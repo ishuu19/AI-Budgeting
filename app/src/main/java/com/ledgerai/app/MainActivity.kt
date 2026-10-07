@@ -14,7 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.presentation.navigation.AppNavigation
 import com.ledgerai.app.presentation.screens.auth.LoginScreen
-import com.ledgerai.app.presentation.theme.BudgetAITheme
+import com.ledgerai.app.presentation.theme.LedgerAITheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            BudgetAITheme {
+            LedgerAITheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val userInfo by userSession.userInfo.collectAsStateWithLifecycle(
                         initialValue = com.ledgerai.app.data.preferences.UserInfo()

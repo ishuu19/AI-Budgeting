@@ -11,8 +11,10 @@ local.properties
 
 # IMPORTANT: Never commit secrets
 secrets.properties
+.env
 *.keystore
 *.jks
+
 
 # Android
 /app/build/

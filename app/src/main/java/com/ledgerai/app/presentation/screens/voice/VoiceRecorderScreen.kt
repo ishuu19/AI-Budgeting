@@ -108,7 +108,7 @@ fun VoiceRecorderScreen(
                         )
 
                     VoiceRecorderState.TRANSCRIBING ->
-                        ProcessingSection(label = "Transcribing audio with Whisper AI…")
+                        ProcessingSection(label = "Preparing transcription…")
 
                     VoiceRecorderState.PARSING ->
                         ProcessingSection(label = "Parsing transaction with Claude AI…")

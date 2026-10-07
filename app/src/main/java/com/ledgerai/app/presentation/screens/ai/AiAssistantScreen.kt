@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 data class AiChatUiState(
     val messages: List<ChatMessage> = listOf(
-        ChatMessage(content = "Hi! I'm BudgetAI 👋 I'm your personal finance assistant. Ask me anything about your spending, budgets, or savings goals!", isFromUser = false)
+        ChatMessage(content = "Hi! I'm LedgerAI. Cloud chat arrives in Phase 7. Until then I can still help with local health scores and budget tips from your on-device data.", isFromUser = false)
     ),
     val isTyping: Boolean = false,
     val inputText: String = ""
@@ -173,7 +173,7 @@ fun AiAssistantScreen(viewModel: AiAssistantViewModel = hiltViewModel()) {
                     value = state.inputText,
                     onValueChange = { viewModel.updateInput(it) },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask BudgetAI anything…") },
+                    placeholder = { Text("Ask LedgerAI anything…") },
                     maxLines = 4,
                     shape = RoundedCornerShape(24.dp)
                 )

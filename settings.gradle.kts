@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BudgetAI"
+rootProject.name = "LedgerAI"
 include(":app")

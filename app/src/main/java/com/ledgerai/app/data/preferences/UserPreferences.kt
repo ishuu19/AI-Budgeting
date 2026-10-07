@@ -23,7 +23,6 @@ class UserPreferences @Inject constructor(
     private object Keys {
         val CURRENCY = stringPreferencesKey("currency")
         val CURRENCY_SYMBOL = stringPreferencesKey("currency_symbol")
-        val AI_MODEL = stringPreferencesKey("ai_model")
         val DARK_THEME = booleanPreferencesKey("dark_theme")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val BUDGET_ALERT_THRESHOLD = stringPreferencesKey("budget_alert_threshold")
@@ -36,10 +35,6 @@ class UserPreferences @Inject constructor(
 
     val currencySymbol: Flow<String> = context.dataStore.data.map {
         it[Keys.CURRENCY_SYMBOL] ?: BuildConfig.DEFAULT_CURRENCY_SYMBOL
-    }
-
-    val aiModel: Flow<String> = context.dataStore.data.map {
-        it[Keys.AI_MODEL] ?: BuildConfig.AI_MODEL
     }
 
     val darkTheme: Flow<Boolean> = context.dataStore.data.map {
@@ -63,10 +58,6 @@ class UserPreferences @Inject constructor(
             prefs[Keys.CURRENCY] = currency
             prefs[Keys.CURRENCY_SYMBOL] = symbol
         }
-    }
-
-    suspend fun setAiModel(model: String) {
-        context.dataStore.edit { it[Keys.AI_MODEL] = model }
     }
 
     suspend fun setDarkTheme(enabled: Boolean) {

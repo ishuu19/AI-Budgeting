@@ -20,8 +20,7 @@ data class UserInfo(
     val userId: String = "",
     val displayName: String = "",
     val email: String = "",
-    val photoUrl: String = "",
-    val googleAccountEmail: String = ""   // the account used for calendar
+    val photoUrl: String = ""
 )
 
 @Singleton
@@ -30,33 +29,30 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
     private val store = context.sessionDataStore
 
     companion object {
-        val KEY_LOGGED_IN    = booleanPreferencesKey("logged_in")
-        val KEY_USER_ID      = stringPreferencesKey("user_id")
-        val KEY_NAME         = stringPreferencesKey("display_name")
-        val KEY_EMAIL        = stringPreferencesKey("email")
-        val KEY_PHOTO        = stringPreferencesKey("photo_url")
-        val KEY_GOOGLE_EMAIL = stringPreferencesKey("google_account_email")
+        val KEY_LOGGED_IN = booleanPreferencesKey("logged_in")
+        val KEY_USER_ID = stringPreferencesKey("user_id")
+        val KEY_NAME = stringPreferencesKey("display_name")
+        val KEY_EMAIL = stringPreferencesKey("email")
+        val KEY_PHOTO = stringPreferencesKey("photo_url")
     }
 
     val userInfo: Flow<UserInfo> = store.data.map { prefs ->
         UserInfo(
-            isLoggedIn    = prefs[KEY_LOGGED_IN] ?: false,
-            userId        = prefs[KEY_USER_ID] ?: "",
-            displayName   = prefs[KEY_NAME] ?: "",
-            email         = prefs[KEY_EMAIL] ?: "",
-            photoUrl      = prefs[KEY_PHOTO] ?: "",
-            googleAccountEmail = prefs[KEY_GOOGLE_EMAIL] ?: ""
+            isLoggedIn = prefs[KEY_LOGGED_IN] ?: false,
+            userId = prefs[KEY_USER_ID] ?: "",
+            displayName = prefs[KEY_NAME] ?: "",
+            email = prefs[KEY_EMAIL] ?: "",
+            photoUrl = prefs[KEY_PHOTO] ?: ""
         )
     }
 
     suspend fun saveUser(userId: String, name: String, email: String, photoUrl: String) {
         store.edit { prefs ->
-            prefs[KEY_LOGGED_IN]    = true
-            prefs[KEY_USER_ID]      = userId
-            prefs[KEY_NAME]         = name
-            prefs[KEY_EMAIL]        = email
-            prefs[KEY_PHOTO]        = photoUrl
-            prefs[KEY_GOOGLE_EMAIL] = email
+            prefs[KEY_LOGGED_IN] = true
+            prefs[KEY_USER_ID] = userId
+            prefs[KEY_NAME] = name
+            prefs[KEY_EMAIL] = email
+            prefs[KEY_PHOTO] = photoUrl
         }
     }
 

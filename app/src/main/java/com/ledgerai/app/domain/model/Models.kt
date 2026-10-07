@@ -31,6 +31,7 @@ data class Transaction(
     val id: Long = 0,
     /** Server id after Supabase sync (Phase 2); null while local-only. */
     val remoteId: String? = null,
+    val userId: String? = null,
     val amount: Double,
     val type: TransactionType,
     val category: TransactionCategory,
@@ -39,7 +40,10 @@ data class Transaction(
     val date: LocalDate = LocalDate.now(),
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val isRecurring: Boolean = false,
-    val currency: String = "USD"
+    val currency: String = "USD",
+    /** Epoch millis; set by repository on write. */
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 // ─── Budget ──────────────────────────────────────────────────────────────────
@@ -47,12 +51,15 @@ data class Transaction(
 data class Budget(
     val id: Long = 0,
     val remoteId: String? = null,
+    val userId: String? = null,
     val category: TransactionCategory,
     val monthlyLimit: Double,
     val spent: Double = 0.0,
     val month: Int,
     val year: Int,
-    val alertThreshold: Int = 80
+    val alertThreshold: Int = 80,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 ) {
     val remaining: Double get() = monthlyLimit - spent
     val usagePercent: Int get() = if (monthlyLimit > 0) ((spent / monthlyLimit) * 100).toInt() else 0
@@ -67,6 +74,7 @@ enum class DebtDirection { I_OWE, THEY_OWE }
 data class Debt(
     val id: Long = 0,
     val remoteId: String? = null,
+    val userId: String? = null,
     val friendName: String,
     val amount: Double,
     val direction: DebtDirection,
@@ -76,7 +84,9 @@ data class Debt(
     val email: String = "",
     val note: String = "",
     val isPaid: Boolean = false,
-    val currency: String = "USD"
+    val currency: String = "USD",
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 // ─── Goal ────────────────────────────────────────────────────────────────────
@@ -84,6 +94,7 @@ data class Debt(
 data class Goal(
     val id: Long = 0,
     val remoteId: String? = null,
+    val userId: String? = null,
     val name: String,
     val targetAmount: Double,
     val savedAmount: Double = 0.0,
@@ -91,7 +102,9 @@ data class Goal(
     val emoji: String = "🎯",
     val note: String = "",
     val isCompleted: Boolean = false,
-    val createdAt: LocalDate = LocalDate.now()
+    val createdAt: LocalDate = LocalDate.now(),
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 ) {
     val progressPercent: Int get() =
         if (targetAmount > 0) ((savedAmount / targetAmount) * 100).toInt().coerceIn(0, 100) else 0
@@ -110,6 +123,7 @@ enum class BillFrequency(val displayName: String) {
 data class Bill(
     val id: Long = 0,
     val remoteId: String? = null,
+    val userId: String? = null,
     val name: String,
     val amount: Double,
     val frequency: BillFrequency = BillFrequency.MONTHLY,
@@ -117,7 +131,9 @@ data class Bill(
     val category: TransactionCategory = TransactionCategory.SUBSCRIPTIONS,
     val note: String = "",
     val isActive: Boolean = true,
-    val currency: String = "USD"
+    val currency: String = "USD",
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 // ─── AI / Chat ────────────────────────────────────────────────────────────────

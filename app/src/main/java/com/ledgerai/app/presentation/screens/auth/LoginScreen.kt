@@ -1,14 +1,8 @@
 package com.ledgerai.app.presentation.screens.auth
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -18,12 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.R
 
@@ -33,13 +25,6 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-
-    // Launch Google Sign-In intent
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        viewModel.handleSignInResult(result)
-    }
 
     LaunchedEffect(state.isSignedIn) {
         if (state.isSignedIn) onSignedIn()
@@ -51,7 +36,8 @@ fun LoginScreen(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                        MaterialTheme.colorScheme.background,
                         MaterialTheme.colorScheme.background
                     )
                 )
@@ -60,132 +46,90 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 32.dp)
+                .padding(top = 72.dp, bottom = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo
-            Card(
-                shape = CircleShape,
-                modifier = Modifier.size(100.dp),
-                elevation = CardDefaults.cardElevation(8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "LedgerAI Logo",
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            // Brand-first hero (upper scan path)
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "LedgerAI",
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(20.dp))
+            )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 "LedgerAI",
                 style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                "Your AI-powered voice-first finance tracker",
-                style = MaterialTheme.typography.bodyMedium,
+                "Track money by voice. Stay on budget.",
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 8.dp)
             )
 
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.weight(1f))
 
-            // Feature bullets
-            AnimatedVisibility(enter = fadeIn() + slideInVertically { it / 2 }, visible = true) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FeatureBullet("🎤", "Voice-record transactions in seconds")
-                    FeatureBullet("🤖", "AI transcribes & categorizes automatically")
-                    FeatureBullet("📅", "Debt reminders sync to your Google Calendar")
-                    FeatureBullet("📊", "Smart budget forecasting & analytics")
-                }
-            }
-
-            Spacer(Modifier.height(48.dp))
-
-            // Google Sign-In button
+            // One primary CTA — Maze success path: Continue → home
             if (state.isLoading) {
                 CircularProgressIndicator()
             } else {
-                GoogleSignInButton(
-                    onClick = { launcher.launch(viewModel.getSignInIntent()) }
-                )
-            }
-
-            // Error message
-            AnimatedVisibility(visible = state.errorMessage != null) {
-                state.errorMessage?.let { error ->
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.errorContainer)
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.Warning, null,
-                            tint = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.size(18.dp))
-                        Text(error, style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer)
-                    }
+                Button(
+                    onClick = { viewModel.continueLocally() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        "Continue",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            state.errorMessage?.let { error ->
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             Text(
-                "By signing in you agree to use this app for personal finance tracking. Your data is stored locally on your device.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                "Works offline on this device. Cloud sync comes later.",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                 textAlign = TextAlign.Center
             )
         }
-    }
-}
-
-@Composable
-private fun FeatureBullet(emoji: String, text: String) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(emoji, fontSize = 22.sp)
-        Text(text, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-@Composable
-private fun GoogleSignInButton(onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
-    ) {
-        // Google G icon (text-based since we can't use actual SVG easily)
-        Text(
-            "G",
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 20.sp,
-            color = Color(0xFF4285F4),
-            modifier = Modifier.padding(end = 12.dp)
-        )
-        Text(
-            "Continue with Google",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold
-        )
     }
 }

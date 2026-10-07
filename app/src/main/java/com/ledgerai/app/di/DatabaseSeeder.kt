@@ -9,7 +9,6 @@ import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,8 +24,7 @@ class DatabaseSeeder @Inject constructor(
 
     fun seedIfEmpty() {
         CoroutineScope(Dispatchers.IO).launch {
-            val existing = transactionRepo.getAllTransactions().first()
-            if (existing.isEmpty()) {
+            if (transactionRepo.countActive() == 0) {
                 seedTransactions()
                 seedBudgets()
                 seedBills()

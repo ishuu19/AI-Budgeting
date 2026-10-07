@@ -18,6 +18,9 @@ data class DashboardUiState(
     val isLoading: Boolean = true,
     val monthlyIncome: Double = 0.0,
     val monthlyExpenses: Double = 0.0,
+    val netBalance: Double = 0.0,
+    val remainingBudget: Double? = null,
+    val takeaway: String = "",
     val recentTransactions: List<Transaction> = emptyList(),
     val budgets: List<Budget> = emptyList(),
     val healthScore: FinancialHealthScore? = null,
@@ -55,11 +58,18 @@ class DashboardViewModel @Inject constructor(
                 val income = transactionRepo.getTotalIncomeForMonth(now.year, now.monthValue)
                 val expenses = transactionRepo.getTotalExpensesForMonth(now.year, now.monthValue)
                 val budgetsWithSpending = budgets.map { budget ->
-                    val spent = transactionRepo.getSpendingForCategoryMonth(budget.category, now.year, now.monthValue)
+                    val spent = transactionRepo.getSpendingForCategoryMonth(
+                        budget.category, now.year, now.monthValue
+                    )
                     budget.copy(spent = spent)
                 }
+                val net = income - expenses
+                val remaining = if (budgetsWithSpending.isNotEmpty()) {
+                    budgetsWithSpending.sumOf { it.remaining }
+                } else null
                 val adherence = if (budgetsWithSpending.isNotEmpty()) {
-                    budgetsWithSpending.count { !it.isOverBudget }.toDouble() / budgetsWithSpending.size * 100
+                    budgetsWithSpending.count { !it.isOverBudget }.toDouble() /
+                        budgetsWithSpending.size * 100
                 } else 100.0
 
                 _uiState.update {
@@ -67,6 +77,9 @@ class DashboardViewModel @Inject constructor(
                         isLoading = false,
                         monthlyIncome = income,
                         monthlyExpenses = expenses,
+                        netBalance = net,
+                        remainingBudget = remaining,
+                        takeaway = buildTakeaway(net, remaining),
                         recentTransactions = recent,
                         budgets = budgetsWithSpending,
                         greeting = getGreeting()
@@ -75,6 +88,19 @@ class DashboardViewModel @Inject constructor(
 
                 loadHealthScore(income, expenses, adherence)
             }
+        }
+    }
+
+    private fun buildTakeaway(net: Double, remainingBudget: Double?): String {
+        return when {
+            remainingBudget != null && net >= 0 ->
+                "On track — \$${"%.0f".format(remainingBudget)} left in budgets"
+            remainingBudget != null && net < 0 ->
+                "Spending ahead — \$${"%.0f".format(remainingBudget)} still in budgets"
+            net >= 0 ->
+                "Income covers spending this month"
+            else ->
+                "Spending exceeds income this month"
         }
     }
 
@@ -89,10 +115,10 @@ class DashboardViewModel @Inject constructor(
 
     private fun getGreeting(): String {
         return when (java.time.LocalTime.now().hour) {
-            in 5..11 -> "Good morning!"
-            in 12..17 -> "Good afternoon!"
-            in 18..21 -> "Good evening!"
-            else -> "Hello!"
+            in 5..11 -> "Good morning"
+            in 12..17 -> "Good afternoon"
+            in 18..21 -> "Good evening"
+            else -> "Hello"
         }
     }
 }

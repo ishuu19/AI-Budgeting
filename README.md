@@ -1,112 +1,60 @@
-# BudgetAI — AI-Powered Voice-First Android Budgeting App
+# LedgerAI
 
-A feature-rich Android budgeting app powered by OpenRouter AI (Claude 3.7 Sonnet by default).
+Voice-first personal finance Android app (Kotlin, Compose, Material 3).
 
-## Features
+## Current status
 
-| Feature | Description |
+**Phase 1 (foundation)** is in progress: MongoDB / OpenRouter / Whisper / cosmetic Google login removed. Data is held in an in-memory store so the UI stays runnable until Room + Supabase land in Phase 2.
+
+See [PLAN.md](PLAN.md) for requirements, architecture, and build phases.
+
+## Stack (target)
+
+| Concern | Choice |
 |---|---|
-| **Voice Widget** | Home screen widget with mic button — speak a transaction, AI parses it instantly |
-| **AI Transactions** | Natural language transaction entry ("Spent $50 on groceries") |
-| **Budget Categories** | Set monthly limits per category with % alerts and AI advice |
-| **AI Forecast** | 3-month spending forecast with risk level and recommendations |
-| **Debt Tracker** | Track money owed to/from friends with Google Calendar + 5 reminder tiers |
-| **Analytics** | Pie charts, bar charts, income vs. expense trends, category breakdown |
-| **Savings Goals** | Set goals with progress tracking and AI tips |
-| **Bills Tracker** | Manage recurring bills and subscriptions |
-| **AI Assistant** | Chat with BudgetAI about your finances |
-| **Smart Notifications** | Budget alerts, debt reminders, bill due alerts |
-| **Financial Health Score** | Personalized score based on savings rate, debt ratio, and budget adherence |
-
-## Debt Reminder Schedule
-
-When you add a debt with a due date, BudgetAI automatically:
-1. Creates a **Google Calendar event** on the due date
-2. Schedules **5 push notifications**:
-   - 1 week before
-   - 5 days before
-   - 1 day before
-   - 10 hours before
-   - 30 minutes before
+| Client | Kotlin, Compose, Hilt, Glance, WorkManager |
+| Local store | Room (Phase 2) |
+| Backend | Supabase (Auth, Postgres + RLS, Edge Functions) |
+| AI | Gemini via Edge Function (key never in APK) |
+| Voice | Vosk offline (Phase 4) |
 
 ## Setup
 
-### 1. Clone & Open in Android Studio
-
-Open this folder in Android Studio (Hedgehog or newer, with Android SDK 34+).
-
-### 2. Configure API Key
+1. Open this folder in Android Studio (SDK 34+).
+2. Copy secrets:
 
 ```bash
-# Copy the example secrets file
-cp .env.example secrets.properties
-
-# Edit secrets.properties and fill in your OpenRouter API key
-OPENROUTER_API_KEY=your_key_here
+cp secrets.properties.example secrets.properties
 ```
 
-Get your free API key at: https://openrouter.ai/keys
-
-### 3. AI Model
-
-Default model: `anthropic/claude-3.7-sonnet` (best reasoning for financial analysis)
-
-You can change this in `secrets.properties` or in the app's Settings screen.
-
-### 4. Build & Run
+3. Fill `secrets.properties` (see `secrets.properties.example`):
+   - **Client:** `SUPABASE_URL` + `SUPABASE_ANON_KEY` (or `SUPABASE_PUBLISHABLE_KEY`)
+   - **AI cascade (server/Edge only):** OpenRouter free → Gemini → DeepSeek → OpenRouter paid — never put those keys in the APK
+4. Leave AI keys blank until Phase 7 Edge Function wiring.
+4. Build:
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-Or press ▶ in Android Studio.
+## Security
 
-## Architecture
+- Never put Mongo URIs, OpenRouter keys, Gemini keys, or Supabase `service_role` in the APK.
+- `secrets.properties` is gitignored.
+- Cloud backup is disabled for app data.
+- Rotate any credentials that were previously compiled into debug builds.
+
+## Architecture (high level)
 
 ```
 app/
 ├── data/
-│   ├── local/          # Room database (entities, DAOs)
-│   ├── remote/         # OpenRouter API (Retrofit)
-│   ├── repository/     # Repository pattern
-│   └── preferences/    # DataStore user preferences
-├── domain/
-│   └── model/          # Domain models
-├── presentation/
-│   ├── navigation/     # Compose Navigation
-│   ├── screens/        # Screen composables + ViewModels
-│   ├── components/     # Shared UI components
-│   └── theme/          # Material 3 theme
-├── service/            # VoiceRecordingService, CalendarService, NotificationService
-├── widget/             # Glance widget (home screen)
-├── worker/             # WorkManager tasks (debt reminders, budget checks)
-└── di/                 # Hilt dependency injection
+│   ├── local/          # InMemoryStore (→ Room in Phase 2)
+│   ├── repository/     # Domain repositories
+│   └── preferences/    # DataStore session + prefs
+├── domain/model/
+├── presentation/       # Compose screens + ViewModels
+├── service/            # Voice FGS, notifications, boot receiver
+├── widget/             # Glance voice widget
+└── worker/             # Budget / debt reminders
 ```
-
-**Tech Stack:**
-- Language: Kotlin
-- UI: Jetpack Compose + Material 3
-- Architecture: MVVM + Clean Architecture
-- DI: Hilt
-- Database: Room (SQLite)
-- Networking: Retrofit + OkHttp → OpenRouter AI
-- Background: WorkManager
-- Widget: Glance (Compose-based home screen widget)
-- Preferences: DataStore
-- Charts: Vico
-
-## Required Permissions
-
-| Permission | Purpose |
-|---|---|
-| `INTERNET` | AI API calls |
-| `RECORD_AUDIO` | Voice transaction entry |
-| `READ/WRITE_CALENDAR` | Debt reminder calendar events |
-| `POST_NOTIFICATIONS` | Budget alerts, reminders |
-| `READ_CONTACTS` | Optional: auto-fill friend contacts |
-
-## Project Notes
-
-- **secrets.properties** is git-ignored — never commit it
-- Build config injects secrets at compile time via `BuildConfig.*`
-- All AI calls route through `AiRepository` → `OpenRouterService`

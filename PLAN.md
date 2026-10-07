@@ -1,6 +1,6 @@
 # LedgerAI — Product & Engineering Plan
 
-Status: planning only. No code has been changed yet. Findings below come from reading the code; the project has not been compiled.
+Status: **Phase 1 in progress** (foundation & cleanup applied). Next: Phase 2 (Supabase + auth + Room).
 
 ---
 
@@ -46,23 +46,24 @@ Status: planning only. No code has been changed yet. Findings below come from re
 
 ## 2. Audit — what is wrong today
 
-### Critical (privacy / security)
-1. **App talks straight to MongoDB.** `MONGODB_URI` is compiled into the APK via `BuildConfig` (`app/build.gradle.kts`, `MongoProvider.kt`) — anyone can extract DB credentials. All queries are `col.find()` with no user filter and no document has a `userId` (`TransactionRepository.kt`, `OtherRepositories.kt`), so every user would see every user's data.
-2. **OpenRouter API key ships in the APK** (`AppModule.kt`) and is also reused for the Whisper client.
-3. **Login is cosmetic.** Google Sign-In only stores the account id in local DataStore (`AuthViewModel.kt`, `UserSession.kt`). Nothing server-side verifies it and the data layer never uses it. Uses the deprecated `play-services-auth` API.
-4. **Transcription likely broken.** Whisper is pointed at OpenRouter `/audio/transcriptions`, which probably does not exist (to verify).
+### Critical (privacy / security) — addressed in Phase 1
+1. ~~**App talks straight to MongoDB.**~~ Removed `MongoProvider`, driver, and `MONGODB_URI` BuildConfig. Temporary **in-memory** store until Room (Phase 2).
+2. ~~**OpenRouter API key ships in the APK**~~ Removed OpenRouter/Whisper clients and API-key BuildConfig fields.
+3. ~~**Login is cosmetic / play-services-auth.**~~ Removed. Temporary **Continue locally** session until Supabase (Phase 2).
+4. ~~**Whisper via OpenRouter.**~~ Removed. Voice mic still records; transcript path waits for Vosk (Phase 4); text entry still parses locally.
 
-### Functional bugs
-5. Repositories use one-shot `flow { emit(...) }` — UI will not refresh after inserts. Totals are computed by downloading all documents; dates filtered by regex on strings.
-6. Entity ids are `mongoId.hashCode().toLong()` — collisions possible.
-7. Manifest:
-   - Mic foreground service lacks `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_MICROPHONE` permissions (required at targetSdk 34) → crash.
-   - `REQUEST_INSTALL_PACKAGES` is unnecessary (Play policy flag).
-   - `BootReceiver` is `exported="true"` without need.
-   - `allowBackup="true"` lets financial data enter cloud backups.
-8. `DatabaseSeeder.seedIfEmpty()` is called in `Application.onCreate` against a network DB — check threading / ANR risk.
-9. Housekeeping: README says Room but code uses Mongo; app is named both BudgetAI and LedgerAI; `libs.versions.toml` has a stale Mongo entry vs hardcoded version in gradle; AI JSON is extracted from free text with `extractJson` instead of a response schema.
-10. Git repo root is `C:\`; the project's files are not tracked. Run `git init` in the project folder.
+### Functional (partially fixed / deferred)
+5. ~~One-shot `flow { emit(...) }`~~ In-memory `StateFlow` updates reactively. Room Flows in Phase 2.
+6. ~~`mongoId.hashCode()` ids~~ Local auto-increment `Long` ids; `remoteId` reserved for Supabase.
+7. Manifest: added FGS mic permissions; removed calendar + `REQUEST_INSTALL_PACKAGES`; `BootReceiver` not exported; `allowBackup="false"`.
+8. `DatabaseSeeder` still seeds demo data on empty store (IO coroutine) — fine for in-memory; revisit when Room lands.
+9. Naming unified to **LedgerAI**; README rewritten; stale Mongo catalog entry removed; AI no longer uses free-text `extractJson` against OpenRouter.
+10. ~~Git repo root was `C:\`~~ Project has its own `.git` with baseline commit.
+
+### Still open
+- Rotate previously embedded Mongo/OpenRouter credentials (owner action).
+- Supabase project, RLS, Room, Credential Manager auth (Phase 2).
+- Vosk (Phase 4), Gemini Edge Function (Phase 7).
 
 ---
 
@@ -115,13 +116,15 @@ KPI row (income, expense, net, savings rate) · spending by category · income v
 
 ## 4. Build phases
 
-### Phase 1 — Foundation & cleanup
-- `git init` in the project; commit baseline.
-- First Gradle build; record compile errors.
-- Remove MongoDB driver/`MongoProvider`, OpenRouter/Whisper services, `play-services-auth` Google login.
-- Fix manifest (permissions, exported flags, backup rules).
-- Unify naming (LedgerAI), clean `libs.versions.toml`, rewrite README.
-- Move secrets handling: no API keys in `BuildConfig` except the public Supabase URL + anon key.
+### Phase 1 — Foundation & cleanup ✅
+- [x] `git init` in the project; commit baseline.
+- [x] First Gradle build: `./gradlew assembleDebug` → **BUILD SUCCESSFUL**.
+- [x] Remove MongoDB driver/`MongoProvider`, OpenRouter/Whisper services, `play-services-auth` Google login.
+- [x] Fix manifest (permissions, exported flags, backup rules).
+- [x] Unify naming (LedgerAI), clean `libs.versions.toml`, rewrite README.
+- [x] Move secrets handling: only public Supabase URL + anon key in BuildConfig.
+- [x] Remove `CalendarService` + calendar permissions (per decision §5.3).
+- Ruling: in-memory store + local session + local AI stubs keep the app runnable until Phases 2/4/7.
 
 ### Phase 2 — Supabase + auth + data layer
 - Supabase project, schema, RLS policies, tests that user A cannot read user B.
@@ -159,9 +162,15 @@ KPI row (income, expense, net, savings rate) · spending by category · income v
 2. **Stack:** owner delegated the choice → **Supabase + native Android (Kotlin/Compose)**, as described in section 3.
 3. **Google Calendar sync:** **dropped**. In-app reminders replace it; remove `CalendarService` and calendar permissions.
 4. **Transcription:** use a free option if it is the best → **Vosk** (free, Apache-2.0, offline) as the default. whisper.cpp / Gemini-audio remain optional upgrades, not in v1.
-5. **Gemini API key:** do **not** paste into chat/repo; it will be set as a Supabase secret.
+5. **AI keys:** do **not** paste into chat/repo or APK BuildConfig. Hold in `secrets.properties` / Edge Function secrets.
+6. **AI provider cascade (confirmed):**  
+   1) OpenRouter **free** models (`OPENROUTER_FREE_API_KEY` → else `OPENROUTER_API_KEY` + `AI_MODEL_OPENROUTER_FREE`)  
+   2) Gemini (`GEMINI_API_KEY` then `GEMINI_API_KEYS`)  
+   3) DeepSeek official (`DEEPSEEK_API_KEY`, `AI_MODEL_DEEPSEEK`)  
+   4) OpenRouter paid/extra (`OPENROUTER_API_KEY` then `OPENROUTER_API_KEYS` + `AI_MODEL_OPENROUTER`)  
+   Preferred model family: **DeepSeek** (free via OpenRouter `:free` first, then native DeepSeek API, then OpenRouter paid DeepSeek).
 
 ## 6. Security notes
-- `secrets.properties` is git-ignored, but the old MongoDB/OpenRouter values have been compiled into builds — **rotate them** once they are no longer used.
+- `secrets.properties` is git-ignored. Values previously compiled into APKs (Mongo URI, OpenRouter key) must be **rotated** by the owner.
 - Never put the Supabase `service_role` key in the app; only the anon key + user JWT.
-- Turn off cloud backup for app data (or exclude the Room DB and tones).
+- Turn off cloud backup for app data (or exclude the Room DB and tones) — `allowBackup="false"` now.

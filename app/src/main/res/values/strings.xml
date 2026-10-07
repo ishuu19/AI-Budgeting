@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LedgerAI</string>
-    <string name="widget_label">Voice Transaction</string>
-    <string name="widget_tap_to_record">Tap to record transaction</string>
+    <string name="widget_label">LedgerAI Quote &amp; Voice</string>
+    <string name="widget_tap_to_record">Daily quote, speak aloud, or record</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_notes">Notes</string>
+    <string name="nav_alarms">Alarms</string>
     <string name="recording_in_progress">Recording… speak your transaction</string>
     <string name="processing_voice">Processing your transaction…</string>
 
@@ -26,7 +29,6 @@
 
     <!-- Permissions rationale -->
     <string name="permission_microphone_rationale">Microphone access is needed to record voice transactions via the widget.</string>
-    <string name="permission_calendar_rationale">Calendar access is needed to create debt reminder events.</string>
     <string name="permission_contacts_rationale">Contacts access is optional — used to auto-fill friend names in the debt tracker.</string>
     <string name="permission_notification_rationale">Notification access is needed for budget alerts and debt reminders.</string>
 </resources>

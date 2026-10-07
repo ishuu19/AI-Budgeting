@@ -40,6 +40,44 @@ fun SectionTitle(
     }
 }
 
+/**
+ * Single primary KPI for dashboard-style screens (Tableau: big number early).
+ * Non-clickable — do not wrap in clickable surfaces that look like buttons.
+ */
+@Composable
+fun PrimaryKpi(
+    label: String,
+    formattedValue: String,
+    takeaway: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (takeaway.isNotBlank()) {
+            Text(
+                takeaway,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
+            )
+        }
+        Text(
+            formattedValue,
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            color = valueColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
 @Composable
 fun AmountText(
     amount: Double,

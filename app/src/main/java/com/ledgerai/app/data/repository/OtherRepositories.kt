@@ -1,6 +1,11 @@
 package com.ledgerai.app.data.repository
 
-import com.ledgerai.app.data.local.InMemoryStore
+import com.ledgerai.app.data.local.room.BillDao
+import com.ledgerai.app.data.local.room.BudgetDao
+import com.ledgerai.app.data.local.room.DebtDao
+import com.ledgerai.app.data.local.room.GoalDao
+import com.ledgerai.app.data.local.room.toDomain
+import com.ledgerai.app.data.local.room.toEntity
 import com.ledgerai.app.domain.model.Bill
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.Budget
@@ -14,126 +19,162 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class BudgetRepository @Inject constructor(private val store: InMemoryStore) {
+class BudgetRepository @Inject constructor(
+    private val dao: BudgetDao
+) {
 
     fun getBudgetsForMonth(month: Int, year: Int): Flow<List<Budget>> =
-        store.budgets.map { list -> list.filter { it.month == month && it.year == year } }
+        dao.observeForMonth(month, year).map { list -> list.map { it.toDomain() } }
 
     suspend fun getBudgetForCategory(category: TransactionCategory, month: Int, year: Int): Budget? =
-        store.budgets.value.firstOrNull {
-            it.category == category && it.month == month && it.year == year
-        }
+        dao.getForCategory(category, month, year)?.toDomain()
 
     suspend fun insert(budget: Budget) {
-        val id = if (budget.id == 0L) store.nextId() else budget.id
-        store.upsertBudget(budget.copy(id = id))
+        val now = System.currentTimeMillis()
+        val entity = budget.copy(
+            updatedAt = if (budget.updatedAt == 0L) now else budget.updatedAt,
+            deletedAt = null
+        ).toEntity()
+        if (budget.id == 0L) {
+            dao.insert(entity.copy(id = 0))
+        } else {
+            dao.insert(entity)
+        }
     }
 
     suspend fun update(budget: Budget) {
         if (budget.id == 0L) return
-        store.upsertBudget(budget)
+        dao.update(budget.copy(updatedAt = System.currentTimeMillis()).toEntity())
     }
 
     suspend fun delete(budget: Budget) {
         if (budget.id == 0L) return
-        store.removeBudget(budget.id)
+        val now = System.currentTimeMillis()
+        dao.softDelete(budget.id, deletedAt = now, updatedAt = now)
     }
 }
 
 @Singleton
-class DebtRepository @Inject constructor(private val store: InMemoryStore) {
+class DebtRepository @Inject constructor(
+    private val dao: DebtDao
+) {
 
     fun getActiveDebts(): Flow<List<Debt>> =
-        store.debts.map { list ->
-            list.filter { !it.isPaid }.sortedBy { it.dueDate }
-        }
+        dao.observeActive().map { list -> list.map { it.toDomain() } }
 
     fun getAllDebts(): Flow<List<Debt>> =
-        store.debts.map { list -> list.sortedByDescending { it.dateLent } }
+        dao.observeAll().map { list -> list.map { it.toDomain() } }
 
     suspend fun getTotalOwedToMe(): Double =
-        store.debts.value
-            .filter { it.direction == DebtDirection.THEY_OWE && !it.isPaid }
-            .sumOf { it.amount }
+        dao.sumByDirection(DebtDirection.THEY_OWE)
 
     suspend fun getTotalIOwe(): Double =
-        store.debts.value
-            .filter { it.direction == DebtDirection.I_OWE && !it.isPaid }
-            .sumOf { it.amount }
+        dao.sumByDirection(DebtDirection.I_OWE)
 
     suspend fun insert(debt: Debt): Long {
-        val id = if (debt.id == 0L) store.nextId() else debt.id
-        store.upsertDebt(debt.copy(id = id))
-        return id
+        val now = System.currentTimeMillis()
+        val entity = debt.copy(
+            updatedAt = if (debt.updatedAt == 0L) now else debt.updatedAt,
+            deletedAt = null
+        ).toEntity()
+        return if (debt.id == 0L) {
+            dao.insert(entity.copy(id = 0))
+        } else {
+            dao.insert(entity)
+            debt.id
+        }
     }
 
     suspend fun update(debt: Debt) {
         if (debt.id == 0L) return
-        store.upsertDebt(debt)
+        dao.update(debt.copy(updatedAt = System.currentTimeMillis()).toEntity())
     }
 
     suspend fun delete(debt: Debt) {
         if (debt.id == 0L) return
-        store.removeDebt(debt.id)
+        val now = System.currentTimeMillis()
+        dao.softDelete(debt.id, deletedAt = now, updatedAt = now)
     }
 
     suspend fun markAsPaid(id: Long) {
-        val current = store.debts.value.firstOrNull { it.id == id } ?: return
-        store.upsertDebt(current.copy(isPaid = true))
+        val current = dao.getById(id) ?: return
+        dao.update(
+            current.copy(isPaid = true, updatedAt = System.currentTimeMillis())
+        )
     }
 }
 
 @Singleton
-class GoalRepository @Inject constructor(private val store: InMemoryStore) {
+class GoalRepository @Inject constructor(
+    private val dao: GoalDao
+) {
 
     fun getActiveGoals(): Flow<List<Goal>> =
-        store.goals.map { list -> list.filter { !it.isCompleted } }
+        dao.observeActive().map { list -> list.map { it.toDomain() } }
 
-    fun getAllGoals(): Flow<List<Goal>> = store.goals
+    fun getAllGoals(): Flow<List<Goal>> =
+        dao.observeAll().map { list -> list.map { it.toDomain() } }
 
     suspend fun insert(goal: Goal) {
-        val id = if (goal.id == 0L) store.nextId() else goal.id
-        store.upsertGoal(goal.copy(id = id))
+        val now = System.currentTimeMillis()
+        val entity = goal.copy(
+            updatedAt = if (goal.updatedAt == 0L) now else goal.updatedAt,
+            deletedAt = null
+        ).toEntity()
+        if (goal.id == 0L) {
+            dao.insert(entity.copy(id = 0))
+        } else {
+            dao.insert(entity)
+        }
     }
 
     suspend fun update(goal: Goal) {
         if (goal.id == 0L) return
-        store.upsertGoal(goal)
+        dao.update(goal.copy(updatedAt = System.currentTimeMillis()).toEntity())
     }
 
     suspend fun delete(goal: Goal) {
         if (goal.id == 0L) return
-        store.removeGoal(goal.id)
+        val now = System.currentTimeMillis()
+        dao.softDelete(goal.id, deletedAt = now, updatedAt = now)
     }
 }
 
 @Singleton
-class BillRepository @Inject constructor(private val store: InMemoryStore) {
+class BillRepository @Inject constructor(
+    private val dao: BillDao
+) {
 
     fun getActiveBills(): Flow<List<Bill>> =
-        store.bills.map { list ->
-            list.filter { it.isActive }.sortedBy { it.nextDueDate }
-        }
+        dao.observeActive().map { list -> list.map { it.toDomain() } }
 
-    fun getAllBills(): Flow<List<Bill>> = store.bills
+    fun getAllBills(): Flow<List<Bill>> =
+        dao.observeAll().map { list -> list.map { it.toDomain() } }
 
     suspend fun getTotalMonthlyBills(): Double =
-        store.bills.value
-            .filter { it.isActive && it.frequency == BillFrequency.MONTHLY }
-            .sumOf { it.amount }
+        dao.sumByFrequency(BillFrequency.MONTHLY)
 
     suspend fun insert(bill: Bill) {
-        val id = if (bill.id == 0L) store.nextId() else bill.id
-        store.upsertBill(bill.copy(id = id))
+        val now = System.currentTimeMillis()
+        val entity = bill.copy(
+            updatedAt = if (bill.updatedAt == 0L) now else bill.updatedAt,
+            deletedAt = null
+        ).toEntity()
+        if (bill.id == 0L) {
+            dao.insert(entity.copy(id = 0))
+        } else {
+            dao.insert(entity)
+        }
     }
 
     suspend fun update(bill: Bill) {
         if (bill.id == 0L) return
-        store.upsertBill(bill)
+        dao.update(bill.copy(updatedAt = System.currentTimeMillis()).toEntity())
     }
 
     suspend fun delete(bill: Bill) {
         if (bill.id == 0L) return
-        store.removeBill(bill.id)
+        val now = System.currentTimeMillis()
+        dao.softDelete(bill.id, deletedAt = now, updatedAt = now)
     }
 }

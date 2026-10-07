@@ -1,9 +1,14 @@
 package com.ledgerai.app.data.repository
 
-import com.ledgerai.app.BuildConfig
-import com.ledgerai.app.data.preferences.UserPreferences
-import com.ledgerai.app.data.remote.OpenRouterService
-import com.ledgerai.app.data.remote.model.OpenRouterRequest
+import com.google.gson.Gson
+import com.google.gson.JsonParser
+import com.ledgerai.app.data.ai.AiConfig
+import com.ledgerai.app.data.ai.AiProviderRouter
+import com.ledgerai.app.data.ai.ContextBuilder
+import com.ledgerai.app.data.ai.ForecastItemDto
+import com.ledgerai.app.data.ai.ForecastListDto
+import com.ledgerai.app.data.ai.NetworkAvailability
+import com.ledgerai.app.data.ai.ParsedTransactionDto
 import com.ledgerai.app.domain.model.FinancialForecast
 import com.ledgerai.app.domain.model.FinancialHealthScore
 import com.ledgerai.app.domain.model.ParsedTransaction
@@ -11,268 +16,342 @@ import com.ledgerai.app.domain.model.RiskLevel
 import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * AI entry point: cascade via [AiProviderRouter] when online and keys exist (debug BuildConfig).
+ * Local fallbacks for health score, budget advice, parse, and forecast.
+ * Release BuildConfig AI keys are empty — production should use a Supabase Edge Function.
+ */
 @Singleton
 class AiRepository @Inject constructor(
-    private val service: OpenRouterService,
-    private val preferences: UserPreferences,
-    private val gson: Gson
+    private val router: AiProviderRouter,
+    private val config: AiConfig,
+    private val contextBuilder: ContextBuilder,
+    private val network: NetworkAvailability,
+    private val gson: Gson,
 ) {
-    private suspend fun getModel(): String = preferences.aiModel.first()
 
-    // ─── Voice / Text Transaction Parsing ────────────────────────────────────
-
-    suspend fun parseVoiceTransaction(transcript: String): Result<ParsedTransaction> = runCatching {
-        val prompt = """
-            Parse this voice/text input into a structured transaction.
-            Input: "$transcript"
-            
-            Categories available: ${TransactionCategory.entries.map { it.displayName }.joinToString(", ")}
-            
-            Respond with ONLY valid JSON in this exact format:
-            {
-              "amount": 12.50,
-              "category": "Food",
-              "merchant": "McDonald's",
-              "date": "today",
-              "note": "Lunch",
-              "type": "expense"
+    suspend fun parseVoiceTransaction(transcript: String): Result<ParsedTransaction> {
+        if (canCallCloud()) {
+            val system = """
+                You extract a single personal finance transaction from user text.
+                Reply with ONLY compact JSON (no markdown):
+                {"amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0.0-1.0}
+            """.trimIndent()
+            val cloud = router.complete(system, transcript)
+            cloud.getOrNull()?.let { raw ->
+                parseTransactionJson(raw, transcript)?.let { return Result.success(it) }
             }
-            
-            Rules:
-            - amount must be a number (no currency symbols)
-            - category must match one from the list above
-            - date: use "today", "yesterday", or ISO-8601 (YYYY-MM-DD)
-            - type: "expense" or "income"
-        """.trimIndent()
-
-        val response = service.chatCompletion(
-            OpenRouterRequest(
-                model = getModel(),
-                messages = listOf(
-                    OpenRouterRequest.Message("system", "You are a financial transaction parser. Always respond with valid JSON only."),
-                    OpenRouterRequest.Message("user", prompt)
-                ),
-                maxTokens = 256
-            )
-        )
-
-        val content = response.getContent() ?: throw Exception("Empty AI response")
-        val json = gson.fromJson(extractJson(content), JsonObject::class.java)
-
-        ParsedTransaction(
-            amount = json.get("amount")?.asDouble,
-            category = TransactionCategory.fromDisplayName(json.get("category")?.asString ?: ""),
-            merchant = json.get("merchant")?.asString ?: "",
-            date = parseDateString(json.get("date")?.asString ?: "today"),
-            note = json.get("note")?.asString ?: "",
-            type = if (json.get("type")?.asString?.lowercase() == "income")
-                TransactionType.INCOME else TransactionType.EXPENSE
-        )
+        }
+        return Result.success(quickParse(transcript))
     }
-
-    // ─── Spending Forecast ────────────────────────────────────────────────────
 
     suspend fun generateForecast(
         recentTransactions: List<Transaction>,
         currentBudgets: Map<TransactionCategory, Double>
-    ): Result<List<FinancialForecast>> = runCatching {
-        val summary = buildTransactionSummary(recentTransactions)
-        val budgetSummary = currentBudgets.entries.joinToString("\n") {
-            "- ${it.key.displayName}: \$${it.value} budget"
+    ): Result<List<FinancialForecast>> {
+        if (recentTransactions.isEmpty()) {
+            return Result.failure(IllegalStateException("Need recent transactions to forecast"))
         }
 
-        val prompt = """
-            Analyze this user's recent spending and generate a 3-month financial forecast.
-            
-            Recent spending summary (last 3 months):
-            $summary
-            
-            Current monthly budgets:
-            $budgetSummary
-            
-            Respond with ONLY a JSON array of 3 forecast objects:
-            [
-              {
-                "month": "April 2025",
-                "predictedSpend": 1850.00,
-                "recommendedBudget": 1700.00,
-                "riskLevel": "MEDIUM",
-                "insight": "Your food spending tends to increase 15% in spring."
-              }
-            ]
-            riskLevel must be: LOW, MEDIUM, or HIGH
-        """.trimIndent()
-
-        val response = service.chatCompletion(
-            OpenRouterRequest(
-                model = getModel(),
-                messages = listOf(
-                    OpenRouterRequest.Message("system", "You are a financial forecasting AI. Respond with valid JSON only."),
-                    OpenRouterRequest.Message("user", prompt)
-                ),
-                maxTokens = 512
+        if (canCallCloud()) {
+            val expenseTotal = recentTransactions
+                .filter { it.type == TransactionType.EXPENSE }
+                .sumOf { it.amount }
+            val byCategory = recentTransactions
+                .filter { it.type == TransactionType.EXPENSE }
+                .groupBy { it.category.displayName }
+                .mapValues { (_, txs) -> txs.sumOf { it.amount } }
+            val compact = contextBuilder.buildCompactSummary(
+                monthlyExpenses = expenseTotal,
+                categoryTotals = byCategory,
+                budgetUsage = currentBudgets.map { (cat, limit) ->
+                    "${cat.displayName} limit ${"%.0f".format(limit)}"
+                },
+                recent = recentTransactions.take(5).map {
+                    "${it.category.displayName} ${"%.0f".format(it.amount)}"
+                },
             )
-        )
-
-        val content = response.getContent() ?: throw Exception("Empty AI response")
-        val jsonArray = gson.fromJson(extractJson(content), com.google.gson.JsonArray::class.java)
-
-        jsonArray.map { element ->
-            val obj = element.asJsonObject
-            FinancialForecast(
-                month = obj.get("month")?.asString ?: "",
-                predictedSpend = obj.get("predictedSpend")?.asDouble ?: 0.0,
-                recommendedBudget = obj.get("recommendedBudget")?.asDouble ?: 0.0,
-                riskLevel = try { RiskLevel.valueOf(obj.get("riskLevel")?.asString ?: "MEDIUM") } catch (e: Exception) { RiskLevel.MEDIUM },
-                insight = obj.get("insight")?.asString ?: ""
-            )
+            val system = """
+                You are LedgerAI. Produce a 3-month spending forecast.
+                Reply with ONLY JSON (no markdown):
+                {"forecasts":[{"month":"Month Year","predicted_spend":number,"recommended_budget":number,"risk_level":"LOW|MEDIUM|HIGH","insight":"short string"}]}
+            """.trimIndent()
+            router.complete(system, compact).getOrNull()?.let { raw ->
+                parseForecastJson(raw)?.let { return Result.success(it) }
+            }
         }
+
+        return Result.success(localForecast(recentTransactions, currentBudgets))
     }
-
-    // ─── Financial Health Score ───────────────────────────────────────────────
 
     suspend fun calculateHealthScore(
         monthlyIncome: Double,
         monthlyExpenses: Double,
         totalDebt: Double,
         budgetAdherence: Double
-    ): Result<FinancialHealthScore> = runCatching {
+    ): Result<FinancialHealthScore> {
         val savingsRate = if (monthlyIncome > 0)
             ((monthlyIncome - monthlyExpenses) / monthlyIncome * 100).toInt().coerceIn(0, 100)
         else 0
-
         val debtRatio = if (monthlyIncome > 0)
             (100 - (totalDebt / monthlyIncome * 100).toInt()).coerceIn(0, 100)
         else 50
-
         val adherence = budgetAdherence.toInt().coerceIn(0, 100)
-
-        val prompt = """
-            Calculate a financial health score (0-100) and provide a brief summary.
-            
-            Metrics:
-            - Monthly income: $${monthlyIncome}
-            - Monthly expenses: $${monthlyExpenses}
-            - Savings rate: ${savingsRate}%
-            - Debt ratio score: ${debtRatio}/100
-            - Budget adherence: ${adherence}%
-            
-            Respond with ONLY JSON:
-            {
-              "score": 72,
-              "summary": "You're making good progress! Focus on reducing entertainment spending."
-            }
-        """.trimIndent()
-
-        val response = service.chatCompletion(
-            OpenRouterRequest(
-                model = getModel(),
-                messages = listOf(
-                    OpenRouterRequest.Message("system", "You are a personal finance advisor. Respond with valid JSON only."),
-                    OpenRouterRequest.Message("user", prompt)
-                ),
-                maxTokens = 256
+        val score = (savingsRate + debtRatio + adherence) / 3
+        return Result.success(
+            FinancialHealthScore(
+                score = score,
+                savingsRate = savingsRate,
+                debtRatio = debtRatio,
+                budgetAdherence = adherence,
+                spendingVolatility = 0,
+                summary = when {
+                    score >= 80 -> "Strong local score — keep tracking."
+                    score >= 50 -> "Decent progress. Watch categories near their limits."
+                    else -> "Focus on cutting top expense categories this month."
+                }
             )
         )
-
-        val content = response.getContent() ?: throw Exception("Empty AI response")
-        val json = gson.fromJson(extractJson(content), JsonObject::class.java)
-        val score = json.get("score")?.asInt ?: ((savingsRate + debtRatio + adherence) / 3)
-
-        FinancialHealthScore(
-            score = score.coerceIn(0, 100),
-            savingsRate = savingsRate,
-            debtRatio = debtRatio,
-            budgetAdherence = adherence,
-            spendingVolatility = 0,
-            summary = json.get("summary")?.asString ?: "Keep tracking your finances!"
-        )
     }
-
-    // ─── AI Chat ──────────────────────────────────────────────────────────────
 
     suspend fun chat(
         userMessage: String,
         conversationHistory: List<Pair<String, String>>,
         financialContext: String = ""
-    ): Result<String> = runCatching {
-        val systemPrompt = """
-            You are BudgetAI, a friendly and knowledgeable personal finance assistant.
-            You help users track spending, save money, and make smart financial decisions.
-            Keep responses concise (2-4 sentences max unless detail is requested).
-            Always be encouraging and practical.
-            ${if (financialContext.isNotEmpty()) "\nUser's financial context:\n$financialContext" else ""}
-        """.trimIndent()
-
-        val messages = mutableListOf(
-            OpenRouterRequest.Message("system", systemPrompt)
-        )
-        conversationHistory.forEach { (role, content) ->
-            messages.add(OpenRouterRequest.Message(role, content))
-        }
-        messages.add(OpenRouterRequest.Message("user", userMessage))
-
-        val response = service.chatCompletion(
-            OpenRouterRequest(
-                model = getModel(),
-                messages = messages,
-                maxTokens = 512,
-                temperature = 0.7
+    ): Result<String> {
+        if (!canCallCloud()) {
+            return Result.failure(
+                IllegalStateException(
+                    "Cloud AI unavailable offline or unconfigured. " +
+                        "Local tips still work via health score and budget advice."
+                )
             )
-        )
+        }
 
-        response.getContent() ?: "Sorry, I couldn't generate a response. Please try again."
+        val contextBlock = contextBuilder.fromFinancialContextString(financialContext)
+        val historyBlock = conversationHistory
+            .takeLast(8)
+            .joinToString("\n") { (role, content) -> "$role: $content" }
+
+        val system = buildString {
+            appendLine("You are LedgerAI, a concise personal finance assistant.")
+            appendLine("Be practical, short, and avoid inventing account balances.")
+            if (contextBlock.isNotBlank()) {
+                appendLine()
+                appendLine(contextBlock)
+            }
+        }.trim()
+
+        val user = buildString {
+            if (historyBlock.isNotBlank()) {
+                appendLine("Recent conversation:")
+                appendLine(historyBlock)
+                appendLine()
+            }
+            append("User: $userMessage")
+        }.trim()
+
+        return router.complete(system, user)
     }
-
-    // ─── Budget Advice ────────────────────────────────────────────────────────
 
     suspend fun getBudgetAdvice(
         category: String,
         spent: Double,
         limit: Double,
         usagePercent: Int
-    ): Result<String> = runCatching {
-        val prompt = "The user has spent \$$spent of their \$$limit ${category} budget (${usagePercent}%). Give one short, actionable tip in 1-2 sentences."
+    ): Result<String> = Result.success(
+        when {
+            usagePercent >= 100 ->
+                "You've hit the $category limit (\$${"%.0f".format(spent)} / \$${"%.0f".format(limit)}). Pause non-essential spend here."
+            usagePercent >= 80 ->
+                "You're at $usagePercent% of the $category budget. Slow down for the rest of the month."
+            else ->
+                "You're at $usagePercent% of $category — still on track."
+        }
+    )
 
-        val response = service.chatCompletion(
-            OpenRouterRequest(
-                model = getModel(),
-                messages = listOf(
-                    OpenRouterRequest.Message("system", "You are a concise financial advisor."),
-                    OpenRouterRequest.Message("user", prompt)
-                ),
-                maxTokens = 128
+    private fun canCallCloud(): Boolean =
+        network.isOnline() && config.hasAnyConfiguredProvider()
+
+    private fun parseTransactionJson(raw: String, fallbackNote: String): ParsedTransaction? {
+        return try {
+            val json = extractJsonObject(raw) ?: return null
+            val dto = gson.fromJson(json, ParsedTransactionDto::class.java) ?: return null
+            val category = TransactionCategory.entries.find {
+                it.name.equals(dto.category, ignoreCase = true) ||
+                    it.displayName.equals(dto.category, ignoreCase = true)
+            } ?: TransactionCategory.OTHER
+            val type = when (dto.type?.uppercase()) {
+                "INCOME" -> TransactionType.INCOME
+                else -> TransactionType.EXPENSE
+            }
+            ParsedTransaction(
+                amount = dto.amount,
+                category = category,
+                merchant = dto.merchant.orEmpty(),
+                date = LocalDate.now(),
+                note = dto.note?.ifBlank { fallbackNote } ?: fallbackNote,
+                type = type,
+                confidence = dto.confidence ?: 0.7f,
             )
-        )
-        response.getContent() ?: "Try to reduce spending in this category for the rest of the month."
-    }
-
-    // ─── Helpers ──────────────────────────────────────────────────────────────
-
-    private fun extractJson(text: String): String {
-        val jsonStart = text.indexOfFirst { it == '{' || it == '[' }
-        val jsonEnd = text.indexOfLast { it == '}' || it == ']' }
-        return if (jsonStart >= 0 && jsonEnd > jsonStart) text.substring(jsonStart, jsonEnd + 1) else text
-    }
-
-    private fun parseDateString(dateStr: String): LocalDate = when (dateStr.lowercase()) {
-        "today" -> LocalDate.now()
-        "yesterday" -> LocalDate.now().minusDays(1)
-        else -> try { LocalDate.parse(dateStr) } catch (e: Exception) { LocalDate.now() }
-    }
-
-    private fun buildTransactionSummary(transactions: List<Transaction>): String {
-        val byCategory = transactions.groupBy { it.category }
-        return byCategory.entries.joinToString("\n") { (cat, txns) ->
-            val total = txns.sumOf { it.amount }
-            "- ${cat.displayName}: \$${"%.2f".format(total)} (${txns.size} transactions)"
+        } catch (_: Exception) {
+            null
         }
     }
+
+    private fun parseForecastJson(raw: String): List<FinancialForecast>? {
+        return try {
+            val json = extractJsonObject(raw) ?: return null
+            val listDto = gson.fromJson(json, ForecastListDto::class.java)
+            val items = listDto?.forecasts
+            if (items.isNullOrEmpty()) {
+                // Allow a bare array
+                val arr = JsonParser.parseString(extractJsonArray(raw) ?: return null).asJsonArray
+                arr.mapNotNull { el ->
+                    gson.fromJson(el, ForecastItemDto::class.java)?.toDomain()
+                }.takeIf { it.isNotEmpty() }
+            } else {
+                items.mapNotNull { it.toDomain() }.takeIf { it.isNotEmpty() }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun ForecastItemDto.toDomain(): FinancialForecast? {
+        val month = month?.takeIf { it.isNotBlank() } ?: return null
+        val predicted = predictedSpend ?: return null
+        val recommended = recommendedBudget ?: predicted
+        val risk = when (riskLevel?.uppercase()) {
+            "HIGH" -> RiskLevel.HIGH
+            "MEDIUM" -> RiskLevel.MEDIUM
+            else -> RiskLevel.LOW
+        }
+        return FinancialForecast(
+            month = month,
+            predictedSpend = predicted,
+            recommendedBudget = recommended,
+            riskLevel = risk,
+            insight = insight ?: "Cloud forecast",
+        )
+    }
+
+    private fun extractJsonObject(raw: String): String? {
+        val trimmed = raw.trim()
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
+            .trim()
+        val start = trimmed.indexOf('{')
+        val end = trimmed.lastIndexOf('}')
+        if (start < 0 || end <= start) return null
+        return trimmed.substring(start, end + 1)
+    }
+
+    private fun extractJsonArray(raw: String): String? {
+        val trimmed = raw.trim()
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
+            .trim()
+        val start = trimmed.indexOf('[')
+        val end = trimmed.lastIndexOf(']')
+        if (start < 0 || end <= start) return null
+        return trimmed.substring(start, end + 1)
+    }
+
+    private fun localForecast(
+        recentTransactions: List<Transaction>,
+        currentBudgets: Map<TransactionCategory, Double>,
+    ): List<FinancialForecast> {
+        val monthlySpend = recentTransactions
+            .filter { it.type == TransactionType.EXPENSE }
+            .sumOf { it.amount }
+            .coerceAtLeast(1.0)
+        val budgetTotal = currentBudgets.values.sum().takeIf { it > 0 } ?: monthlySpend
+        val now = LocalDate.now()
+        return (1..3).map { offset ->
+            val month = now.plusMonths(offset.toLong())
+            val predicted = monthlySpend * (1.0 + offset * 0.02)
+            FinancialForecast(
+                month = "${month.month.getDisplayName(TextStyle.FULL, Locale.US)} ${month.year}",
+                predictedSpend = predicted,
+                recommendedBudget = budgetTotal,
+                riskLevel = when {
+                    predicted > budgetTotal * 1.1 -> RiskLevel.HIGH
+                    predicted > budgetTotal * 0.9 -> RiskLevel.MEDIUM
+                    else -> RiskLevel.LOW
+                },
+                insight = "Local estimate from recent spending."
+            )
+        }
+    }
+
+    private fun quickParse(input: String): ParsedTransaction {
+        val amountRegex = Regex("""[$£€]?\s*(\d+(?:[.,]\d{1,2})?)""")
+        val amount = amountRegex.find(input)?.groupValues?.get(1)
+            ?.replace(",", ".")?.toDoubleOrNull()
+        val lower = input.lowercase()
+        val category = when {
+            lower.containsAny(
+                "food", "lunch", "dinner", "breakfast", "coffee",
+                "restaurant", "grocery", "groceries", "eat", "meal"
+            ) -> TransactionCategory.FOOD
+            lower.containsAny(
+                "uber", "lyft", "gas", "fuel", "taxi", "bus", "train",
+                "transport", "metro", "fare"
+            ) -> TransactionCategory.TRANSPORT
+            lower.containsAny(
+                "netflix", "spotify", "subscription", "hulu",
+                "disney", "apple tv", "prime"
+            ) -> TransactionCategory.SUBSCRIPTIONS
+            lower.containsAny(
+                "movie", "game", "concert", "entertainment",
+                "cinema", "theatre"
+            ) -> TransactionCategory.ENTERTAINMENT
+            lower.containsAny(
+                "amazon", "shopping", "clothes", "shoes",
+                "store", "mall", "buy"
+            ) -> TransactionCategory.SHOPPING
+            lower.containsAny(
+                "doctor", "pharmacy", "gym", "health",
+                "medicine", "hospital"
+            ) -> TransactionCategory.HEALTH
+            lower.containsAny(
+                "electric", "water", "internet", "utility",
+                "bill", "wifi"
+            ) -> TransactionCategory.UTILITIES
+            lower.containsAny("rent", "mortgage", "housing") -> TransactionCategory.RENT
+            lower.containsAny(
+                "salary", "paycheck", "income", "paid me",
+                "received", "earned"
+            ) -> TransactionCategory.SALARY
+            else -> TransactionCategory.OTHER
+        }
+        val type = if (category == TransactionCategory.SALARY ||
+            lower.containsAny("received", "earned", "income", "got paid", "deposit")
+        ) TransactionType.INCOME else TransactionType.EXPENSE
+
+        val merchantCandidates = input.split(" ").filter { w ->
+            w.length > 3 && w[0].isUpperCase() && !w.matches(Regex("\\d.*"))
+        }
+        val merchant = merchantCandidates.lastOrNull() ?: ""
+
+        return ParsedTransaction(
+            amount = amount,
+            category = category,
+            merchant = merchant,
+            date = LocalDate.now(),
+            note = input,
+            type = type
+        )
+    }
 }
+
+private fun String.containsAny(vararg terms: String) = terms.any { this.contains(it) }

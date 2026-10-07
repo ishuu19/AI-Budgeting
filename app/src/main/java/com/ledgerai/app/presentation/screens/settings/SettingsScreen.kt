@@ -13,21 +13,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.preferences.UserPreferences
-import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.presentation.screens.auth.AuthViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// ─── ViewModel ────────────────────────────────────────────────────────────────
-
 data class SettingsUiState(
     val currency: String = "USD",
     val currencySymbol: String = "$",
-    val aiModel: String = BuildConfig.AI_MODEL,
     val notificationsEnabled: Boolean = true,
     val budgetAlertThreshold: Int = 80
 )
@@ -40,20 +35,16 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         prefs.currency,
         prefs.currencySymbol,
-        prefs.aiModel,
         prefs.notificationsEnabled,
         prefs.budgetAlertThreshold
-    ) { currency, symbol, model, notifs, threshold ->
-        SettingsUiState(currency, symbol, model, notifs, threshold)
+    ) { currency, symbol, notifs, threshold ->
+        SettingsUiState(currency, symbol, notifs, threshold)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
-    fun setAiModel(model: String) = viewModelScope.launch { prefs.setAiModel(model) }
     fun setNotifications(enabled: Boolean) = viewModelScope.launch { prefs.setNotificationsEnabled(enabled) }
     fun setAlertThreshold(threshold: Int) = viewModelScope.launch { prefs.setBudgetAlertThreshold(threshold) }
     fun setCurrency(currency: String, symbol: String) = viewModelScope.launch { prefs.setCurrency(currency, symbol) }
 }
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,48 +54,73 @@ fun SettingsScreen(
 ) {
     val userInfo by authViewModel.uiState.collectAsState()
     val state by viewModel.uiState.collectAsState()
-    var showModelDialog by remember { mutableStateOf(false) }
     var showCurrencyDialog by remember { mutableStateOf(false) }
-    var thresholdSlider by remember(state.budgetAlertThreshold) { mutableStateOf(state.budgetAlertThreshold.toFloat()) }
+    var thresholdSlider by remember(state.budgetAlertThreshold) {
+        mutableStateOf(state.budgetAlertThreshold.toFloat())
+    }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp)
         ) {
-            item { SettingsSectionTitle("AI Configuration") }
+            item { SettingsSectionTitle("AI") }
             item {
                 SettingsRow(
                     icon = Icons.Filled.AutoAwesome,
-                    title = "AI Model",
-                    subtitle = state.aiModel,
-                    onClick = { showModelDialog = true }
+                    title = "Cloud AI",
+                    subtitle = "Gemini via Supabase Edge Functions — Phase 7"
                 )
             }
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
 
             item { SettingsSectionTitle("Notifications") }
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Notifications, contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Notifications,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                         Column {
                             Text("Push Notifications", fontWeight = FontWeight.Medium)
-                            Text("Budget alerts, debt reminders", style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                "Budget alerts, debt reminders",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-                    Switch(checked = state.notificationsEnabled, onCheckedChange = { viewModel.setNotifications(it) })
+                    Switch(
+                        checked = state.notificationsEnabled,
+                        onCheckedChange = { viewModel.setNotifications(it) }
+                    )
                 }
             }
 
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("Budget Alert Threshold: ${thresholdSlider.toInt()}%", fontWeight = FontWeight.Medium)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "Budget Alert Threshold: ${thresholdSlider.toInt()}%",
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                     Slider(
                         value = thresholdSlider,
@@ -128,7 +144,7 @@ fun SettingsScreen(
             }
 
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
-            item { SettingsSectionTitle("Google Account") }
+            item { SettingsSectionTitle("Account") }
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -139,13 +155,22 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.AccountCircle, null, tint = MaterialTheme.colorScheme.primary)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Filled.AccountCircle,
+                                null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                             Column {
-                                Text("Signed in", fontWeight = FontWeight.Medium)
                                 Text(
-                                    if (userInfo.isSignedIn) "Google account linked • Calendar enabled"
-                                    else "Not signed in",
+                                    if (userInfo.isSignedIn) "Local session" else "Not signed in",
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    "Supabase Google auth arrives in Phase 2",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -164,32 +189,32 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Filled.Info,
                     title = "LedgerAI",
-                    subtitle = "Version 1.0 • Powered by OpenRouter"
+                    subtitle = "Version 1.0 • Phase 1 foundation"
                 )
             }
         }
     }
 
-    if (showModelDialog) {
-        ModelSelectDialog(
-            currentModel = state.aiModel,
-            onDismiss = { showModelDialog = false },
-            onSelect = { model -> viewModel.setAiModel(model); showModelDialog = false }
-        )
-    }
-
     if (showCurrencyDialog) {
         CurrencyDialog(
             onDismiss = { showCurrencyDialog = false },
-            onSelect = { currency, symbol -> viewModel.setCurrency(currency, symbol); showCurrencyDialog = false }
+            onSelect = { currency, symbol ->
+                viewModel.setCurrency(currency, symbol)
+                showCurrencyDialog = false
+            }
         )
     }
 }
 
 @Composable
 private fun SettingsSectionTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-        fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+    Text(
+        title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
 }
 
 @Composable
@@ -199,8 +224,7 @@ private fun SettingsRow(
     subtitle: String,
     onClick: (() -> Unit)? = null
 ) {
-    val modifier = if (onClick != null) Modifier.fillMaxWidth()
-        .padding(vertical = 6.dp) else Modifier.fillMaxWidth().padding(vertical = 6.dp)
+    val modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
 
     Card(
         modifier = modifier,
@@ -208,48 +232,22 @@ private fun SettingsRow(
         enabled = onClick != null,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Column {
                 Text(title, fontWeight = FontWeight.Medium)
-                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
-}
-
-@Composable
-private fun ModelSelectDialog(currentModel: String, onDismiss: () -> Unit, onSelect: (String) -> Unit) {
-    val models = listOf(
-        "anthropic/claude-3.7-sonnet" to "Claude 3.7 Sonnet (Best)",
-        "anthropic/claude-3.5-sonnet" to "Claude 3.5 Sonnet (Fast)",
-        "google/gemini-2.0-flash" to "Gemini 2.0 Flash (Affordable)",
-        "openai/gpt-4o" to "GPT-4o (General Purpose)",
-        "openai/gpt-4o-mini" to "GPT-4o Mini (Budget)"
-    )
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select AI Model") },
-        text = {
-            Column {
-                models.forEach { (id, label) ->
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = currentModel == id, onClick = { onSelect(id) })
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(label, style = MaterialTheme.typography.bodyMedium)
-                            Text(id, style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
-    )
 }
 
 @Composable

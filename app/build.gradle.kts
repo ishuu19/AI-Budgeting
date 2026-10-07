@@ -12,6 +12,73 @@ val secrets = Properties().apply {
     if (secretsFile.exists()) load(secretsFile.inputStream())
 }
 
+/** Escape a property for use inside a BuildConfig string literal. Never log the value. */
+fun escapeBuildConfig(value: String): String =
+    value.replace("\\", "\\\\").replace("\"", "\\\"")
+
+fun secretOrEmpty(key: String, default: String = ""): String =
+    escapeBuildConfig(secrets.getProperty(key, default).orEmpty())
+
+/** AI BuildConfig keys — populated only for debug; release stays empty. Never SUPABASE_SECRET_KEY. */
+val aiBuildConfigKeys = listOf(
+    "OPENROUTER_FREE_API_KEY",
+    "OPENROUTER_API_KEY",
+    "OPENROUTER_API_KEYS",
+    "OPENROUTER_BASE_URL",
+    "GEMINI_API_KEY",
+    "GEMINI_API_KEYS",
+    "GEMINI_BASE_URL",
+    "DEEPSEEK_API_KEY",
+    "DEEPSEEK_BASE_URL",
+    "AI_MODEL_OPENROUTER_FREE",
+    "AI_MODEL_GEMINI",
+    "AI_MODEL_DEEPSEEK",
+    "AI_MODEL_OPENROUTER",
+)
+
+fun com.android.build.api.dsl.ApplicationBuildType.emptyAiBuildConfigFields() {
+    aiBuildConfigKeys.forEach { key ->
+        buildConfigField("String", key, "\"\"")
+    }
+}
+
+fun com.android.build.api.dsl.ApplicationBuildType.debugAiBuildConfigFields() {
+    buildConfigField("String", "OPENROUTER_FREE_API_KEY", "\"${secretOrEmpty("OPENROUTER_FREE_API_KEY")}\"")
+    buildConfigField("String", "OPENROUTER_API_KEY", "\"${secretOrEmpty("OPENROUTER_API_KEY")}\"")
+    buildConfigField("String", "OPENROUTER_API_KEYS", "\"${secretOrEmpty("OPENROUTER_API_KEYS")}\"")
+    buildConfigField(
+        "String", "OPENROUTER_BASE_URL",
+        "\"${secretOrEmpty("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1/")}\""
+    )
+    buildConfigField("String", "GEMINI_API_KEY", "\"${secretOrEmpty("GEMINI_API_KEY")}\"")
+    buildConfigField("String", "GEMINI_API_KEYS", "\"${secretOrEmpty("GEMINI_API_KEYS")}\"")
+    buildConfigField(
+        "String", "GEMINI_BASE_URL",
+        "\"${secretOrEmpty("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta")}\""
+    )
+    buildConfigField("String", "DEEPSEEK_API_KEY", "\"${secretOrEmpty("DEEPSEEK_API_KEY")}\"")
+    buildConfigField(
+        "String", "DEEPSEEK_BASE_URL",
+        "\"${secretOrEmpty("DEEPSEEK_BASE_URL", "https://api.deepseek.com")}\""
+    )
+    buildConfigField(
+        "String", "AI_MODEL_OPENROUTER_FREE",
+        "\"${secretOrEmpty("AI_MODEL_OPENROUTER_FREE", "deepseek/deepseek-chat-v3-0324:free")}\""
+    )
+    buildConfigField(
+        "String", "AI_MODEL_GEMINI",
+        "\"${secretOrEmpty("AI_MODEL_GEMINI", "gemini-flash-latest")}\""
+    )
+    buildConfigField(
+        "String", "AI_MODEL_DEEPSEEK",
+        "\"${secretOrEmpty("AI_MODEL_DEEPSEEK", "deepseek-chat")}\""
+    )
+    buildConfigField(
+        "String", "AI_MODEL_OPENROUTER",
+        "\"${secretOrEmpty("AI_MODEL_OPENROUTER", "deepseek/deepseek-chat")}\""
+    )
+}
+
 android {
     namespace = "com.ledgerai.app"
     compileSdk = 34
@@ -24,30 +91,44 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "OPENROUTER_API_KEY",
-            "\"${secrets.getProperty("OPENROUTER_API_KEY", "")}\"")
-        buildConfigField("String", "OPENROUTER_BASE_URL",
-            "\"${secrets.getProperty("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1/")}\"")
-        buildConfigField("String", "AI_MODEL",
-            "\"${secrets.getProperty("AI_MODEL", "anthropic/claude-3.7-sonnet")}\"")
-        buildConfigField("String", "APP_NAME",
-            "\"${secrets.getProperty("APP_NAME", "LedgerAI")}\"")
-        buildConfigField("String", "APP_SITE_URL",
-            "\"${secrets.getProperty("APP_SITE_URL", "https://ledgerai.app")}\"")
-        buildConfigField("String", "DEFAULT_CURRENCY",
-            "\"${secrets.getProperty("DEFAULT_CURRENCY", "USD")}\"")
-        buildConfigField("String", "DEFAULT_CURRENCY_SYMBOL",
-            "\"${secrets.getProperty("DEFAULT_CURRENCY_SYMBOL", "$")}\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID",
-            "\"${secrets.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
-        buildConfigField("String", "MONGODB_URI",
-            "\"${secrets.getProperty("MONGODB_URI", "")}\"")
+        // Public client config only. Never put SUPABASE_SECRET_KEY in BuildConfig.
+        val supabaseAnon = secrets.getProperty("SUPABASE_ANON_KEY")
+            ?.takeIf { it.isNotBlank() }
+            ?: secrets.getProperty("SUPABASE_PUBLISHABLE_KEY", "")
+
+        buildConfigField(
+            "String", "SUPABASE_URL",
+            "\"${escapeBuildConfig(secrets.getProperty("SUPABASE_URL", "").orEmpty())}\""
+        )
+        buildConfigField(
+            "String", "SUPABASE_ANON_KEY",
+            "\"${escapeBuildConfig(supabaseAnon.orEmpty())}\""
+        )
+        buildConfigField(
+            "String", "APP_NAME",
+            "\"${escapeBuildConfig(secrets.getProperty("APP_NAME", "LedgerAI").orEmpty())}\""
+        )
+        buildConfigField(
+            "String", "DEFAULT_CURRENCY",
+            "\"${escapeBuildConfig(secrets.getProperty("DEFAULT_CURRENCY", "USD").orEmpty())}\""
+        )
+        buildConfigField(
+            "String", "DEFAULT_CURRENCY_SYMBOL",
+            "\"${escapeBuildConfig(secrets.getProperty("DEFAULT_CURRENCY_SYMBOL", "$").orEmpty())}\""
+        )
     }
 
     buildTypes {
+        debug {
+            // Debug-only: optional AI keys/models from secrets.properties for local cascade testing.
+            // Production path remains a Supabase Edge Function; do not ship keys in release.
+            debugAiBuildConfigFields()
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // AI keys/models must remain empty strings in release APKs.
+            emptyAiBuildConfigFields()
         }
     }
 
@@ -82,44 +163,35 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons)
 
-    // Navigation
     implementation(libs.navigation.compose)
 
-    // Hilt DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
-    // MongoDB Atlas (Kotlin sync driver; we run in withContext(IO))
-    implementation(platform("org.mongodb:mongodb-driver-bom:5.6.4"))
-    implementation("org.mongodb:mongodb-driver-kotlin-sync")
-
-    // Retrofit + OkHttp (OpenRouter AI)
+    // Kept for future Supabase Edge Function clients (Phase 2+)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
 
-    // Google Sign-In (Credential Manager)
-    implementation(libs.google.signin)
+    // Credential Manager stubs ready for Phase 2 Supabase Google auth
     implementation(libs.credentials)
     implementation(libs.credentials.play)
 
-    // Glance Widget
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 
-    // WorkManager
     implementation(libs.work.runtime)
-
-    // DataStore (preferences)
     implementation(libs.datastore)
-
-    // Coroutines
     implementation(libs.kotlinx.coroutines)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     debugImplementation(libs.androidx.ui.tooling)
 }

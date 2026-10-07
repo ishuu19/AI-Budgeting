@@ -1,16 +1,12 @@
 package com.ledgerai.app.presentation.screens.dashboard
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assistant
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +26,7 @@ import com.ledgerai.app.presentation.theme.IncomeGreen
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
-    onNavigateToAi: () -> Unit = {},
+    onNavigateToVoice: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -41,24 +37,42 @@ fun DashboardScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("BudgetAI", style = MaterialTheme.typography.titleLarge)
-                        Text(state.currentMonth, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            "LedgerAI",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            state.currentMonth,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToAi) {
-                        Icon(Icons.Filled.Assistant, contentDescription = "AI Assistant")
-                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToVoice,
+                icon = { Icon(Icons.Filled.Mic, contentDescription = null) },
+                text = { Text("Add by voice") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         }
     ) { padding ->
         if (state.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
             return@Scaffold
@@ -68,83 +82,62 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // ── Greeting ──────────────────────────────────────────────────────
+            // Title → subtitle takeaway → primary KPI (F-pattern)
             item {
                 Text(
                     state.greeting,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                PrimaryKpi(
+                    label = "Net this month",
+                    formattedValue = formatSignedCurrency(state.netBalance),
+                    takeaway = state.takeaway,
+                    valueColor = if (state.netBalance >= 0) IncomeGreen else ExpenseRed
                 )
             }
 
-            // ── Income / Expense Summary ───────────────────────────────────────
+            // Supporting metrics — muted, not competing with primary KPI
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    SummaryCard(
+                    SupportingMetric(
                         label = "Income",
                         amount = state.monthlyIncome,
-                        isExpense = false,
+                        accent = IncomeGreen,
                         modifier = Modifier.weight(1f)
                     )
-                    SummaryCard(
+                    SupportingMetric(
                         label = "Expenses",
                         amount = state.monthlyExpenses,
-                        isExpense = true,
+                        accent = ExpenseRed,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // ── Net Balance ────────────────────────────────────────────────────
-            item {
-                val net = state.monthlyIncome - state.monthlyExpenses
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (net >= 0) IncomeGreen.copy(alpha = 0.1f)
-                                         else ExpenseRed.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Net Balance", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = "${if (net >= 0) "+" else ""}\$${"%.2f".format(net)}",
-                            color = if (net >= 0) IncomeGreen else ExpenseRed,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            // ── Health Score ───────────────────────────────────────────────────
             state.healthScore?.let { score ->
                 item {
-                    SectionTitle("Financial Health")
+                    SectionTitle("Health")
                     Spacer(Modifier.height(8.dp))
                     HealthScoreCard(score = score)
                 }
             }
 
-            // ── Budget Overview ────────────────────────────────────────────────
             if (state.budgets.isNotEmpty()) {
                 item {
                     SectionTitle(
-                        "Budget Overview",
+                        "Budgets",
                         action = {
-                            TextButton(onClick = onNavigateToAnalytics) { Text("See all") }
+                            TextButton(onClick = onNavigateToAnalytics) {
+                                Text("Details")
+                            }
                         }
                     )
                 }
@@ -157,13 +150,14 @@ fun DashboardScreen(
                 }
             }
 
-            // ── Recent Transactions ────────────────────────────────────────────
             if (state.recentTransactions.isNotEmpty()) {
                 item {
                     SectionTitle(
-                        "Recent Transactions",
+                        "Recent activity",
                         action = {
-                            TextButton(onClick = onNavigateToTransactions) { Text("See all") }
+                            TextButton(onClick = onNavigateToTransactions) {
+                                Text("See all")
+                            }
                         }
                     )
                 }
@@ -172,42 +166,66 @@ fun DashboardScreen(
                 }
             } else {
                 item {
-                    EmptyStateCard(
-                        emoji = "💸",
-                        title = "No transactions yet",
-                        subtitle = "Add your first transaction or use the voice widget!"
-                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                "No transactions yet",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                "Use Add by voice to log your first entry.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+private fun formatSignedCurrency(amount: Double): String {
+    val sign = when {
+        amount > 0 -> "+"
+        amount < 0 -> "-"
+        else -> ""
+    }
+    return "$sign\$${"%.2f".format(kotlin.math.abs(amount))}"
+}
+
 @Composable
-private fun SummaryCard(
+private fun SupportingMetric(
     label: String,
     amount: Double,
-    isExpense: Boolean,
+    accent: Color,
     modifier: Modifier = Modifier
 ) {
-    val color = if (isExpense) ExpenseRed else IncomeGreen
-    val icon = if (isExpense) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp
-
-    Card(
+    Surface(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.08f))
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        shape = MaterialTheme.shapes.medium
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
-                Text(label, style = MaterialTheme.typography.labelSmall, color = color)
-            }
-            Spacer(Modifier.height(4.dp))
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(2.dp))
             Text(
                 text = "\$${"%.2f".format(amount)}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = color
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = accent
             )
         }
     }
@@ -216,49 +234,74 @@ private fun SummaryCard(
 @Composable
 private fun HealthScoreCard(score: com.ledgerai.app.domain.model.FinancialHealthScore) {
     val scoreColor = when {
-        score.score >= 80 -> Color(0xFF22C55E)
+        score.score >= 80 -> IncomeGreen
         score.score >= 65 -> Color(0xFF84CC16)
         score.score >= 50 -> Color(0xFFF59E0B)
-        else -> Color(0xFFEF4444)
+        else -> ExpenseRed
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("Financial Health Score", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(score.grade, color = scoreColor, fontWeight = FontWeight.SemiBold)
-                }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${score.score}",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    score.grade,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
                     color = scoreColor
                 )
+                Text(
+                    score.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
+                )
             }
-            Spacer(Modifier.height(12.dp))
-            BudgetProgressBar(usagePercent = score.score)
-            Spacer(Modifier.height(8.dp))
-            Text(score.summary, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "${score.score}",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = scoreColor
+            )
         }
     }
 }
 
 @Composable
 private fun BudgetMiniCard(budget: com.ledgerai.app.domain.model.Budget) {
-    Card(modifier = Modifier.width(140.dp)) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Surface(
+        modifier = Modifier.width(140.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             CategoryDot(category = budget.category)
-            Text(budget.category.displayName, style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(
+                budget.category.displayName,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
             BudgetProgressBar(usagePercent = budget.usagePercent)
-            Text("${budget.usagePercent}% used", style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "${budget.usagePercent}% used",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -266,29 +309,31 @@ private fun BudgetMiniCard(budget: com.ledgerai.app.domain.model.Budget) {
 @Composable
 private fun TransactionRow(transaction: com.ledgerai.app.domain.model.Transaction) {
     val isExpense = transaction.type == TransactionType.EXPENSE
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surface
-    )) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                CategoryDot(transaction.category, size = 12.dp)
-                Column {
-                    Text(
-                        transaction.merchant.ifEmpty { transaction.category.displayName },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(transaction.date.toString(), style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            CategoryDot(transaction.category, size = 10.dp)
+            Column {
+                Text(
+                    transaction.merchant.ifEmpty { transaction.category.displayName },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    transaction.date.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            AmountText(amount = transaction.amount, isExpense = isExpense, prefix = "$")
         }
+        AmountText(amount = transaction.amount, isExpense = isExpense, prefix = "$")
     }
 }

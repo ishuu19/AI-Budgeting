@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.DebtRepository
 import com.ledgerai.app.domain.model.Debt
 import com.ledgerai.app.domain.model.DebtDirection
-import com.ledgerai.app.service.CalendarService
 import com.ledgerai.app.worker.DebtReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -24,7 +23,6 @@ data class DebtsUiState(
 @HiltViewModel
 class DebtsViewModel @Inject constructor(
     private val debtRepo: DebtRepository,
-    private val calendarService: CalendarService,
     private val reminderScheduler: DebtReminderScheduler
 ) : ViewModel() {
 
@@ -62,15 +60,10 @@ class DebtsViewModel @Inject constructor(
                 email = email,
                 note = note
             )
-            val mongoId = debtRepo.insert(debt)
-            val savedDebt = debt.copy(mongoId = mongoId)
+            val id = debtRepo.insert(debt)
 
             if (dueDate != null) {
-                val calendarEventId = calendarService.createDebtReminderEvent(savedDebt)
-                if (calendarEventId != null) {
-                    debtRepo.update(savedDebt.copy(calendarEventId = calendarEventId))
-                }
-                reminderScheduler.scheduleReminders(mongoId.hashCode().toLong(), friendName, amount, dueDate)
+                reminderScheduler.scheduleReminders(id, friendName, amount, dueDate)
             }
 
             _uiState.update { it.copy(snackbarMessage = "Debt added for $friendName") }
@@ -79,7 +72,7 @@ class DebtsViewModel @Inject constructor(
 
     fun markAsPaid(debt: Debt) {
         viewModelScope.launch {
-            debt.mongoId?.let { debtRepo.markAsPaid(it) }
+            debtRepo.markAsPaid(debt.id)
             reminderScheduler.cancelReminders(debt.id)
             _uiState.update { it.copy(snackbarMessage = "Marked as paid!") }
         }
