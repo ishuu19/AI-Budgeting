@@ -29,7 +29,8 @@ enum class TransactionCategory(val displayName: String, val colorHex: String) {
 
 data class Transaction(
     val id: Long = 0,
-    val mongoId: String? = null,
+    /** Server id after Supabase sync (Phase 2); null while local-only. */
+    val remoteId: String? = null,
     val amount: Double,
     val type: TransactionType,
     val category: TransactionCategory,
@@ -45,7 +46,7 @@ data class Transaction(
 
 data class Budget(
     val id: Long = 0,
-    val mongoId: String? = null,
+    val remoteId: String? = null,
     val category: TransactionCategory,
     val monthlyLimit: Double,
     val spent: Double = 0.0,
@@ -65,7 +66,7 @@ enum class DebtDirection { I_OWE, THEY_OWE }
 
 data class Debt(
     val id: Long = 0,
-    val mongoId: String? = null,
+    val remoteId: String? = null,
     val friendName: String,
     val amount: Double,
     val direction: DebtDirection,
@@ -75,7 +76,6 @@ data class Debt(
     val email: String = "",
     val note: String = "",
     val isPaid: Boolean = false,
-    val calendarEventId: Long? = null,
     val currency: String = "USD"
 )
 
@@ -83,7 +83,7 @@ data class Debt(
 
 data class Goal(
     val id: Long = 0,
-    val mongoId: String? = null,
+    val remoteId: String? = null,
     val name: String,
     val targetAmount: Double,
     val savedAmount: Double = 0.0,
@@ -109,7 +109,7 @@ enum class BillFrequency(val displayName: String) {
 
 data class Bill(
     val id: Long = 0,
-    val mongoId: String? = null,
+    val remoteId: String? = null,
     val name: String,
     val amount: Double,
     val frequency: BillFrequency = BillFrequency.MONTHLY,
