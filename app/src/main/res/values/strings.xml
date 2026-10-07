@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LedgerAI</string>
+    <string name="widget_label">Voice Transaction</string>
+    <string name="widget_tap_to_record">Tap to record transaction</string>
+    <string name="recording_in_progress">Recording… speak your transaction</string>
+    <string name="processing_voice">Processing your transaction…</string>
+
+    <!-- Nav labels -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_budget">Budget</string>
+    <string name="nav_forecast">Forecast</string>
+    <string name="nav_debts">Debts</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_goals">Goals</string>
+    <string name="nav_bills">Bills</string>
+    <string name="nav_ai">AI Assistant</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Notification channels -->
+    <string name="channel_budget_alerts">Budget Alerts</string>
+    <string name="channel_debt_reminders">Debt Reminders</string>
+    <string name="channel_bill_reminders">Bill Reminders</string>
+    <string name="channel_ai_insights">AI Insights</string>
+
+    <!-- Permissions rationale -->
+    <string name="permission_microphone_rationale">Microphone access is needed to record voice transactions via the widget.</string>
+    <string name="permission_calendar_rationale">Calendar access is needed to create debt reminder events.</string>
+    <string name="permission_contacts_rationale">Contacts access is optional — used to auto-fill friend names in the debt tracker.</string>
+    <string name="permission_notification_rationale">Notification access is needed for budget alerts and debt reminders.</string>
+</resources>
