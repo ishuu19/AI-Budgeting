@@ -1,6 +1,9 @@
 package com.ledgerai.app.presentation.screens.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -16,9 +19,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ledgerai.app.domain.model.FinancialHealthScore
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
@@ -81,35 +84,38 @@ fun DashboardScreen(
                     cash != null -> cash + state.monthlyIncome - state.monthlyExpenses
                     else -> state.netBalance
                 }
-                LHero(
-                    label = when {
-                        state.trackExpensesOnly -> "Spent"
-                        cash != null -> "On hand"
-                        else -> "Balance"
-                    },
-                    value = money(heroValue),
-                    sub = if (state.trackExpensesOnly) state.currentMonth
-                    else if (remaining != null) "${money(remaining)} left" else state.currentMonth,
-                    valueColor = if (!state.trackExpensesOnly && heroValue < 0) L.Danger else L.OnBox
-                )
+                if (state.trackExpensesOnly) {
+                    SpentWithHealthCard(
+                        spentLabel = "Spent",
+                        spentValue = money(heroValue),
+                        sub = state.currentMonth,
+                        health = state.healthScore,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    LHero(
+                        label = when {
+                            cash != null -> "On hand"
+                            else -> "Balance"
+                        },
+                        value = money(heroValue),
+                        sub = if (remaining != null) "${money(remaining)} left" else state.currentMonth,
+                        valueColor = if (heroValue < 0) L.Danger else L.OnBox
+                    )
+                }
             }
 
             if (!state.trackExpensesOnly) {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         LStat("Income", money(state.monthlyIncome), Modifier.weight(1f))
-                        LStat("Spent", money(state.monthlyExpenses), Modifier.weight(1f))
+                        SpentWithHealthCard(
+                            spentLabel = "Spent",
+                            spentValue = money(state.monthlyExpenses),
+                            health = state.healthScore,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
-                }
-            }
-
-            state.healthScore?.let { health ->
-                item {
-                    LRow(
-                        title = "Health",
-                        sub = health.grade,
-                        trailing = health.score.toString()
-                    )
                 }
             }
 
@@ -123,30 +129,24 @@ fun DashboardScreen(
 
             state.aiInsightCard?.let { card ->
                 item {
-                    LCard(onClick = { onNavigateToChat(card.chatContext) }) {
-                        Text("Insight", style = MaterialTheme.typography.labelMedium, color = L.Gold)
+                    LCard(
+                        onClick = { onNavigateToChat(card.chatContext) },
+                        padding = 20.dp
+                    ) {
+                        Text(
+                            "Insight",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = L.Gold
+                        )
                         Text(
                             card.body.ifBlank { card.title },
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = L.OnBox,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
-                }
-            }
-
-            if (state.quote.isNotBlank()) {
-                item {
-                    Text(
-                        state.quote,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontStyle = FontStyle.Italic,
-                        color = L.InkMuted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
-                    )
                 }
             }
 
@@ -158,6 +158,78 @@ fun DashboardScreen(
                 items(state.recentTransactions.take(5), key = { it.id }) { tx ->
                     TransactionRow(tx, onClick = onNavigateToTransactions)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpentWithHealthCard(
+    spentLabel: String,
+    spentValue: String,
+    health: FinancialHealthScore?,
+    modifier: Modifier = Modifier,
+    sub: String? = null
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(L.RadiusSm))
+            .background(L.Box)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                spentLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = L.Gold,
+                maxLines = 1
+            )
+            Text(
+                spentValue,
+                style = MaterialTheme.typography.titleMedium,
+                color = L.OnBox,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (!sub.isNullOrBlank()) {
+                Text(
+                    sub,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = L.OnBoxMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        health?.let { h ->
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.padding(start = 12.dp)
+            ) {
+                Text(
+                    "Health",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = L.Gold,
+                    maxLines = 1
+                )
+                Text(
+                    h.grade,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = L.OnBoxMuted,
+                    maxLines = 1
+                )
+                Text(
+                    h.score.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = L.Gold,
+                    maxLines = 1
+                )
             }
         }
     }

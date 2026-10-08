@@ -1,6 +1,6 @@
 # LedgerAI — Widget Plan
 
-Status: Planning. No code yet.
+Status: Implemented (W1–W6, W8). Glance 1.1; old three widgets removed.
 Replaces the three current widgets (Quote/Voice, Day Schedule, Calendar Events) with one widget family. Uses Glance, the existing repositories and the features in [plan-new-features.md](plan-new-features.md).
 
 ---

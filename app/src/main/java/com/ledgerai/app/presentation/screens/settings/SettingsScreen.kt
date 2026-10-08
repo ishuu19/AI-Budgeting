@@ -18,19 +18,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.preferences.UserPreferences
+import com.ledgerai.app.data.repository.QuoteRepository
+import com.ledgerai.app.domain.model.Quote
 import com.ledgerai.app.data.voice.OfflineSttEngine
 import com.ledgerai.app.data.voice.OfflineVoiceEngine
 import com.ledgerai.app.presentation.components.*
 import com.ledgerai.app.presentation.screens.auth.AuthViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.util.Currency
 import java.util.Locale
 import javax.inject.Inject
@@ -47,8 +53,21 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferences,
-    private val offline: OfflineSttEngine
+    private val offline: OfflineSttEngine,
+    private val quoteRepository: QuoteRepository
 ) : ViewModel() {
+
+    private val _dailyQuote = MutableStateFlow(Quote(text = ""))
+    val dailyQuote: StateFlow<Quote> = _dailyQuote.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val quote = runCatching {
+                withContext(Dispatchers.IO) { quoteRepository.todaysQuote(LocalDate.now()) }
+            }.getOrDefault(Quote(text = ""))
+            _dailyQuote.value = quote
+        }
+    }
 
     val uiState: StateFlow<SettingsUiState> = combine(
         combine(
@@ -109,6 +128,7 @@ fun SettingsScreen(
 ) {
     val user by authViewModel.uiState.collectAsState()
     val state by viewModel.uiState.collectAsState()
+    val dailyQuote by viewModel.dailyQuote.collectAsState()
     val downloads by viewModel.downloads.collectAsState()
     val failed by viewModel.failed.collectAsState()
     val statusTick by viewModel.statusTick.collectAsState()
@@ -125,6 +145,31 @@ fun SettingsScreen(
 
     LScreen(title = "You") {
         item { ProfileCard(name = user.displayName, email = user.email, isLocal = isLocal) }
+
+        if (dailyQuote.text.isNotBlank()) {
+            item {
+                LCard(modifier = Modifier.padding(top = 4.dp)) {
+                    Text(
+                        "Today's quote",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = L.Gold
+                    )
+                    Text(
+                        dailyQuote.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontStyle = FontStyle.Italic,
+                        color = L.OnBox
+                    )
+                    if (dailyQuote.author.isNotBlank()) {
+                        Text(
+                            "— ${dailyQuote.author}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = L.OnBoxMuted
+                        )
+                    }
+                }
+            }
+        }
 
         item { LSection("Voice") }
         OfflineVoiceEngine.entries.forEach { engine ->

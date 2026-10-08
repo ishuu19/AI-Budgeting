@@ -14,6 +14,7 @@ import com.ledgerai.app.worker.NoteScanWorker
 import com.ledgerai.app.worker.QuoteDailyWorker
 import com.ledgerai.app.worker.SpendGuideMorningWorker
 import com.ledgerai.app.worker.SyncWorker
+import com.ledgerai.app.worker.WidgetRefreshWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,7 @@ class LedgerApp : Application(), Configuration.Provider {
         CheckinWorker.schedule(this)
         SpendGuideMorningWorker.schedule(this)
         NoteScanWorker.schedule(this)
+        WidgetRefreshWorker.schedule(this)
         appScope.launch {
             runCatching { quoteRepository.persistForWidgetRemote() }
             userSession.userInfo

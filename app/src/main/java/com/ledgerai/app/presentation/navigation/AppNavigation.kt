@@ -45,6 +45,7 @@ import com.ledgerai.app.presentation.screens.notes.NotesScreen
 import com.ledgerai.app.presentation.screens.calendar.CalendarScreen
 import com.ledgerai.app.presentation.screens.focus.FocusScreen
 import com.ledgerai.app.presentation.screens.life.LifeContainerScreen
+import com.ledgerai.app.presentation.screens.life.LifeTab
 import com.ledgerai.app.presentation.screens.money.SpendTodayScreen
 import com.ledgerai.app.presentation.screens.search.SearchScreen
 import com.ledgerai.app.presentation.screens.settings.SettingsScreen
@@ -91,6 +92,10 @@ private fun NavHostController.tab(route: String) = navigate(route) {
 fun AppNavigation(
     openVoice: Boolean = false,
     openCalendar: Boolean = false,
+    openSpendToday: Boolean = false,
+    openTasks: Boolean = false,
+    openBills: Boolean = false,
+    lifeInitialTab: LifeTab? = null,
     openFocusBlockId: Long = 0L,
     focusTopic: String? = null
 ) {
@@ -99,11 +104,25 @@ fun AppNavigation(
     val destination = entry?.destination
 
     LaunchedEffect(openVoice) { if (openVoice) nav.tab(Screen.VoiceRecord.route) }
-    LaunchedEffect(openCalendar) {
+    LaunchedEffect(openCalendar, lifeInitialTab) {
         if (openCalendar) {
             nav.tab(Screen.Life.route)
-            nav.go(Screen.Calendar.route)
+            if (lifeInitialTab == null) {
+                nav.go(Screen.Calendar.route)
+            }
         }
+    }
+    LaunchedEffect(openSpendToday) {
+        if (openSpendToday) {
+            nav.tab(Screen.Money.route)
+            nav.go(Screen.Today.route)
+        }
+    }
+    LaunchedEffect(openTasks) {
+        if (openTasks) nav.go(Screen.Tasks.route)
+    }
+    LaunchedEffect(openBills) {
+        if (openBills) nav.go(Screen.Bills.route)
     }
     LaunchedEffect(openFocusBlockId) {
         if (openFocusBlockId != 0L) {
@@ -152,7 +171,8 @@ fun AppNavigation(
                     onBack = { nav.popBackStack() },
                     onOpenTasks = { nav.go(Screen.Tasks.route) },
                     onOpenNotes = { nav.go(Screen.Notes.route) },
-                    onOpenFocus = { id -> nav.go("${Screen.Focus.route}/$id") }
+                    onOpenFocus = { id -> nav.go("${Screen.Focus.route}/$id") },
+                    initialTab = lifeInitialTab ?: LifeTab.Calendar
                 )
             }
             composable(Screen.You.route) {

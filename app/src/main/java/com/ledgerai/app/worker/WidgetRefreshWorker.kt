@@ -7,26 +7,19 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.ledgerai.app.data.repository.QuoteRepository
 import com.ledgerai.app.widget.WidgetRefresh
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import androidx.glance.appwidget.updateAll
 import java.util.concurrent.TimeUnit
 
-/**
- * Picks today's quote, persists it for the widget, and requests a Glance refresh.
- */
 @HiltWorker
-class QuoteDailyWorker @AssistedInject constructor(
+class WidgetRefreshWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted workerParams: WorkerParameters,
-    private val quoteRepository: QuoteRepository
-) : CoroutineWorker(context, workerParams) {
+    @Assisted params: WorkerParameters
+) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            quoteRepository.persistForWidgetRemote()
             WidgetRefresh.refreshAll(applicationContext)
             Result.success()
         } catch (_: Exception) {
@@ -35,11 +28,10 @@ class QuoteDailyWorker @AssistedInject constructor(
     }
 
     companion object {
-        private const val WORK_NAME = "daily_quote_refresh"
+        private const val WORK_NAME = "widget_refresh_periodic"
 
         fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<QuoteDailyWorker>(24, TimeUnit.HOURS)
-                .build()
+            val request = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(15, TimeUnit.MINUTES).build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,

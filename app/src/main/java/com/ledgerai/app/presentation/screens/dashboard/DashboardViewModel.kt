@@ -7,7 +7,6 @@ import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.AlarmRepository
 import com.ledgerai.app.data.repository.BillRepository
 import com.ledgerai.app.data.repository.BudgetRepository
-import com.ledgerai.app.data.repository.QuoteRepository
 import com.ledgerai.app.data.preferences.UserPreferences
 import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.data.repository.TaskRepository
@@ -21,8 +20,6 @@ import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -88,7 +85,6 @@ data class DashboardUiState(
     val greeting: String = "Hello!",
     val currentMonth: String = "",
     val userName: String = "",
-    val quote: String = "",
     val trackExpensesOnly: Boolean = false,
     val cashOnHand: Double? = null
 )
@@ -101,7 +97,6 @@ class DashboardViewModel @Inject constructor(
     private val taskRepo: TaskRepository,
     private val billRepo: BillRepository,
     private val alarmRepo: AlarmRepository,
-    private val quoteRepo: QuoteRepository,
     private val userSession: UserSession,
     private val prefs: UserPreferences
 ) : ViewModel() {
@@ -117,12 +112,6 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadProfileAndQuote() {
-        viewModelScope.launch {
-            val quote = runCatching {
-                withContext(Dispatchers.IO) { quoteRepo.todaysQuote(now).text }
-            }.getOrDefault("")
-            _uiState.update { it.copy(quote = quote) }
-        }
         viewModelScope.launch {
             combine(prefs.trackMode, prefs.cashOnHand) { mode, cash ->
                 mode to cash.toDoubleOrNull()

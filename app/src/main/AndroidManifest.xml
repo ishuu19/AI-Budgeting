@@ -61,6 +61,15 @@
             android:taskAffinity="" />
 
         <activity
+            android:name=".widget.WidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LedgerAI">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".service.SpeakQuoteActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
@@ -159,40 +168,44 @@
         </receiver>
 
         <receiver
-            android:name=".widget.VoiceTransactionWidgetReceiver"
+            android:name=".widget.HomeWidgetReceiver"
             android:exported="true"
-            android:label="@string/widget_label">
+            android:label="@string/widget_home_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/voice_transaction_widget_info" />
+                android:resource="@xml/home_widget_info" />
         </receiver>
 
         <receiver
-            android:name=".widget.DayScheduleWidgetReceiver"
+            android:name=".widget.QuickActionsWidgetReceiver"
             android:exported="true"
-            android:label="@string/widget_day_schedule_label">
+            android:label="@string/widget_quick_actions_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/day_schedule_widget_info" />
+                android:resource="@xml/quick_actions_widget_info" />
         </receiver>
 
         <receiver
-            android:name=".widget.CalendarEventsWidgetReceiver"
+            android:name=".widget.FocusWidgetReceiver"
             android:exported="true"
-            android:label="@string/widget_calendar_label">
+            android:label="@string/widget_focus_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/calendar_events_widget_info" />
+                android:resource="@xml/focus_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".widget.WidgetTaskToggleCallback"
+            android:exported="false" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

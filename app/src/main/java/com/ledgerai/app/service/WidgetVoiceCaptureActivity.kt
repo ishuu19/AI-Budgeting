@@ -12,14 +12,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.lifecycleScope
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.TaskRepository
 import com.ledgerai.app.domain.model.TaskItem
 import com.ledgerai.app.domain.schedule.resolveEventDateTime
-import com.ledgerai.app.widget.DayScheduleWidget
+import com.ledgerai.app.widget.WidgetRefresh
 import dagger.hilt.android.AndroidEntryPoint
 import java.time.LocalDate
 import java.time.LocalTime
@@ -99,7 +98,7 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
         ) ?: java.time.LocalDateTime.now()
         val id = taskRepository.insert(TaskItem(title = title, notes = notes, dueAt = due))
         taskRepository.seedBeforeEventReminders(id, due)
-        DayScheduleWidget().updateAll(applicationContext)
+        WidgetRefresh.refreshAll(applicationContext)
         finishWithToast("Task added")
     }
 
