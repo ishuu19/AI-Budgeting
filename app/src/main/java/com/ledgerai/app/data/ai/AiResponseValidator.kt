@@ -210,7 +210,7 @@ class AiResponseValidator @Inject constructor(
         private const val MAX_VOICE_AMOUNT = 1_000_000_000.0
         private val VOICE_INTENTS = setOf(
             "TRANSACTION", "EXPENSE", "INCOME", "EVENT", "TASK", "EXAM", "REMINDER", "ALARM", "ROUTINE",
-            "NOTE", "BILL", "DEBT", "GOAL", "BUDGET"
+            "NOTE", "BILL", "DEBT", "GOAL", "BUDGET", "JOB"
         )
     }
 }

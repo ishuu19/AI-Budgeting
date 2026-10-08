@@ -140,7 +140,7 @@ const SCHEMAS: Record<AiType, Record<string, unknown>> = {
       transcript: { type: "string" },
       intent: {
         type: "string",
-        enum: ["TRANSACTION", "TASK", "REMINDER", "ALARM", "NOTE", "ROUTINE"],
+        enum: ["TRANSACTION", "TASK", "REMINDER", "ALARM", "NOTE", "ROUTINE", "JOB"],
       },
       amount: { type: "number", nullable: true },
       category: {
@@ -192,8 +192,9 @@ function allowRate(userId: string): boolean {
 }
 
 const VOICE_SYSTEM = `You turn a spoken request into ONE structured action for a personal finance + planner app.
+The user may speak English or Bangla, or mix the two. Understand both.
 If audio is attached: first transcribe it faithfully into "transcript" (spoken numbers as digits, e.g. "fifty two dollars" -> 52), then interpret it. If only text is given, copy it into "transcript".
-"intent": TRANSACTION (spent/paid/bought/earned/received money), TASK (to-do), REMINDER (remind me at a time), ALARM (wake/alarm at a clock time), NOTE (remember/write down), ROUTINE (repeating habit).
+"intent": TRANSACTION (spent/paid/bought/earned/received money), TASK (to-do), REMINDER (remind me at a time), ALARM (wake/alarm at a clock time), NOTE (remember/write down), ROUTINE (repeating habit), JOB (a job application or interview; never a calendar event).
 Rules:
 - If the user spent, paid, bought, or received money, intent is TRANSACTION, never NOTE.
 - TRANSACTION: amount is a positive number without currency symbols; type EXPENSE unless money was received/earned (INCOME); category from the enum; merchant is the specific shop or person name if one was said (Starbucks, Sarah, John). note is a short extra detail or empty. Never copy the full sentence into note, title, or body.
@@ -203,6 +204,7 @@ Rules:
 - ALARM: time as 24h "HH:mm"; label; repeat_days weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0 = one time, weekdays = 62, every day = 127).
 - NOTE: title, body, up to 5 short tags.
 - ROUTINE: title and repeat_rule DAILY|WEEKLY|WEEKDAYS|CUSTOM.
+- JOB: name is the company, title is the role, label is APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN, start_at is the interview or follow-up. Do not use TASK, REMINDER, or EVENT for a job or interview.
 confidence is 0..1. Never invent amounts or times that were not said; leave them null instead.`;
 
 function defaultSystem(type: AiType): string {

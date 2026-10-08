@@ -9,6 +9,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.JobApplicationStatus
 import com.ledgerai.app.domain.model.RecurrenceFrequency
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -326,6 +327,133 @@ class QuickParseIntentTest {
         val task = QuickParse.asKind(VoiceResultKind.Task, "call dentist tomorrow at 9 am", today = today) as ParsedIntent.Event
         assertEquals(CalendarEventKind.TASK, task.kind)
         assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0)), task.startAt)
+    }
+
+    @Test
+    fun alarmAt332_usesTheNextTwelveHourSlot() {
+        val morning = LocalDateTime.of(today, LocalTime.of(2, 0))
+        val mid = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val evening = LocalDateTime.of(today, LocalTime.of(16, 0))
+        val atMorning = QuickParse.parseVoiceIntent("put an alarm at 3:32", today = today, now = morning) as ParsedIntent.Event
+        val atMidday = QuickParse.parseVoiceIntent("put an alarm at 3:32", today = today, now = mid) as ParsedIntent.Event
+        val atEvening = QuickParse.parseVoiceIntent("put an alarm at 3:32", today = today, now = evening) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(today, LocalTime.of(3, 32)), atMorning.startAt)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(15, 32)), atMidday.startAt)
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(3, 32)), atEvening.startAt)
+        assertTrue(atMorning.startAt >= morning && atMidday.startAt >= mid && atEvening.startAt >= evening)
+    }
+
+    @Test
+    fun alarmAfterOneMinute_isOneMinuteFromNow() {
+        val now = LocalDateTime.of(today, LocalTime.of(4, 35))
+        val event = QuickParse.parseVoiceIntent("add an alarm after 1 min", today = today, now = now) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ALARM, event.kind)
+        assertEquals(now.plusMinutes(1), event.startAt)
+    }
+
+    @Test
+    fun statedPmThatHasPassed_movesToTheNextDay() {
+        val now = LocalDateTime.of(today, LocalTime.of(16, 0))
+        val event = QuickParse.parseVoiceIntent("alarm at 3:32 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(15, 32)), event.startAt)
+        assertTrue(!event.startAt.isBefore(now))
+    }
+
+    @Test
+    fun banglaAlarm_usesTheNextClockTime() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val event = QuickParse.parseVoiceIntent("অ্যালার্ম ৩:৩২", today = today, now = now) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ALARM, event.kind)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(15, 32)), event.startAt)
+    }
+
+    @Test
+    fun banglaReminder_keepsTomorrowMorning() {
+        val event = QuickParse.parseVoiceIntent("মনে করিয়ে দিও আগামীকাল সকাল ৯টা", today = today) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0)), event.startAt)
+    }
+
+    @Test
+    fun appliedToCompany_isAJobNotACalendarEvent() {
+        val intent = QuickParse.parseVoiceIntent("Applied to Stripe for Android engineer", today = today)
+        assertTrue(intent is ParsedIntent.Job)
+        val job = intent as ParsedIntent.Job
+        assertEquals("Stripe", job.company)
+        assertEquals("Android engineer", job.title)
+        assertEquals(JobApplicationStatus.APPLIED, job.status)
+        assertEquals(today, job.appliedOn)
+    }
+
+    @Test
+    fun interview_landsOnTheJobsFollowUpNotTheCalendar() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val intent = QuickParse.parseVoiceIntent("Interview at Google on Friday at 3 pm", today = today, now = now)
+        assertTrue(intent is ParsedIntent.Job)
+        val job = intent as ParsedIntent.Job
+        assertEquals("Google", job.company)
+        assertEquals("Interview", job.title)
+        assertEquals(JobApplicationStatus.INTERVIEW, job.status)
+        assertEquals(LocalDate.of(2026, 10, 9), job.followUpOn)
+    }
+
+    @Test
+    fun meetingAtThreePm_isTodayWhenThatTimeIsStillAhead() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val event = QuickParse.parseVoiceIntent("Book a meeting at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.EVENT, event.kind)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(15, 0)), event.startAt)
+        assertEquals(null, event.repeat)
+    }
+
+    @Test
+    fun meetingAtThreePm_movesToTomorrowAfterThatTime() {
+        val now = LocalDateTime.of(today, LocalTime.of(16, 0))
+        val event = QuickParse.parseVoiceIntent("Book a meeting at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(15, 0)), event.startAt)
+    }
+
+    @Test
+    fun sundayAtThreePm_isTheNearestUpcomingSunday() {
+        // 2026-10-08 is Thursday, so the next Sunday is the 11th.
+        val now = LocalDateTime.of(today, LocalTime.of(16, 0))
+        val event = QuickParse.parseVoiceIntent("book a meeting on Sunday at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(2026, 10, 11, 15, 0), event.startAt)
+    }
+
+    @Test
+    fun sundayAtThreePm_staysTodayWhenTodayIsSundayAndTimeIsAhead() {
+        val sunday = LocalDate.of(2026, 10, 11)
+        val now = LocalDateTime.of(sunday, LocalTime.of(10, 0))
+        val event = QuickParse.parseVoiceIntent("meeting on Sunday at 3 pm", today = sunday, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(sunday, LocalTime.of(15, 0)), event.startAt)
+    }
+
+    @Test
+    fun weeklyMeeting_repeatsOnThatWeekday() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val event = QuickParse.parseVoiceIntent("book a meeting every Sunday at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(2026, 10, 11, 15, 0), event.startAt)
+        assertEquals(RecurrenceFrequency.WEEKLY, event.repeat?.frequency)
+        assertEquals(setOf(7), event.repeat?.weekDays)
+    }
+
+    @Test
+    fun recursively_meansWeekly() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val event = QuickParse.parseVoiceIntent("add task gym recursively at 6 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.TASK, event.kind)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(18, 0)), event.startAt)
+        assertEquals(RecurrenceFrequency.WEEKLY, event.repeat?.frequency)
+        assertEquals(setOf(today.dayOfWeek.value), event.repeat?.weekDays)
+    }
+
+    @Test
+    fun dayOfMonth_usesThisMonthThenTheNext() {
+        val now = LocalDateTime.of(today, LocalTime.of(10, 0))
+        val thisMonth = QuickParse.parseVoiceIntent("remind me on the 15th at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(2026, 10, 15, 15, 0), thisMonth.startAt)
+        val nextMonth = QuickParse.parseVoiceIntent("remind me on the 2nd at 3 pm", today = today, now = now) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(2026, 11, 2, 15, 0), nextMonth.startAt)
     }
 
     @Test

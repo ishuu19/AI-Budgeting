@@ -458,23 +458,26 @@ private fun DayCell(
     Column(
         modifier = modifier
             .heightIn(min = 48.dp)
-            .padding(2.dp)
-            .clip(CircleShape)
-            .background(bg)
             .clickable(onClick = onClick)
             .semantics { contentDescription = desc }
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(
-            date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = ink,
-            textAlign = TextAlign.Center
-        )
+        Box(
+            Modifier.size(36.dp).clip(CircleShape).background(bg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = ink,
+                textAlign = TextAlign.Center
+            )
+        }
         Box(
             Modifier
-                .size(6.dp)
+                .size(5.dp)
                 .clip(CircleShape)
                 .background(
                     when {

@@ -16,6 +16,7 @@ import com.ledgerai.app.domain.model.Budget
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.Debt
 import com.ledgerai.app.domain.model.Goal
+import com.ledgerai.app.domain.model.JobApplication
 import com.ledgerai.app.domain.model.NoteItem
 import com.ledgerai.app.domain.model.Transaction
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +66,8 @@ class VoiceCaptureRepository @Inject constructor(
     private val goals: GoalRepository,
     private val goalDao: GoalDao,
     private val budgets: BudgetRepository,
-    private val budgetDao: BudgetDao
+    private val budgetDao: BudgetDao,
+    private val jobs: JobRepository
 ) {
 
     fun observeHistory(limit: Int = 100): Flow<List<VoiceHistoryItem>> =
@@ -154,6 +156,21 @@ class VoiceCaptureRepository @Inject constructor(
                 if (name.isBlank() || intent.targetAmount <= 0.0) return null
                 val id = goals.insert(Goal(name = name, targetAmount = intent.targetAmount))
                 id to name
+            }
+            is ParsedIntent.Job -> {
+                val company = intent.company.trim()
+                if (company.isBlank()) return null
+                val id = jobs.save(
+                    JobApplication(
+                        company = company,
+                        title = intent.title.trim().ifBlank { "Role" },
+                        status = intent.status,
+                        appliedOn = intent.appliedOn,
+                        followUpOn = intent.followUpOn,
+                        notes = intent.notes.trim()
+                    )
+                )
+                id to company
             }
             is ParsedIntent.Budget -> {
                 if (intent.limit <= 0.0) return null
@@ -265,6 +282,7 @@ class VoiceCaptureRepository @Inject constructor(
             VoiceResultKind.Debt -> debtDao.softDelete(itemId, now, now)
             VoiceResultKind.Goal -> goalDao.softDelete(itemId, now, now)
             VoiceResultKind.Note -> noteDao.softDelete(itemId, now, now)
+            VoiceResultKind.Job -> jobs.delete(itemId)
             VoiceResultKind.Unsorted -> Unit
         }
     }

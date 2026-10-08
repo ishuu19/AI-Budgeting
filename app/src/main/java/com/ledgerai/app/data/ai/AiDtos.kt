@@ -7,6 +7,7 @@ import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
 import com.ledgerai.app.domain.model.EventRecurrence
 import com.ledgerai.app.domain.model.EventReminder
+import com.ledgerai.app.domain.model.JobApplicationStatus
 import com.ledgerai.app.domain.model.ParsedTransaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
@@ -98,7 +99,7 @@ data class ParsedTransactionDto(
 
 /**
  * Multi-intent voice parse payload from the model (JSON in content).
- * [intent]: TRANSACTION | EVENT | TASK | EXAM | REMINDER | ALARM | ROUTINE | NOTE | BILL | DEBT | GOAL | BUDGET.
+ * [intent]: TRANSACTION | EVENT | TASK | EXAM | REMINDER | ALARM | ROUTINE | NOTE | BILL | DEBT | GOAL | BUDGET | JOB.
  * The model may answer with several of these in an `items` array (or a bare array), one per spoken item.
  * Everything that lands on the calendar (EVENT, TASK, EXAM, REMINDER, ALARM, ROUTINE) becomes one
  * [ParsedIntent.Event].
@@ -237,6 +238,20 @@ sealed class ParsedIntent {
     data class Goal(
         val name: String,
         val targetAmount: Double,
+        override val rawTranscript: String = "",
+        override val confidence: Float = 0.7f,
+    ) : ParsedIntent()
+
+    /**
+     * A job application. Kept off the main calendar. [followUpOn] is the date on the jobs calendar.
+     */
+    data class Job(
+        val company: String,
+        val title: String,
+        val status: JobApplicationStatus = JobApplicationStatus.APPLIED,
+        val appliedOn: LocalDate,
+        val followUpOn: LocalDate? = null,
+        val notes: String = "",
         override val rawTranscript: String = "",
         override val confidence: Float = 0.7f,
     ) : ParsedIntent()

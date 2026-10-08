@@ -36,6 +36,7 @@ import com.ledgerai.app.data.ai.resultKind
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
+import com.ledgerai.app.domain.model.JobApplicationStatus
 import com.ledgerai.app.domain.model.EventReminder
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
@@ -125,6 +126,10 @@ internal fun summarize(intent: ParsedIntent): Pair<String, String?> = when (inte
         intent.category.displayName,
         if (intent.limit > 0.0) "${money(intent.limit)} a month" else "Add limit"
     )
+    is ParsedIntent.Job -> Pair(
+        intent.company,
+        listOfNotNull(intent.title, intent.followUpOn?.format(DateShort)).joinToString(" · ")
+    )
     is ParsedIntent.Unmatched -> Pair("\"${intent.rawTranscript}\"", null)
 }
 
@@ -136,6 +141,7 @@ internal fun canSave(intent: ParsedIntent): Boolean = when (intent) {
     is ParsedIntent.Debt -> intent.friendName.isNotBlank() && intent.amount > 0.0
     is ParsedIntent.Goal -> intent.name.isNotBlank() && intent.targetAmount > 0.0
     is ParsedIntent.Budget -> intent.limit > 0.0
+    is ParsedIntent.Job -> intent.company.isNotBlank()
     is ParsedIntent.Unmatched -> intent.rawTranscript.isNotBlank()
 }
 
@@ -255,6 +261,7 @@ internal fun ConfirmCard(
             is ParsedIntent.Debt -> DebtDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
             is ParsedIntent.Goal -> GoalDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
             is ParsedIntent.Budget -> BudgetDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
+            is ParsedIntent.Job -> JobDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
             is ParsedIntent.Unmatched -> RedoSheet(
                 initialTranscript = intent.rawTranscript,
                 initialKind = null,
@@ -341,6 +348,14 @@ private fun CardPickers(intent: ParsedIntent, onChange: (ParsedIntent) -> Unit) 
             if (sheet == "category") {
                 CategorySheet(intent.category, { sheet = null }) { onChange(intent.copy(category = it)); sheet = null }
             }
+        }
+        is ParsedIntent.Job -> ChipsRow {
+            DatePickChip(
+                intent.followUpOn ?: intent.appliedOn,
+                selected = true,
+                onDate = { onChange(intent.copy(followUpOn = it)) },
+                label = "Follow up ${ (intent.followUpOn ?: intent.appliedOn).format(DateShort) }"
+            )
         }
         else -> Unit
     }
@@ -639,6 +654,37 @@ private fun DebtDraftSheet(parsed: ParsedIntent.Debt, onDismiss: () -> Unit, onA
                 label = due?.let { "Due ${it.format(DateShort)}" } ?: "No due date"
             )
             if (due != null) LChip("Clear", selected = false, onClick = { due = null })
+        }
+    }
+}
+
+@Composable
+private fun JobDraftSheet(parsed: ParsedIntent.Job, onDismiss: () -> Unit, onApply: (ParsedIntent.Job) -> Unit) {
+    var company by rememberSaveable { mutableStateOf(parsed.company) }
+    var title by rememberSaveable { mutableStateOf(parsed.title) }
+    var status by rememberSaveable { mutableStateOf(parsed.status.name) }
+
+    LSheet(
+        title = "Edit",
+        onDismiss = onDismiss,
+        primary = "Done",
+        onPrimary = {
+            onApply(
+                parsed.copy(
+                    company = company.trim(),
+                    title = title.trim().ifBlank { "Role" },
+                    status = JobApplicationStatus.valueOf(status)
+                )
+            )
+        },
+        primaryEnabled = company.isNotBlank()
+    ) {
+        LField(value = company, onValueChange = { company = it }, label = "Company")
+        LField(value = title, onValueChange = { title = it }, label = "Role")
+        ChipsRow {
+            JobApplicationStatus.entries.forEach { s ->
+                LChip(s.name.lowercase().replaceFirstChar { it.uppercase() }, selected = s.name == status, onClick = { status = s.name })
+            }
         }
     }
 }

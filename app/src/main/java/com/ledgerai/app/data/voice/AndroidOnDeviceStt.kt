@@ -68,10 +68,14 @@ class AndroidOnDeviceStt(private val context: Context) {
     }
 
     private fun buildIntent(languageTag: String) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        val primary = if (languageTag.startsWith("bn")) "bn-BD" else "en-US"
+        val other = if (primary.startsWith("bn")) "en-US" else "bn-BD"
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, primary)
+        putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf(other))
+        putExtra("android.speech.extra.ENABLE_LANGUAGE_SWITCH", "balanced")
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+        putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, usingOnDevice)
         putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
     }

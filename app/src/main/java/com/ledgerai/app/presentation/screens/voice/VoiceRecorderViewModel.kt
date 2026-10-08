@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
+import android.speech.SpeechRecognizer
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -105,6 +106,7 @@ fun VoiceResultKind.openKind(): OpenKind? = when (this) {
     VoiceResultKind.Debt -> OpenKind.Debt
     VoiceResultKind.Goal -> OpenKind.Goal
     VoiceResultKind.Note -> OpenKind.Note
+    VoiceResultKind.Job -> OpenKind.Job
     VoiceResultKind.Unsorted -> null
 }
 
@@ -176,7 +178,7 @@ class VoiceRecorderViewModel @Inject constructor(
             showError(ErrorType.PERMISSION, "Mic blocked")
             return
         }
-        if (engine.isLive) startLive() else startFileRecording()
+        if (SpeechRecognizer.isRecognitionAvailable(context)) startLive() else startFileRecording()
     }
 
     private fun hasMicPermission() =

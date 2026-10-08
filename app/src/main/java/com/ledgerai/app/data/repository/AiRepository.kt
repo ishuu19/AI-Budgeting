@@ -36,6 +36,7 @@ import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
 import com.ledgerai.app.domain.model.EventReminder
+import com.ledgerai.app.domain.model.JobApplicationStatus
 import com.ledgerai.app.domain.model.MAX_REMINDERS_PER_EVENT
 import com.ledgerai.app.domain.schedule.labelForMinutesBefore
 import com.ledgerai.app.domain.model.FinancialForecast
@@ -109,19 +110,21 @@ class AiRepository @Inject constructor(
         if (network.isOnline() && edgeClient.isConfigured()) {
             edgeClient.voiceIntent(nowHint() + "\nUser said: " + trimmed).getOrNull()?.let { raw ->
                 mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
-                    return Result.success(preferLocalForMoneyKinds(it, trimmed))
+                    return Result.success(preferLocalKinds(it, trimmed))
                 }
             }
         }
 
         if (canCallCloud()) {
             val system = """
+                The user may speak English or Bangla, or mix the two. Understand both.
                 Split the user utterance into one or more items and classify each. Most utterances hold one item.
                 If money was spent or received, intent is TRANSACTION, not NOTE.
                 merchant and title must be the specific person or place name when one is said. Do not copy the whole sentence into note or body.
                 Reply with ONLY JSON: {"items":[ITEM,...]} where ITEM is:
-                {"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET","amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"name":string,"body":string,"start_at":"ISO-8601 local date and time|null","end_at":"ISO-8601|null","due_at":"ISO-8601|null","reminder_minutes":[0],"label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0,"direction":"I_OWE|THEY_OWE"}
+                {"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB","amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"name":string,"body":string,"start_at":"ISO-8601 local date and time|null","end_at":"ISO-8601|null","due_at":"ISO-8601|null","reminder_minutes":[0],"label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0,"direction":"I_OWE|THEY_OWE"}
                 For EVENT, TASK, EXAM, REMINDER, ROUTINE and ALARM always set start_at to the full spoken date and time, and title to only what to do (no date or time words).
+                JOB is a job application or interview. Set name to the company, title to the role, label to APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN, start_at to the interview or follow-up, due_at to the day they applied. Never classify a job or interview as EVENT, TASK, or REMINDER.
                 For ALARM, repeat_days is a weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0=one-shot; weekdays=62; every day=127).
                 For ROUTINE, set title and repeat_rule.
                 For BILL set name, amount, repeat_rule (WEEKLY|MONTHLY|QUARTERLY|YEARLY) and due_at. For DEBT set name (the other person), amount, direction and optional due_at. For GOAL set name and amount (the target). For BUDGET set category and amount (the monthly limit).
@@ -129,7 +132,7 @@ class AiRepository @Inject constructor(
             """.trimIndent()
             completeRaw(system, trimmed).getOrNull()?.let { raw ->
                 mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
-                    return Result.success(preferLocalForMoneyKinds(it, trimmed))
+                    return Result.success(preferLocalKinds(it, trimmed))
                 }
             }
         }
@@ -141,9 +144,10 @@ class AiRepository @Inject constructor(
      * The edge function and some models only know a transaction or a note. When the words clearly name a
      * bill, debt, goal or budget, the offline parse wins for those.
      */
-    private fun preferLocalForMoneyKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
-        if (cloud.none { it is ParsedIntent.Transaction || it is ParsedIntent.Note }) return cloud
+    private fun preferLocalKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
         val local = QuickParse.parseVoiceIntents(transcript)
+        if (local.any { it is ParsedIntent.Job }) return local
+        if (cloud.none { it is ParsedIntent.Transaction || it is ParsedIntent.Note }) return cloud
         val special = local.any {
             it is ParsedIntent.Bill || it is ParsedIntent.Debt || it is ParsedIntent.Goal || it is ParsedIntent.Budget
         }
@@ -490,6 +494,7 @@ class AiRepository @Inject constructor(
         return try {
             val confidence = (dto.confidence ?: 0.7f).coerceIn(0f, 1f)
             when (dto.intent?.uppercase()) {
+                "JOB" -> mapJobIntent(dto, transcript, confidence)
                 "EVENT", "TASK", "EXAM", "REMINDER", "ALARM", "ROUTINE" ->
                     mapEventIntent(dto, transcript, confidence)
                 "NOTE" -> {
@@ -614,6 +619,33 @@ class AiRepository @Inject constructor(
         }
     }
 
+    /** A job stays in the jobs list. It is never written onto the main calendar. */
+    private fun mapJobIntent(dto: ParsedVoiceIntentDto, transcript: String, confidence: Float): ParsedIntent {
+        val local = QuickParse.parseVoiceIntents(transcript).filterIsInstance<ParsedIntent.Job>().firstOrNull()
+        val today = LocalDate.now()
+        val now = LocalDateTime.now()
+        val spoken = parseDateTime(dto.startAt) ?: parseDateTime(dto.dueAt)
+        val follow = spoken?.toLocalDate()
+            ?: QuickParse.resolveSpokenDateTime(transcript, today, now)?.toLocalDate()
+            ?: local?.followUpOn
+        val status = JobApplicationStatus.entries.firstOrNull {
+            it.name.equals(dto.label, true) || it.name.equals(dto.type, true)
+        } ?: local?.status ?: JobApplicationStatus.APPLIED
+        return ParsedIntent.Job(
+            company = dto.name?.takeIf { it.isNotBlank() }
+                ?: dto.merchant?.takeIf { it.isNotBlank() }
+                ?: local?.company
+                ?: "Company",
+            title = dto.title?.takeIf { it.isNotBlank() } ?: local?.title ?: "Role",
+            status = status,
+            appliedOn = parseDateTime(dto.dueAt)?.toLocalDate() ?: local?.appliedOn ?: today,
+            followUpOn = follow,
+            notes = dto.note?.takeIf { it.isNotBlank() } ?: dto.body.orEmpty().ifBlank { transcript },
+            rawTranscript = transcript,
+            confidence = confidence,
+        )
+    }
+
     /** One calendar item from the cloud DTO. The spoken date and the title are always honoured. */
     private fun mapEventIntent(dto: ParsedVoiceIntentDto, transcript: String, confidence: Float): ParsedIntent? {
         val today = LocalDate.now()
@@ -626,7 +658,13 @@ class AiRepository @Inject constructor(
             else -> CalendarEventKind.TASK
         }
         val spoken = parseDateTime(dto.startAt) ?: parseDateTime(dto.remindAt) ?: parseDateTime(dto.dueAt)
-        val fromText = QuickParse.resolveEventDateTimeFromText(transcript, today)
+        val now = LocalDateTime.now()
+        val fromSpeech = QuickParse.resolveSpokenDateTime(
+            transcript, today, now, allowBareHour = intent == "ALARM"
+        )
+        val fromText = fromSpeech ?: QuickParse.resolveEventDateTimeFromText(transcript, today, now)
+        val whenFromSpeech = fromSpeech != null || QuickParse.hasSpokenWhen(transcript) ||
+            spoken == null || spoken.isBefore(now)
         val title = dto.title?.takeIf { it.isNotBlank() }
             ?: dto.label?.takeIf { it.isNotBlank() && !it.equals("Reminder", true) && !it.equals("Alarm", true) }
             ?: QuickParse.eventTitleFromText(transcript, if (kind == CalendarEventKind.ALARM) "Alarm" else "Reminder")
@@ -636,12 +674,13 @@ class AiRepository @Inject constructor(
 
         return when (kind) {
             CalendarEventKind.ALARM -> {
-                val time = parseClockTime(dto.time) ?: spoken?.toLocalTime()
-                    ?: QuickParse.parseClockTimeFromText(transcript.lowercase()) ?: return null
+                val start = fromSpeech
+                    ?: spoken?.let { QuickParse.futureOnDate(it.toLocalTime(), transcript, it.toLocalDate(), now) }
+                    ?: return null
                 val mask = dto.repeatDays?.takeIf { it >= 0 } ?: QuickParse.parseRepeatDays(transcript)
                 ParsedIntent.Event(
                     title = title.ifBlank { "Alarm" },
-                    startAt = LocalDateTime.of(spoken?.toLocalDate() ?: QuickParse.parseEventDate(transcript, today), time),
+                    startAt = start,
                     kind = kind,
                     repeat = if (mask == 0) null else QuickParse.repeatFromAlarmMask(mask),
                     confidence = confidence,
@@ -649,7 +688,7 @@ class AiRepository @Inject constructor(
                 )
             }
             CalendarEventKind.ROUTINE -> {
-                val start = spoken ?: fromText
+                val start = if (whenFromSpeech) fromText else spoken!!
                 val rule = dto.repeatRule?.uppercase()?.takeIf { it in setOf("DAILY", "WEEKLY", "WEEKDAYS") }
                     ?: QuickParse.parseRepeatRule(transcript)
                 ParsedIntent.Event(
@@ -665,7 +704,7 @@ class AiRepository @Inject constructor(
                 )
             }
             else -> {
-                val start = spoken ?: fromText
+                val start = if (whenFromSpeech) fromText else spoken!!
                 val isReminder = intent == "REMINDER"
                 ParsedIntent.Event(
                     title = title,
@@ -674,6 +713,7 @@ class AiRepository @Inject constructor(
                     endAt = if (kind == CalendarEventKind.TASK) null
                     else parseDateTime(dto.endAt)?.takeIf { it.isAfter(start) } ?: start.plusHours(1),
                     kind = kind,
+                    repeat = QuickParse.explicitRepeat(transcript, start.toLocalDate()),
                     reminders = when {
                         explicit.isNotEmpty() -> explicit
                         isReminder -> listOf(EventReminder(label = "At time", offsetMinutes = 0))

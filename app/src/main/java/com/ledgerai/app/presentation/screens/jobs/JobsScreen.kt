@@ -2,14 +2,24 @@ package com.ledgerai.app.presentation.screens.jobs
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +30,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -58,6 +73,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
@@ -132,6 +148,108 @@ class JobsViewModel @Inject constructor(
 
 private fun JobApplicationStatus.label(): String = name.lowercase().replaceFirstChar { it.titlecase() }
 
+/** Month of job follow-ups only. These dates are not written to the main calendar. */
+@Composable
+private fun JobsMonth(
+    jobs: List<JobApplication>,
+    selected: LocalDate?,
+    onSelect: (LocalDate) -> Unit
+) {
+    var month by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
+    val shown = YearMonth.parse(month)
+    val today = LocalDate.now()
+    val marks = jobs.mapNotNull { it.followUpOn }.toSet()
+    val first = shown.atDay(1)
+    val lead = (first.dayOfWeek.value + 6) % 7
+    val cells = buildList {
+        repeat(lead) { add(first.minusDays((lead - it).toLong())) }
+        for (day in 1..shown.lengthOfMonth()) add(shown.atDay(day))
+        val tail = shown.atEndOfMonth().plusDays(1)
+        var extra = 0
+        while (size % 7 != 0) add(tail.plusDays((extra++).toLong()))
+    }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { month = shown.minusMonths(1).toString() }) {
+                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous month", tint = L.Box)
+            }
+            Text(
+                shown.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge,
+                color = L.Ink
+            )
+            IconButton(onClick = { month = shown.plusMonths(1).toString() }) {
+                Icon(Icons.Default.ChevronRight, contentDescription = "Next month", tint = L.Box)
+            }
+        }
+        Row(Modifier.fillMaxWidth()) {
+            listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { letter ->
+                Text(
+                    letter,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = L.InkMuted,
+                    maxLines = 1
+                )
+            }
+        }
+        cells.chunked(7).forEach { week ->
+            Row(Modifier.fillMaxWidth()) {
+                week.forEach { date ->
+                    val inMonth = YearMonth.from(date) == shown
+                    val marked = date in marks
+                    val on = date == selected
+                    val isToday = date == today
+                    val bg = when {
+                        on -> L.Gold
+                        isToday -> L.Box
+                        else -> Color.Transparent
+                    }
+                    val ink = when {
+                        on -> L.BoxDeep
+                        isToday -> L.OnBox
+                        inMonth -> L.Ink
+                        else -> L.InkMuted
+                    }
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp)
+                            .clickable { onSelect(date) }
+                            .semantics {
+                                contentDescription = date.format(DateTimeFormatter.ofPattern("MMMM d")) +
+                                    if (marked) ", follow up" else ""
+                            }
+                            .padding(vertical = 2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Box(
+                            Modifier.size(36.dp).clip(CircleShape).background(bg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.bodyMedium, color = ink)
+                        }
+                        Box(
+                            Modifier.size(5.dp).clip(CircleShape).background(
+                                when {
+                                    !marked -> Color.Transparent
+                                    on -> L.BoxDeep
+                                    isToday -> L.Gold
+                                    else -> L.Box
+                                }
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 private val StatusFilters: List<JobApplicationStatus?> = listOf(null) + JobApplicationStatus.entries
 
 @Composable
@@ -146,6 +264,8 @@ fun JobsScreen(
     var paste by rememberSaveable { mutableStateOf("") }
     var sheetId by rememberSaveable { mutableStateOf<Long?>(null) }
     var filter by rememberSaveable { mutableStateOf<JobApplicationStatus?>(null) }
+    var dayEpoch by rememberSaveable { mutableStateOf(Long.MIN_VALUE) }
+    val selectedDay = if (dayEpoch == Long.MIN_VALUE) null else LocalDate.ofEpochDay(dayEpoch)
 
     LaunchedEffect(openId) {
         if (openId != null) {
@@ -154,7 +274,10 @@ fun JobsScreen(
         }
     }
 
-    val shown = state.jobs.filter { filter == null || it.status == filter }
+    val shown = state.jobs.filter { job ->
+        (filter == null || job.status == filter) &&
+            (selectedDay == null || job.followUpOn == selectedDay || (job.followUpOn == null && job.appliedOn == selectedDay))
+    }
 
     LScreen(
         title = "Jobs",
@@ -163,8 +286,19 @@ fun JobsScreen(
         when {
             state.loading -> item { LLoading() }
             state.error -> item { LError("Could not load", onRetry = viewModel::load) }
-            state.jobs.isEmpty() -> item { LEmpty(Icons.Default.Work, "No jobs") }
             else -> {
+                item(key = "month") {
+                    JobsMonth(
+                        jobs = state.jobs,
+                        selected = selectedDay,
+                        onSelect = { day ->
+                            dayEpoch = if (day == selectedDay) Long.MIN_VALUE else day.toEpochDay()
+                        }
+                    )
+                }
+                if (state.jobs.isEmpty()) {
+                    item { LEmpty(Icons.Default.Work, "No jobs") }
+                } else {
                 item(key = "hero") {
                     LHero(
                         label = "This week",
@@ -184,7 +318,7 @@ fun JobsScreen(
                                 if (i > 0) LGroupDivider()
                                 LGroupRow(
                                     title = job.title,
-                                    sub = "${job.company} · ${job.appliedOn.format(dateFmt)}",
+                                    sub = job.company + " · " + (job.followUpOn ?: job.appliedOn).format(dateFmt),
                                     trailing = job.status.label(),
                                     onClick = { sheetId = job.id }
                                 )
@@ -193,6 +327,7 @@ fun JobsScreen(
                     }
                 }
             }
+        }
         }
     }
 

@@ -17,6 +17,7 @@ enum class VoiceResultKind(val label: String) {
     Bill("Bill"),
     Debt("Debt"),
     Goal("Goal"),
+    Job("Job"),
     Note("Note"),
     Unsorted("Unsorted");
 
@@ -44,5 +45,6 @@ fun ParsedIntent.resultKind(): VoiceResultKind = when (this) {
     is ParsedIntent.Debt -> VoiceResultKind.Debt
     is ParsedIntent.Goal -> VoiceResultKind.Goal
     is ParsedIntent.Budget -> VoiceResultKind.Budget
+    is ParsedIntent.Job -> VoiceResultKind.Job
     is ParsedIntent.Unmatched -> VoiceResultKind.Unsorted
 }
