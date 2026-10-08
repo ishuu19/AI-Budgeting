@@ -1,7 +1,8 @@
 package com.ledgerai.app.presentation.screens.notes
 
 import android.widget.Toast
-import androidx.compose.foundation.horizontalScroll
+import kotlinx.coroutines.delay
+import com.ledgerai.app.presentation.navigation.OpenItem
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +53,9 @@ class NotesViewModel @Inject constructor(
     fun clearAiMessage() {
         _aiMessage.value = null
     }
+
+    /** True when the cloud can be reached. Summarize, tag and ask need it. */
+    fun aiAvailable(): Boolean = aiRepo.isAiAvailable()
 
     fun addNote(title: String, body: String, tags: List<String>) {
         if (title.isBlank() && body.isBlank()) return
@@ -155,13 +160,6 @@ class NotesViewModel @Inject constructor(
     }
 }
 
-private data class NoteEditorState(
-    val existing: NoteItem? = null,
-    val title: String = "",
-    val body: String = "",
-    val tags: List<String> = emptyList()
-)
-
 /** Tags that actually appear on notes, sorted. Suggested tags show only when used. */
 internal fun appearingNoteTags(notes: List<NoteItem>): List<String> =
     notes.asSequence().flatMap { it.tags }.distinct().sortedBy { it.lowercase() }.toList()
@@ -187,20 +185,48 @@ internal fun notesMatching(
         .toList()
 }
 
+private const val EDITOR_CLOSED = -1L
+private const val EDITOR_NEW = 0L
+private const val TAG_SEPARATOR = ","
+
+private fun List<String>.joinTags() = joinToString(TAG_SEPARATOR)
+private fun String.splitTags() = split(TAG_SEPARATOR).map { it.trim() }.filter { it.isNotEmpty() }
+
+/**
+ * Notes list with search, tag filter and a note editor sheet.
+ * [open] asks to open one note (a saved voice result); [onOpened] is called once it is handled.
+ */
 @Composable
-fun NotesScreen(onBack: () -> Unit = {}, viewModel: NotesViewModel = hiltViewModel()) {
+fun NotesScreen(
+    onBack: () -> Unit = {},
+    open: OpenItem? = null,
+    onOpened: () -> Unit = {},
+    viewModel: NotesViewModel = hiltViewModel()
+) {
     val notes by viewModel.notes.collectAsState()
     val aiBusy by viewModel.aiBusy.collectAsState()
     val aiMessage by viewModel.aiMessage.collectAsState()
-    var editor by remember { mutableStateOf<NoteEditorState?>(null) }
-    var query by remember { mutableStateOf("") }
-    var selectedTag by remember { mutableStateOf<String?>(null) }
+    var editorId by rememberSaveable { mutableLongStateOf(EDITOR_CLOSED) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var selectedTag by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
     LaunchedEffect(aiMessage) {
         val msg = aiMessage ?: return@LaunchedEffect
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         viewModel.clearAiMessage()
+    }
+
+    LaunchedEffect(open?.nonce, notes) {
+        val request = open ?: return@LaunchedEffect
+        if (notes.any { it.id == request.id }) {
+            editorId = request.id
+            onOpened()
+        } else {
+            // The list may still be loading; give up when the note is not there.
+            delay(1500)
+            onOpened()
+        }
     }
 
     val filterTags = remember(notes) { appearingNoteTags(notes) }
@@ -214,7 +240,7 @@ fun NotesScreen(onBack: () -> Unit = {}, viewModel: NotesViewModel = hiltViewMod
     LScreen(
         title = "Notes",
         onBack = onBack,
-        fab = { LFab(Icons.Filled.Add, onClick = { editor = NoteEditorState() }) }
+        fab = { LFab(Icons.Filled.Add, onClick = { editorId = EDITOR_NEW }, label = "Add note") }
     ) {
         item(key = "hero") {
             LHero(label = "Notes", value = visible.size.toString())
@@ -223,10 +249,7 @@ fun NotesScreen(onBack: () -> Unit = {}, viewModel: NotesViewModel = hiltViewMod
             LField(query, { query = it }, "Search")
         }
         item(key = "tags") {
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            ChipsRow {
                 LChip("All", selected = selectedTag == null, onClick = { selectedTag = null })
                 filterTags.forEach { tag ->
                     LChip(tag, selected = selectedTag == tag, onClick = { selectedTag = tag })
@@ -246,142 +269,159 @@ fun NotesScreen(onBack: () -> Unit = {}, viewModel: NotesViewModel = hiltViewMod
                     title = note.title,
                     sub = note.body.ifBlank { null },
                     trailing = note.tags.firstOrNull()?.let { "#$it" },
-                    onClick = {
-                        editor = NoteEditorState(
-                            existing = note,
-                            title = note.title,
-                            body = note.body,
-                            tags = note.tags
-                        )
-                    }
+                    onClick = { editorId = note.id }
                 )
             }
         }
     }
 
-    editor?.let { state ->
+    val existing = notes.firstOrNull { it.id == editorId }
+    if (editorId == EDITOR_NEW || existing != null) {
         NoteEditorSheet(
-            state = state,
+            existing = existing,
             aiBusy = aiBusy,
-            onDismiss = { editor = null },
+            aiAvailable = viewModel.aiAvailable(),
+            onClose = { title, body, tags ->
+                // Closing the sheet keeps what was typed, so text is never lost.
+                val hasText = title.isNotBlank() || body.isNotBlank()
+                val changed = existing == null ||
+                    title.trim() != existing.title || body.trim() != existing.body || tags != existing.tags
+                if (hasText && changed) {
+                    if (existing == null) viewModel.addNote(title, body, tags)
+                    else viewModel.updateNote(existing, title, body, tags)
+                    Toast.makeText(context, "Note saved", Toast.LENGTH_SHORT).show()
+                }
+                editorId = EDITOR_CLOSED
+            },
             onSave = { title, body, tags ->
-                val existing = state.existing
                 if (existing == null) viewModel.addNote(title, body, tags)
                 else viewModel.updateNote(existing, title, body, tags)
-                editor = null
+                editorId = EDITOR_CLOSED
             },
             onDelete = {
-                state.existing?.let { viewModel.deleteNote(it) }
-                editor = null
+                existing?.let { viewModel.deleteNote(it) }
+                editorId = EDITOR_CLOSED
             },
             onSummarize = { title, body, apply -> viewModel.summarizeNote(title, body, apply) },
             onTag = { title, body, applyTags -> viewModel.tagNote(title, body, applyTags) },
             onAsk = { title, body, question, onAnswer ->
                 viewModel.askAboutNote(title, body, question, onAnswer)
             },
-            onNudge = { note ->
-                viewModel.nudgeFromNote(note)
-            },
+            onNudge = { note -> viewModel.nudgeFromNote(note) },
         )
     }
 }
 
 @Composable
 private fun NoteEditorSheet(
-    state: NoteEditorState,
+    existing: NoteItem?,
     aiBusy: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (String, String, List<String>) -> Unit,
+    aiAvailable: Boolean,
+    onClose: (title: String, body: String, tags: List<String>) -> Unit,
+    onSave: (title: String, body: String, tags: List<String>) -> Unit,
     onDelete: () -> Unit,
     onSummarize: (title: String, body: String, apply: (NoteSummaryDto) -> Unit) -> Unit,
     onTag: (title: String, body: String, applyTags: (List<String>) -> Unit) -> Unit,
     onAsk: (title: String, body: String, question: String, onAnswer: (String) -> Unit) -> Unit,
     onNudge: (NoteItem) -> Unit,
 ) {
-    var title by remember(state) { mutableStateOf(state.title) }
-    var body by remember(state) { mutableStateOf(state.body) }
-    var tags by remember(state) { mutableStateOf(state.tags) }
-    var askQuestion by remember { mutableStateOf("") }
-    var askAnswer by remember { mutableStateOf<String?>(null) }
-    var summaryPreview by remember { mutableStateOf<String?>(null) }
+    var title by rememberSaveable { mutableStateOf(existing?.title.orEmpty()) }
+    var body by rememberSaveable { mutableStateOf(existing?.body.orEmpty()) }
+    var tagText by rememberSaveable { mutableStateOf(existing?.tags.orEmpty().joinTags()) }
+    var askOpen by rememberSaveable { mutableStateOf(false) }
+    var askQuestion by rememberSaveable { mutableStateOf("") }
+    var askAnswer by rememberSaveable { mutableStateOf<String?>(null) }
+    var summaryPreview by rememberSaveable { mutableStateOf<String?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    val tags = tagText.splitTags()
     val hasText = title.isNotBlank() || body.isNotBlank()
     val tagOptions = (tags + SUGGESTED_TAGS).distinct()
 
-    LSheet(
-        title = if (state.existing == null) "New" else "Note",
-        onDismiss = onDismiss,
+    LItemSheet(
+        title = if (existing == null) "New" else "Note",
+        onDismiss = { onClose(title, body, tags) },
         primary = "Save",
         onPrimary = { onSave(title, body, tags) },
         primaryEnabled = hasText,
-        secondary = if (state.existing != null) "Delete" else null,
-        onSecondary = onDelete
+        onDelete = if (existing != null) onDelete else null
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            LField(title, { title = it }, "Title")
-            LField(body, { body = it }, "Note", singleLine = false, minLines = 6)
+        LField(title, { title = it }, "Title")
+        LField(body, { body = it }, "Note", singleLine = false, minLines = 6)
 
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                tagOptions.forEach { tag ->
-                    val selected = tag in tags
-                    LChip(tag, selected = selected, onClick = {
-                        tags = if (selected) tags - tag else tags + tag
-                    })
-                }
+        ChipsRow {
+            tagOptions.forEach { tag ->
+                val selected = tag in tags
+                LChip(tag, selected = selected, onClick = {
+                    tagText = (if (selected) tags - tag else tags + tag).joinTags()
+                })
             }
+        }
 
-            LButton("Summarize", onClick = {
-                if (aiBusy || !hasText) return@LButton
-                onSummarize(title, body) { summary ->
-                    summaryPreview = summary.summary
-                    val suggested = summary.tags.orEmpty()
-                    if (suggested.isNotEmpty()) tags = (tags + suggested).distinct()
-                    if (body.isBlank() && !summary.summary.isNullOrBlank()) body = summary.summary
-                }
-            }, enabled = hasText && !aiBusy)
-
-            LButton("Tag", onClick = {
-                if (aiBusy || !hasText) return@LButton
-                onTag(title, body) { suggested -> tags = (tags + suggested).distinct() }
-            }, enabled = hasText && !aiBusy)
-
-            LButton("Nudge", onClick = {
-                val existing = state.existing
-                if (!aiBusy && hasText && existing != null) {
-                    onNudge(existing.copy(title = title, body = body, tags = tags))
-                }
-            }, enabled = hasText && !aiBusy && state.existing != null)
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LField(askQuestion, { askQuestion = it }, "Ask", modifier = Modifier.weight(1f))
+        // One menu for the four AI actions. They need the cloud, so they say Offline instead of failing.
+        Box {
+            LGhostButton(
+                if (aiAvailable) "AI" else "AI · Offline",
+                onClick = { menuOpen = true },
+                enabled = hasText && !aiBusy
+            )
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text("Summarize") },
+                    enabled = aiAvailable,
+                    onClick = {
+                        menuOpen = false
+                        onSummarize(title, body) { summary ->
+                            summaryPreview = summary.summary
+                            val suggested = summary.tags.orEmpty()
+                            if (suggested.isNotEmpty()) tagText = (tags + suggested).distinct().joinTags()
+                            if (body.isBlank() && !summary.summary.isNullOrBlank()) body = summary.summary
+                        }
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Tag") },
+                    enabled = aiAvailable,
+                    onClick = {
+                        menuOpen = false
+                        onTag(title, body) { suggested -> tagText = (tags + suggested).distinct().joinTags() }
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Ask") },
+                    enabled = aiAvailable,
+                    onClick = { menuOpen = false; askOpen = true }
+                )
+                DropdownMenuItem(
+                    text = { Text("Nudge") },
+                    enabled = existing != null,
+                    onClick = {
+                        menuOpen = false
+                        existing?.let { onNudge(it.copy(title = title, body = body, tags = tags)) }
+                    }
+                )
             }
+        }
+
+        if (askOpen) {
+            LField(askQuestion, { askQuestion = it }, "Question")
             LButton("Ask", onClick = {
                 if (!aiBusy && askQuestion.isNotBlank()) {
                     onAsk(title, body, askQuestion) { answer -> askAnswer = answer }
                 }
-            }, enabled = !aiBusy && askQuestion.isNotBlank())
+            }, enabled = aiAvailable && !aiBusy && askQuestion.isNotBlank())
+        }
 
-            if (aiBusy) {
-                LProgress(1f)
-            }
+        if (aiBusy) LLoading()
 
-            listOfNotNull(summaryPreview, askAnswer).forEach { text ->
-                LCard {
-                    Text(
-                        text,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = L.OnBox,
-                        maxLines = 6,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+        listOfNotNull(summaryPreview, askAnswer).forEach { text ->
+            LCard {
+                Text(
+                    text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = L.OnBox,
+                    maxLines = 6,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

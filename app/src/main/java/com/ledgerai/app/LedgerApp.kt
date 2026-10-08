@@ -1,6 +1,8 @@
 package com.ledgerai.app
 
 import android.app.Application
+import android.net.ConnectivityManager
+import android.net.Network
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.ledgerai.app.data.preferences.UserSession
@@ -33,6 +35,7 @@ class LedgerApp : Application(), Configuration.Provider {
     @Inject lateinit var userSession: UserSession
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var syncNetworkCallback: ConnectivityManager.NetworkCallback? = null
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -56,9 +59,33 @@ class LedgerApp : Application(), Configuration.Provider {
                 .map { it.hasRemoteUser }
                 .distinctUntilChanged()
                 .collect { remote ->
-                    if (remote) SyncWorker.schedule(this@LedgerApp)
-                    else SyncWorker.cancel(this@LedgerApp)
+                    if (remote) {
+                        SyncWorker.schedule(this@LedgerApp)
+                        registerSyncOnAvailable()
+                    } else {
+                        unregisterSyncOnAvailable()
+                        SyncWorker.cancel(this@LedgerApp)
+                    }
                 }
         }
+    }
+
+    private fun registerSyncOnAvailable() {
+        if (syncNetworkCallback != null) return
+        val connectivity = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                SyncWorker.syncNow(this@LedgerApp)
+            }
+        }
+        connectivity.registerDefaultNetworkCallback(callback)
+        syncNetworkCallback = callback
+    }
+
+    private fun unregisterSyncOnAvailable() {
+        val callback = syncNetworkCallback ?: return
+        val connectivity = getSystemService(ConnectivityManager::class.java)
+        runCatching { connectivity?.unregisterNetworkCallback(callback) }
+        syncNetworkCallback = null
     }
 }

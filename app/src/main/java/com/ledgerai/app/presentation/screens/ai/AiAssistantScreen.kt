@@ -17,6 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -24,9 +29,13 @@ import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.ChatMessage
+import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
+import com.ledgerai.app.presentation.components.LError
+import com.ledgerai.app.presentation.components.LocalEmbedded
+import com.ledgerai.app.presentation.components.money
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -38,7 +47,9 @@ import javax.inject.Inject
 data class AiChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isTyping: Boolean = false,
-    val inputText: String = ""
+    val inputText: String = "",
+    /** The last request failed. The failure is shown, never stored as a message or sent back to the model. */
+    val failed: Boolean = false
 )
 
 @HiltViewModel
@@ -49,7 +60,6 @@ class AiAssistantViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AiChatUiState())
     val uiState: StateFlow<AiChatUiState> = _uiState.asStateFlow()
-    private val now = LocalDate.now()
     private var seededInsight = false
 
     fun seedInsight(insight: String) {
@@ -79,16 +89,29 @@ class AiAssistantViewModel @Inject constructor(
     }
 
     fun sendMessage() {
-        val message = _uiState.value.inputText.trim()
-        if (message.isBlank()) return
+        val state = _uiState.value
+        val message = state.inputText.trim()
+        if (message.isBlank() || state.isTyping) return
 
         val userMsg = ChatMessage(content = message, isFromUser = true)
-        _uiState.update { it.copy(
-            messages = it.messages + userMsg,
-            inputText = "",
-            isTyping = true
-        ) }
+        _uiState.update {
+            // A message that got no answer is dropped, so it never reaches the model as history.
+            val kept = if (it.failed) it.messages.dropLast(1) else it.messages
+            it.copy(messages = kept + userMsg, inputText = "", isTyping = true, failed = false)
+        }
+        request(message)
+    }
 
+    /** Sends the unanswered message again. */
+    fun retry() {
+        val state = _uiState.value
+        if (!state.failed || state.isTyping) return
+        val last = state.messages.lastOrNull { it.isFromUser } ?: return
+        _uiState.update { it.copy(isTyping = true, failed = false) }
+        request(last.content)
+    }
+
+    private fun request(message: String) {
         viewModelScope.launch {
             val context = buildFinancialContext()
             val history = _uiState.value.messages
@@ -102,8 +125,7 @@ class AiAssistantViewModel @Inject constructor(
                     _uiState.update { it.copy(messages = it.messages + aiMsg, isTyping = false) }
                 },
                 onFailure = {
-                    val errMsg = ChatMessage(content = "Couldn't connect. Try again.", isFromUser = false)
-                    _uiState.update { it.copy(messages = it.messages + errMsg, isTyping = false) }
+                    _uiState.update { it.copy(isTyping = false, failed = true) }
                 }
             )
         }
@@ -111,17 +133,18 @@ class AiAssistantViewModel @Inject constructor(
 
     private suspend fun buildFinancialContext(): String {
         return try {
+            val now = LocalDate.now()
             val transactions = transactionRepo.getRecentTransactions(20).first()
             val income = transactionRepo.getTotalIncomeForMonth(now.year, now.monthValue)
             val expenses = transactionRepo.getTotalExpensesForMonth(now.year, now.monthValue)
             val net = income - expenses
             """
                 Current month: ${now.month} ${now.year}
-                Monthly income: $${income}
-                Monthly expenses: $${expenses}
-                Net balance: $${net}
-                Recent transactions: ${transactions.take(5).joinToString(", ") { 
-                    "${it.category.displayName} $${it.amount}" 
+                Monthly income: ${money(income)}
+                Monthly expenses: ${money(expenses)}
+                Net balance: ${money(net)}
+                Recent transactions: ${transactions.take(5).joinToString(", ") {
+                    "${it.category.displayName} ${money(it.amount)}"
                 }}
             """.trimIndent()
         } catch (e: Exception) { "" }
@@ -136,7 +159,6 @@ private val Suggestions = listOf(
     "Save more" to "How can I save more?"
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AiAssistantScreen(
     initialInsight: String = "",
@@ -145,7 +167,8 @@ fun AiAssistantScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
-    val itemCount = state.messages.size + if (state.isTyping) 1 else 0
+    val embedded = LocalEmbedded.current
+    val itemCount = state.messages.size + (if (state.isTyping) 1 else 0) + (if (state.failed) 1 else 0)
 
     LaunchedEffect(initialInsight) {
         if (initialInsight.isNotBlank()) viewModel.seedFromInsight(initialInsight)
@@ -163,21 +186,24 @@ fun AiAssistantScreen(
                 .consumeWindowInsets(padding)
                 .imePadding()
         ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = L.Ink)
+            // Inside the Voice tab the tab header and segments already say "Ask".
+            if (!embedded) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = L.Ink)
+                    }
+                    Text(
+                        "Ask",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = L.Ink,
+                        modifier = Modifier.weight(1f).semantics { heading() }
+                    )
                 }
-                Text(
-                    "Ask",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = L.Ink,
-                    modifier = Modifier.weight(1f)
-                )
             }
 
             if (itemCount == 0) {
@@ -193,21 +219,19 @@ fun AiAssistantScreen(
                 ) {
                     itemsIndexed(state.messages) { _, message -> Bubble(message) }
                     if (state.isTyping) item { TypingBubble() }
+                    if (state.failed) item { LError("Could not connect", onRetry = viewModel::retry) }
                 }
             }
 
             if (state.messages.isEmpty() && !state.isTyping) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = L.Gutter, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Suggestions.forEach { (label, prompt) ->
-                        LChip(label, selected = false, onClick = {
-                            viewModel.updateInput(prompt)
-                            viewModel.sendMessage()
-                        })
+                Box(Modifier.padding(horizontal = L.Gutter, vertical = 8.dp)) {
+                    ChipsRow {
+                        Suggestions.forEach { (label, prompt) ->
+                            LChip(label, selected = false, onClick = {
+                                viewModel.updateInput(prompt)
+                                viewModel.sendMessage()
+                            })
+                        }
                     }
                 }
             }
@@ -234,7 +258,7 @@ private fun Bubble(message: ChatMessage) {
             style = MaterialTheme.typography.bodyMedium,
             color = if (isUser) L.BoxDeep else L.OnBox,
             modifier = Modifier
-                .widthIn(max = 300.dp)
+                .widthIn(max = 320.dp)
                 .clip(
                     if (isUser) RoundedCornerShape(L.Radius, 4.dp, L.Radius, L.Radius)
                     else RoundedCornerShape(4.dp, L.Radius, L.Radius, L.Radius)
@@ -254,7 +278,11 @@ private fun TypingBubble() {
                 .background(L.Box)
                 .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            CircularProgressIndicator(modifier = Modifier.size(14.dp), color = L.Gold, strokeWidth = 2.dp)
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp).semantics { contentDescription = "Thinking" },
+                color = L.Gold,
+                strokeWidth = 2.dp
+            )
         }
     }
 }
@@ -290,6 +318,7 @@ private fun InputBar(text: String, onTextChange: (String) -> Unit, canSend: Bool
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(if (canSend) L.Gold else L.Gold.copy(alpha = 0.4f))
+                .semantics { role = Role.Button }
                 .clickable(enabled = canSend, onClick = onSend),
             contentAlignment = Alignment.Center
         ) {

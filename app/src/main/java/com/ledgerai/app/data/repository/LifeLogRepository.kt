@@ -24,6 +24,9 @@ class LifeLogRepository @Inject constructor(
         return checkinDao.observeDay(start, end)
     }
 
+    fun observeEntries(date: LocalDate): Flow<List<ActivityEntryEntity>> =
+        entryDao.observeDay(date.atStartOfDay(), date.plusDays(1).atStartOfDay())
+
     suspend fun ensureWindowsForDay(date: LocalDate, wakeStart: LocalTime = LocalTime.of(7, 0), wakeEnd: LocalTime = LocalTime.of(23, 0)) {
         var cursor = LocalDateTime.of(date, wakeStart)
         val end = LocalDateTime.of(date, wakeEnd)
@@ -43,15 +46,27 @@ class LifeLogRepository @Inject constructor(
         checkinDao.markExpiredGaps(now)
     }
 
-    suspend fun answerWindow(windowId: Long, text: String, start: LocalDateTime, end: LocalDateTime) {
-        entryDao.insert(
-            ActivityEntryEntity(
-                startAt = start,
-                endAt = end,
-                text = text,
-                source = ActivityEntrySource.MANUAL
+    suspend fun answerWindow(
+        windowId: Long,
+        text: String,
+        start: LocalDateTime,
+        end: LocalDateTime,
+        entryId: Long? = null,
+        voice: Boolean = false,
+    ) {
+        val source = if (voice) ActivityEntrySource.VOICE else ActivityEntrySource.MANUAL
+        if (entryId != null && entryId > 0L) {
+            entryDao.updateText(entryId, text, source.name)
+        } else {
+            entryDao.insert(
+                ActivityEntryEntity(
+                    startAt = start,
+                    endAt = end,
+                    text = text,
+                    source = source
+                )
             )
-        )
+        }
         checkinDao.updateState(windowId, CheckinWindowState.ANSWERED.name)
     }
 

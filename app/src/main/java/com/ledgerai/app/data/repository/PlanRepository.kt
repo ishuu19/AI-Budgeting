@@ -6,7 +6,6 @@ import com.ledgerai.app.data.local.room.toDomain
 import com.ledgerai.app.data.local.room.toEntity
 import com.ledgerai.app.service.PlanBlockScheduler
 import com.ledgerai.app.data.schedule.BusyInterval
-import com.ledgerai.app.data.schedule.expandSlotsForMonth
 import com.ledgerai.app.data.schedule.FreeBlockFinder
 import com.ledgerai.app.data.schedule.FreeSlotOption
 import com.ledgerai.app.domain.model.PlanBlock
@@ -26,8 +25,6 @@ class PlanRepository @Inject constructor(
     private val studyPlanDao: StudyPlanDao,
     private val planBlockDao: PlanBlockDao,
     private val calendarRepository: CalendarRepository,
-    private val scheduleRepository: ScheduleRepository,
-    private val taskRepository: TaskRepository,
     private val planBlockScheduler: PlanBlockScheduler
 ) {
 
@@ -53,6 +50,29 @@ class PlanRepository @Inject constructor(
             )
             planBlockScheduler.schedule(id, topic, slot.start)
         }
+    }
+
+    /** Saves the plan and its blocks together. Call only after the user confirmed the proposals. */
+    suspend fun saveStudyPlanWithBlocks(plan: StudyPlan, slots: List<FreeSlotOption>): Long {
+        if (slots.isEmpty()) return 0L
+        val planId = saveStudyPlan(plan)
+        createBlocksFromSlots(planId, plan.topic, slots)
+        return planId
+    }
+
+    suspend fun getBlock(id: Long): PlanBlock? =
+        if (id <= 0L) null else planBlockDao.getById(id)?.takeIf { it.deletedAt == null }?.toDomain()
+
+    suspend fun deleteBlock(id: Long) {
+        if (id <= 0L) return
+        planBlockDao.softDelete(id, System.currentTimeMillis())
+        planBlockScheduler.cancel(id)
+    }
+
+    suspend fun setBlockStatus(id: Long, status: PlanBlockStatus) {
+        if (id <= 0L) return
+        planBlockDao.updateStatus(id, status.name, System.currentTimeMillis())
+        if (status != PlanBlockStatus.SCHEDULED) planBlockScheduler.cancel(id)
     }
 
     suspend fun rescheduleAllBlockAlarms(): Int {
@@ -82,32 +102,20 @@ class PlanRepository @Inject constructor(
         )
     }
 
+    /** Calendar events that occupy time (classes included) plus scheduled plan blocks. */
     private suspend fun collectBusyIntervals(from: LocalDate, to: LocalDate): List<BusyInterval> {
         val out = mutableListOf<BusyInterval>()
-        val days = java.time.temporal.ChronoUnit.DAYS.between(from, to).toInt().coerceAtLeast(0) + 1
-        val events = calendarRepository.listNextDays(days.coerceAtMost(60))
+        val events = calendarRepository.listRange(from, to.coerceAtMost(from.plusDays(60)))
         for (e in events) {
+            if (!e.kind.blocksTime || !e.isEnabled || !e.endAt.isAfter(e.startAt)) continue
             out += BusyInterval(e.startAt, e.endAt, e.title)
         }
-        val slots = scheduleRepository.observeAllSlots().first()
-        var month = from.withDayOfMonth(1)
-        while (!month.isAfter(to)) {
-            for (cls in expandSlotsForMonth(slots, month)) {
-                val d = cls.startAt.toLocalDate()
-                if (!d.isBefore(from) && !d.isAfter(to)) {
-                    out += BusyInterval(cls.startAt, cls.endAt, cls.title)
-                }
-            }
-            month = month.plusMonths(1)
-        }
-        val tasks = taskRepository.observeTasks().first()
-        for (t in tasks) {
-            val due = t.dueAt
-            if (!t.isCompleted && due != null) {
-                val d = due.toLocalDate()
-                if (!d.isBefore(from) && !d.isAfter(to)) {
-                    out += BusyInterval(due, due.plusMinutes(30), t.title)
-                }
+        val blocks = planBlockDao.observeAll().first()
+        for (b in blocks) {
+            if (b.deletedAt != null) continue
+            val d = b.startAt.toLocalDate()
+            if (!d.isBefore(from) && !d.isAfter(to)) {
+                out += BusyInterval(b.startAt, b.endAt, b.title)
             }
         }
         return out

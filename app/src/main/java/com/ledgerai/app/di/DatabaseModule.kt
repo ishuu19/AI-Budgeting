@@ -4,19 +4,18 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.ledgerai.app.data.local.room.AlarmDao
 import com.ledgerai.app.data.local.room.BillDao
 import com.ledgerai.app.data.local.room.BudgetDao
 import com.ledgerai.app.data.local.room.CalendarEventDao
-import com.ledgerai.app.data.local.room.CourseDao
+import com.ledgerai.app.data.local.room.EventReminderDao
+import com.ledgerai.app.data.local.room.MIGRATION_6_7
+import com.ledgerai.app.data.local.room.MIGRATION_7_8
+import com.ledgerai.app.data.local.room.MIGRATION_8_9
+import com.ledgerai.app.data.local.room.VoiceHistoryDao
 import com.ledgerai.app.data.local.room.DebtDao
 import com.ledgerai.app.data.local.room.GoalDao
 import com.ledgerai.app.data.local.room.LedgerDatabase
 import com.ledgerai.app.data.local.room.NoteDao
-import com.ledgerai.app.data.local.room.RoutineDao
-import com.ledgerai.app.data.local.room.RoutineSlotReminderDao
-import com.ledgerai.app.data.local.room.ScheduleSlotDao
-import com.ledgerai.app.data.local.room.ScheduleSlotExceptionDao
 import com.ledgerai.app.data.local.room.StudyPlanDao
 import com.ledgerai.app.data.local.room.PlanBlockDao
 import com.ledgerai.app.data.local.room.HabitDao
@@ -31,8 +30,6 @@ import com.ledgerai.app.data.local.room.VisitDao
 import com.ledgerai.app.data.local.room.ActivityEntryDao
 import com.ledgerai.app.data.local.room.CheckinWindowDao
 import com.ledgerai.app.data.local.room.JobApplicationDao
-import com.ledgerai.app.data.local.room.TaskDao
-import com.ledgerai.app.data.local.room.TaskReminderDao
 import com.ledgerai.app.data.local.room.TransactionDao
 import dagger.Module
 import dagger.Provides
@@ -49,8 +46,8 @@ object DatabaseModule {
     @Singleton
     fun provideLedgerDatabase(@ApplicationContext context: Context): LedgerDatabase =
         Room.databaseBuilder(context, LedgerDatabase::class.java, "ledgerai.db")
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
-            .fallbackToDestructiveMigration()
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            .fallbackToDestructiveMigrationFrom(1)
             .build()
 
     @Provides
@@ -69,36 +66,13 @@ object DatabaseModule {
     fun provideBillDao(db: LedgerDatabase): BillDao = db.billDao()
 
     @Provides
-    fun provideTaskDao(db: LedgerDatabase): TaskDao = db.taskDao()
-
-    @Provides
-    fun provideTaskReminderDao(db: LedgerDatabase): TaskReminderDao = db.taskReminderDao()
-
-    @Provides
-    fun provideRoutineDao(db: LedgerDatabase): RoutineDao = db.routineDao()
-
-    @Provides
     fun provideNoteDao(db: LedgerDatabase): NoteDao = db.noteDao()
-
-    @Provides
-    fun provideAlarmDao(db: LedgerDatabase): AlarmDao = db.alarmDao()
-
-    @Provides
-    fun provideCourseDao(db: LedgerDatabase): CourseDao = db.courseDao()
-
-    @Provides
-    fun provideScheduleSlotDao(db: LedgerDatabase): ScheduleSlotDao = db.scheduleSlotDao()
-
-    @Provides
-    fun provideRoutineSlotReminderDao(db: LedgerDatabase): RoutineSlotReminderDao =
-        db.routineSlotReminderDao()
 
     @Provides
     fun provideCalendarEventDao(db: LedgerDatabase): CalendarEventDao = db.calendarEventDao()
 
     @Provides
-    fun provideScheduleSlotExceptionDao(db: LedgerDatabase): ScheduleSlotExceptionDao =
-        db.scheduleSlotExceptionDao()
+    fun provideEventReminderDao(db: LedgerDatabase): EventReminderDao = db.eventReminderDao()
 
     @Provides fun provideStudyPlanDao(db: LedgerDatabase): StudyPlanDao = db.studyPlanDao()
     @Provides fun providePlanBlockDao(db: LedgerDatabase): PlanBlockDao = db.planBlockDao()
@@ -115,6 +89,7 @@ object DatabaseModule {
     @Provides fun provideActivityEntryDao(db: LedgerDatabase): ActivityEntryDao = db.activityEntryDao()
     @Provides fun provideCheckinWindowDao(db: LedgerDatabase): CheckinWindowDao = db.checkinWindowDao()
     @Provides fun provideJobApplicationDao(db: LedgerDatabase): JobApplicationDao = db.jobApplicationDao()
+    @Provides fun provideVoiceHistoryDao(db: LedgerDatabase): VoiceHistoryDao = db.voiceHistoryDao()
 }
 
 private val MIGRATION_5_6 = object : Migration(5, 6) {

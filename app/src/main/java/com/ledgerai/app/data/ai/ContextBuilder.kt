@@ -1,13 +1,16 @@
 package com.ledgerai.app.data.ai
 
-import com.ledgerai.app.data.repository.AlarmRepository
 import com.ledgerai.app.data.repository.BillRepository
 import com.ledgerai.app.data.repository.BudgetRepository
-import com.ledgerai.app.data.repository.TaskRepository
+import com.ledgerai.app.data.repository.CalendarRepository
+import com.ledgerai.app.data.repository.PlanRepository
 import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.domain.model.CalendarEvent
+import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.TransactionType
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
@@ -21,10 +24,11 @@ import javax.inject.Singleton
 class ContextBuilder @Inject constructor(
     private val transactionRepo: TransactionRepository,
     private val budgetRepo: BudgetRepository,
-    private val taskRepo: TaskRepository,
+    private val calendarRepo: CalendarRepository,
     private val billRepo: BillRepository,
-    private val alarmRepo: AlarmRepository,
+    private val planRepo: PlanRepository,
 ) {
+    private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     suspend fun buildFromRoom(now: LocalDate = LocalDate.now()): String {
         val year = now.year
@@ -35,11 +39,10 @@ class ContextBuilder @Inject constructor(
         val expenses = transactionRepo.getTotalExpensesForMonth(year, month)
         val recent = transactionRepo.getRecentTransactions(8).first()
         val budgets = budgetRepo.getBudgetsForMonth(month, year).first()
-        val tasks = taskRepo.observeTasks().first().filter { !it.isCompleted }.take(5)
+        val events = calendarRepo.listNextDays(7).filter { it.isOpen() }.take(8)
         val bills = billRepo.getActiveBills().first()
             .sortedBy { it.nextDueDate }
             .take(5)
-        val alarms = alarmRepo.observeAlarms().first().filter { it.isEnabled }.take(4)
 
         val categoryTotals = recent
             .filter { it.type == TransactionType.EXPENSE }
@@ -69,15 +72,11 @@ class ContextBuilder @Inject constructor(
         }
 
         val upcoming = buildList {
-            tasks.forEach { t ->
-                val due = t.dueAt?.toLocalDate()?.toString() ?: "no due"
-                add("task: ${t.title} ($due)")
+            events.forEach { e ->
+                add("${e.kind.name.lowercase()}: ${e.title} (${fmt.format(e.startAt)})")
             }
             bills.forEach { b ->
                 add("bill: ${b.name} ${"%.0f".format(b.amount)} due ${b.nextDueDate}")
-            }
-            alarms.forEach { a ->
-                add("alarm: ${a.label} @ ${a.time}")
             }
         }
 
@@ -98,6 +97,25 @@ class ContextBuilder @Inject constructor(
             recent = recentLines,
         )
     }
+
+    /** Calendar events (all kinds) and plan blocks for the next 14 days, one line each. */
+    suspend fun build14DaySlice(now: LocalDate = LocalDate.now()): String {
+        val events = calendarRepo.listNextDays(14).filter { it.isOpen() }
+        val blocks = planRepo.observeBlocks().first()
+        val lines = buildList {
+            add("Schedule next 14 days from $now:")
+            events.forEach { e ->
+                add("${e.kind.name.lowercase()}|${fmt.format(e.startAt)}|${e.title}")
+            }
+            blocks.forEach { b ->
+                add("plan|${fmt.format(b.startAt)}|${b.title}|${b.kind}")
+            }
+        }
+        return lines.joinToString("\n")
+    }
+
+    private fun CalendarEvent.isOpen(): Boolean =
+        isEnabled && !(isCompleted && kind == CalendarEventKind.TASK)
 
     fun buildCompactSummary(
         monthLabel: String = "",

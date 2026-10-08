@@ -2,12 +2,16 @@ package com.ledgerai.app.data.ai
 
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.DebtDirection
+import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.RecurrenceFrequency
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 class QuickParseIntentTest {
@@ -20,10 +24,11 @@ class QuickParseIntentTest {
             "Set an alarm for 7:30 am on weekdays",
             today = today,
         )
-        assertTrue(intent is ParsedIntent.Alarm)
-        val alarm = intent as ParsedIntent.Alarm
-        assertEquals(LocalTime.of(7, 30), alarm.time)
-        assertEquals(QuickParse.MASK_WEEKDAYS, alarm.repeatDays)
+        assertTrue(intent is ParsedIntent.Event)
+        val alarm = intent as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ALARM, alarm.kind)
+        assertEquals(LocalTime.of(7, 30), alarm.startAt.toLocalTime())
+        assertEquals(QuickParse.MASK_WEEKDAYS, alarm.alarmRepeatDays)
     }
 
     @Test
@@ -32,17 +37,19 @@ class QuickParseIntentTest {
             "Add a weekly routine to stretch",
             today = today,
         )
-        assertTrue(intent is ParsedIntent.Routine)
-        val routine = intent as ParsedIntent.Routine
-        assertEquals("WEEKLY", routine.repeatRule)
+        assertTrue(intent is ParsedIntent.Event)
+        val routine = intent as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ROUTINE, routine.kind)
+        assertEquals(RecurrenceFrequency.WEEKLY, routine.repeat?.frequency)
         assertTrue(routine.title.lowercase().contains("stretch"))
     }
 
     @Test
     fun parseVoiceIntent_task() {
         val intent = QuickParse.parseVoiceIntent("Add task Buy milk", today = today)
-        assertTrue(intent is ParsedIntent.Task)
-        assertEquals("Buy milk", (intent as ParsedIntent.Task).title)
+        assertTrue(intent is ParsedIntent.Event)
+        assertEquals("Buy milk", (intent as ParsedIntent.Event).title)
+        assertEquals(CalendarEventKind.TASK, intent.kind)
     }
 
     @Test
@@ -212,12 +219,120 @@ class QuickParseIntentTest {
     @Test
     fun parseVoiceIntent_alarmStillBeatsMoney() {
         val intent = QuickParse.parseVoiceIntent("Set an alarm for 7 am", today = today)
-        assertTrue(intent is ParsedIntent.Alarm)
+        assertTrue(intent is ParsedIntent.Event && intent.kind == CalendarEventKind.ALARM)
     }
 
     @Test
     fun parseVoiceIntent_taskStillBeatsBillWords() {
         val intent = QuickParse.parseVoiceIntent("Add task pay the netflix bill", today = today)
-        assertTrue(intent is ParsedIntent.Task)
+        assertTrue(intent is ParsedIntent.Event && intent.kind == CalendarEventKind.TASK)
+    }
+
+    @Test
+    fun parseVoiceIntent_reminderKeepsSpokenDateTimeAndLabel() {
+        val intent = QuickParse.parseVoiceIntent("Remind me to call mom tomorrow at 9 am", today = today)
+        assertTrue(intent is ParsedIntent.Event)
+        val event = intent as ParsedIntent.Event
+        assertEquals("Call mom", event.title)
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0)), event.startAt)
+        assertEquals(CalendarEventKind.TASK, event.kind)
+        assertEquals(listOf(0), event.reminders.map { it.offsetMinutes })
+    }
+
+    @Test
+    fun parseVoiceIntent_reminderOnWeekdayAndEveningTime() {
+        // 2026-10-08 is a Thursday, so the next Friday is the 9th.
+        val intent = QuickParse.parseVoiceIntent("remind me to pay rent on friday at 6:30 pm", today = today)
+        val event = intent as ParsedIntent.Event
+        assertEquals("Pay rent", event.title)
+        assertEquals(LocalDateTime.of(2026, 10, 9, 18, 30), event.startAt)
+    }
+
+    @Test
+    fun parseVoiceIntent_reminderInDays_isNotReadAsClockTime() {
+        val event = QuickParse.parseVoiceIntent("remind me to renew passport in 3 days", today = today) as ParsedIntent.Event
+        assertEquals(today.plusDays(3), event.startAt.toLocalDate())
+        assertEquals(LocalTime.of(9, 0), event.startAt.toLocalTime())
+        assertEquals("Renew passport", event.title)
+    }
+
+    @Test
+    fun parseVoiceIntent_examBecomesExamEvent() {
+        val event = QuickParse.parseVoiceIntent("exam on october 20 at 2 pm", today = today) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.EXAM, event.kind)
+        assertEquals(LocalDateTime.of(2026, 10, 20, 14, 0), event.startAt)
+    }
+
+    @Test
+    fun parseVoiceIntent_alarmDailyHasAllWeekdays() {
+        val event = QuickParse.parseVoiceIntent("alarm every day at 6:15 am", today = today) as ParsedIntent.Event
+        assertEquals(QuickParse.MASK_EVERY_DAY, event.alarmRepeatDays)
+        assertEquals(RecurrenceFrequency.WEEKLY, event.repeat?.frequency)
+        assertEquals(setOf(1, 2, 3, 4, 5, 6, 7), event.repeat?.weekDays)
+    }
+
+    @Test
+    fun parseVoiceIntent_unmatchedIsNotATransaction() {
+        val intent = QuickParse.parseVoiceIntent("hello there how are you", today = today)
+        assertTrue(intent is ParsedIntent.Unmatched)
+        assertEquals("hello there how are you", intent.rawTranscript)
+    }
+
+    @Test
+    fun parseVoiceIntent_budget() {
+        val intent = QuickParse.parseVoiceIntent("set a food budget of 300", today = today)
+        assertTrue(intent is ParsedIntent.Budget)
+        val budget = intent as ParsedIntent.Budget
+        assertEquals(TransactionCategory.FOOD, budget.category)
+        assertEquals(300.0, budget.limit, 0.001)
+    }
+
+    @Test
+    fun parseVoiceIntents_splitsOnThen() {
+        val items = QuickParse.parseVoiceIntents("spent 12 on lunch then remind me to call mom at 5 pm", today = today)
+        assertEquals(2, items.size)
+        assertTrue(items[0] is ParsedIntent.Transaction)
+        assertTrue(items[1] is ParsedIntent.Event)
+    }
+
+    @Test
+    fun parseVoiceIntents_splitsOnAndWhenBothSidesAreClear() {
+        val items = QuickParse.parseVoiceIntents("set an alarm for 7 am and remind me to take pills at 8 pm", today = today)
+        assertEquals(2, items.size)
+        assertEquals(CalendarEventKind.ALARM, (items[0] as ParsedIntent.Event).kind)
+        assertEquals(CalendarEventKind.TASK, (items[1] as ParsedIntent.Event).kind)
+    }
+
+    @Test
+    fun parseVoiceIntents_keepsOneItemWhenAndIsPartOfTheTitle() {
+        val items = QuickParse.parseVoiceIntents("remind me to buy milk and eggs tomorrow", today = today)
+        assertEquals(1, items.size)
+        assertEquals("Buy milk and eggs", (items[0] as ParsedIntent.Event).title)
+    }
+
+    @Test
+    fun parseVoiceIntents_unmatchedStaysOneUnmatchedCard() {
+        val items = QuickParse.parseVoiceIntents("blah blah then umm", today = today)
+        assertEquals(1, items.size)
+        assertTrue(items[0] is ParsedIntent.Unmatched)
+    }
+
+    @Test
+    fun asKind_forcesTheChosenKind() {
+        val note = QuickParse.asKind(VoiceResultKind.Note, "buy milk", today = today)
+        assertTrue(note is ParsedIntent.Note)
+        val bill = QuickParse.asKind(VoiceResultKind.Bill, "gym 40", today = today)
+        assertEquals(40.0, (bill as ParsedIntent.Bill).amount, 0.001)
+        val task = QuickParse.asKind(VoiceResultKind.Task, "call dentist tomorrow at 9 am", today = today) as ParsedIntent.Event
+        assertEquals(CalendarEventKind.TASK, task.kind)
+        assertEquals(LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0)), task.startAt)
+    }
+
+    @Test
+    fun resultKind_namesRemindersApartFromTasks() {
+        val reminder = QuickParse.parseVoiceIntent("remind me to call mom tomorrow", today = today)
+        assertEquals(VoiceResultKind.Reminder, reminder.resultKind())
+        val task = QuickParse.parseVoiceIntent("add task buy milk", today = today)
+        assertEquals(VoiceResultKind.Task, task.resultKind())
     }
 }

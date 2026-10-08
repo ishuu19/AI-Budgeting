@@ -14,6 +14,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.ledgerai.app.R
 import com.ledgerai.app.presentation.theme.*
 
@@ -50,6 +62,19 @@ object L {
     val Gutter = 20.dp
 }
 
+/** Current currency symbol. Snapshot state, so screens that call money() recompose on change. */
+object LCurrency {
+    var symbol by mutableStateOf("$")
+}
+
+/** True when a screen is shown as a segment inside a tab. LScreen then hides its own title and back button. */
+val LocalEmbedded = compositionLocalOf { false }
+
+@Composable
+fun LEmbedded(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalEmbedded provides true, content = content)
+}
+
 @Composable
 fun LLogo(size: Dp = 32.dp, modifier: Modifier = Modifier) {
     Image(
@@ -67,39 +92,54 @@ fun LScreen(
     onBack: (() -> Unit)? = null,
     action: (@Composable RowScope.() -> Unit)? = null,
     fab: (@Composable () -> Unit)? = null,
+    snackbarHost: (@Composable () -> Unit)? = null,
+    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     content: LazyListScope.() -> Unit
 ) {
+    val embedded = LocalEmbedded.current
     Scaffold(
         modifier = modifier,
         containerColor = L.Page,
-        floatingActionButton = { fab?.invoke() }
+        floatingActionButton = { fab?.invoke() },
+        snackbarHost = { snackbarHost?.invoke() }
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(start = L.Gutter, end = L.Gutter, top = 20.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = L.Ink
-                            )
+            if (!embedded) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = L.Ink
+                                )
+                            }
                         }
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = L.Ink,
+                            modifier = Modifier.weight(1f).semantics { heading() }
+                        )
+                        action?.invoke(this)
                     }
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = L.Ink,
-                        modifier = Modifier.weight(1f)
-                    )
-                    action?.invoke(this)
+                }
+            } else if (action != null) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
+                    ) { action.invoke(this) }
                 }
             }
             content()
@@ -111,7 +151,7 @@ fun LScreen(
 @Composable
 fun LHero(label: String, value: String, sub: String? = null, modifier: Modifier = Modifier, valueColor: Color = L.OnBox) {
     Surface(modifier = modifier.fillMaxWidth(), color = L.Box, shape = RoundedCornerShape(24.dp)) {
-        Column(Modifier.padding(horizontal = 24.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = L.Gold)
             Text(value, style = MaterialTheme.typography.displaySmall, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted, maxLines = 1)
@@ -123,7 +163,7 @@ fun LHero(label: String, value: String, sub: String? = null, modifier: Modifier 
 fun LCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    padding: Dp = 16.dp,
+    padding: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val base = modifier.fillMaxWidth().clip(RoundedCornerShape(L.Radius))
@@ -131,7 +171,7 @@ fun LCard(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
             .background(L.Box)
             .padding(padding),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         content = content
     )
 }
@@ -185,16 +225,17 @@ fun LRow(
 @Composable
 fun LSection(text: String, action: String? = null, onAction: () -> Unit = {}) {
     Row(
-        Modifier.fillMaxWidth().padding(top = 12.dp),
+        Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, style = MaterialTheme.typography.titleMedium, color = L.Ink, modifier = Modifier.weight(1f))
+        Text(text, style = MaterialTheme.typography.titleMedium, color = L.Ink, modifier = Modifier.weight(1f).semantics { heading() })
         if (action != null) {
             Text(
                 action,
                 style = MaterialTheme.typography.labelLarge,
                 color = L.Box,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction).padding(6.dp)
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction)
+                    .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 12.dp)
             )
         }
     }
@@ -280,17 +321,23 @@ fun LField(
 
 @Composable
 fun LChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        color = if (selected) L.OnBox else L.Box,
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(50))
-            .background(if (selected) L.Box else Color.Transparent)
-            .border(1.dp, if (selected) L.Box else L.Box.copy(alpha = 0.35f), RoundedCornerShape(50))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    )
+            .heightIn(min = 48.dp)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) L.OnBox else L.Box,
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(if (selected) L.Box else Color.Transparent)
+                .border(1.dp, if (selected) L.Box else L.Box.copy(alpha = 0.35f), RoundedCornerShape(50))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
 }
 
 /** Bottom sheet with a title and a primary action. */
@@ -308,12 +355,14 @@ fun LSheet(
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = L.Page) {
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = L.Gutter).padding(bottom = 32.dp),
+            Modifier.fillMaxWidth().imePadding().padding(horizontal = L.Gutter).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = L.Ink)
-            content()
-            Spacer(Modifier.height(4.dp))
+            Text(title, style = MaterialTheme.typography.titleLarge, color = L.Ink, modifier = Modifier.semantics { heading() })
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) { content() }
             LButton(primary, onPrimary, enabled = primaryEnabled)
             if (secondary != null) LGhostButton(secondary, onSecondary)
         }
@@ -337,7 +386,7 @@ fun LIconButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     IconButton(onClick = onClick) { Icon(icon, contentDescription = label, tint = L.Box) }
 }
 
-fun money(amount: Double, symbol: String = "$"): String {
+fun money(amount: Double, symbol: String = LCurrency.symbol): String {
     val abs = kotlin.math.abs(amount)
     val body = if (abs >= 1000) "%,.0f".format(abs) else "%,.2f".format(abs)
     return (if (amount < 0) "-" else "") + symbol + body

@@ -26,6 +26,13 @@ class JobRepository @Inject constructor(
         return dao.insert(application.toEntity())
     }
 
+    suspend fun delete(id: Long) {
+        if (id > 0L) dao.softDelete(id, System.currentTimeMillis())
+    }
+
+    suspend fun getById(id: Long): JobApplication? =
+        if (id <= 0L) null else dao.getById(id)?.toDomain()
+
     suspend fun saveBatch(apps: List<JobApplication>) {
         for (app in apps) save(app)
     }

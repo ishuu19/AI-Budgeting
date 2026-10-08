@@ -3,7 +3,6 @@ package com.ledgerai.app.data.repository
 import com.ledgerai.app.data.local.room.CalendarEventDao
 import com.ledgerai.app.data.local.room.LeaveRuleDao
 import com.ledgerai.app.data.local.room.LeaveRuleEntity
-import com.ledgerai.app.data.local.room.TaskDao
 import com.ledgerai.app.domain.model.LeaveRefType
 import com.ledgerai.app.domain.util.LeaveByTime
 import com.ledgerai.app.service.LeaveByScheduler
@@ -14,7 +13,6 @@ import javax.inject.Singleton
 @Singleton
 class LeaveByRepository @Inject constructor(
     private val leaveRuleDao: LeaveRuleDao,
-    private val taskDao: TaskDao,
     private val calendarEventDao: CalendarEventDao,
     private val scheduler: LeaveByScheduler
 ) {
@@ -92,12 +90,10 @@ class LeaveByRepository @Inject constructor(
     }
 
     private suspend fun resolveStartAt(rule: LeaveRuleEntity): LocalDateTime? = when (rule.refType) {
-        LeaveRefType.TASK -> taskDao.getById(rule.refId)?.dueAt
         LeaveRefType.CALENDAR_EVENT -> calendarEventDao.getById(rule.refId)?.startAt
     }
 
     private suspend fun resolveTitle(rule: LeaveRuleEntity): String? = when (rule.refType) {
-        LeaveRefType.TASK -> taskDao.getById(rule.refId)?.title
         LeaveRefType.CALENDAR_EVENT -> calendarEventDao.getById(rule.refId)?.title
     }
 

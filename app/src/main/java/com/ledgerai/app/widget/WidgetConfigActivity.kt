@@ -8,6 +8,7 @@ import android.widget.CheckBox
 import android.widget.Spinner
 import androidx.activity.ComponentActivity
 import androidx.glance.appwidget.updateAll
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -60,7 +61,7 @@ class WidgetConfigActivity : ComponentActivity() {
                     }
                 )
                 WidgetPrefs.setPrivateMode(this@WidgetConfigActivity, privateBox.isChecked)
-                runBlocking {
+                runBlocking(Dispatchers.IO) {
                     HomeWidget().updateAll(this@WidgetConfigActivity)
                     QuickActionsWidget().updateAll(this@WidgetConfigActivity)
                     FocusWidget().updateAll(this@WidgetConfigActivity)

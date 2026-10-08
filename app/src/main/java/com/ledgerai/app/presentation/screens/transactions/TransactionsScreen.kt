@@ -1,24 +1,57 @@
 package com.ledgerai.app.presentation.screens.transactions
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
-import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.components.ChipsRow
+import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LEmpty
+import com.ledgerai.app.presentation.components.LFab
+import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LHero
+import com.ledgerai.app.presentation.components.LIconButton
+import com.ledgerai.app.presentation.components.LLoading
+import com.ledgerai.app.presentation.components.LRow
+import com.ledgerai.app.presentation.components.LScreen
+import com.ledgerai.app.presentation.components.LSection
+import com.ledgerai.app.presentation.components.money
+import com.ledgerai.app.presentation.navigation.OpenItem
+import com.ledgerai.app.presentation.navigation.OpenKind
+import com.ledgerai.app.presentation.screens.money.SnackEffect
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -30,19 +63,40 @@ private enum class SpendFilter(val label: String) { ALL("All"), INCOME("In"), EX
 fun TransactionsScreen(
     onNavigateToVoice: () -> Unit,
     onBack: () -> Unit = {},
+    open: OpenItem? = null,
+    onOpened: () -> Unit = {},
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var filter by remember { mutableStateOf(SpendFilter.ALL) }
-    var query by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf<TransactionCategory?>(null) }
-    var month by remember { mutableStateOf(YearMonth.now()) }
+    var filterName by rememberSaveable { mutableStateOf(SpendFilter.ALL.name) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var categoryName by rememberSaveable { mutableStateOf<String?>(null) }
+    var fromText by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
+    var toText by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
 
-    LaunchedEffect(state.snackbarMessage) {
-        state.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearSnackbar()
+    val filter = SpendFilter.valueOf(filterName)
+    val category = categoryName?.let { name -> TransactionCategory.entries.firstOrNull { it.name == name } }
+    val fromDate = remember(fromText) { runCatching { LocalDate.parse(fromText) }.getOrDefault(LocalDate.now().withDayOfMonth(1)) }
+    val toDate = remember(toText) { runCatching { LocalDate.parse(toText) }.getOrDefault(LocalDate.now()) }
+    val rangeStart = if (fromDate.isAfter(toDate)) toDate else fromDate
+    val rangeEnd = if (fromDate.isAfter(toDate)) fromDate else toDate
+
+    SnackEffect(state.snackbarMessage, snackbarHostState) { viewModel.clearSnackbar() }
+
+    LaunchedEffect(open, state.transactions, state.isLoading) {
+        val request = open
+        if (request != null && request.kind == OpenKind.Transaction) {
+            val tx = state.transactions.firstOrNull { it.id == request.id }
+            if (tx != null) {
+                val ym = YearMonth.from(tx.date)
+                fromText = ym.atDay(1).toString()
+                toText = ym.atEndOfMonth().toString()
+                viewModel.showEditSheet(tx)
+                onOpened()
+            } else if (!state.isLoading) {
+                onOpened()
+            }
         }
     }
 
@@ -51,100 +105,83 @@ fun TransactionsScreen(
         SpendFilter.INCOME -> TransactionType.INCOME
         SpendFilter.EXPENSE -> TransactionType.EXPENSE
     }
-    val monthRows = remember(state.transactions, month) {
-        SpendQuery.inMonth(state.transactions, month)
+    val rangeRows = remember(state.transactions, rangeStart, rangeEnd) {
+        SpendQuery.inRange(state.transactions, rangeStart, rangeEnd)
     }
-    val net = remember(monthRows) { SpendQuery.monthNet(monthRows) }
-    val monthCategories = remember(monthRows) { SpendQuery.categoriesIn(monthRows) }
-    LaunchedEffect(month, monthCategories) {
-        if (category != null && category !in monthCategories) category = null
+    val monthCategories = remember(rangeRows) { SpendQuery.categoriesIn(rangeRows) }
+    LaunchedEffect(rangeStart, rangeEnd, monthCategories) {
+        if (category != null && category !in monthCategories) categoryName = null
     }
-    val visible = remember(state.transactions, month, type, category, query) {
-        SpendQuery.filter(state.transactions, month, type, category, query)
+    val visible = remember(state.transactions, rangeStart, rangeEnd, type, category, query) {
+        SpendQuery.filter(state.transactions, rangeStart, rangeEnd, type, category, query)
             .sortedWith(compareByDescending<Transaction> { it.date }.thenByDescending { it.createdAt })
+    }
+    val total = remember(visible, filter) {
+        visible.sumOf { tx ->
+            when (filter) {
+                SpendFilter.INCOME -> if (tx.type == TransactionType.INCOME) tx.amount else 0.0
+                else -> if (tx.type == TransactionType.EXPENSE) tx.amount else 0.0
+            }
+        }
     }
     val days = remember(visible) {
         visible.groupBy { it.date }.toSortedMap(Comparator.reverseOrder())
     }
-    val monthLabel = remember(month) {
-        month.format(DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault()))
-    }
-
-    Box(Modifier.fillMaxSize()) {
-        LScreen(
-            title = "Spend",
-            onBack = onBack,
-            action = { LIconButton(Icons.Filled.Mic, "Voice", onNavigateToVoice) },
-            fab = { LFab(Icons.Filled.Add, onClick = { viewModel.showAddSheet() }) }
-        ) {
-            item(key = "hero") {
-                LHero(
-                    label = monthLabel,
-                    value = money(net),
-                    valueColor = if (net < 0) L.Danger else L.OnBox
-                )
-            }
-            item(key = "month") {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    LChip("Prev", false, onClick = { month = month.minusMonths(1) })
-                    LChip("Next", false, onClick = { month = month.plusMonths(1) })
+    LScreen(
+        title = "Spend",
+        onBack = onBack,
+        action = { LIconButton(Icons.Filled.Mic, "Add by voice", onNavigateToVoice) },
+        fab = { LFab(Icons.Filled.Add, onClick = { viewModel.showAddSheet() }, label = "Add transaction") },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) {
+        item(key = "total") {
+            LHero(label = "Total", value = money(total))
+        }
+        item(key = "controls") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DatePickChip(rangeStart, selected = false, onDate = { fromText = it.toString() }, label = "From " + shortDate(rangeStart))
+                    DatePickChip(rangeEnd, selected = false, onDate = { toText = it.toString() }, label = "To " + shortDate(rangeEnd))
                 }
-            }
-            item(key = "search") {
                 LField(query, { query = it }, "Search")
-            }
-            item(key = "filters") {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                ChipsRow {
                     SpendFilter.entries.forEach { f ->
-                        LChip(f.label, filter == f, onClick = { filter = f; category = null })
+                        LChip(f.label, filter == f, onClick = { filterName = f.name; categoryName = null })
                     }
-                }
-            }
-            item(key = "categories") {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    LChip("All", category == null, onClick = { category = null })
                     monthCategories.forEach { cat ->
-                        LChip(cat.displayName, category == cat, onClick = { category = cat })
+                        LChip(
+                            cat.displayName,
+                            category == cat,
+                            onClick = { categoryName = if (category == cat) null else cat.name }
+                        )
                     }
-                }
-            }
-
-            if (!state.isLoading && days.isEmpty()) {
-                item(key = "empty") { LEmpty(Icons.AutoMirrored.Filled.ReceiptLong, "No spending") }
-            }
-
-            days.forEach { (date, list) ->
-                item(key = "day-$date") { LSection(dayLabel(date)) }
-                items(list, key = { it.id }) { tx ->
-                    val income = tx.type == TransactionType.INCOME
-                    LRow(
-                        title = tx.merchant.ifBlank { tx.category.displayName },
-                        sub = listOf(tx.location, tx.note).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { null },
-                        trailing = (if (income) "+" else "-") + money(tx.amount),
-                        trailingColor = if (income) L.Gold else L.OnBox,
-                        icon = spendIcon(tx.category),
-                        onClick = { viewModel.showEditSheet(tx) },
-                        end = if (tx.isRecurring) {
-                            { LChip("Repeat", true, onClick = { viewModel.showEditSheet(tx) }) }
-                        } else null
-                    )
                 }
             }
         }
 
-        SnackbarHost(
-            snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp)
-        )
+        if (state.isLoading) {
+            item(key = "loading") { LLoading() }
+        } else if (days.isEmpty()) {
+            item(key = "empty") { LEmpty(Icons.AutoMirrored.Filled.ReceiptLong, "No spending") }
+        }
+
+        days.forEach { (date, list) ->
+            item(key = "day-$date") { LSection(dayLabel(date)) }
+            items(list, key = { it.id }) { tx ->
+                val income = tx.type == TransactionType.INCOME
+                LRow(
+                    title = tx.merchant.ifBlank { tx.category.displayName },
+                    sub = listOf(tx.location, tx.note).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { null },
+                    trailing = (if (income) "+" else "-") + money(tx.amount),
+                    trailingColor = if (income) L.Gold else L.OnBox,
+                    icon = spendIcon(tx.category),
+                    onClick = { viewModel.showEditSheet(tx) },
+                    end = if (tx.isRecurring) {
+                        { Icon(Icons.Filled.Repeat, contentDescription = "Repeats", tint = L.OnBoxMuted, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
+            }
+        }
     }
 
     if (state.showAddSheet) {
@@ -159,7 +196,7 @@ fun TransactionsScreen(
     }
 
     state.editingTransaction?.let { editing ->
-        key(editing.id) {
+        androidx.compose.runtime.key(editing.id) {
             AddTransactionSheet(
                 existing = editing,
                 onDismiss = { viewModel.hideEditSheet() },

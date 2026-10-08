@@ -95,11 +95,6 @@ fun LPlaceField(
                 Icon(Icons.Default.OpenInNew, contentDescription = "Search in Google Maps", tint = L.Box)
             }
         }
-        Text(
-            "Type to search here, or open Google Maps to pick a place",
-            style = MaterialTheme.typography.labelSmall,
-            color = L.InkMuted
-        )
         if (searching) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
         }
@@ -120,7 +115,8 @@ fun LPlaceField(
                                     onLinksChange(PlaceLinks.mergeMapsLink(links, place.mapsUrl))
                                     suggestions = emptyList()
                                 }
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                .heightIn(min = 48.dp)
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(Icons.Default.Map, contentDescription = null, tint = L.Box, modifier = Modifier.size(20.dp))

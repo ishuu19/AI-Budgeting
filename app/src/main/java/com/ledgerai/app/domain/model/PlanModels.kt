@@ -26,7 +26,7 @@ enum class ActivityEntrySource { MANUAL, VOICE, SUGGESTED }
 
 enum class CheckinWindowState { PENDING, ANSWERED, GAP }
 
-enum class LeaveRefType { TASK, CALENDAR_EVENT }
+enum class LeaveRefType { CALENDAR_EVENT }
 
 data class StudyPlan(
     val id: Long = 0,

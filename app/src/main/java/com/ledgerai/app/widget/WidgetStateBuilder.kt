@@ -3,7 +3,6 @@ package com.ledgerai.app.widget
 import android.content.Context
 import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.finance.SpendGuideStatus
-import com.ledgerai.app.data.schedule.expandSlotsForDay
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.domain.model.CheckinWindowState
@@ -13,12 +12,13 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 object WidgetStateBuilder {
 
-    fun load(context: Context): WidgetPayload = runBlocking {
+    fun load(context: Context): WidgetPayload = runBlocking(Dispatchers.IO) {
         val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
         build(context, ep)
     }
@@ -59,18 +59,9 @@ object WidgetStateBuilder {
 
         val nextItems = mutableListOf<Pair<LocalDateTime, String>>()
         try {
-            ep.calendarRepository().listNextDays(2).forEach { e ->
-                if (e.startAt.toLocalDate() == today && e.kind != CalendarEventKind.TASK) {
-                    nextItems += e.startAt to e.title
-                }
-            }
-            val slots = ep.scheduleRepository().observeAllSlots().first()
-            expandSlotsForDay(slots, today).forEach { c ->
-                nextItems += c.startAt to c.title
-            }
-            ep.taskRepository().observeTasks().first()
-                .filter { !it.isCompleted && it.dueAt != null && it.dueAt!!.toLocalDate() == today }
-                .forEach { t -> nextItems += t.dueAt!! to t.title }
+            ep.calendarRepository().listRange(today, today)
+                .filter { !(it.kind == CalendarEventKind.TASK && it.isCompleted) && it.isEnabled }
+                .forEach { e -> nextItems += e.startAt to e.title }
             ep.planRepository().observeBlocks().first()
                 .filter {
                     it.status == PlanBlockStatus.SCHEDULED &&
@@ -82,6 +73,7 @@ object WidgetStateBuilder {
         }
 
         val sortedNext = nextItems
+            .distinct()
             .filter { !it.first.isBefore(now.minusMinutes(5)) }
             .sortedBy { it.first }
             .take(3)
@@ -93,10 +85,10 @@ object WidgetStateBuilder {
         var tasksDue = 0
         val tasksToday = mutableListOf<WidgetTaskLine>()
         try {
-            val tasks = ep.taskRepository().observeTasks().first()
-            val due = tasks.filter { !it.isCompleted && it.dueAt != null && !it.dueAt!!.toLocalDate().isAfter(today) }
+            val tasks = ep.calendarRepository().observeTasks().first()
+            val due = tasks.filter { !it.isCompleted && it.hasDate && !it.startAt.toLocalDate().isAfter(today) }
             tasksDue = due.size
-            due.sortedWith(compareBy({ it.dueAt }, { it.title }))
+            due.sortedWith(compareBy({ it.startAt }, { it.title }))
                 .take(4)
                 .forEach { t -> tasksToday += WidgetTaskLine(t.id, t.title, t.isCompleted) }
         } catch (_: Exception) {

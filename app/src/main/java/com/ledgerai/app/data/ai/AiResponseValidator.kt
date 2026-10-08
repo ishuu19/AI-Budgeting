@@ -7,8 +7,6 @@ import javax.inject.Singleton
 
 sealed class ValidatedAiResponse {
     data class Transaction(val dto: ParsedTransactionDto) : ValidatedAiResponse()
-    data class Task(val dto: ParsedTaskDto) : ValidatedAiResponse()
-    data class Alarm(val dto: ParsedAlarmDto) : ValidatedAiResponse()
     data class Insight(val dto: InsightDto) : ValidatedAiResponse()
     data class NoteSummary(val dto: NoteSummaryDto) : ValidatedAiResponse()
     data class Chat(val reply: String) : ValidatedAiResponse()
@@ -16,7 +14,7 @@ sealed class ValidatedAiResponse {
 
 /**
  * Validates AI JSON against fixed schemas:
- * transaction | task | alarm | insight | note_summary | chat.
+ * transaction | insight | note_summary | chat.
  * Accepts bare payloads or Edge envelopes `{ "type", "data" }`.
  * Never persists — writes happen only in app code after user confirm.
  */
@@ -30,8 +28,6 @@ class AiResponseValidator @Inject constructor(
             val payload = unwrapPayload(rawOrJson, type) ?: return null
             when (type) {
                 AiResponseType.TRANSACTION -> validateTransaction(payload)
-                AiResponseType.TASK -> validateTask(payload)
-                AiResponseType.ALARM -> validateAlarm(payload)
                 AiResponseType.INSIGHT -> validateInsight(payload)
                 AiResponseType.NOTE_SUMMARY -> validateNoteSummary(payload)
                 AiResponseType.CHAT -> validateChat(payload)?.let { ValidatedAiResponse.Chat(it) }
@@ -51,6 +47,52 @@ class AiResponseValidator @Inject constructor(
             .removeSuffix("```")
             .trim()
         return trimmed.takeIf { it.isNotBlank() && !it.startsWith("{") }
+    }
+
+    /**
+     * Voice reply: a bare array, an `items` array or one object (the Edge `voice_intent` shape).
+     * Unknown intents are dropped. Amounts must be positive and sane, text is capped, at most [MAX_VOICE_ITEMS] items.
+     */
+    fun validateVoiceItems(raw: String): List<ParsedVoiceIntentDto> {
+        val cleaned = raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        if (cleaned.isBlank()) return emptyList()
+        val elements = try {
+            val root = JsonParser.parseString(cleaned)
+            when {
+                root.isJsonArray -> root.asJsonArray.toList()
+                root.isJsonObject && root.asJsonObject.get("items")?.isJsonArray == true ->
+                    root.asJsonObject.getAsJsonArray("items").toList()
+                root.isJsonObject -> listOf(root)
+                else -> emptyList()
+            }
+        } catch (_: Exception) {
+            // Text around the JSON: use the first object.
+            listOfNotNull(extractJsonObject(cleaned)?.let { runCatching { JsonParser.parseString(it) }.getOrNull() })
+        }
+        return elements.asSequence()
+            .filter { it.isJsonObject }
+            .mapNotNull { runCatching { gson.fromJson(it, ParsedVoiceIntentDto::class.java) }.getOrNull() }
+            .mapNotNull { sanitizeVoiceItem(it) }
+            .take(MAX_VOICE_ITEMS)
+            .toList()
+    }
+
+    private fun sanitizeVoiceItem(dto: ParsedVoiceIntentDto): ParsedVoiceIntentDto? {
+        val intent = dto.intent?.trim()?.uppercase()
+        if (intent != null && intent.isNotEmpty() && intent !in VOICE_INTENTS) return null
+        val amount = dto.amount?.takeIf { it.isFinite() && it > 0.0 && it < MAX_VOICE_AMOUNT }
+        return dto.copy(
+            intent = intent,
+            amount = amount,
+            confidence = (dto.confidence ?: 0.7f).coerceIn(0f, 1f),
+            merchant = dto.merchant?.take(MAX_VOICE_TEXT),
+            note = dto.note?.take(MAX_VOICE_BODY),
+            title = dto.title?.take(MAX_VOICE_TEXT),
+            body = dto.body?.take(MAX_VOICE_BODY),
+            label = dto.label?.take(MAX_VOICE_TEXT),
+            name = dto.name?.take(MAX_VOICE_TEXT),
+            tags = dto.tags?.map { it.trim().take(40) }?.filter { it.isNotEmpty() }?.take(8),
+        )
     }
 
     private fun unwrapPayload(raw: String, expected: AiResponseType): String? {
@@ -94,34 +136,6 @@ class AiResponseValidator @Inject constructor(
                 merchant = dto.merchant.orEmpty(),
                 note = dto.note.orEmpty(),
                 confidence = confidence,
-            )
-        )
-    }
-
-    private fun validateTask(json: String): ValidatedAiResponse? {
-        val dto = gson.fromJson(json, ParsedTaskDto::class.java) ?: return null
-        if (dto.title.isNullOrBlank()) return null
-        return ValidatedAiResponse.Task(
-            dto.copy(
-                title = dto.title.trim(),
-                notes = dto.notes.orEmpty(),
-                reminders = (dto.reminders.orEmpty()).take(10),
-            )
-        )
-    }
-
-    private fun validateAlarm(json: String): ValidatedAiResponse? {
-        val dto = gson.fromJson(json, ParsedAlarmDto::class.java) ?: return null
-        val hour = dto.hour ?: return null
-        val minute = dto.minute ?: return null
-        if (hour !in 0..23 || minute !in 0..59) return null
-        return ValidatedAiResponse.Alarm(
-            dto.copy(
-                hour = hour,
-                minute = minute,
-                label = dto.label?.ifBlank { "Alarm" } ?: "Alarm",
-                enabled = dto.enabled ?: true,
-                repeatDays = dto.repeatDays ?: 0,
             )
         )
     }
@@ -187,5 +201,16 @@ class AiResponseValidator @Inject constructor(
         val end = trimmed.lastIndexOf('}')
         if (start < 0 || end <= start) return null
         return trimmed.substring(start, end + 1)
+    }
+
+    companion object {
+        const val MAX_VOICE_ITEMS = 5
+        private const val MAX_VOICE_TEXT = 120
+        private const val MAX_VOICE_BODY = 2000
+        private const val MAX_VOICE_AMOUNT = 1_000_000_000.0
+        private val VOICE_INTENTS = setOf(
+            "TRANSACTION", "EXPENSE", "INCOME", "EVENT", "TASK", "EXAM", "REMINDER", "ALARM", "ROUTINE",
+            "NOTE", "BILL", "DEBT", "GOAL", "BUDGET"
+        )
     }
 }

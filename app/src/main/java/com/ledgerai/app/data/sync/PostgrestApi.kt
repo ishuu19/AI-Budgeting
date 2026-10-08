@@ -17,7 +17,10 @@ interface PostgrestApi {
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteTransactionDto>
 
     @POST("transactions")
@@ -34,7 +37,10 @@ interface PostgrestApi {
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteBudgetDto>
 
     @POST("budgets")
@@ -51,7 +57,10 @@ interface PostgrestApi {
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteDebtDto>
 
     @POST("debts")
@@ -68,7 +77,10 @@ interface PostgrestApi {
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteGoalDto>
 
     @POST("goals")
@@ -85,7 +97,10 @@ interface PostgrestApi {
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteBillDto>
 
     @POST("bills")
@@ -97,63 +112,15 @@ interface PostgrestApi {
         @Body body: List<RemoteBillDto>
     ): List<RemoteBillDto>
 
-    @GET("tasks")
-    suspend fun pullTasks(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
-    ): List<RemoteTaskDto>
-
-    @POST("tasks")
-    suspend fun upsertTasks(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Header("Prefer") prefer: String = UPSERT_PREFER,
-        @Query("on_conflict") onConflict: String = "id",
-        @Body body: List<RemoteTaskDto>
-    ): List<RemoteTaskDto>
-
-    @GET("reminders")
-    suspend fun pullReminders(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
-    ): List<RemoteReminderDto>
-
-    @POST("reminders")
-    suspend fun upsertReminders(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Header("Prefer") prefer: String = UPSERT_PREFER,
-        @Query("on_conflict") onConflict: String = "id",
-        @Body body: List<RemoteReminderDto>
-    ): List<RemoteReminderDto>
-
-    @GET("alarms")
-    suspend fun pullAlarms(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
-    ): List<RemoteAlarmDto>
-
-    @POST("alarms")
-    suspend fun upsertAlarms(
-        @Header("Authorization") authorization: String,
-        @Header("apikey") apiKey: String,
-        @Header("Prefer") prefer: String = UPSERT_PREFER,
-        @Query("on_conflict") onConflict: String = "id",
-        @Body body: List<RemoteAlarmDto>
-    ): List<RemoteAlarmDto>
-
     @GET("notes")
     suspend fun pullNotes(
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
     ): List<RemoteNoteDto>
 
     @POST("notes")
@@ -165,22 +132,45 @@ interface PostgrestApi {
         @Body body: List<RemoteNoteDto>
     ): List<RemoteNoteDto>
 
-    @GET("routines")
-    suspend fun pullRoutines(
+    @GET("calendar_events")
+    suspend fun pullEvents(
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Query("updated_at") updatedAt: String,
-        @Query("select") select: String = "*"
-    ): List<RemoteRoutineDto>
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
+    ): List<RemoteEventDto>
 
-    @POST("routines")
-    suspend fun upsertRoutines(
+    @POST("calendar_events")
+    suspend fun upsertEvents(
         @Header("Authorization") authorization: String,
         @Header("apikey") apiKey: String,
         @Header("Prefer") prefer: String = UPSERT_PREFER,
         @Query("on_conflict") onConflict: String = "id",
-        @Body body: List<RemoteRoutineDto>
-    ): List<RemoteRoutineDto>
+        @Body body: List<RemoteEventDto>
+    ): List<RemoteEventDto>
+
+    @GET("event_reminders")
+    suspend fun pullEventReminders(
+        @Header("Authorization") authorization: String,
+        @Header("apikey") apiKey: String,
+        @Query("updated_at") updatedAt: String,
+        @Query("select") select: String = "*",
+        @Query("order") order: String = PULL_ORDER,
+        @Query("limit") limit: Int = PULL_PAGE_SIZE,
+        @Query("offset") offset: Int = 0
+    ): List<RemoteEventReminderDto>
+
+    @POST("event_reminders")
+    suspend fun upsertEventReminders(
+        @Header("Authorization") authorization: String,
+        @Header("apikey") apiKey: String,
+        @Header("Prefer") prefer: String = UPSERT_PREFER,
+        @Query("on_conflict") onConflict: String = "id",
+        @Body body: List<RemoteEventReminderDto>
+    ): List<RemoteEventReminderDto>
 
     @GET("quotes_seen")
     suspend fun pullQuotesSeen(
@@ -200,6 +190,9 @@ interface PostgrestApi {
     ): List<RemoteQuotesSeenDto>
 
     companion object {
+        const val PULL_ORDER = "updated_at.asc,id.asc"
+        const val PULL_PAGE_SIZE = 500
+
         /** representation keeps Retrofit List<> deserialization happy (minimal = empty body). */
         const val UPSERT_PREFER = "resolution=merge-duplicates,return=representation"
     }

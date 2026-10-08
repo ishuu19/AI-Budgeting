@@ -1,16 +1,16 @@
 package com.ledgerai.app.data.sync
 
-import com.ledgerai.app.data.local.room.AlarmEntity
 import com.ledgerai.app.data.local.room.BillEntity
 import com.ledgerai.app.data.local.room.BudgetEntity
 import com.ledgerai.app.data.local.room.DebtEntity
 import com.ledgerai.app.data.local.room.GoalEntity
 import com.ledgerai.app.data.local.room.NoteEntity
-import com.ledgerai.app.data.local.room.RoutineEntity
-import com.ledgerai.app.data.local.room.TaskEntity
-import com.ledgerai.app.data.local.room.TaskReminderEntity
+import com.ledgerai.app.data.local.room.CalendarEventEntity
+import com.ledgerai.app.data.local.room.EventReminderEntity
 import com.ledgerai.app.data.local.room.TransactionEntity
 import com.ledgerai.app.domain.model.BillFrequency
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.RecurrenceFrequency
 import com.ledgerai.app.domain.model.DebtDirection
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
@@ -184,87 +184,92 @@ internal fun RemoteBillDto.toEntity(localId: Long = 0): BillEntity =
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )
 
-internal fun TaskEntity.toRemoteDto(remoteId: String, userId: String): RemoteTaskDto =
-    RemoteTaskDto(
+internal fun CalendarEventEntity.toRemoteDto(remoteId: String, userId: String): RemoteEventDto =
+    RemoteEventDto(
         id = remoteId,
         userId = userId,
         title = title,
         notes = notes,
-        dueAt = dueAt?.let(SyncTime::dateTimeToIso),
+        location = location,
+        links = links,
+        startAt = SyncTime.floatingToString(startAt),
+        endAt = SyncTime.floatingToString(endAt),
+        allDay = allDay,
+        hasDate = hasDate,
+        kind = kind.name,
         isCompleted = isCompleted,
-        createdAt = SyncTime.dateTimeToIso(createdAt),
+        completedAt = completedAt?.let(SyncTime::floatingToString),
+        isEnabled = isEnabled,
+        alarmToneUri = alarmToneUri,
+        alarmRepeatDays = alarmRepeatDays,
+        recurrenceFrequency = recurrenceFrequency.name,
+        recurrenceInterval = recurrenceInterval,
+        recurrenceWeekdays = recurrenceWeekdays,
+        specificDates = specificDatesJson,
+        recurrenceUntil = recurrenceUntil?.let(SyncTime::dateToString),
+        excludedDates = excludedDatesJson,
         updatedAt = SyncTime.millisToIso(updatedAt),
         deletedAt = deletedAt?.let(SyncTime::millisToIso)
     )
 
-internal fun RemoteTaskDto.toEntity(localId: Long = 0): TaskEntity =
-    TaskEntity(
+internal fun RemoteEventDto.toEntity(localId: Long = 0): CalendarEventEntity {
+    val start = SyncTime.isoToDateTime(startAt) ?: LocalDateTime.now()
+    return CalendarEventEntity(
         id = localId,
         remoteId = id,
         userId = userId,
         title = title,
         notes = notes,
-        dueAt = SyncTime.isoToDateTime(dueAt),
+        location = location,
+        links = links,
+        startAt = start,
+        endAt = SyncTime.isoToDateTime(endAt)?.takeIf { !it.isBefore(start) } ?: start,
+        allDay = allDay,
+        hasDate = hasDate,
+        kind = CalendarEventKind.parse(kind),
         isCompleted = isCompleted,
-        createdAt = SyncTime.isoToDateTime(createdAt) ?: LocalDateTime.now(),
+        completedAt = SyncTime.isoToDateTime(completedAt),
+        isEnabled = isEnabled,
+        alarmToneUri = alarmToneUri,
+        alarmRepeatDays = alarmRepeatDays,
+        recurrenceFrequency = enumOr(recurrenceFrequency, RecurrenceFrequency.NONE),
+        recurrenceInterval = recurrenceInterval.coerceAtLeast(1),
+        recurrenceWeekdays = recurrenceWeekdays,
+        specificDatesJson = specificDates,
+        recurrenceUntil = SyncTime.optionalDate(recurrenceUntil),
+        excludedDatesJson = excludedDates,
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )
+}
 
-internal fun TaskReminderEntity.toRemoteDto(
+internal fun EventReminderEntity.toRemoteDto(
     remoteId: String,
     userId: String,
-    remoteTaskId: String
-): RemoteReminderDto =
-    RemoteReminderDto(
+    remoteEventId: String
+): RemoteEventReminderDto =
+    RemoteEventReminderDto(
         id = remoteId,
         userId = userId,
-        taskId = remoteTaskId,
+        eventId = remoteEventId,
         label = label,
-        remindAt = SyncTime.dateTimeToIso(remindAt),
         offsetMinutes = offsetMinutes,
+        remindAt = remindAt?.let(SyncTime::floatingToString),
         isEnabled = isEnabled,
         updatedAt = SyncTime.millisToIso(updatedAt),
         deletedAt = deletedAt?.let(SyncTime::millisToIso)
     )
 
-internal fun RemoteReminderDto.toEntity(localId: Long = 0, localTaskId: Long): TaskReminderEntity =
-    TaskReminderEntity(
+internal fun RemoteEventReminderDto.toEntity(localId: Long = 0, localEventId: Long): EventReminderEntity =
+    EventReminderEntity(
         id = localId,
         remoteId = id,
         userId = userId,
-        taskId = localTaskId,
+        eventId = localEventId,
         label = label,
-        remindAt = SyncTime.isoToDateTime(remindAt) ?: LocalDateTime.now(),
         offsetMinutes = offsetMinutes,
+        remindAt = SyncTime.isoToDateTime(remindAt),
         isEnabled = isEnabled,
-        updatedAt = SyncTime.isoToMillis(updatedAt),
-        deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
-    )
-
-internal fun AlarmEntity.toRemoteDto(remoteId: String, userId: String): RemoteAlarmDto =
-    RemoteAlarmDto(
-        id = remoteId,
-        userId = userId,
-        label = label,
-        time = SyncTime.timeToString(time),
-        isEnabled = isEnabled,
-        repeatDays = repeatDays,
-        toneUri = toneUri,
-        updatedAt = SyncTime.millisToIso(updatedAt),
-        deletedAt = deletedAt?.let(SyncTime::millisToIso)
-    )
-
-internal fun RemoteAlarmDto.toEntity(localId: Long = 0): AlarmEntity =
-    AlarmEntity(
-        id = localId,
-        remoteId = id,
-        userId = userId,
-        label = label,
-        time = SyncTime.stringToTime(time),
-        isEnabled = isEnabled,
-        repeatDays = repeatDays,
-        toneUri = toneUri,
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )
@@ -292,31 +297,6 @@ internal fun RemoteNoteDto.toEntity(localId: Long = 0): NoteEntity =
         tags = tags,
         createdAt = SyncTime.isoToDateTime(createdAt) ?: LocalDateTime.now(),
         editedAt = SyncTime.isoToDateTime(editedAt) ?: LocalDateTime.now(),
-        updatedAt = SyncTime.isoToMillis(updatedAt),
-        deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
-    )
-
-internal fun RoutineEntity.toRemoteDto(remoteId: String, userId: String): RemoteRoutineDto =
-    RemoteRoutineDto(
-        id = remoteId,
-        userId = userId,
-        title = title,
-        notes = notes,
-        repeatRule = repeatRule,
-        isActive = isActive,
-        updatedAt = SyncTime.millisToIso(updatedAt),
-        deletedAt = deletedAt?.let(SyncTime::millisToIso)
-    )
-
-internal fun RemoteRoutineDto.toEntity(localId: Long = 0): RoutineEntity =
-    RoutineEntity(
-        id = localId,
-        remoteId = id,
-        userId = userId,
-        title = title,
-        notes = notes,
-        repeatRule = repeatRule,
-        isActive = isActive,
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )

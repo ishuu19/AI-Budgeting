@@ -2,10 +2,13 @@ package com.ledgerai.app.presentation.screens.analytics
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -121,6 +124,17 @@ private val slicePalette = listOf(
 
 private fun sliceColor(index: Int): Color = slicePalette[index % slicePalette.size]
 
+private const val MAX_SLICES = 5
+
+private data class Slice(val name: String, val amount: Double)
+
+/** Top five categories plus one "Other" slice, so the donut never has more than six parts. */
+private fun toSlices(entries: List<Map.Entry<TransactionCategory, Double>>): List<Slice> {
+    val top = entries.take(MAX_SLICES).map { Slice(it.key.displayName, it.value) }
+    val rest = entries.drop(MAX_SLICES).sumOf { it.value }
+    return if (rest > 0.0) top + Slice("Other", rest) else top
+}
+
 @Composable
 fun AnalyticsScreen(
     onBack: () -> Unit = {},
@@ -131,79 +145,92 @@ fun AnalyticsScreen(
     val total = state.monthlyExpenses
 
     LScreen(title = "Insights", onBack = onBack) {
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AnalyticsPeriod.entries.forEach { p ->
-                    LChip(p.label, selected = state.period == p, onClick = { viewModel.setPeriod(p) })
-                }
-            }
+        item(key = "period") {
+            LKindChips(AnalyticsPeriod.entries.toList(), state.period, { it.label }, viewModel::setPeriod)
         }
 
         if (state.isLoading) {
-            item {
-                Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = L.Gold)
-                }
-            }
+            item(key = "loading") { LLoading() }
             return@LScreen
         }
 
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LStat("Income", money(state.monthlyIncome), Modifier.weight(1f))
-                LStat("Spent", money(total), Modifier.weight(1f))
-            }
-        }
-
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        item(key = "numbers") {
+            LGroup {
+                LGroupRow("Income", trailing = money(state.monthlyIncome))
+                LGroupDivider()
+                LGroupRow("Spent", trailing = money(total), trailingColor = L.OnBox)
                 state.savingsRate?.let { rate ->
-                    LStat("Savings", "${"%.0f".format(rate)}%", Modifier.weight(1f))
+                    LGroupDivider()
+                    LGroupRow("Savings rate", trailing = "${"%.0f".format(rate)}%")
                 }
-                LStat("Daily", money(state.dailyAverageSpend), Modifier.weight(1f))
-            }
-        }
-
-        state.topMerchant?.let { merchant ->
-            item {
-                LRow(title = merchant, trailing = money(state.topMerchantTotal))
+                LGroupDivider()
+                LGroupRow("Daily average", trailing = money(state.dailyAverageSpend))
+                state.topMerchant?.let { merchant ->
+                    LGroupDivider()
+                    LGroupRow("Top: $merchant", trailing = money(state.topMerchantTotal))
+                }
             }
         }
 
         if (entries.isEmpty()) {
-            item { LEmpty(Icons.Filled.PieChart, "No spending") }
+            item(key = "empty") { LEmpty(Icons.Filled.PieChart, "No spending") }
             return@LScreen
         }
 
-        item {
+        val slices = toSlices(entries)
+        item(key = "donut") {
+            val description = "Spending by category: " + slices.joinToString(", ") {
+                "${it.name} ${if (total > 0) (it.amount / total * 100).toInt() else 0} percent"
+            }
             LCard(padding = 24.dp) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    SpendDonut(entries.map { it.value }, Modifier.size(180.dp))
+                Box(
+                    Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = description },
+                    contentAlignment = Alignment.Center
+                ) {
+                    SpendDonut(slices.map { it.amount }, Modifier.size(180.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Spent", style = MaterialTheme.typography.labelSmall, color = L.Gold)
                         Text(money(total), style = MaterialTheme.typography.titleLarge, color = L.OnBox, maxLines = 1)
                     }
                 }
+                slices.forEachIndexed { index, slice ->
+                    val pct = if (total > 0) (slice.amount / total * 100).toInt() else 0
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(Modifier.size(12.dp).clip(CircleShape).background(sliceColor(index)))
+                        Text(slice.name, style = MaterialTheme.typography.bodyMedium, color = L.OnBox, modifier = Modifier.weight(1f))
+                        Text("$pct%", style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted)
+                    }
+                }
             }
         }
 
-        item { LSection("Categories") }
-
+        item(key = "categories-header") { LSection("Categories") }
         val max = entries.maxOf { it.value }.coerceAtLeast(1.0)
-        itemsIndexed(entries, key = { _, e -> e.key.name }) { index, (cat, amount) ->
-            val pct = if (total > 0) (amount / total * 100).toInt() else 0
-            LRow(
-                title = cat.displayName,
-                sub = "$pct%",
-                trailing = money(amount),
-                end = {
-                    LProgress(
-                        fraction = (amount / max).toFloat(),
-                        modifier = Modifier.width(48.dp),
-                        color = sliceColor(index)
-                    )
+        item(key = "categories") {
+            LGroup {
+                entries.forEachIndexed { index, (cat, amount) ->
+                    androidx.compose.runtime.key(cat.name) {
+                        if (index > 0) LGroupDivider()
+                        val pct = if (total > 0) (amount / total * 100).toInt() else 0
+                        LGroupRow(
+                            title = cat.displayName,
+                            sub = "$pct%",
+                            trailing = money(amount),
+                            end = {
+                                LProgress(
+                                    fraction = (amount / max).toFloat(),
+                                    modifier = Modifier.width(48.dp),
+                                    color = sliceColor(index)
+                                )
+                            }
+                        )
+                    }
                 }
-            )
+            }
         }
     }
 }

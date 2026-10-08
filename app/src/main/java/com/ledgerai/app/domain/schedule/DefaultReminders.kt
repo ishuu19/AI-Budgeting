@@ -1,5 +1,6 @@
 package com.ledgerai.app.domain.schedule
 
+import com.ledgerai.app.domain.model.EventReminder
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -56,3 +57,9 @@ fun labelForMinutesBefore(minutes: Long): String = when (minutes) {
     10_080L -> "1 week before"
     else -> "$minutes min before"
 }
+
+/** Offsets applied to a new event unless the user changes them. */
+fun defaultEventReminders(): List<EventReminder> =
+    defaultBeforeEventOptions().map { (label, minutes) ->
+        EventReminder(label = label, offsetMinutes = minutes.toInt())
+    }

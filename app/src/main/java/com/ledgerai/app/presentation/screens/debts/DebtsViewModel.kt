@@ -163,6 +163,7 @@ class DebtsViewModel @Inject constructor(
         viewModelScope.launch {
             debtRepo.delete(debt)
             reminderScheduler.cancelReminders(debt.id)
+            _uiState.update { it.copy(snackbarMessage = "Debt deleted") }
         }
     }
 

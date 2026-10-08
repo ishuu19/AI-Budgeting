@@ -11,16 +11,9 @@ import androidx.room.TypeConverters
         DebtEntity::class,
         GoalEntity::class,
         BillEntity::class,
-        TaskEntity::class,
-        TaskReminderEntity::class,
-        RoutineEntity::class,
-        AlarmEntity::class,
         NoteEntity::class,
-        CourseEntity::class,
-        ScheduleSlotEntity::class,
-        RoutineSlotReminderEntity::class,
         CalendarEventEntity::class,
-        ScheduleSlotExceptionEntity::class,
+        EventReminderEntity::class,
         StudyPlanEntity::class,
         PlanBlockEntity::class,
         HabitEntity::class,
@@ -34,10 +27,11 @@ import androidx.room.TypeConverters
         VisitEntity::class,
         ActivityEntryEntity::class,
         CheckinWindowEntity::class,
-        JobApplicationEntity::class
+        JobApplicationEntity::class,
+        VoiceHistoryEntity::class
     ],
-    version = 6,
-    exportSchema = false
+    version = 9,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class LedgerDatabase : RoomDatabase() {
@@ -46,17 +40,9 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun debtDao(): DebtDao
     abstract fun goalDao(): GoalDao
     abstract fun billDao(): BillDao
-    abstract fun taskDao(): TaskDao
-    abstract fun taskReminderDao(): TaskReminderDao
-    abstract fun routineDao(): RoutineDao
-    abstract fun alarmDao(): AlarmDao
     abstract fun noteDao(): NoteDao
-    abstract fun courseDao(): CourseDao
-    abstract fun scheduleSlotDao(): ScheduleSlotDao
-    abstract fun routineSlotReminderDao(): RoutineSlotReminderDao
     abstract fun calendarEventDao(): CalendarEventDao
-
-    abstract fun scheduleSlotExceptionDao(): ScheduleSlotExceptionDao
+    abstract fun eventReminderDao(): EventReminderDao
 
     abstract fun studyPlanDao(): StudyPlanDao
     abstract fun planBlockDao(): PlanBlockDao
@@ -72,4 +58,5 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun activityEntryDao(): ActivityEntryDao
     abstract fun checkinWindowDao(): CheckinWindowDao
     abstract fun jobApplicationDao(): JobApplicationDao
+    abstract fun voiceHistoryDao(): VoiceHistoryDao
 }

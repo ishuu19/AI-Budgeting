@@ -9,10 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.domain.model.ParsedTransaction
@@ -21,6 +24,9 @@ import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LConfirmDelete
+import com.ledgerai.app.presentation.components.LCurrency
+import com.ledgerai.app.presentation.components.LItemSheet
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LPlaceField
 import com.ledgerai.app.presentation.components.LGhostButton
@@ -43,53 +49,37 @@ fun AddTransactionSheet(
     onCopy: ((Double, TransactionType, TransactionCategory, String, String, String, Boolean) -> Unit)? = null
 ) {
     val seed = existing ?: copyDraft
-    var amountText by remember {
+    var amountText by rememberSaveable {
         mutableStateOf((seed?.amount ?: prefilled?.amount)?.let(::amountInput) ?: "")
     }
-    var merchant by remember { mutableStateOf(seed?.merchant ?: prefilled?.merchant ?: "") }
-    var note by remember { mutableStateOf(seed?.note ?: prefilled?.note ?: "") }
-    var location by remember { mutableStateOf(seed?.location ?: prefilled?.location ?: "") }
-    var placeLinks by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(seed?.type ?: prefilled?.type ?: TransactionType.EXPENSE) }
-    var category by remember {
+    var merchant by rememberSaveable { mutableStateOf(seed?.merchant ?: prefilled?.merchant ?: "") }
+    var note by rememberSaveable { mutableStateOf(seed?.note ?: prefilled?.note ?: "") }
+    var location by rememberSaveable { mutableStateOf(seed?.location ?: prefilled?.location ?: "") }
+    var placeLinks by rememberSaveable { mutableStateOf("") }
+    var type by rememberSaveable { mutableStateOf(seed?.type ?: prefilled?.type ?: TransactionType.EXPENSE) }
+    var category by rememberSaveable {
         mutableStateOf(seed?.category ?: prefilled?.category ?: TransactionCategory.OTHER)
     }
-    var date by remember { mutableStateOf(seed?.date ?: prefilled?.date ?: LocalDate.now()) }
-    var isRecurring by remember { mutableStateOf(seed?.isRecurring ?: false) }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var date by rememberSaveable { mutableStateOf(seed?.date ?: prefilled?.date ?: LocalDate.now()) }
+    var isRecurring by rememberSaveable { mutableStateOf(seed?.isRecurring ?: false) }
     val amount = amountText.toDoubleOrNull()?.takeIf { it > 0 }
     val today = LocalDate.now()
     val canCopy = existing != null && onCopy != null
 
-    LSheet(
-        title = if (existing != null) "Edit" else "New",
-        onDismiss = onDismiss,
-        primary = "Save",
-        onPrimary = {
-            val noteOut = if (placeLinks.isNotBlank()) {
-                val url = placeLinks.lines().firstOrNull { it.contains("google.com/maps") } ?: placeLinks.trim()
-                listOf(note.trim(), url).filter { it.isNotEmpty() }.joinToString("\n")
-            } else note.trim()
-            amount?.let { onConfirm(it, type, category, merchant.trim(), noteOut, date, location.trim(), isRecurring) }
-        },
-        primaryEnabled = amount != null,
-        secondary = when {
-            canCopy -> "Copy"
-            existing != null && onDelete != null -> "Delete"
-            else -> null
-        },
-        onSecondary = {
-            if (canCopy) {
-                val copyAmount = amount ?: existing?.amount
-                if (copyAmount != null) {
-                    onCopy?.invoke(copyAmount, type, category, merchant.trim(), note.trim(), location.trim(), isRecurring)
-                }
-            } else {
-                confirmDelete = true
-            }
-        }
-    ) {
+    val save = {
+        val noteOut = if (placeLinks.isNotBlank()) {
+            val url = placeLinks.lines().firstOrNull { it.contains("google.com/maps") } ?: placeLinks.trim()
+            listOf(note.trim(), url).filter { it.isNotEmpty() }.joinToString("\n")
+        } else note.trim()
+        amount?.let { onConfirm(it, type, category, merchant.trim(), noteOut, date, location.trim(), isRecurring) }
+        Unit
+    }
+
+    val body: @Composable ColumnScope.() -> Unit = {
         BigAmountField(amountText, onValueChange = { amountText = it })
+        if (amountText.isNotEmpty() && amount == null) {
+            Text("Enter an amount above 0", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LChip("Expense", type == TransactionType.EXPENSE, onClick = { type = TransactionType.EXPENSE })
@@ -119,22 +109,41 @@ fun AddTransactionSheet(
             DatePickChip(date, selected = custom, onDate = { date = it }, label = if (custom) shortDate(date) else "Date")
         }
 
-        if (canCopy && onDelete != null) {
-            LGhostButton("Delete", onClick = { confirmDelete = true })
+        if (canCopy) {
+            LGhostButton("Duplicate", onClick = {
+                val copyAmount = amount ?: existing?.amount
+                if (copyAmount != null) {
+                    onCopy?.invoke(copyAmount, type, category, merchant.trim(), note.trim(), location.trim(), isRecurring)
+                }
+            })
         }
     }
 
-    if (confirmDelete) {
-        ConfirmDelete(
-            onConfirm = { confirmDelete = false; onDelete?.invoke() },
-            onDismiss = { confirmDelete = false }
+    if (existing != null) {
+        LItemSheet(
+            title = "Edit",
+            onDismiss = onDismiss,
+            primary = "Save",
+            onPrimary = save,
+            primaryEnabled = amount != null,
+            onDelete = onDelete,
+            content = body
+        )
+    } else {
+        LSheet(
+            title = "New",
+            onDismiss = onDismiss,
+            primary = "Save",
+            onPrimary = save,
+            primaryEnabled = amount != null,
+            content = body
         )
     }
 }
 
 /** Large centered money input. Accepts digits and one decimal point. */
 @Composable
-internal fun BigAmountField(value: String, onValueChange: (String) -> Unit, symbol: String = "$") {
+internal fun BigAmountField(value: String, onValueChange: (String) -> Unit, symbol: String = LCurrency.symbol) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
@@ -152,7 +161,7 @@ internal fun BigAmountField(value: String, onValueChange: (String) -> Unit, symb
             textStyle = MaterialTheme.typography.displaySmall.copy(color = L.Ink),
             cursorBrush = SolidColor(L.Box),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.widthIn(min = 48.dp).width(IntrinsicSize.Min),
+            modifier = Modifier.widthIn(min = 48.dp).width(IntrinsicSize.Min).semantics { contentDescription = "Amount" },
             decorationBox = { inner ->
                 Box {
                     if (value.isEmpty()) {
@@ -185,7 +194,7 @@ internal fun DatePickChip(
     onDate: (LocalDate) -> Unit,
     label: String = shortDate(date)
 ) {
-    var open by remember { mutableStateOf(false) }
+    var open by rememberSaveable { mutableStateOf(false) }
     LChip(label, selected, onClick = { open = true })
     if (open) {
         val state = rememberDatePickerState(
@@ -210,13 +219,7 @@ internal fun DatePickChip(
 
 @Composable
 internal fun ConfirmDelete(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = L.Page,
-        title = { Text("Delete?", color = L.Ink) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Delete", color = L.Box) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = L.InkMuted) } }
-    )
+    LConfirmDelete(onConfirm = onConfirm, onDismiss = onDismiss)
 }
 
 internal fun spendIcon(category: TransactionCategory): ImageVector = when (category) {

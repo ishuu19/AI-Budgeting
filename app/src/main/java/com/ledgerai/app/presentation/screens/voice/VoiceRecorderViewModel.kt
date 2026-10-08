@@ -1,52 +1,41 @@
 package com.ledgerai.app.presentation.screens.voice
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Build
+import android.os.SystemClock
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.ai.ParsedIntent
+import com.ledgerai.app.data.ai.QuickParse
+import com.ledgerai.app.data.ai.VoiceResultKind
 import com.ledgerai.app.data.preferences.UserPreferences
 import com.ledgerai.app.data.repository.AiRepository
-import com.ledgerai.app.data.repository.AlarmRepository
-import com.ledgerai.app.data.repository.BillRepository
-import com.ledgerai.app.data.repository.DebtRepository
-import com.ledgerai.app.data.repository.GoalRepository
-import com.ledgerai.app.data.repository.NoteRepository
-import com.ledgerai.app.data.repository.RoutineRepository
-import com.ledgerai.app.data.repository.TaskRepository
-import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.data.repository.SavedVoiceItem
+import com.ledgerai.app.data.repository.VoiceCaptureRepository
+import com.ledgerai.app.data.repository.VoiceHistoryItem
 import com.ledgerai.app.data.voice.AndroidOnDeviceStt
 import com.ledgerai.app.data.voice.OfflineSttEngine
 import com.ledgerai.app.data.voice.OfflineVoiceEngine
 import com.ledgerai.app.data.voice.VoskModelManager
-import com.ledgerai.app.domain.model.AlarmItem
-import com.ledgerai.app.domain.model.Bill
-import com.ledgerai.app.domain.model.BillFrequency
-import com.ledgerai.app.domain.model.Debt
-import com.ledgerai.app.domain.model.DebtDirection
-import com.ledgerai.app.domain.model.Goal
-import com.ledgerai.app.domain.model.NoteItem
-import com.ledgerai.app.domain.model.RoutineItem
-import com.ledgerai.app.domain.model.TaskItem
-import com.ledgerai.app.domain.model.TaskReminder
-import com.ledgerai.app.domain.model.Transaction
-import com.ledgerai.app.domain.model.TransactionCategory
-import com.ledgerai.app.domain.model.TransactionType
+import com.ledgerai.app.presentation.navigation.OpenKind
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import javax.inject.Inject
 
 enum class VoiceRecorderState {
@@ -55,16 +44,42 @@ enum class VoiceRecorderState {
     TRANSCRIBING,
     PARSING,
     RESULT,
-    SAVED,
     ERROR
 }
+
+enum class ErrorType {
+    NONE,
+    AUDIO_UNCLEAR,
+    NETWORK,
+    PARSE_FAILED,
+    /** Microphone permission denied; asking again is possible. */
+    PERMISSION,
+    /** Denied with "don't ask again": only system settings can fix it. */
+    PERMISSION_BLOCKED,
+    /** Permission is fine but the recorder or recognizer failed. */
+    RECORDER_FAILED,
+    TOO_SHORT
+}
+
+/** One confirm card. [remindersEdited] false lets a new event take the standard reminders. */
+data class VoiceCard(val key: Int, val intent: ParsedIntent, val remindersEdited: Boolean = false)
+
+/** A history row being redone: saving a card updates that row, and optionally removes its old item. */
+data class RedoContext(val history: VoiceHistoryItem, val replaceOld: Boolean)
+
+/** Shown after a save. [undo] reverts it; [open] is where the saved item lives, when one id is known. */
+class SavedNotice(
+    val nonce: Long,
+    val message: String,
+    val open: Pair<OpenKind, Long>?,
+    val undo: suspend () -> Unit
+)
 
 data class VoiceUiState(
     val recorderState: VoiceRecorderState = VoiceRecorderState.IDLE,
     val recordingSeconds: Int = 0,
     val transcript: String = "",
-    val parsedIntent: ParsedIntent? = null,
-    val savedKind: String = "Item",
+    val cards: List<VoiceCard> = emptyList(),
     val errorMessage: String? = null,
     val errorType: ErrorType = ErrorType.NONE,
     val typedInput: String = "",
@@ -74,37 +89,57 @@ data class VoiceUiState(
     /** Selected engine's display label. */
     val engineLabel: String = OfflineVoiceEngine.SHERPA.label,
     /** True when the selected engine streams live results (no audio file). */
-    val liveEngine: Boolean = false
-)
+    val liveEngine: Boolean = false,
+    val redo: RedoContext? = null,
+    val notice: SavedNotice? = null
+) {
+    val maxSeconds: Int get() = VoiceRecorderViewModel.MAX_SECONDS
+}
 
-enum class ErrorType { NONE, AUDIO_UNCLEAR, NETWORK, PARSE_FAILED, PERMISSION }
+fun VoiceResultKind.openKind(): OpenKind? = when (this) {
+    VoiceResultKind.Spend, VoiceResultKind.Income -> OpenKind.Transaction
+    VoiceResultKind.Task, VoiceResultKind.Reminder, VoiceResultKind.Event, VoiceResultKind.Exam,
+    VoiceResultKind.Routine, VoiceResultKind.Alarm -> OpenKind.Event
+    VoiceResultKind.Budget -> OpenKind.Budget
+    VoiceResultKind.Bill -> OpenKind.Bill
+    VoiceResultKind.Debt -> OpenKind.Debt
+    VoiceResultKind.Goal -> OpenKind.Goal
+    VoiceResultKind.Note -> OpenKind.Note
+    VoiceResultKind.Unsorted -> null
+}
 
 @HiltViewModel
 class VoiceRecorderViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val transactionRepo: TransactionRepository,
-    private val taskRepo: TaskRepository,
-    private val alarmRepo: AlarmRepository,
-    private val noteRepo: NoteRepository,
-    private val routineRepo: RoutineRepository,
-    private val billRepo: BillRepository,
-    private val debtRepo: DebtRepository,
-    private val goalRepo: GoalRepository,
+    private val capture: VoiceCaptureRepository,
     private val aiRepo: AiRepository,
     private val voskModelManager: VoskModelManager,
     private val offlineEngine: OfflineSttEngine,
     private val prefs: UserPreferences
 ) : ViewModel() {
 
+    companion object {
+        const val MAX_SECONDS = 60
+        private const val MIN_RECORDING_MS = 1000L
+    }
+
     private var engine: OfflineVoiceEngine = OfflineVoiceEngine.SHERPA
 
     private val _uiState = MutableStateFlow(fresh())
     val uiState: StateFlow<VoiceUiState> = _uiState.asStateFlow()
 
+    /** Null while loading. */
+    val history: StateFlow<List<VoiceHistoryItem>?> = capture.observeHistory()
+        .map<List<VoiceHistoryItem>, List<VoiceHistoryItem>?> { it }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
     private var timerJob: Job? = null
     private var amplitudeJob: Job? = null
+    private var startedAt = 0L
+    private var cardKeys = 0
+    private var noticeNonce = 0L
 
     private var liveStt: AndroidOnDeviceStt? = null
     private var liveSession = 0
@@ -121,12 +156,35 @@ class VoiceRecorderViewModel @Inject constructor(
 
     private fun fresh() = VoiceUiState(engineLabel = engine.label, liveEngine = engine.isLive)
 
+    // --- recording ---------------------------------------------------------------------------
+
+    private var voiceEdit: VoiceHistoryItem? = null
+
+    /** Records over an existing history row. The transcript replaces that capture. */
+    fun recordOver(item: VoiceHistoryItem) {
+        voiceEdit = item
+        beginRecording()
+    }
+
     fun startRecording() {
+        voiceEdit = null
+        beginRecording()
+    }
+
+    private fun beginRecording() {
+        if (!hasMicPermission()) {
+            showError(ErrorType.PERMISSION, "Mic blocked")
+            return
+        }
         if (engine.isLive) startLive() else startFileRecording()
     }
 
+    private fun hasMicPermission() =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+
     private fun startFileRecording() {
-        val file = File(context.cacheDir, "voice_transaction_${System.currentTimeMillis()}.m4a")
+        val file = File(context.cacheDir, "voice_capture_${System.currentTimeMillis()}.m4a")
         audioFile = file
 
         @Suppress("DEPRECATION")
@@ -160,8 +218,11 @@ class VoiceRecorderViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            recorder.release()
-            showError(ErrorType.PERMISSION, "Mic blocked")
+            runCatching { recorder.release() }
+            audioFile = null
+            runCatching { file.delete() }
+            // Permission was checked above, so this is the recorder itself (busy mic, no input device).
+            showError(ErrorType.RECORDER_FAILED, "Recorder failed")
         }
     }
 
@@ -184,24 +245,30 @@ class VoiceRecorderViewModel @Inject constructor(
                 if (session != liveSession) return
                 stopTimers()
                 _uiState.update { it.copy(transcript = text, amplitudeLevel = 0f) }
-                parseTranscript(text)
+                deliverTranscript(text)
             }
 
             override fun onError(message: String, permission: Boolean) {
                 if (session != liveSession) return
                 stopTimers()
-                showError(if (permission) ErrorType.PERMISSION else ErrorType.AUDIO_UNCLEAR, message)
+                when {
+                    permission -> showError(ErrorType.PERMISSION, "Mic blocked")
+                    message.contains("catch", ignoreCase = true) -> showError(ErrorType.AUDIO_UNCLEAR, message)
+                    else -> showError(ErrorType.RECORDER_FAILED, message)
+                }
             }
         })
     }
 
     private fun enterRecordingState() {
+        startedAt = SystemClock.elapsedRealtime()
         _uiState.update {
             it.copy(
                 recorderState = VoiceRecorderState.RECORDING,
                 recordingSeconds = 0,
                 transcript = "",
-                parsedIntent = null,
+                cards = emptyList(),
+                redo = null,
                 errorMessage = null,
                 errorType = ErrorType.NONE,
                 amplitudeLevel = 0f,
@@ -213,7 +280,10 @@ class VoiceRecorderViewModel @Inject constructor(
             while (true) {
                 delay(1000)
                 _uiState.update { it.copy(recordingSeconds = it.recordingSeconds + 1) }
-                if (_uiState.value.recordingSeconds >= 60) stopRecording()
+                if (_uiState.value.recordingSeconds >= MAX_SECONDS) {
+                    stopRecording()
+                    break
+                }
             }
         }
     }
@@ -226,7 +296,15 @@ class VoiceRecorderViewModel @Inject constructor(
     }
 
     fun stopRecording() {
+        if (_uiState.value.recorderState != VoiceRecorderState.RECORDING) return
         stopTimers()
+
+        // A tap that is shorter than a second holds no speech: discard it, do not transcribe.
+        if (SystemClock.elapsedRealtime() - startedAt < MIN_RECORDING_MS) {
+            discardRecorder()
+            showError(ErrorType.TOO_SHORT, "Too short")
+            return
+        }
 
         val stt = liveStt
         if (stt != null && stt.isActive) {
@@ -242,10 +320,10 @@ class VoiceRecorderViewModel @Inject constructor(
 
         try {
             recorder.stop()
-            recorder.release()
         } catch (e: Exception) {
-            recorder.release()
+            // Stop can throw when no audio frame was written.
         }
+        runCatching { recorder.release() }
         mediaRecorder = null
 
         _uiState.update {
@@ -275,7 +353,7 @@ class VoiceRecorderViewModel @Inject constructor(
             result.fold(
                 onSuccess = { transcript ->
                     _uiState.update { it.copy(transcript = transcript, modelDownloadProgress = null) }
-                    parseTranscript(transcript)
+                    deliverTranscript(transcript)
                 },
                 onFailure = { err ->
                     val message = err.message.orEmpty()
@@ -294,14 +372,24 @@ class VoiceRecorderViewModel @Inject constructor(
         }
     }
 
+    /** Stops and throws away the current recording. Safe to call in any state. */
     fun cancelRecording() {
         stopTimers()
+        discardRecorder()
+        _uiState.update { fresh().copy(typedInput = it.typedInput) }
+    }
+
+    /** The screen left the foreground or the segment: stop the mic, keep nothing. */
+    fun onLeave() {
+        if (_uiState.value.recorderState == VoiceRecorderState.RECORDING) cancelRecording()
+    }
+
+    private fun discardRecorder() {
         cancelLive()
-        mediaRecorder?.apply { runCatching { stop(); release() } }
+        mediaRecorder?.apply { runCatching { stop() }; runCatching { release() } }
         mediaRecorder = null
-        audioFile?.delete()
+        audioFile?.let { runCatching { it.delete() } }
         audioFile = null
-        _uiState.update { fresh() }
     }
 
     private fun cancelLive() {
@@ -309,7 +397,23 @@ class VoiceRecorderViewModel @Inject constructor(
         liveStt?.destroy()
     }
 
+    private fun deliverTranscript(text: String) {
+        val edit = voiceEdit
+        voiceEdit = null
+        if (edit != null && text.isNotBlank()) {
+            redo(
+                edit,
+                text,
+                edit.kind.takeIf { it != VoiceResultKind.Unsorted },
+                replaceOld = edit.linkedItemId != null
+            )
+        } else {
+            parseTranscript(text)
+        }
+    }
+
     private fun showError(type: ErrorType, message: String) {
+        voiceEdit = null
         _uiState.update {
             it.copy(
                 recorderState = VoiceRecorderState.ERROR,
@@ -321,29 +425,41 @@ class VoiceRecorderViewModel @Inject constructor(
         }
     }
 
-    /** Shared entry for live, file, and typed transcripts → multi-intent parse. */
-    private fun parseTranscript(transcript: String) {
+    /** Called with the result of the permission dialog. [permanent] is true when "don't ask again" applies. */
+    fun onPermissionDenied(permanent: Boolean) {
+        if (permanent) showError(ErrorType.PERMISSION_BLOCKED, "Mic blocked")
+        else showError(ErrorType.PERMISSION, "Mic blocked")
+    }
+
+    // --- parsing -----------------------------------------------------------------------------
+
+    /** Shared entry for live, file, typed and redone transcripts. [kind] forces the result kind. */
+    private fun parseTranscript(transcript: String, kind: VoiceResultKind? = null) {
+        val text = transcript.trim()
+        if (text.isEmpty()) {
+            showError(ErrorType.AUDIO_UNCLEAR, "Didn't catch that")
+            return
+        }
         _uiState.update {
             it.copy(
                 recorderState = VoiceRecorderState.PARSING,
+                transcript = text,
                 modelDownloadProgress = null,
-                parsedIntent = null
+                cards = emptyList()
             )
         }
         viewModelScope.launch {
-            aiRepo.parseVoiceIntent(transcript).fold(
-                onSuccess = { intent ->
-                    val invalidTx = intent is ParsedIntent.Transaction &&
-                        (intent.amount == null || intent.amount <= 0.0)
-                    if (invalidTx) {
-                        showError(ErrorType.PARSE_FAILED, "No amount")
-                    } else {
-                        _uiState.update {
-                            it.copy(recorderState = VoiceRecorderState.RESULT, parsedIntent = intent)
-                        }
-                    }
+            val parsed = if (kind != null) {
+                Result.success(listOf(QuickParse.asKind(kind, text)))
+            } else {
+                aiRepo.parseVoiceIntents(text)
+            }
+            parsed.fold(
+                onSuccess = { intents ->
+                    val cards = intents.map { VoiceCard(cardKeys++, it) }
+                    _uiState.update { it.copy(recorderState = VoiceRecorderState.RESULT, cards = cards) }
                 },
-                onFailure = { showError(ErrorType.PARSE_FAILED, "No match") }
+                onFailure = { showError(ErrorType.PARSE_FAILED, "Didn't catch that") }
             )
         }
     }
@@ -353,195 +469,160 @@ class VoiceRecorderViewModel @Inject constructor(
     fun parseTypedInput() {
         val input = _uiState.value.typedInput.trim()
         if (input.isBlank()) return
-        _uiState.update { it.copy(transcript = input, typedInput = "") }
+        _uiState.update { it.copy(typedInput = "", redo = null) }
         parseTranscript(input)
     }
 
-    fun confirmTransaction(
-        amount: Double,
-        type: TransactionType,
-        category: TransactionCategory,
-        merchant: String,
-        note: String,
-        date: LocalDate
-    ) {
-        viewModelScope.launch {
-            transactionRepo.insert(
-                Transaction(
-                    amount = amount,
-                    type = type,
-                    category = category,
-                    merchant = merchant,
-                    note = note,
-                    date = date,
-                    createdAt = LocalDateTime.now()
-                )
-            )
-            markSaved("Transaction")
+    /** Re-reads [text] (edited by the user), optionally forcing a result kind. Used by the unmatched card. */
+    fun reparse(text: String, kind: VoiceResultKind?) {
+        _uiState.update { it.copy(redo = null) }
+        parseTranscript(text, kind)
+    }
+
+    /**
+     * Redo a history row: parse [transcript] again and show confirm cards.
+     * Saving a card then updates that row; with [replaceOld] the item it created before is removed.
+     */
+    fun redo(item: VoiceHistoryItem, transcript: String, kind: VoiceResultKind?, replaceOld: Boolean) {
+        parseTranscript(transcript, kind)
+        _uiState.update { it.copy(redo = RedoContext(item, replaceOld && item.linkedItemId != null)) }
+    }
+
+    // --- cards -------------------------------------------------------------------------------
+
+    fun updateCard(key: Int, intent: ParsedIntent, remindersEdited: Boolean? = null) {
+        _uiState.update { state ->
+            state.copy(cards = state.cards.map {
+                if (it.key == key) it.copy(intent = intent, remindersEdited = remindersEdited ?: it.remindersEdited) else it
+            })
         }
     }
 
-    fun confirmTask(title: String, notes: String, dueAt: LocalDateTime?) {
-        val trimmed = title.trim()
-        if (trimmed.isBlank()) return
-        viewModelScope.launch {
-            val whenAt = dueAt ?: java.time.LocalDate.now().atTime(9, 0)
-            val id = taskRepo.insert(
-                TaskItem(
-                    title = trimmed,
-                    notes = notes.trim(),
-                    dueAt = whenAt
-                )
-            )
-            taskRepo.seedBeforeEventReminders(id, whenAt)
-            markSaved("Task")
+    fun discardCard(key: Int) {
+        val card = _uiState.value.cards.firstOrNull { it.key == key } ?: return
+        val unmatched = card.intent as? ParsedIntent.Unmatched
+        if (unmatched != null) {
+            viewModelScope.launch { capture.recordUnsorted(unmatched.rawTranscript, _uiState.value.redo?.history) }
+        }
+        removeCard(key)
+    }
+
+    /** Throws away every card and goes back to idle. */
+    fun discardAll() {
+        _uiState.value.cards.filter { it.intent is ParsedIntent.Unmatched }.forEach { discardCard(it.key) }
+        _uiState.update { fresh().copy(typedInput = it.typedInput) }
+    }
+
+    private fun removeCard(key: Int) {
+        _uiState.update { state ->
+            val left = state.cards.filterNot { it.key == key }
+            if (left.isEmpty()) fresh().copy(typedInput = state.typedInput, notice = state.notice)
+            else state.copy(cards = left)
         }
     }
 
-    fun confirmReminder(title: String, label: String, remindAt: LocalDateTime) {
-        val trimmed = title.trim().ifBlank { "Reminder" }
+    /** Saves one card. An unmatched card is kept as a note. */
+    fun saveCard(key: Int) {
+        val card = _uiState.value.cards.firstOrNull { it.key == key } ?: return
         viewModelScope.launch {
-            val eventAt = java.time.LocalDateTime.of(
-                java.time.LocalDate.now(),
-                remindAt.toLocalTime()
-            )
-            val id = taskRepo.insert(
-                TaskItem(
-                    title = trimmed,
-                    notes = "",
-                    dueAt = eventAt
-                )
-            )
-            taskRepo.seedBeforeEventReminders(id, eventAt)
-            markSaved("Reminder")
+            val saved = saveOne(card, _uiState.value.transcript)
+            if (saved != null) {
+                removeCard(key)
+                publish(listOf(saved))
+            }
         }
     }
 
-    fun confirmAlarm(label: String, time: LocalTime, repeatDays: Int = 0) {
+    /** Saves every card that can be saved; the rest stay. */
+    fun saveAll() {
+        val state = _uiState.value
         viewModelScope.launch {
-            alarmRepo.insert(
-                AlarmItem(
-                    label = label.trim().ifBlank { "Alarm" },
-                    time = time,
-                    isEnabled = true,
-                    repeatDays = repeatDays.coerceAtLeast(0)
-                )
-            )
-            markSaved("Alarm")
+            val saved = mutableListOf<SavedVoiceItem>()
+            for (card in state.cards) {
+                val result = saveOne(card, state.transcript)
+                if (result != null) {
+                    saved += result
+                    removeCard(card.key)
+                }
+            }
+            if (saved.isNotEmpty()) publish(saved)
         }
     }
 
-    fun confirmNote(title: String, body: String, tags: List<String> = emptyList()) {
-        if (title.isBlank() && body.isBlank()) return
-        viewModelScope.launch {
-            noteRepo.insert(
-                NoteItem(
-                    title = title.trim().ifBlank { "Untitled" },
-                    body = body.trim(),
-                    tags = tags.map { it.trim() }.filter { it.isNotEmpty() }
-                )
-            )
-            markSaved("Note")
+    private suspend fun saveOne(card: VoiceCard, transcript: String): SavedVoiceItem? {
+        val redo = _uiState.value.redo
+        val intent = card.intent.let {
+            if (it is ParsedIntent.Unmatched) {
+                ParsedIntent.Note(title = noteTitle(it.rawTranscript), body = it.rawTranscript, rawTranscript = it.rawTranscript)
+            } else it
         }
+        val text = card.intent.rawTranscript.ifBlank { transcript }
+        val saved = capture.save(intent, text.ifBlank { transcript }, redo?.history, card.remindersEdited)
+        if (saved != null && redo != null) {
+            if (redo.replaceOld) redo.history.linkedItemId?.let { capture.deleteLinked(redo.history.kind, it) }
+            // The first saved card takes over the row; further cards add their own rows.
+            _uiState.update { it.copy(redo = null) }
+        }
+        return saved
     }
 
-    fun confirmRoutine(title: String, notes: String, repeatRule: String) {
-        val trimmed = title.trim()
-        if (trimmed.isBlank()) return
-        viewModelScope.launch {
-            routineRepo.insert(
-                RoutineItem(
-                    title = trimmed,
-                    notes = notes.trim(),
-                    repeatRule = repeatRule.trim().ifBlank { "DAILY" },
-                    isActive = true
-                )
-            )
-            markSaved("Routine")
-        }
-    }
+    private fun noteTitle(text: String) = text.trim().split(' ').take(6).joinToString(" ").ifBlank { "Note" }
 
-    fun confirmBill(
-        name: String,
-        amount: Double,
-        frequency: BillFrequency,
-        nextDueDate: LocalDate,
-        category: TransactionCategory
-    ) {
-        val trimmed = name.trim()
-        if (trimmed.isBlank() || amount <= 0.0) return
-        viewModelScope.launch {
-            billRepo.insert(
-                Bill(
-                    name = trimmed,
-                    amount = amount,
-                    frequency = frequency,
-                    nextDueDate = nextDueDate,
-                    category = category
-                )
-            )
-            markSaved("Bill")
+    private fun publish(saved: List<SavedVoiceItem>) {
+        val first = saved.first()
+        val message = if (saved.size == 1) {
+            "${first.kind.label} saved"
+        } else {
+            "${saved.size} items saved"
         }
-    }
-
-    fun confirmDebt(
-        friendName: String,
-        amount: Double,
-        direction: DebtDirection,
-        dueDate: LocalDate?
-    ) {
-        val trimmed = friendName.trim()
-        if (trimmed.isBlank() || amount <= 0.0) return
-        viewModelScope.launch {
-            debtRepo.insert(
-                Debt(
-                    friendName = trimmed,
-                    amount = amount,
-                    direction = direction,
-                    dueDate = dueDate
-                )
-            )
-            markSaved("Debt")
-        }
-    }
-
-    fun confirmGoal(name: String, targetAmount: Double) {
-        val trimmed = name.trim()
-        if (trimmed.isBlank() || targetAmount <= 0.0) return
-        viewModelScope.launch {
-            goalRepo.insert(
-                Goal(
-                    name = trimmed,
-                    targetAmount = targetAmount
-                )
-            )
-            markSaved("Goal")
-        }
-    }
-
-    private fun markSaved(kind: String) {
+        val open = if (saved.size == 1) first.kind.openKind()?.let { it to first.itemId } else null
         _uiState.update {
-            it.copy(recorderState = VoiceRecorderState.SAVED, savedKind = kind)
+            it.copy(
+                notice = SavedNotice(
+                    nonce = ++noticeNonce,
+                    message = message,
+                    open = open,
+                    undo = { saved.asReversed().forEach { s -> s.undo() } }
+                )
+            )
         }
     }
 
-    fun reset() = _uiState.update { fresh() }
+    fun dismissNotice() = _uiState.update { it.copy(notice = null) }
 
-    fun retryRecording() {
-        cancelLive()
-        audioFile?.delete()
-        audioFile = null
-        _uiState.update { fresh() }
+    fun undoNotice() {
+        val notice = _uiState.value.notice ?: return
+        _uiState.update { it.copy(notice = null) }
+        viewModelScope.launch { notice.undo() }
     }
 
-    fun onPermissionDenied() = showError(ErrorType.PERMISSION, "Mic blocked")
+    // --- history -----------------------------------------------------------------------------
+
+    fun updateHistory(item: VoiceHistoryItem, transcript: String, kind: VoiceResultKind) {
+        viewModelScope.launch { capture.updateHistory(item, transcript, kind) }
+    }
+
+    fun deleteHistory(item: VoiceHistoryItem, deleteItem: Boolean) {
+        viewModelScope.launch { capture.deleteHistory(item, deleteItem) }
+    }
+
+    // --- misc --------------------------------------------------------------------------------
+
+    fun reset() = _uiState.update { fresh().copy(typedInput = it.typedInput) }
+
+    /** Back to a clean idle state before recording again. */
+    fun retryRecording() {
+        stopTimers()
+        discardRecorder()
+        _uiState.update { fresh().copy(typedInput = it.typedInput) }
+    }
 
     override fun onCleared() {
         stopTimers()
         cancelLive()
         liveStt = null
-        mediaRecorder?.apply { runCatching { stop(); release() } }
-        audioFile?.delete()
+        mediaRecorder?.apply { runCatching { stop() }; runCatching { release() } }
+        audioFile?.let { runCatching { it.delete() } }
         super.onCleared()
     }
 }

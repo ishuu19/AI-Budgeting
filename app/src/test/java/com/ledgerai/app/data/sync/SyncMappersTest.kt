@@ -1,8 +1,11 @@
 package com.ledgerai.app.data.sync
 
-import com.ledgerai.app.data.local.room.AlarmEntity
 import com.ledgerai.app.data.local.room.BudgetEntity
+import com.ledgerai.app.data.local.room.CalendarEventEntity
+import com.ledgerai.app.data.local.room.EventReminderEntity
 import com.ledgerai.app.data.local.room.TransactionEntity
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.RecurrenceFrequency
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import org.junit.Assert.assertEquals
@@ -10,37 +13,57 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 class SyncMappersTest {
 
     @Test
-    fun alarmEntity_roundTrip_preservesFields() {
-        val entity = AlarmEntity(
+    fun eventEntity_roundTrip_preservesFields() {
+        val entity = CalendarEventEntity(
             id = 3,
-            remoteId = "alarm-1",
+            remoteId = "ev-1",
             userId = "user-1",
-            label = "Wake",
-            time = LocalTime.of(6, 30, 0),
+            title = "Wake",
+            notes = "n",
+            location = "Home",
+            links = "https://x.test",
+            startAt = LocalDateTime.of(2026, 10, 8, 6, 30),
+            endAt = LocalDateTime.of(2026, 10, 8, 6, 30),
+            kind = CalendarEventKind.ALARM,
             isEnabled = true,
-            repeatDays = 62, // weekdays
-            toneUri = "content://tone",
+            alarmToneUri = "content://tone",
+            alarmRepeatDays = 62,
+            recurrenceFrequency = RecurrenceFrequency.WEEKLY,
+            recurrenceWeekdays = "1,2,3,4,5",
+            recurrenceUntil = LocalDate.of(2027, 1, 1),
+            excludedDatesJson = "2026-10-12",
             updatedAt = 1_700_000_000_000L,
-            deletedAt = null,
         )
-        val dto = entity.toRemoteDto(remoteId = "alarm-1", userId = "user-1")
-        val back = dto.toEntity(localId = 3)
+        val back = entity.toRemoteDto(remoteId = "ev-1", userId = "user-1").toEntity(localId = 3)
+        assertEquals(entity, back)
+    }
 
-        assertEquals(entity.id, back.id)
-        assertEquals(entity.remoteId, back.remoteId)
-        assertEquals(entity.userId, back.userId)
-        assertEquals(entity.label, back.label)
-        assertEquals(entity.time, back.time)
-        assertEquals(entity.isEnabled, back.isEnabled)
-        assertEquals(entity.repeatDays, back.repeatDays)
-        assertEquals(entity.toneUri, back.toneUri)
-        assertEquals(entity.updatedAt, back.updatedAt)
-        assertNull(back.deletedAt)
+    @Test
+    fun eventDto_unknownKindFallsBackToEvent() {
+        val dto = RemoteEventDto(id = "x", kind = "SOMETHING", startAt = "2026-10-08T09:00:00")
+        assertEquals(CalendarEventKind.EVENT, dto.toEntity().kind)
+    }
+
+    @Test
+    fun eventDto_endBeforeStartIsClamped() {
+        val dto = RemoteEventDto(id = "x", startAt = "2026-10-08T09:00:00", endAt = "2026-10-08T08:00:00")
+        val entity = dto.toEntity()
+        assertEquals(entity.startAt, entity.endAt)
+    }
+
+    @Test
+    fun reminderEntity_roundTrip_keepsOffsetAndAbsoluteTime() {
+        val offset = EventReminderEntity(id = 1, remoteId = "r1", eventId = 4, label = "10 min before", offsetMinutes = 10)
+        assertEquals(offset, offset.toRemoteDto("r1", "u", "ev").toEntity(localId = 1, localEventId = 4).copy(userId = null))
+        val absolute = EventReminderEntity(
+            id = 2, remoteId = "r2", eventId = 4, label = "x",
+            remindAt = LocalDateTime.of(2026, 10, 8, 9, 0)
+        )
+        assertEquals(absolute, absolute.toRemoteDto("r2", "u", "ev").toEntity(localId = 2, localEventId = 4).copy(userId = null))
     }
 
     @Test
@@ -101,9 +124,10 @@ class SyncMappersTest {
 
     @Test
     fun remoteWins_matchesMapperUpdatedAt() {
-        val entity = AlarmEntity(
-            label = "x",
-            time = LocalTime.NOON,
+        val entity = CalendarEventEntity(
+            title = "x",
+            startAt = LocalDateTime.of(2026, 10, 8, 12, 0),
+            endAt = LocalDateTime.of(2026, 10, 8, 12, 0),
             updatedAt = 1_000L,
         )
         val dto = entity.toRemoteDto("a", "u")

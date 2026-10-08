@@ -29,13 +29,13 @@ class BudgetRepository @Inject constructor(
     suspend fun getBudgetForCategory(category: TransactionCategory, month: Int, year: Int): Budget? =
         dao.getForCategory(category, month, year)?.toDomain()
 
-    suspend fun insert(budget: Budget) {
+    suspend fun insert(budget: Budget): Long {
         val now = System.currentTimeMillis()
         val entity = budget.copy(
             updatedAt = if (budget.updatedAt == 0L) now else budget.updatedAt,
             deletedAt = null
         ).toEntity()
-        if (budget.id == 0L) {
+        return if (budget.id == 0L) {
             dao.insert(entity.copy(id = 0))
         } else {
             dao.insert(entity)
@@ -115,13 +115,13 @@ class GoalRepository @Inject constructor(
     fun getAllGoals(): Flow<List<Goal>> =
         dao.observeAll().map { list -> list.map { it.toDomain() } }
 
-    suspend fun insert(goal: Goal) {
+    suspend fun insert(goal: Goal): Long {
         val now = System.currentTimeMillis()
         val entity = goal.copy(
             updatedAt = if (goal.updatedAt == 0L) now else goal.updatedAt,
             deletedAt = null
         ).toEntity()
-        if (goal.id == 0L) {
+        return if (goal.id == 0L) {
             dao.insert(entity.copy(id = 0))
         } else {
             dao.insert(entity)
@@ -154,13 +154,13 @@ class BillRepository @Inject constructor(
     suspend fun getTotalMonthlyBills(): Double =
         dao.sumByFrequency(BillFrequency.MONTHLY)
 
-    suspend fun insert(bill: Bill) {
+    suspend fun insert(bill: Bill): Long {
         val now = System.currentTimeMillis()
         val entity = bill.copy(
             updatedAt = if (bill.updatedAt == 0L) now else bill.updatedAt,
             deletedAt = null
         ).toEntity()
-        if (bill.id == 0L) {
+        return if (bill.id == 0L) {
             dao.insert(entity.copy(id = 0))
         } else {
             dao.insert(entity)

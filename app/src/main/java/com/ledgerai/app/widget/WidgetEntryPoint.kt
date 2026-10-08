@@ -7,9 +7,7 @@ import com.ledgerai.app.data.repository.HabitRepository
 import com.ledgerai.app.data.repository.JobRepository
 import com.ledgerai.app.data.repository.PlanRepository
 import com.ledgerai.app.data.repository.QuoteRepository
-import com.ledgerai.app.data.repository.ScheduleRepository
 import com.ledgerai.app.data.repository.SpendGuideRepository
-import com.ledgerai.app.data.repository.TaskRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.data.repository.LifeLogRepository
 import com.ledgerai.app.data.preferences.UserPreferences
@@ -20,8 +18,6 @@ import dagger.hilt.components.SingletonComponent
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
-    fun taskRepository(): TaskRepository
-    fun scheduleRepository(): ScheduleRepository
     fun calendarRepository(): CalendarRepository
     fun spendGuideRepository(): SpendGuideRepository
     fun budgetRepository(): BudgetRepository

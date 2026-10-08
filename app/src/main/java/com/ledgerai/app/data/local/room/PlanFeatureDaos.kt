@@ -16,6 +16,18 @@ interface StudyPlanDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: StudyPlanEntity): Long
+
+    @Update
+    suspend fun update(entity: StudyPlanEntity)
+
+    @Query("SELECT * FROM study_plans WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<StudyPlanEntity>
+
+    @Query("SELECT * FROM study_plans WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): StudyPlanEntity?
+
+    @Query("SELECT * FROM study_plans WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): StudyPlanEntity?
 }
 
 @Dao
@@ -52,6 +64,15 @@ interface PlanBlockDao {
         """
     )
     suspend fun listFutureScheduled(now: LocalDateTime): List<PlanBlockEntity>
+
+    @Update
+    suspend fun update(entity: PlanBlockEntity)
+
+    @Query("SELECT * FROM plan_blocks WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<PlanBlockEntity>
+
+    @Query("SELECT * FROM plan_blocks WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): PlanBlockEntity?
 }
 
 @Dao
@@ -67,12 +88,36 @@ interface HabitDao {
 
     @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND nudgeEnabled = 1")
     suspend fun listNudgeEnabled(): List<HabitEntity>
+
+    @Query("UPDATE habits SET deletedAt = :now, updatedAt = :now WHERE id = :id")
+    suspend fun softDelete(id: Long, now: Long)
+
+    @Update
+    suspend fun update(entity: HabitEntity)
+
+    @Query("SELECT * FROM habits WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<HabitEntity>
+
+    @Query("SELECT * FROM habits WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): HabitEntity?
 }
 
 @Dao
 interface HabitLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: HabitLogEntity): Long
+
+    @Query("SELECT * FROM habit_logs WHERE date >= :from AND date <= :to")
+    fun observeRange(from: LocalDate, to: LocalDate): Flow<List<HabitLogEntity>>
+
+    @Update
+    suspend fun update(entity: HabitLogEntity)
+
+    @Query("SELECT * FROM habit_logs WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<HabitLogEntity>
+
+    @Query("SELECT * FROM habit_logs WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): HabitLogEntity?
 }
 
 @Dao
@@ -82,6 +127,12 @@ interface FocusSessionDao {
 
     @Update
     suspend fun update(entity: FocusSessionEntity)
+
+    @Query("SELECT * FROM focus_sessions WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<FocusSessionEntity>
+
+    @Query("SELECT * FROM focus_sessions WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): FocusSessionEntity?
 }
 
 @Dao
@@ -94,6 +145,15 @@ interface NudgeProposalDao {
 
     @Query("UPDATE nudge_proposals SET state = :state WHERE id = :id")
     suspend fun updateState(id: Long, state: String)
+
+    @Update
+    suspend fun update(entity: NudgeProposalEntity)
+
+    @Query("SELECT * FROM nudge_proposals WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<NudgeProposalEntity>
+
+    @Query("SELECT * FROM nudge_proposals WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): NudgeProposalEntity?
 }
 
 @Dao
@@ -106,6 +166,15 @@ interface SpendSpeculationDao {
 
     @Query("UPDATE spend_speculations SET deletedAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun softDelete(id: Long, now: Long)
+
+    @Update
+    suspend fun update(entity: SpendSpeculationEntity)
+
+    @Query("SELECT * FROM spend_speculations WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<SpendSpeculationEntity>
+
+    @Query("SELECT * FROM spend_speculations WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): SpendSpeculationEntity?
 }
 
 @Dao
@@ -115,6 +184,15 @@ interface SpendGuideDayDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: SpendGuideDayEntity)
+
+    @Update
+    suspend fun update(entity: SpendGuideDayEntity)
+
+    @Query("SELECT * FROM spend_guide_days WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<SpendGuideDayEntity>
+
+    @Query("SELECT * FROM spend_guide_days WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): SpendGuideDayEntity?
 }
 
 @Dao
@@ -130,6 +208,15 @@ interface LeaveRuleDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LeaveRuleEntity): Long
+
+    @Update
+    suspend fun update(entity: LeaveRuleEntity)
+
+    @Query("SELECT * FROM leave_rules WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<LeaveRuleEntity>
+
+    @Query("SELECT * FROM leave_rules WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): LeaveRuleEntity?
 }
 
 @Dao
@@ -157,6 +244,18 @@ interface ActivityEntryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: ActivityEntryEntity): Long
+
+    @Query("UPDATE activity_entries SET text = :text, source = :source WHERE id = :id")
+    suspend fun updateText(id: Long, text: String, source: String)
+
+    @Update
+    suspend fun update(entity: ActivityEntryEntity)
+
+    @Query("SELECT * FROM activity_entries WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<ActivityEntryEntity>
+
+    @Query("SELECT * FROM activity_entries WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): ActivityEntryEntity?
 }
 
 @Dao
@@ -180,6 +279,15 @@ interface CheckinWindowDao {
 
     @Query("UPDATE checkin_windows SET state = 'GAP' WHERE state = 'PENDING' AND endAt < :now")
     suspend fun markExpiredGaps(now: LocalDateTime)
+
+    @Update
+    suspend fun update(entity: CheckinWindowEntity)
+
+    @Query("SELECT * FROM checkin_windows WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<CheckinWindowEntity>
+
+    @Query("SELECT * FROM checkin_windows WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): CheckinWindowEntity?
 }
 
 @Dao
@@ -192,4 +300,19 @@ interface JobApplicationDao {
 
     @Query("SELECT * FROM job_applications WHERE url = :url AND deletedAt IS NULL LIMIT 1")
     suspend fun findByUrl(url: String): JobApplicationEntity?
+
+    @Query("UPDATE job_applications SET deletedAt = :now, updatedAt = :now WHERE id = :id")
+    suspend fun softDelete(id: Long, now: Long)
+
+    @Query("SELECT * FROM job_applications WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): JobApplicationEntity?
+
+    @Update
+    suspend fun update(entity: JobApplicationEntity)
+
+    @Query("SELECT * FROM job_applications WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<JobApplicationEntity>
+
+    @Query("SELECT * FROM job_applications WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): JobApplicationEntity?
 }

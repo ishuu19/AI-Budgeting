@@ -33,17 +33,32 @@ class HabitRepository @Inject constructor(
         return id
     }
 
+    suspend fun getById(id: Long): Habit? =
+        if (id <= 0L) null else habitDao.getById(id)?.takeIf { it.deletedAt == null }?.toDomain()
+
+    suspend fun delete(id: Long) {
+        if (id <= 0L) return
+        habitDao.softDelete(id, System.currentTimeMillis())
+        habitNudgeScheduler.cancelForHabit(id)
+    }
+
+    /** Habit ids with a DONE log on each date in the range. */
+    fun observeDone(from: LocalDate, to: LocalDate): Flow<Set<Pair<Long, LocalDate>>> =
+        habitLogDao.observeRange(from, to).map { logs ->
+            logs.filter { it.outcome == HabitOutcome.DONE }.map { it.habitId to it.date }.toSet()
+        }
+
     suspend fun rescheduleAllNudges(): Int {
         val habits = habitDao.listNudgeEnabled()
         habits.forEach { habitNudgeScheduler.scheduleForHabit(it.toDomain()) }
         return habits.size
     }
 
-    suspend fun logOutcome(habitId: Long, outcome: HabitOutcome, minutes: Int? = null) {
+    suspend fun logOutcome(habitId: Long, outcome: HabitOutcome, minutes: Int? = null, date: LocalDate = LocalDate.now()) {
         habitLogDao.insert(
             HabitLogEntity(
                 habitId = habitId,
-                date = LocalDate.now(),
+                date = date,
                 outcome = outcome,
                 minutes = minutes,
                 updatedAt = System.currentTimeMillis()

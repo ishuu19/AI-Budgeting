@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.MainActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -94,27 +95,6 @@ class NotificationService @Inject constructor(
         notificationManager.notify(notificationId, notification)
     }
 
-    fun showTaskReminder(taskTitle: String, reminderLabel: String, notificationId: Int) {
-        val message = if (reminderLabel.isBlank() || reminderLabel == taskTitle) {
-            taskTitle
-        } else {
-            "$reminderLabel — $taskTitle"
-        }
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_TASK)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Task reminder")
-            .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setVibrate(REMINDER_VIBRATION_PATTERN)
-            .setContentIntent(buildMainActivityPendingIntent())
-            .build()
-
-        notificationManager.notify(notificationId, notification)
-    }
-
     fun showLeaveByReminder(
         eventTitle: String,
         placeLabel: String,
@@ -137,16 +117,24 @@ class NotificationService @Inject constructor(
         notificationManager.notify(notificationId, notification)
     }
 
-    fun showRoutineSlotReminder(slotTitle: String, reminderLabel: String, notificationId: Int) {
-        val message = if (reminderLabel.isBlank() || reminderLabel == slotTitle) {
-            slotTitle
-        } else {
-            "$reminderLabel — $slotTitle"
+    fun showEventReminder(
+        title: String,
+        reminderLabel: String,
+        kind: CalendarEventKind,
+        notificationId: Int
+    ) {
+        val message = if (reminderLabel.isBlank() || reminderLabel == title) title else "$reminderLabel - $title"
+        val (channel, heading) = when (kind) {
+            CalendarEventKind.TASK -> CHANNEL_TASK to "Task reminder"
+            CalendarEventKind.EXAM -> CHANNEL_TASK to "Exam reminder"
+            CalendarEventKind.CLASS -> CHANNEL_ROUTINE to "Class reminder"
+            CalendarEventKind.ROUTINE -> CHANNEL_ROUTINE to "Routine reminder"
+            else -> CHANNEL_TASK to "Event reminder"
         }
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ROUTINE)
+        val notification = NotificationCompat.Builder(context, channel)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Daily routine")
+            .setContentTitle(heading)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)

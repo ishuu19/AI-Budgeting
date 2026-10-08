@@ -27,6 +27,10 @@ class SyncCursorStore @Inject constructor(
         store.edit { it[KEY_LAST_SYNC_MS] = ms }
     }
 
+    suspend fun clear() {
+        store.edit { it.clear() }
+    }
+
     companion object {
         private val KEY_LAST_SYNC_MS = longPreferencesKey("last_sync_ms")
     }

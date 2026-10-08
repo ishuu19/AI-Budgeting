@@ -200,13 +200,17 @@ object SpendQuery {
             .any { it.contains(q, ignoreCase = true) }
     }
 
+    fun inRange(transactions: List<Transaction>, from: LocalDate, to: LocalDate): List<Transaction> =
+        transactions.filter { !it.date.isBefore(from) && !it.date.isAfter(to) }
+
     fun filter(
         transactions: List<Transaction>,
-        month: YearMonth,
+        from: LocalDate,
+        to: LocalDate,
         type: TransactionType?,
         category: TransactionCategory?,
         query: String
-    ): List<Transaction> = inMonth(transactions, month).filter { tx ->
+    ): List<Transaction> = inRange(transactions, from, to).filter { tx ->
         val typeOk = type == null || tx.type == type
         val categoryOk = category == null || tx.category == category
         typeOk && categoryOk && matchesSearch(tx, query)

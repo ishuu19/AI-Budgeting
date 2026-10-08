@@ -6,8 +6,6 @@ package com.ledgerai.app.data.ai
  */
 enum class AiResponseType(val wireName: String) {
     TRANSACTION("transaction"),
-    TASK("task"),
-    ALARM("alarm"),
     INSIGHT("insight"),
     NOTE_SUMMARY("note_summary"),
     CHAT("chat");

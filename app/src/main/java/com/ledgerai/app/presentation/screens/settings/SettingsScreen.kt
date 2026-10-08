@@ -1,42 +1,81 @@
 package com.ledgerai.app.presentation.screens.settings
 
-import androidx.compose.foundation.background
+import android.app.Activity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.glance.appwidget.updateAll
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.preferences.UserPreferences
-import com.ledgerai.app.data.repository.QuoteRepository
-import com.ledgerai.app.domain.model.Quote
 import com.ledgerai.app.data.voice.OfflineSttEngine
 import com.ledgerai.app.data.voice.OfflineVoiceEngine
-import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
+import com.ledgerai.app.presentation.components.LProgress
+import com.ledgerai.app.presentation.components.LScreen
+import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.screens.auth.AuthViewModel
+import com.ledgerai.app.widget.FocusWidget
+import com.ledgerai.app.widget.HomeWidget
+import com.ledgerai.app.widget.QuickActionsWidget
+import com.ledgerai.app.widget.WidgetPrefs
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.LocalDate
 import java.util.Currency
 import java.util.Locale
 import javax.inject.Inject
@@ -46,38 +85,23 @@ data class SettingsUiState(
     val currencySymbol: String = "$",
     val notificationsEnabled: Boolean = true,
     val budgetAlertThreshold: Int = 80,
-    val voiceOnlyWidget: Boolean = false,
     val voiceEngine: String = "sherpa"
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferences,
-    private val offline: OfflineSttEngine,
-    private val quoteRepository: QuoteRepository
+    private val offline: OfflineSttEngine
 ) : ViewModel() {
-
-    private val _dailyQuote = MutableStateFlow(Quote(text = ""))
-    val dailyQuote: StateFlow<Quote> = _dailyQuote.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            val quote = runCatching {
-                withContext(Dispatchers.IO) { quoteRepository.todaysQuote(LocalDate.now()) }
-            }.getOrDefault(Quote(text = ""))
-            _dailyQuote.value = quote
-        }
-    }
 
     val uiState: StateFlow<SettingsUiState> = combine(
         combine(
             prefs.currency,
             prefs.currencySymbol,
             prefs.notificationsEnabled,
-            prefs.budgetAlertThreshold,
-            prefs.voiceOnlyWidget
-        ) { currency, symbol, notifs, threshold, voiceOnly ->
-            SettingsUiState(currency, symbol, notifs, threshold, voiceOnly)
+            prefs.budgetAlertThreshold
+        ) { currency, symbol, notifs, threshold ->
+            SettingsUiState(currency, symbol, notifs, threshold)
         },
         prefs.voiceEngine
     ) { base, engine -> base.copy(voiceEngine = engine) }
@@ -96,12 +120,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setNotifications(enabled: Boolean) = viewModelScope.launch { prefs.setNotificationsEnabled(enabled) }
     fun setAlertThreshold(threshold: Int) = viewModelScope.launch { prefs.setBudgetAlertThreshold(threshold) }
+
+    /** Saves code and symbol together. MainActivity mirrors the symbol into LCurrency, so money() follows. */
     fun setCurrency(currency: String, symbol: String) = viewModelScope.launch { prefs.setCurrency(currency, symbol) }
     val trackMode = prefs.trackMode
     val cashOnHand = prefs.cashOnHand
     fun setTrackMode(mode: String) = viewModelScope.launch { prefs.setTrackMode(mode) }
     fun setCashOnHand(amount: String) = viewModelScope.launch { prefs.setCashOnHand(amount) }
-    fun setVoiceOnlyWidget(enabled: Boolean) = viewModelScope.launch { prefs.setVoiceOnlyWidget(enabled) }
     fun setVoiceEngine(id: String) = viewModelScope.launch { prefs.setVoiceEngine(id) }
     fun engineStatus(engine: OfflineVoiceEngine) = offline.status(engine)
 
@@ -120,262 +145,186 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
+private enum class YouSheet { None, Profile, Voice, Money, Alerts, About }
+
 @Composable
 fun SettingsScreen(
+    /** Kept for the nav graph. Ask AI now lives in the Voice tab only. */
     onOpenAi: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val user by authViewModel.uiState.collectAsState()
     val state by viewModel.uiState.collectAsState()
-    val dailyQuote by viewModel.dailyQuote.collectAsState()
+    val trackMode by viewModel.trackMode.collectAsState(initial = "both")
+    val cashOnHand by viewModel.cashOnHand.collectAsState(initial = "")
+
+    var sheet by rememberSaveable { mutableStateOf(YouSheet.None) }
+    val close = { sheet = YouSheet.None }
+
+    val isLocal = user.userId.isBlank() || user.userId.startsWith("local-")
+    val engineLabel = OfflineVoiceEngine.entries.firstOrNull { it.id == state.voiceEngine }?.label ?: "Default"
+
+    LScreen(title = "You", onBack = onBack) {
+        item {
+            LGroup {
+                LGroupRow(
+                    title = user.displayName.ifBlank { if (isLocal) "Local user" else "Profile" },
+                    sub = user.email.ifBlank { "On this device" },
+                    icon = Icons.Filled.Person,
+                    trailing = if (isLocal) "Sign in" else null,
+                    onClick = { sheet = YouSheet.Profile },
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Voice and AI",
+                    sub = engineLabel,
+                    icon = Icons.Filled.Mic,
+                    onClick = { sheet = YouSheet.Voice },
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Money rules",
+                    sub = "${state.currency} · ${if (trackMode == "expenses") "Expenses" else "Income and expenses"}",
+                    icon = Icons.Filled.CurrencyExchange,
+                    onClick = { sheet = YouSheet.Money },
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Alerts and widget",
+                    sub = if (state.notificationsEnabled) "On · ${state.budgetAlertThreshold}%" else "Off",
+                    icon = Icons.Filled.Notifications,
+                    onClick = { sheet = YouSheet.Alerts },
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "About",
+                    sub = "Version ${BuildConfig.VERSION_NAME}",
+                    icon = Icons.Filled.Info,
+                    onClick = { sheet = YouSheet.About },
+                    end = { Chevron() }
+                )
+            }
+        }
+    }
+
+    when (sheet) {
+        YouSheet.None -> Unit
+        YouSheet.Profile -> ProfileSheet(user = user, isLocal = isLocal, authViewModel = authViewModel, onDismiss = close)
+        YouSheet.Voice -> VoiceSheet(viewModel = viewModel, selected = state.voiceEngine, onDismiss = close)
+        YouSheet.Money -> MoneySheet(
+            viewModel = viewModel,
+            currency = state.currency,
+            trackMode = trackMode,
+            cashOnHand = cashOnHand,
+            onDismiss = close
+        )
+        YouSheet.Alerts -> AlertsSheet(
+            viewModel = viewModel,
+            enabled = state.notificationsEnabled,
+            threshold = state.budgetAlertThreshold,
+            onDismiss = close
+        )
+        YouSheet.About -> AboutSheet(isLocal = isLocal, onDismiss = close)
+    }
+}
+
+@Composable
+private fun Chevron() {
+    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = L.OnBoxMuted)
+}
+
+// --- profile -------------------------------------------------------------------------------
+
+@Composable
+private fun ProfileSheet(
+    user: com.ledgerai.app.presentation.screens.auth.AuthUiState,
+    isLocal: Boolean,
+    authViewModel: AuthViewModel,
+    onDismiss: () -> Unit
+) {
+    val activity = LocalContext.current as? Activity
+    var confirmOut by rememberSaveable { mutableStateOf(false) }
+
+    LSheet(
+        title = "Profile",
+        onDismiss = onDismiss,
+        primary = when {
+            !isLocal -> "Sign out"
+            user.isLoading -> "Signing in"
+            else -> "Sign in with Google"
+        },
+        onPrimary = {
+            if (!isLocal) confirmOut = true
+            else activity?.let { authViewModel.signInWithGoogle(it) }
+        },
+        primaryEnabled = !isLocal || (user.googleSignInAvailable && activity != null && !user.isLoading)
+    ) {
+        LGroup {
+            LGroupRow(
+                title = user.displayName.ifBlank { if (isLocal) "Local user" else "You" },
+                sub = user.email.ifBlank { "On this device" },
+                icon = Icons.Filled.Person
+            )
+            LGroupDivider()
+            LGroupRow(title = "Sync", trailing = if (isLocal) "Off" else "On")
+        }
+        if (isLocal && !user.googleSignInAvailable) {
+            Text("Google sign-in is not set up", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        }
+        user.errorMessage?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        }
+    }
+
+    if (confirmOut) {
+        AlertDialog(
+            onDismissRequest = { confirmOut = false },
+            containerColor = L.Page,
+            title = { Text("Sign out?", color = L.Ink) },
+            confirmButton = {
+                TextButton(
+                    onClick = { confirmOut = false; onDismiss(); authViewModel.signOut() },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) { Text("Sign out", color = L.Box) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmOut = false }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text("Cancel", color = L.InkMuted)
+                }
+            }
+        )
+    }
+}
+
+// --- voice and AI --------------------------------------------------------------------------
+
+@Composable
+private fun VoiceSheet(viewModel: SettingsViewModel, selected: String, onDismiss: () -> Unit) {
     val downloads by viewModel.downloads.collectAsState()
     val failed by viewModel.failed.collectAsState()
     val statusTick by viewModel.statusTick.collectAsState()
 
-    var showCurrency by remember { mutableStateOf(false) }
-    var showTrack by remember { mutableStateOf(false) }
-    var showCash by remember { mutableStateOf(false) }
-    val trackMode by viewModel.trackMode.collectAsState(initial = "both")
-    val cashOnHand by viewModel.cashOnHand.collectAsState(initial = "")
-    var showAlert by remember { mutableStateOf(false) }
-    var showPrivacy by remember { mutableStateOf(false) }
-
-    val isLocal = user.userId.isBlank() || user.userId.startsWith("local-")
-
-    LScreen(title = "You") {
-        item { ProfileCard(name = user.displayName, email = user.email, isLocal = isLocal) }
-
-        if (dailyQuote.text.isNotBlank()) {
-            item {
-                LCard(modifier = Modifier.padding(top = 4.dp)) {
-                    Text(
-                        "Today's quote",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = L.Gold
-                    )
-                    Text(
-                        dailyQuote.text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontStyle = FontStyle.Italic,
-                        color = L.OnBox
-                    )
-                    if (dailyQuote.author.isNotBlank()) {
-                        Text(
-                            "— ${dailyQuote.author}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = L.OnBoxMuted
-                        )
-                    }
-                }
-            }
-        }
-
-        item { LSection("Voice") }
-        OfflineVoiceEngine.entries.forEach { engine ->
-            item(key = "engine-${engine.id}") {
+    LSheet(title = "Voice and AI", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
+        LGroup {
+            OfflineVoiceEngine.entries.forEachIndexed { index, engine ->
+                if (index > 0) LGroupDivider()
                 val status = remember(engine, statusTick, downloads.containsKey(engine.id)) {
                     viewModel.engineStatus(engine)
                 }
                 EngineRow(
                     engine = engine,
-                    selected = state.voiceEngine == engine.id,
+                    selected = selected == engine.id,
                     status = status,
                     progress = downloads[engine.id],
                     failed = engine.id in failed,
                     onSelect = { viewModel.setVoiceEngine(engine.id) },
                     onGet = { viewModel.prepare(engine) }
-                )
-            }
-        }
-        item { LRow(title = "Ask AI", icon = Icons.Filled.AutoAwesome, onClick = onOpenAi) }
-
-        item { LSection("App") }
-        item {
-            LRow(
-                title = "Currency",
-                icon = Icons.Filled.CurrencyExchange,
-                trailing = state.currency,
-                onClick = { showCurrency = true }
-            )
-        }
-        item {
-            LRow(
-                title = "Track",
-                icon = Icons.Filled.AccountBalanceWallet,
-                trailing = if (trackMode == "expenses") "Expenses" else "Both",
-                onClick = { showTrack = true }
-            )
-        }
-        item {
-            LRow(
-                title = "On hand",
-                icon = Icons.Filled.Savings,
-                trailing = cashOnHand.ifBlank { "—" },
-                onClick = { showCash = true }
-            )
-        }
-        item {
-            LRow(
-                title = "Alerts",
-                icon = Icons.Filled.Notifications,
-                onClick = { viewModel.setNotifications(!state.notificationsEnabled) },
-                end = {
-                    LSwitch(state.notificationsEnabled) { viewModel.setNotifications(it) }
-                }
-            )
-        }
-        item {
-            LRow(
-                title = "Threshold",
-                icon = Icons.Filled.Percent,
-                trailing = "${state.budgetAlertThreshold}%",
-                onClick = { showAlert = true }
-            )
-        }
-        item {
-            LRow(
-                title = "Widget quote",
-                icon = Icons.Filled.Widgets,
-                onClick = { viewModel.setVoiceOnlyWidget(!state.voiceOnlyWidget) },
-                end = {
-                    LSwitch(!state.voiceOnlyWidget) { viewModel.setVoiceOnlyWidget(!it) }
-                }
-            )
-        }
-
-        item { LSection("Account") }
-        item {
-            LRow(
-                title = "Sync",
-                icon = Icons.Filled.Sync,
-                trailing = if (isLocal) "Off" else "On"
-            )
-        }
-        item {
-            LRow(title = "Privacy", icon = Icons.Filled.PrivacyTip, onClick = { showPrivacy = true })
-        }
-        item { LRow(title = "Version", icon = Icons.Filled.Info, trailing = "1.0") }
-        if (user.isSignedIn) {
-            item {
-                LGhostButton(
-                    "Sign out",
-                    onClick = { authViewModel.signOut() },
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
-    }
-
-    if (showTrack) {
-        LSheet(
-            title = "Track",
-            onDismiss = { showTrack = false },
-            primary = "Done",
-            onPrimary = { showTrack = false }
-        ) {
-            LChip("Expenses", trackMode == "expenses", onClick = { viewModel.setTrackMode("expenses") })
-            LChip("Both", trackMode != "expenses", onClick = { viewModel.setTrackMode("both") })
-        }
-    }
-
-    if (showCash) {
-        var amount by remember { mutableStateOf(cashOnHand) }
-        LSheet(
-            title = "On hand",
-            onDismiss = { showCash = false },
-            primary = "Save",
-            onPrimary = {
-                viewModel.setCashOnHand(amount)
-                showCash = false
-            },
-            secondary = "Clear",
-            onSecondary = {
-                viewModel.setCashOnHand("")
-                showCash = false
-            }
-        ) {
-            LField(amount, { amount = it.filter { ch -> ch.isDigit() || ch == '.' } }, "Amount")
-        }
-    }
-
-    if (showCurrency) {
-        CurrencyPopup(
-            selected = state.currency,
-            onPick = { code, symbol ->
-                viewModel.setCurrency(code, symbol)
-                showCurrency = false
-            },
-            onDismiss = { showCurrency = false }
-        )
-    }
-
-    if (showAlert) {
-        var value by remember { mutableStateOf(state.budgetAlertThreshold.toFloat()) }
-        LSheet(
-            title = "Threshold",
-            onDismiss = { showAlert = false },
-            primary = "Save",
-            onPrimary = {
-                viewModel.setAlertThreshold(value.toInt())
-                showAlert = false
-            }
-        ) {
-            Text("${value.toInt()}%", style = MaterialTheme.typography.headlineMedium, color = L.Box)
-            Slider(
-                value = value,
-                onValueChange = { value = it },
-                valueRange = 50f..95f,
-                colors = SliderDefaults.colors(
-                    thumbColor = L.Box,
-                    activeTrackColor = L.Box,
-                    inactiveTrackColor = L.Line
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-
-    if (showPrivacy) {
-        LSheet(
-            title = "Privacy",
-            onDismiss = { showPrivacy = false },
-            primary = "Done",
-            onPrimary = { showPrivacy = false }
-        ) {
-            Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
-                Text(PRIVACY_POLICY_TEXT, style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfileCard(name: String, email: String, isLocal: Boolean) {
-    val shownName = name.ifBlank { if (isLocal) "Local" else "You" }
-    val initial = (name.ifBlank { email }).firstOrNull()?.uppercaseChar()?.toString() ?: "L"
-    LCard {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(
-                Modifier.size(52.dp).clip(CircleShape).background(L.Gold),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(initial, style = MaterialTheme.typography.titleLarge, color = L.BoxDeep)
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    shownName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = L.OnBox,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    email.ifBlank { "On device" },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = L.OnBoxMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -393,39 +342,231 @@ private fun EngineRow(
     onGet: () -> Unit
 ) {
     val needsGet = status != "Ready" && status != "On demand"
-    LRow(
+    LGroupRow(
         title = engine.label,
-        sub = if (progress != null) "${(progress.coerceIn(0f, 1f) * 100).toInt()}%" else engine.sizeHint,
+        sub = when {
+            progress != null -> "${(progress.coerceIn(0f, 1f) * 100).toInt()}%"
+            failed -> "Download failed"
+            needsGet -> engine.sizeHint
+            else -> "Ready"
+        },
         onClick = onSelect,
         end = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
                     progress != null -> Box(Modifier.width(56.dp)) { LProgress(progress) }
-                    needsGet || failed -> Text(
-                        if (failed) "Retry" else "Get",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = L.Gold,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onGet)
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                    needsGet || failed -> TextButton(onClick = onGet, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(if (failed) "Retry" else "Get", style = MaterialTheme.typography.labelLarge, color = L.Gold)
+                    }
                 }
                 if (selected) {
                     Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Gold, modifier = Modifier.size(20.dp))
                 } else {
-                    Spacer(Modifier.size(20.dp))
+                    Box(Modifier.size(20.dp))
                 }
             }
         }
     )
 }
 
+// --- money rules ---------------------------------------------------------------------------
+
 @Composable
-private fun LSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun MoneySheet(
+    viewModel: SettingsViewModel,
+    currency: String,
+    trackMode: String,
+    cashOnHand: String,
+    onDismiss: () -> Unit
+) {
+    var cash by rememberSaveable(cashOnHand) { mutableStateOf(cashOnHand) }
+    var picking by rememberSaveable { mutableStateOf(false) }
+
+    LSheet(
+        title = "Money rules",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = {
+            viewModel.setCashOnHand(cash)
+            onDismiss()
+        }
+    ) {
+        LGroup {
+            LGroupRow(
+                title = "Currency",
+                trailing = currency,
+                onClick = { picking = true },
+                end = { Chevron() }
+            )
+        }
+        Text("Track", style = MaterialTheme.typography.titleSmall, color = L.Ink)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LChip("Expenses", trackMode == "expenses", onClick = { viewModel.setTrackMode("expenses") })
+            LChip("Both", trackMode != "expenses", onClick = { viewModel.setTrackMode("both") })
+        }
+        LField(
+            value = cash,
+            onValueChange = { cash = it.filter { ch -> ch.isDigit() || ch == '.' } },
+            label = "Cash on hand",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        )
+    }
+
+    if (picking) {
+        CurrencySheet(
+            selected = currency,
+            onPick = { code, symbol ->
+                viewModel.setCurrency(code, symbol)
+                picking = false
+            },
+            onDismiss = { picking = false }
+        )
+    }
+}
+
+private val POPULAR = listOf("USD", "EUR", "GBP", "INR", "CAD", "AUD", "JPY", "CNY", "CHF", "NZD", "SGD", "AED")
+
+@Composable
+private fun CurrencySheet(
+    selected: String,
+    onPick: (code: String, symbol: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val all = remember {
+        Currency.getAvailableCurrencies()
+            .filter { it.currencyCode.length == 3 }
+            .sortedBy { it.currencyCode }
+            .map { c ->
+                val symbol = c.getSymbol(Locale.getDefault()).ifBlank { c.currencyCode }
+                Triple(c.currencyCode, symbol, c.getDisplayName(Locale.getDefault()))
+            }
+    }
+    val q = query.trim()
+    val shown = if (q.isEmpty()) {
+        POPULAR.mapNotNull { code -> all.firstOrNull { it.first == code } }
+    } else {
+        all.filter { (code, symbol, name) ->
+            code.contains(q, ignoreCase = true) ||
+                name.contains(q, ignoreCase = true) ||
+                symbol.contains(q, ignoreCase = true)
+        }.take(30)
+    }
+
+    LSheet(title = "Currency", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
+        LField(value = query, onValueChange = { query = it }, label = "Search")
+        LGroup {
+            shown.forEachIndexed { index, (code, symbol, name) ->
+                if (index > 0) LGroupDivider()
+                LGroupRow(
+                    title = "$code  $symbol",
+                    sub = name,
+                    onClick = { onPick(code, symbol) },
+                    end = {
+                        if (code == selected) {
+                            Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Gold, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                )
+            }
+            if (shown.isEmpty()) LGroupRow(title = "No match")
+        }
+    }
+}
+
+// --- alerts and widget ---------------------------------------------------------------------
+
+@Composable
+private fun AlertsSheet(
+    viewModel: SettingsViewModel,
+    enabled: Boolean,
+    threshold: Int,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var value by rememberSaveable { mutableStateOf(threshold.toFloat()) }
+    var theme by rememberSaveable { mutableStateOf(WidgetPrefs.theme(context)) }
+    var hidden by rememberSaveable { mutableStateOf(WidgetPrefs.privateMode(context)) }
+
+    fun refreshWidgets() {
+        scope.launch {
+            runCatching {
+                HomeWidget().updateAll(context)
+                QuickActionsWidget().updateAll(context)
+                FocusWidget().updateAll(context)
+            }
+        }
+    }
+
+    LSheet(
+        title = "Alerts and widget",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = {
+            viewModel.setAlertThreshold(value.toInt())
+            onDismiss()
+        }
+    ) {
+        LGroup {
+            LGroupRow(
+                title = "Notifications",
+                icon = Icons.Filled.Notifications,
+                onClick = { viewModel.setNotifications(!enabled) },
+                end = { LSwitch(enabled, "Notifications") { viewModel.setNotifications(it) } }
+            )
+            LGroupDivider()
+            LGroupRow(
+                title = "Private widget",
+                onClick = {
+                    hidden = !hidden
+                    WidgetPrefs.setPrivateMode(context, hidden)
+                    refreshWidgets()
+                },
+                end = {
+                    LSwitch(hidden, "Private widget") {
+                        hidden = it
+                        WidgetPrefs.setPrivateMode(context, it)
+                        refreshWidgets()
+                    }
+                }
+            )
+        }
+        Text("Budget alert at ${value.toInt()}%", style = MaterialTheme.typography.titleSmall, color = L.Ink)
+        Slider(
+            value = value,
+            onValueChange = { value = it },
+            valueRange = 50f..95f,
+            colors = SliderDefaults.colors(
+                thumbColor = L.Box,
+                activeTrackColor = L.Box,
+                inactiveTrackColor = L.Line
+            ),
+            modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Budget alert threshold" }
+        )
+        Text("Widget theme", style = MaterialTheme.typography.titleSmall, color = L.Ink)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(
+                WidgetPrefs.THEME_SYSTEM to "System",
+                WidgetPrefs.THEME_DARK to "Dark",
+                WidgetPrefs.THEME_LIGHT to "Light"
+            ).forEach { (id, label) ->
+                LChip(label, theme == id, onClick = {
+                    theme = id
+                    WidgetPrefs.setTheme(context, id)
+                    refreshWidgets()
+                })
+            }
+        }
+    }
+}
+
+@Composable
+private fun LSwitch(checked: Boolean, label: String, onChange: (Boolean) -> Unit) {
     Switch(
         checked = checked,
         onCheckedChange = onChange,
+        modifier = Modifier.semantics { contentDescription = label },
         colors = SwitchDefaults.colors(
             checkedThumbColor = L.BoxDeep,
             checkedTrackColor = L.Gold,
@@ -437,74 +578,18 @@ private fun LSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
     )
 }
 
-@Composable
-private fun CurrencyPopup(
-    selected: String,
-    onPick: (code: String, symbol: String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var query by remember { mutableStateOf("") }
-    val all = remember {
-        Currency.getAvailableCurrencies()
-            .filter { it.currencyCode.length == 3 }
-            .sortedBy { it.currencyCode }
-            .map { currency ->
-                val symbol = currency.getSymbol(Locale.getDefault()).ifBlank { currency.currencyCode }
-                Triple(currency.currencyCode, symbol, currency.getDisplayName(Locale.getDefault()))
-            }
-    }
-    val q = query.trim()
-    val shown = if (q.isEmpty()) all else all.filter { (code, symbol, name) ->
-        code.contains(q, ignoreCase = true) ||
-            name.contains(q, ignoreCase = true) ||
-            symbol.contains(q, ignoreCase = true)
-    }
+// --- about ---------------------------------------------------------------------------------
 
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .height(440.dp)
-                .clip(RoundedCornerShape(L.Radius))
-                .background(L.Page)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text("Currency", style = MaterialTheme.typography.titleLarge, color = L.Ink)
-            LField(value = query, onValueChange = { query = it }, label = "Search")
-            LazyColumn(Modifier.weight(1f)) {
-                items(shown, key = { it.first }) { (code, symbol, name) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onPick(code, symbol) }
-                            .padding(horizontal = 4.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            code,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = if (selected == code) L.Box else L.Ink,
-                            modifier = Modifier.width(52.dp)
-                        )
-                        Text(
-                            name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = L.InkMuted,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            symbol,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = if (selected == code) L.Gold else L.Ink
-                        )
-                    }
-                }
-            }
+@Composable
+private fun AboutSheet(isLocal: Boolean, onDismiss: () -> Unit) {
+    LSheet(title = "About", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
+        LGroup {
+            LGroupRow(title = "Version", trailing = BuildConfig.VERSION_NAME)
+            LGroupDivider()
+            LGroupRow(title = "Sync", trailing = if (isLocal) "Off" else "On")
         }
+        Text("Privacy", style = MaterialTheme.typography.titleSmall, color = L.Ink)
+        Text(PRIVACY_POLICY_TEXT, style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
     }
 }
 

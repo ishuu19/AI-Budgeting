@@ -78,38 +78,42 @@ data class RemoteBillDto(
     @SerializedName("deleted_at") val deletedAt: String? = null
 )
 
-data class RemoteTaskDto(
+/** One row per calendar event of any kind (event, task, exam, class, routine, alarm). */
+data class RemoteEventDto(
     @SerializedName("id") val id: String,
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("title") val title: String = "",
     @SerializedName("notes") val notes: String = "",
-    @SerializedName("due_at") val dueAt: String? = null,
+    @SerializedName("location") val location: String = "",
+    @SerializedName("links") val links: String = "",
+    @SerializedName("start_at") val startAt: String = "",
+    @SerializedName("end_at") val endAt: String = "",
+    @SerializedName("all_day") val allDay: Boolean = false,
+    @SerializedName("has_date") val hasDate: Boolean = true,
+    @SerializedName("kind") val kind: String = "EVENT",
     @SerializedName("is_completed") val isCompleted: Boolean = false,
-    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("completed_at") val completedAt: String? = null,
+    @SerializedName("is_enabled") val isEnabled: Boolean = true,
+    @SerializedName("alarm_tone_uri") val alarmToneUri: String? = null,
+    @SerializedName("alarm_repeat_days") val alarmRepeatDays: Int = 0,
+    @SerializedName("recurrence_frequency") val recurrenceFrequency: String = "NONE",
+    @SerializedName("recurrence_interval") val recurrenceInterval: Int = 1,
+    @SerializedName("recurrence_weekdays") val recurrenceWeekdays: String = "",
+    @SerializedName("specific_dates") val specificDates: String = "",
+    @SerializedName("recurrence_until") val recurrenceUntil: String? = null,
+    @SerializedName("excluded_dates") val excludedDates: String = "",
     @SerializedName("updated_at") val updatedAt: String? = null,
     @SerializedName("deleted_at") val deletedAt: String? = null
 )
 
-data class RemoteReminderDto(
+data class RemoteEventReminderDto(
     @SerializedName("id") val id: String,
     @SerializedName("user_id") val userId: String? = null,
-    @SerializedName("task_id") val taskId: String,
+    @SerializedName("event_id") val eventId: String,
     @SerializedName("label") val label: String = "",
-    @SerializedName("remind_at") val remindAt: String = "",
     @SerializedName("offset_minutes") val offsetMinutes: Int? = null,
+    @SerializedName("remind_at") val remindAt: String? = null,
     @SerializedName("is_enabled") val isEnabled: Boolean = true,
-    @SerializedName("updated_at") val updatedAt: String? = null,
-    @SerializedName("deleted_at") val deletedAt: String? = null
-)
-
-data class RemoteAlarmDto(
-    @SerializedName("id") val id: String,
-    @SerializedName("user_id") val userId: String? = null,
-    @SerializedName("label") val label: String = "Alarm",
-    @SerializedName("time") val time: String = "00:00:00",
-    @SerializedName("is_enabled") val isEnabled: Boolean = true,
-    @SerializedName("repeat_days") val repeatDays: Int = 0,
-    @SerializedName("tone_uri") val toneUri: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null,
     @SerializedName("deleted_at") val deletedAt: String? = null
 )
@@ -122,17 +126,6 @@ data class RemoteNoteDto(
     @SerializedName("tags") val tags: String = "",
     @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("edited_at") val editedAt: String? = null,
-    @SerializedName("updated_at") val updatedAt: String? = null,
-    @SerializedName("deleted_at") val deletedAt: String? = null
-)
-
-data class RemoteRoutineDto(
-    @SerializedName("id") val id: String,
-    @SerializedName("user_id") val userId: String? = null,
-    @SerializedName("title") val title: String = "",
-    @SerializedName("notes") val notes: String = "",
-    @SerializedName("repeat_rule") val repeatRule: String = "",
-    @SerializedName("is_active") val isActive: Boolean = true,
     @SerializedName("updated_at") val updatedAt: String? = null,
     @SerializedName("deleted_at") val deletedAt: String? = null
 )

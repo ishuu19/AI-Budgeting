@@ -24,7 +24,15 @@ class InsightStore @Inject constructor(
             .putString(KEY_ACTIONS, insight.actions.orEmpty().joinToString("\n"))
             .putString(KEY_DATE, date.toString())
             .putString(KEY_TYPE, AiResponseType.INSIGHT.wireName)
+            .putLong(KEY_SAVED_AT, System.currentTimeMillis())
             .apply()
+    }
+
+    /** True when there is no timestamp, or the copy is older than four hours. */
+    fun isStale(nowMillis: Long = System.currentTimeMillis()): Boolean {
+        val savedAt = prefs.getLong(KEY_SAVED_AT, 0L)
+        if (savedAt == 0L) return true
+        return nowMillis - savedAt > STALE_AFTER_MS
     }
 
     fun readToday(date: LocalDate = LocalDate.now()): InsightDto? {
@@ -52,5 +60,7 @@ class InsightStore @Inject constructor(
         private const val KEY_ACTIONS = "actions"
         private const val KEY_DATE = "date"
         private const val KEY_TYPE = "type"
+        private const val KEY_SAVED_AT = "saved_at"
+        private const val STALE_AFTER_MS = 4 * 60 * 60 * 1000L
     }
 }

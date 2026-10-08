@@ -16,7 +16,6 @@ import com.ledgerai.app.domain.model.RecurrenceFrequency
 import com.ledgerai.app.domain.model.DebtDirection
 import com.ledgerai.app.domain.model.SpeculationConfidence
 import com.ledgerai.app.domain.model.SpeculationDirection
-import com.ledgerai.app.domain.model.TaskEventKind
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import java.time.LocalDate
@@ -68,16 +67,10 @@ class Converters {
     fun toBillFrequency(value: String): BillFrequency = BillFrequency.valueOf(value)
 
     @TypeConverter
-    fun fromTaskEventKind(value: TaskEventKind): String = value.name
-
-    @TypeConverter
-    fun toTaskEventKind(value: String): TaskEventKind = TaskEventKind.valueOf(value)
-
-    @TypeConverter
     fun fromCalendarEventKind(value: CalendarEventKind): String = value.name
 
     @TypeConverter
-    fun toCalendarEventKind(value: String): CalendarEventKind = CalendarEventKind.valueOf(value)
+    fun toCalendarEventKind(value: String): CalendarEventKind = CalendarEventKind.parse(value)
 
     @TypeConverter
     fun fromRecurrenceFrequency(value: RecurrenceFrequency): String = value.name

@@ -1,17 +1,18 @@
 package com.ledgerai.app.data.sync
 
 import com.ledgerai.app.BuildConfig
-import com.ledgerai.app.data.local.room.AlarmDao
 import com.ledgerai.app.data.local.room.BillDao
 import com.ledgerai.app.data.local.room.BudgetDao
+import com.ledgerai.app.data.local.room.CalendarEventDao
 import com.ledgerai.app.data.local.room.DebtDao
+import com.ledgerai.app.data.local.room.EventReminderDao
 import com.ledgerai.app.data.local.room.GoalDao
 import com.ledgerai.app.data.local.room.NoteDao
-import com.ledgerai.app.data.local.room.RoutineDao
-import com.ledgerai.app.data.local.room.TaskDao
-import com.ledgerai.app.data.local.room.TaskReminderDao
 import com.ledgerai.app.data.local.room.TransactionDao
 import com.ledgerai.app.data.preferences.UserSession
+import com.ledgerai.app.data.repository.CalendarRepository
+import com.ledgerai.app.domain.schedule.EventReminderRules
+import kotlin.jvm.JvmSuppressWildcards
 import kotlinx.coroutines.flow.first
 import java.util.UUID
 import javax.inject.Inject
@@ -31,11 +32,11 @@ class SyncRepository @Inject constructor(
     private val debtDao: DebtDao,
     private val goalDao: GoalDao,
     private val billDao: BillDao,
-    private val taskDao: TaskDao,
-    private val reminderDao: TaskReminderDao,
-    private val routineDao: RoutineDao,
-    private val alarmDao: AlarmDao,
+    private val eventDao: CalendarEventDao,
+    private val eventReminderDao: EventReminderDao,
     private val noteDao: NoteDao,
+    private val calendarRepository: CalendarRepository,
+    private val extras: Set<@JvmSuppressWildcards ExtraSync>,
 ) {
 
     private val anonKey: String get() = BuildConfig.SUPABASE_ANON_KEY
@@ -59,10 +60,9 @@ class SyncRepository @Inject constructor(
         pullDebts(bearer, filter)
         pullGoals(bearer, filter)
         pullBills(bearer, filter)
-        pullTasks(bearer, filter)
-        pullReminders(bearer, filter)
-        pullRoutines(bearer, filter)
-        pullAlarms(bearer, filter)
+        val touchedEvents = mutableSetOf<Long>()
+        pullEvents(bearer, filter, touchedEvents)
+        pullEventReminders(bearer, filter, touchedEvents)
         pullNotes(bearer, filter)
 
         pushTransactions(userId, sinceMs, bearer)
@@ -70,11 +70,12 @@ class SyncRepository @Inject constructor(
         pushDebts(userId, sinceMs, bearer)
         pushGoals(userId, sinceMs, bearer)
         pushBills(userId, sinceMs, bearer)
-        pushTasks(userId, sinceMs, bearer)
-        pushReminders(userId, sinceMs, bearer)
-        pushRoutines(userId, sinceMs, bearer)
-        pushAlarms(userId, sinceMs, bearer)
+        pushEvents(userId, sinceMs, bearer)
+        pushEventReminders(userId, sinceMs, bearer)
         pushNotes(userId, sinceMs, bearer)
+        extras.forEach { it.sync(bearer, anonKey, userId, sinceMs, filter) }
+
+        touchedEvents.forEach { calendarRepository.rearmAfterPull(it) }
 
         cursorStore.saveLastSyncMs(startedAt)
         return true
@@ -82,10 +83,23 @@ class SyncRepository @Inject constructor(
 
     private fun newId(): String = UUID.randomUUID().toString()
 
+    /** Fetches ordered pages until a short page is returned, so no row beyond the page size is skipped. */
+    private suspend fun <T> forEachPage(fetch: suspend (offset: Int) -> List<T>): List<T> {
+        val all = ArrayList<T>()
+        var offset = 0
+        while (true) {
+            val page = fetch(offset)
+            all += page
+            if (page.size < PostgrestApi.PULL_PAGE_SIZE) break
+            offset += page.size
+        }
+        return all
+    }
+
     // ─── pull (remote wins if remote.updatedAt >= local.updatedAt) ───────────
 
     private suspend fun pullTransactions(bearer: String, filter: String) {
-        api.pullTransactions(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullTransactions(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val local = transactionDao.getByRemoteId(remote.id)
             if (local == null) transactionDao.insert(remote.toEntity())
             else if (SyncTime.remoteWins(remote.updatedAt, local.updatedAt)) {
@@ -95,7 +109,7 @@ class SyncRepository @Inject constructor(
     }
 
     private suspend fun pullBudgets(bearer: String, filter: String) {
-        api.pullBudgets(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullBudgets(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
             val local = budgetDao.getByRemoteId(remote.id)
             if (local == null) budgetDao.insert(remote.toEntity())
@@ -106,7 +120,7 @@ class SyncRepository @Inject constructor(
     }
 
     private suspend fun pullDebts(bearer: String, filter: String) {
-        api.pullDebts(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullDebts(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
             val local = debtDao.getByRemoteId(remote.id)
             if (local == null) debtDao.insert(remote.toEntity())
@@ -117,7 +131,7 @@ class SyncRepository @Inject constructor(
     }
 
     private suspend fun pullGoals(bearer: String, filter: String) {
-        api.pullGoals(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullGoals(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
             val local = goalDao.getByRemoteId(remote.id)
             if (local == null) goalDao.insert(remote.toEntity())
@@ -128,7 +142,7 @@ class SyncRepository @Inject constructor(
     }
 
     private suspend fun pullBills(bearer: String, filter: String) {
-        api.pullBills(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullBills(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
             val local = billDao.getByRemoteId(remote.id)
             if (local == null) billDao.insert(remote.toEntity())
@@ -138,54 +152,49 @@ class SyncRepository @Inject constructor(
         }
     }
 
-    private suspend fun pullTasks(bearer: String, filter: String) {
-        api.pullTasks(bearer, anonKey, filter).forEach { remote ->
-            val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
-            val local = taskDao.getByRemoteId(remote.id)
-            if (local == null) taskDao.insert(remote.toEntity())
-            else if (remoteUpdated >= local.updatedAt) {
-                taskDao.update(remote.toEntity(localId = local.id).copy(location = local.location, links = local.links))
-            }
-        }
-    }
-
-    private suspend fun pullReminders(bearer: String, filter: String) {
-        api.pullReminders(bearer, anonKey, filter).forEach { remote ->
-            val task = taskDao.getByRemoteId(remote.taskId) ?: return@forEach
-            val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
-            val local = reminderDao.getByRemoteId(remote.id)
+    private suspend fun pullEvents(bearer: String, filter: String, touched: MutableSet<Long>) {
+        forEachPage { offset -> api.pullEvents(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
+            val local = eventDao.getByRemoteId(remote.id)
             if (local == null) {
-                reminderDao.insert(remote.toEntity(localTaskId = task.id))
-            } else if (remoteUpdated >= local.updatedAt) {
-                reminderDao.update(remote.toEntity(localId = local.id, localTaskId = task.id))
+                val id = eventDao.insert(remote.toEntity())
+                touched += id
+            } else if (SyncTime.remoteWins(remote.updatedAt, local.updatedAt)) {
+                eventDao.update(remote.toEntity(localId = local.id))
+                touched += local.id
             }
         }
     }
 
-    private suspend fun pullRoutines(bearer: String, filter: String) {
-        api.pullRoutines(bearer, anonKey, filter).forEach { remote ->
+    /** Applies the per-event reminder cap so a bad remote state can never exceed it locally. */
+    private suspend fun pullEventReminders(bearer: String, filter: String, touched: MutableSet<Long>) {
+        forEachPage { offset -> api.pullEventReminders(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
+            val event = eventDao.getByRemoteId(remote.eventId) ?: return@forEach
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
-            val local = routineDao.getByRemoteId(remote.id)
-            if (local == null) routineDao.insert(remote.toEntity())
-            else if (remoteUpdated >= local.updatedAt) {
-                routineDao.update(remote.toEntity(localId = local.id).copy(location = local.location))
-            }
-        }
-    }
-
-    private suspend fun pullAlarms(bearer: String, filter: String) {
-        api.pullAlarms(bearer, anonKey, filter).forEach { remote ->
-            val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
-            val local = alarmDao.getByRemoteId(remote.id)
-            if (local == null) alarmDao.insert(remote.toEntity())
-            else if (remoteUpdated >= local.updatedAt) {
-                alarmDao.update(remote.toEntity(localId = local.id).copy(location = local.location))
+            val local = eventReminderDao.getByRemoteId(remote.id)
+            val incoming = remote.toEntity(localId = local?.id ?: 0L, localEventId = event.id)
+            when {
+                local == null -> {
+                    val active = eventReminderDao.countActiveForEvent(event.id)
+                    if (!EventReminderRules.acceptPulled(active, incoming.deletedAt != null)) return@forEach
+                    eventReminderDao.insert(incoming)
+                    touched += event.id
+                }
+                remoteUpdated >= local.updatedAt -> {
+                    val reviving = local.deletedAt != null && incoming.deletedAt == null
+                    if (reviving &&
+                        !EventReminderRules.acceptPulled(eventReminderDao.countActiveForEvent(event.id), false)
+                    ) {
+                        return@forEach
+                    }
+                    eventReminderDao.update(incoming)
+                    touched += event.id
+                }
             }
         }
     }
 
     private suspend fun pullNotes(bearer: String, filter: String) {
-        api.pullNotes(bearer, anonKey, filter).forEach { remote ->
+        forEachPage { offset -> api.pullNotes(bearer, anonKey, filter, offset = offset) }.forEach { remote ->
             val remoteUpdated = SyncTime.isoToMillis(remote.updatedAt)
             val local = noteDao.getByRemoteId(remote.id)
             if (local == null) noteDao.insert(remote.toEntity())
@@ -272,67 +281,37 @@ class SyncRepository @Inject constructor(
         api.upsertBills(bearer, anonKey, body = rows)
     }
 
-    private suspend fun pushTasks(userId: String, sinceMs: Long, bearer: String) {
-        val locals = taskDao.listForSync(sinceMs)
+    private suspend fun pushEvents(userId: String, sinceMs: Long, bearer: String) {
+        val locals = eventDao.listForSync(sinceMs)
         if (locals.isEmpty()) return
-        val rows = ArrayList<RemoteTaskDto>(locals.size)
+        val rows = ArrayList<RemoteEventDto>(locals.size)
         for (local in locals) {
             val rid = local.remoteId ?: run {
                 val id = newId()
-                taskDao.update(local.copy(remoteId = id, userId = userId))
+                eventDao.update(local.copy(remoteId = id, userId = userId))
                 id
             }
             rows += local.toRemoteDto(rid, userId)
         }
-        api.upsertTasks(bearer, anonKey, body = rows)
+        rows.chunked(PUSH_CHUNK).forEach { api.upsertEvents(bearer, anonKey, body = it) }
     }
 
-    private suspend fun pushReminders(userId: String, sinceMs: Long, bearer: String) {
-        val locals = reminderDao.listForSync(sinceMs)
+    private suspend fun pushEventReminders(userId: String, sinceMs: Long, bearer: String) {
+        val locals = eventReminderDao.listForSync(sinceMs)
         if (locals.isEmpty()) return
-        val rows = ArrayList<RemoteReminderDto>()
+        val rows = ArrayList<RemoteEventReminderDto>()
         for (local in locals) {
-            val task = taskDao.getByIdAny(local.taskId) ?: continue
-            val taskRemote = task.remoteId ?: continue
+            val event = eventDao.getByIdAny(local.eventId) ?: continue
+            val eventRemote = event.remoteId ?: continue
             val rid = local.remoteId ?: run {
                 val id = newId()
-                reminderDao.update(local.copy(remoteId = id, userId = userId))
+                eventReminderDao.update(local.copy(remoteId = id, userId = userId))
                 id
             }
-            rows += local.toRemoteDto(rid, userId, taskRemote)
+            rows += local.toRemoteDto(rid, userId, eventRemote)
         }
         if (rows.isEmpty()) return
-        api.upsertReminders(bearer, anonKey, body = rows)
-    }
-
-    private suspend fun pushRoutines(userId: String, sinceMs: Long, bearer: String) {
-        val locals = routineDao.listForSync(sinceMs)
-        if (locals.isEmpty()) return
-        val rows = ArrayList<RemoteRoutineDto>(locals.size)
-        for (local in locals) {
-            val rid = local.remoteId ?: run {
-                val id = newId()
-                routineDao.update(local.copy(remoteId = id, userId = userId))
-                id
-            }
-            rows += local.toRemoteDto(rid, userId)
-        }
-        api.upsertRoutines(bearer, anonKey, body = rows)
-    }
-
-    private suspend fun pushAlarms(userId: String, sinceMs: Long, bearer: String) {
-        val locals = alarmDao.listForSync(sinceMs)
-        if (locals.isEmpty()) return
-        val rows = ArrayList<RemoteAlarmDto>(locals.size)
-        for (local in locals) {
-            val rid = local.remoteId ?: run {
-                val id = newId()
-                alarmDao.update(local.copy(remoteId = id, userId = userId))
-                id
-            }
-            rows += local.toRemoteDto(rid, userId)
-        }
-        api.upsertAlarms(bearer, anonKey, body = rows)
+        rows.chunked(PUSH_CHUNK).forEach { api.upsertEventReminders(bearer, anonKey, body = it) }
     }
 
     private suspend fun pushNotes(userId: String, sinceMs: Long, bearer: String) {
@@ -348,5 +327,9 @@ class SyncRepository @Inject constructor(
             rows += local.toRemoteDto(rid, userId)
         }
         api.upsertNotes(bearer, anonKey, body = rows)
+    }
+
+    private companion object {
+        const val PUSH_CHUNK = 200
     }
 }

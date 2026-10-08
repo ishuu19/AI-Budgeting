@@ -15,24 +15,20 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.repository.AiRepository
-import com.ledgerai.app.data.repository.TaskRepository
-import com.ledgerai.app.domain.model.TaskItem
-import com.ledgerai.app.domain.schedule.resolveEventDateTime
+import com.ledgerai.app.data.repository.VoiceCaptureRepository
 import com.ledgerai.app.widget.WidgetRefresh
 import dagger.hilt.android.AndroidEntryPoint
-import java.time.LocalDate
-import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 /**
- * Widget mic → record → parse → save task → refresh day widget.
+ * Widget mic -> record -> parse -> save calendar event -> refresh day widget.
  */
 @AndroidEntryPoint
 class WidgetVoiceCaptureActivity : ComponentActivity() {
 
     @Inject lateinit var aiRepository: AiRepository
-    @Inject lateinit var taskRepository: TaskRepository
+    @Inject lateinit var voiceCapture: VoiceCaptureRepository
 
     private var receiver: BroadcastReceiver? = null
 
@@ -57,6 +53,7 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
             this,
             Intent(this, VoiceRecordingService::class.java).apply {
                 action = VoiceRecordingService.ACTION_START_RECORDING
+                putExtra(VoiceRecordingService.EXTRA_PROMPT, "Say what to add")
             }
         )
         Toast.makeText(this, "Listening…", Toast.LENGTH_SHORT).show()
@@ -83,23 +80,33 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Saves every clear item (spend, task, bill, ...) straight away, like the confirm card Save, and keeps a
+     * history row for each. Words nothing recognises are kept as a note, never turned into a fake task.
+     */
     private suspend fun handleTranscript(text: String) {
-        val parsed = aiRepository.parseVoiceIntent(text).getOrNull()
-        val title = when (parsed) {
-            is ParsedIntent.Task -> parsed.title.ifBlank { text }
-            else -> text.take(120)
+        val items = aiRepository.parseVoiceIntents(text).getOrNull().orEmpty()
+        var saved = 0
+        var firstKind = ""
+        for (item in items) {
+            val result = if (item is ParsedIntent.Unmatched) {
+                voiceCapture.save(ParsedIntent.Note(title = text.take(40), body = text, rawTranscript = text), text)
+            } else {
+                voiceCapture.save(item, text)
+            }
+            if (result != null) {
+                if (saved == 0) firstKind = result.kind.label
+                saved++
+            }
         }
-        val notes = (parsed as? ParsedIntent.Task)?.notes ?: ""
-        val due = (parsed as? ParsedIntent.Task)?.dueAt ?: resolveEventDateTime(
-            date = LocalDate.now(),
-            time = LocalTime.now().withSecond(0).withNano(0),
-            isNew = true,
-            explicitNoDate = false
-        ) ?: java.time.LocalDateTime.now()
-        val id = taskRepository.insert(TaskItem(title = title, notes = notes, dueAt = due))
-        taskRepository.seedBeforeEventReminders(id, due)
-        WidgetRefresh.refreshAll(applicationContext)
-        finishWithToast("Task added")
+        if (saved > 0) WidgetRefresh.refreshAll(applicationContext)
+        finishWithToast(
+            when {
+                saved == 0 -> "Could not save. Open Voice to edit."
+                saved == 1 -> "$firstKind saved"
+                else -> "$saved items saved"
+            }
+        )
     }
 
     private fun finishWithToast(msg: String) {

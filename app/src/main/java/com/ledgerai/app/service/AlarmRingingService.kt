@@ -17,7 +17,8 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.ledgerai.app.data.repository.AlarmRepository
+import com.ledgerai.app.data.repository.CalendarRepository
+import com.ledgerai.app.domain.model.CalendarEventKind
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class AlarmRingingService : Service() {
 
-    @Inject lateinit var alarmRepository: AlarmRepository
+    @Inject lateinit var calendarRepository: CalendarRepository
     @Inject lateinit var alarmScheduler: AlarmScheduler
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -75,11 +76,15 @@ class AlarmRingingService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification(activeLabel, alarmId))
 
         scope.launch {
-            val alarm = alarmRepository.getById(alarmId)
-            activeLabel = alarm?.label?.ifBlank { "Alarm" } ?: "Alarm"
+            val alarm = calendarRepository.getById(alarmId)?.takeIf { it.kind == CalendarEventKind.ALARM }
+            if (alarm == null || !alarm.isEnabled) {
+                stopEverything()
+                return@launch
+            }
+            activeLabel = alarm.title.ifBlank { "Alarm" }
             val nm = getSystemService(NotificationManager::class.java)
             nm?.notify(NOTIFICATION_ID, buildNotification(activeLabel, alarmId))
-            playTone(alarm?.toneUri)
+            playTone(alarm.alarmToneUri)
             vibrate()
             launchFullScreen(alarmId, activeLabel)
         }
@@ -182,12 +187,12 @@ class AlarmRingingService : Service() {
     private fun dismiss(alarmId: Long) {
         scope.launch {
             try {
-                val alarm = alarmRepository.getById(alarmId)
-                if (alarm != null) {
-                    if (alarm.repeatDays == 0) {
-                        alarmRepository.setEnabled(alarmId, false)
+                val alarm = calendarRepository.getById(alarmId)
+                if (alarm != null && alarm.kind == CalendarEventKind.ALARM) {
+                    if (alarm.alarmRepeatDays == 0) {
+                        calendarRepository.setEnabled(alarmId, false)
                     } else {
-                        alarmScheduler.schedule(alarm)
+                        calendarRepository.setEnabled(alarmId, true)
                     }
                 }
             } finally {

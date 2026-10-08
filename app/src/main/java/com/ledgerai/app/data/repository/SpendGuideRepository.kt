@@ -37,7 +37,12 @@ class SpendGuideRepository @Inject constructor(
         val (periodStart, periodEnd) = SpendGuideCalculator.monthPeriod(date)
         val now = date
         val budgets = budgetRepository.getBudgetsForMonth(now.monthValue, now.year).first()
-        val remainingBudget = budgets.sumOf { it.monthlyLimit - it.spent }
+        val txs = transactionRepository.getTransactionsForMonth(now.year, now.monthValue).first()
+        // Budget.spent is not maintained in storage, so spending comes from this month's transactions.
+        val spentByCategory = txs.filter { it.type == TransactionType.EXPENSE }
+            .groupBy { it.category }
+            .mapValues { (_, list) -> list.sumOf { it.amount } }
+        val remainingBudget = budgets.sumOf { it.monthlyLimit - (spentByCategory[it.category] ?: 0.0) }
         val bills = billRepository.getAllBills().first()
         val billsDue = bills.sumOf {
             SpendGuideCalculator.billAmountDueInPeriod(
@@ -54,7 +59,6 @@ class SpendGuideRepository @Inject constructor(
             (g.targetAmount - g.savedAmount).coerceAtLeast(0.0) / monthsLeft.coerceAtLeast(1.0)
         }
         val specs = speculationDao.observeAll().first().map { it.toDomain() }
-        val txs = transactionRepository.getTransactionsForMonth(now.year, now.monthValue).first()
         val periodTx = txs.filter { !it.date.isBefore(periodStart) && !it.date.isAfter(periodEnd) }
         val spentPeriod = periodTx.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
         val spentToday = periodTx.filter { it.date == date && it.type == TransactionType.EXPENSE }

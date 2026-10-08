@@ -2,6 +2,8 @@ package com.ledgerai.app.data.ai
 
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.RecurrenceFrequency
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -59,18 +61,20 @@ class QuickParseTest {
     @Test
     fun parseVoiceIntentAlarmIncludesRepeatDays() {
         val intent = QuickParse.parseVoiceIntent("Set an alarm weekdays at 7am")
-        assertTrue(intent is ParsedIntent.Alarm)
-        val alarm = intent as ParsedIntent.Alarm
-        assertEquals(LocalTime.of(7, 0), alarm.time)
-        assertEquals(QuickParse.MASK_WEEKDAYS, alarm.repeatDays)
+        assertTrue(intent is ParsedIntent.Event)
+        val alarm = intent as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ALARM, alarm.kind)
+        assertEquals(LocalTime.of(7, 0), alarm.startAt.toLocalTime())
+        assertEquals(QuickParse.MASK_WEEKDAYS, alarm.alarmRepeatDays)
     }
 
     @Test
     fun parseVoiceIntentRoutine() {
         val intent = QuickParse.parseVoiceIntent("Daily routine to stretch")
-        assertTrue(intent is ParsedIntent.Routine)
-        val routine = intent as ParsedIntent.Routine
-        assertEquals("DAILY", routine.repeatRule)
+        assertTrue(intent is ParsedIntent.Event)
+        val routine = intent as ParsedIntent.Event
+        assertEquals(CalendarEventKind.ROUTINE, routine.kind)
+        assertEquals(RecurrenceFrequency.DAILY, routine.repeat?.frequency)
         assertTrue(routine.title.contains("stretch", ignoreCase = true))
     }
 

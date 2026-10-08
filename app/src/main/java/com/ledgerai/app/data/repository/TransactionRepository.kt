@@ -47,13 +47,13 @@ class TransactionRepository @Inject constructor(
 
     suspend fun countActive(): Int = dao.countActive()
 
-    suspend fun insert(transaction: Transaction) {
+    suspend fun insert(transaction: Transaction): Long {
         val now = System.currentTimeMillis()
         val entity = transaction.copy(
             updatedAt = if (transaction.updatedAt == 0L) now else transaction.updatedAt,
             deletedAt = null
         ).toEntity()
-        if (transaction.id == 0L) {
+        return if (transaction.id == 0L) {
             dao.insert(entity.copy(id = 0))
         } else {
             dao.insert(entity)

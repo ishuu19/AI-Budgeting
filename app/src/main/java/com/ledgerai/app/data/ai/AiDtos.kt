@@ -2,13 +2,17 @@ package com.ledgerai.app.data.ai
 
 import com.google.gson.annotations.SerializedName
 import com.ledgerai.app.domain.model.BillFrequency
+import com.ledgerai.app.domain.model.CalendarEvent
+import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
+import com.ledgerai.app.domain.model.EventRecurrence
+import com.ledgerai.app.domain.model.EventReminder
 import com.ledgerai.app.domain.model.ParsedTransaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
+import com.ledgerai.app.domain.schedule.AlarmDays
 
 /** OpenAI-compatible chat request (OpenRouter + DeepSeek). */
 data class ChatCompletionRequest(
@@ -94,7 +98,10 @@ data class ParsedTransactionDto(
 
 /**
  * Multi-intent voice parse payload from the model (JSON in content).
- * [intent]: TRANSACTION | TASK | REMINDER | ALARM | NOTE | ROUTINE | BILL | DEBT | GOAL
+ * [intent]: TRANSACTION | EVENT | TASK | EXAM | REMINDER | ALARM | ROUTINE | NOTE | BILL | DEBT | GOAL | BUDGET.
+ * The model may answer with several of these in an `items` array (or a bare array), one per spoken item.
+ * Everything that lands on the calendar (EVENT, TASK, EXAM, REMINDER, ALARM, ROUTINE) becomes one
+ * [ParsedIntent.Event].
  */
 data class ParsedVoiceIntentDto(
     val intent: String? = null,
@@ -106,8 +113,13 @@ data class ParsedVoiceIntentDto(
     val confidence: Float? = null,
     val title: String? = null,
     val body: String? = null,
+    /** Full local date and time (ISO-8601) of the event, task, reminder or first alarm. */
+    @SerializedName("start_at") val startAt: String? = null,
+    @SerializedName("end_at") val endAt: String? = null,
     @SerializedName("due_at") val dueAt: String? = null,
     @SerializedName("remind_at") val remindAt: String? = null,
+    /** Minutes before the start for each reminder; 0 = at time. */
+    @SerializedName("reminder_minutes") val reminderMinutes: List<Int>? = null,
     val label: String? = null,
     /** Alarm clock time as HH:mm (24h). */
     val time: String? = null,
@@ -116,6 +128,10 @@ data class ParsedVoiceIntentDto(
     @SerializedName("repeat_rule") val repeatRule: String? = null,
     /** Alarm weekday bitmask Sun=1 … Sat=64; 0 = one-shot. */
     @SerializedName("repeat_days") val repeatDays: Int? = null,
+    /** DEBT: I_OWE | THEY_OWE. */
+    val direction: String? = null,
+    /** DEBT: the other person. BILL, GOAL, BUDGET: the name. */
+    val name: String? = null,
 )
 
 /** Result of [com.ledgerai.app.data.repository.AiRepository.parseVoiceIntent]. */
@@ -157,45 +173,44 @@ sealed class ParsedIntent {
         }
     }
 
-    data class Task(
+    /**
+     * Anything that goes on the calendar: event, task, exam, routine, alarm or a reminder
+     * (a task with an at-time reminder). [startAt] is the full spoken date and time.
+     * Empty [reminders] means the standard defaults for kinds that support reminders.
+     */
+    data class Event(
         val title: String,
         val notes: String = "",
-        val dueAt: LocalDateTime? = null,
+        val startAt: LocalDateTime,
+        val endAt: LocalDateTime? = null,
+        val kind: CalendarEventKind = CalendarEventKind.TASK,
+        val repeat: EventRecurrence? = null,
+        val reminders: List<EventReminder> = emptyList(),
         override val confidence: Float = 0.7f,
         override val rawTranscript: String = "",
-    ) : ParsedIntent()
+    ) : ParsedIntent() {
+        /** Sun=1 ... Sat=64 mask for alarms, derived from [repeat]. */
+        val alarmRepeatDays: Int get() = AlarmDays.fromIsoDays(repeat?.weekDays.orEmpty())
 
-    /** Creates a task with a single attached reminder. */
-    data class Reminder(
-        val title: String,
-        val label: String = "Reminder",
-        val remindAt: LocalDateTime,
-        override val confidence: Float = 0.7f,
-        override val rawTranscript: String = "",
-    ) : ParsedIntent()
-
-    data class Alarm(
-        val label: String,
-        val time: LocalTime,
-        /** Bitmask Sun=1 … Sat=64; 0 = one-shot. */
-        val repeatDays: Int = 0,
-        override val confidence: Float = 0.7f,
-        override val rawTranscript: String = "",
-    ) : ParsedIntent()
+        fun toCalendarEvent(): CalendarEvent {
+            val point = kind == CalendarEventKind.TASK || kind == CalendarEventKind.ALARM
+            return CalendarEvent(
+                title = title.trim(),
+                notes = notes.trim(),
+                startAt = startAt,
+                endAt = endAt?.takeIf { it.isAfter(startAt) } ?: if (point) startAt else startAt.plusHours(1),
+                kind = kind,
+                recurrence = repeat,
+                alarmRepeatDays = alarmRepeatDays,
+                reminders = reminders
+            )
+        }
+    }
 
     data class Note(
         val title: String,
         val body: String = "",
         val tags: List<String> = emptyList(),
-        override val confidence: Float = 0.7f,
-        override val rawTranscript: String = "",
-    ) : ParsedIntent()
-
-    data class Routine(
-        val title: String,
-        val notes: String = "",
-        /** Opaque repeat rule (e.g. DAILY, WEEKLY, WEEKDAYS, CUSTOM). */
-        val repeatRule: String = "DAILY",
         override val confidence: Float = 0.7f,
         override val rawTranscript: String = "",
     ) : ParsedIntent()
@@ -224,6 +239,20 @@ sealed class ParsedIntent {
         val targetAmount: Double,
         override val rawTranscript: String = "",
         override val confidence: Float = 0.7f,
+    ) : ParsedIntent()
+
+    /** Monthly limit for a category, for the current month. */
+    data class Budget(
+        val category: TransactionCategory,
+        val limit: Double,
+        override val rawTranscript: String = "",
+        override val confidence: Float = 0.7f,
+    ) : ParsedIntent()
+
+    /** Nothing in the utterance could be recognised. The user can edit it, retry or keep it as a note. */
+    data class Unmatched(
+        override val rawTranscript: String = "",
+        override val confidence: Float = 0f,
     ) : ParsedIntent()
 }
 
@@ -263,26 +292,6 @@ data class AiProxyResponse(
 
 data class ChatReplyDto(
     val reply: String? = null,
-)
-
-data class ParsedTaskDto(
-    val title: String? = null,
-    val notes: String? = null,
-    @SerializedName("dueAt") val dueAt: String? = null,
-    val reminders: List<ParsedReminderDto>? = null,
-)
-
-data class ParsedReminderDto(
-    val label: String? = null,
-    @SerializedName("remindAt") val remindAt: String? = null,
-)
-
-data class ParsedAlarmDto(
-    val hour: Int? = null,
-    val minute: Int? = null,
-    val label: String? = null,
-    val enabled: Boolean? = null,
-    @SerializedName("repeatDays") val repeatDays: Int? = null,
 )
 
 data class InsightDto(

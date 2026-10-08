@@ -1,7 +1,6 @@
 package com.ledgerai.app.presentation.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +23,9 @@ fun SuggestionsSheet(
         onPrimary = onDismiss
     ) {
         if (loading) {
-            CircularProgressIndicator(color = L.Box)
+            LLoading()
         } else if (drafts.isEmpty()) {
-            Text("Nothing missing", color = L.InkMuted)
+            Text("Nothing to add", color = L.InkMuted)
         } else {
             drafts.forEach { draft ->
                 LRow(

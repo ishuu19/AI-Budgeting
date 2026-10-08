@@ -42,10 +42,10 @@ class SpendQueryTest {
     @Test
     fun filter_monthTypeCategoryAndQuery() {
         val all = listOf(coffee, pay, rent)
-        val october = YearMonth.of(2026, 10)
         val out = SpendQuery.filter(
             all,
-            month = october,
+            from = LocalDate.of(2026, 10, 1),
+            to = LocalDate.of(2026, 10, 31),
             type = TransactionType.EXPENSE,
             category = TransactionCategory.FOOD,
             query = "cof"

@@ -1,6 +1,12 @@
 package com.ledgerai.app
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,7 +19,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.presentation.navigation.AppNavigation
-import com.ledgerai.app.presentation.screens.life.LifeTab
+import com.ledgerai.app.data.preferences.UserPreferences
+import com.ledgerai.app.presentation.components.LCurrency
+import com.ledgerai.app.presentation.navigation.LaunchRequest
+import com.ledgerai.app.presentation.navigation.PlanSeg
 import com.ledgerai.app.widget.WidgetActions
 import com.ledgerai.app.presentation.screens.auth.LoginScreen
 import com.ledgerai.app.presentation.theme.LedgerAITheme
@@ -31,10 +40,19 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userSession: UserSession
 
+    @Inject
+    lateinit var userPreferences: UserPreferences
+
+    private var request by mutableStateOf<LaunchRequest?>(null)
+    private var requestCounter = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestNotificationPermission()
+        // A restored activity keeps its old intent; only a fresh launch is a request.
+        if (savedInstanceState == null) request = parse(intent)
 
         setContent {
             LedgerAITheme {
@@ -42,36 +60,61 @@ class MainActivity : ComponentActivity() {
                     val userInfo by userSession.userInfo.collectAsStateWithLifecycle(
                         initialValue = com.ledgerai.app.data.preferences.UserInfo()
                     )
+                    val symbol by userPreferences.currencySymbol.collectAsStateWithLifecycle(initialValue = LCurrency.symbol)
+                    LaunchedEffect(symbol) { LCurrency.symbol = symbol }
 
-                    if (userInfo.isLoggedIn) {
-                        val openVoice = intent?.getBooleanExtra(WidgetActions.EXTRA_OPEN_VOICE, false) == true
-                        val openCalendar = intent?.getBooleanExtra(WidgetActions.EXTRA_OPEN_CALENDAR, false) == true
-                        val openToday = intent?.getBooleanExtra(WidgetActions.EXTRA_OPEN_TODAY, false) == true
-                        val openTasks = intent?.getBooleanExtra(WidgetActions.EXTRA_OPEN_TASKS, false) == true
-                        val openBills = intent?.getBooleanExtra(WidgetActions.EXTRA_OPEN_BILLS, false) == true
-                        val lifeTab = when (intent?.getStringExtra(WidgetActions.EXTRA_LIFE_TAB)) {
-                            WidgetActions.LIFE_TAB_LOG -> LifeTab.Log
-                            WidgetActions.LIFE_TAB_JOBS -> LifeTab.Jobs
-                            WidgetActions.LIFE_TAB_PLAN -> LifeTab.Plan
-                            else -> null
-                        }
-                        val focusBlockId = intent?.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L) ?: 0L
-                        val focusTopic = intent?.getStringExtra(EXTRA_FOCUS_TOPIC)
-                        AppNavigation(
-                            openVoice = openVoice,
-                            openCalendar = openCalendar,
-                            openSpendToday = openToday,
-                            openTasks = openTasks,
-                            openBills = openBills,
-                            lifeInitialTab = lifeTab,
-                            openFocusBlockId = focusBlockId,
-                            focusTopic = focusTopic
-                        )
+                    if (userInfo.hasRemoteUser) {
+                        AppNavigation(request = request)
                     } else {
                         LoginScreen(onSignedIn = { /* state update triggers recomposition */ })
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        parse(intent)?.let { request = it }
+    }
+
+    private fun parse(intent: Intent?): LaunchRequest? {
+        if (intent == null) return null
+        val id = ++requestCounter
+        val planSeg = when (intent.getStringExtra(WidgetActions.EXTRA_LIFE_TAB)) {
+            WidgetActions.LIFE_TAB_LOG -> PlanSeg.Log
+            WidgetActions.LIFE_TAB_JOBS -> PlanSeg.Jobs
+            WidgetActions.LIFE_TAB_PLAN -> PlanSeg.Calendar
+            else -> when {
+                intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_TASKS, false) -> PlanSeg.Tasks
+                intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_CALENDAR, false) -> PlanSeg.Calendar
+                else -> null
+            }
+        }
+        val hasFocus = intent.hasExtra(EXTRA_OPEN_FOCUS_BLOCK_ID) && intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L) != 0L
+        val req = LaunchRequest(
+            id = id,
+            voice = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_VOICE, false),
+            plan = planSeg,
+            spendGuide = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_TODAY, false),
+            bills = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_BILLS, false),
+            focusBlockId = intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L),
+            focusTopic = intent.getStringExtra(EXTRA_FOCUS_TOPIC),
+            hasFocus = hasFocus
+        )
+        val any = req.voice || req.plan != null || req.spendGuide || req.bills || req.hasFocus
+        return if (any) req else null
+    }
+
+    private val notificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }

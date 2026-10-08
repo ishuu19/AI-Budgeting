@@ -26,7 +26,9 @@ data class StudyPlanEntity(
     val sessionLenMinutes: Int = 50,
     val status: String = "active",
     val updatedAt: Long = 0L,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null
 )
 
 @Entity(tableName = "plan_blocks")
@@ -42,7 +44,9 @@ data class PlanBlockEntity(
     val habitId: Long? = null,
     val actualMinutes: Int? = null,
     val updatedAt: Long = 0L,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null
 )
 
 @Entity(tableName = "habits")
@@ -56,7 +60,9 @@ data class HabitEntity(
     val nudgeEnabled: Boolean = true,
     val quietOverride: Boolean = false,
     val updatedAt: Long = 0L,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null
 )
 
 @Entity(tableName = "habit_logs")
@@ -66,7 +72,9 @@ data class HabitLogEntity(
     val date: LocalDate,
     val outcome: HabitOutcome,
     val minutes: Int? = null,
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
+    val remoteId: String? = null,
+    val userId: String? = null
 )
 
 @Entity(tableName = "focus_sessions")
@@ -75,7 +83,10 @@ data class FocusSessionEntity(
     val blockId: Long,
     val startedAt: LocalDateTime,
     val endedAt: LocalDateTime? = null,
-    val preset: String = "deep"
+    val preset: String = "deep",
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L
 )
 
 @Entity(tableName = "nudge_proposals")
@@ -85,7 +96,11 @@ data class NudgeProposalEntity(
     val message: String,
     val suggestedAt: LocalDateTime,
     val reason: String = "",
-    val state: NudgeProposalState = NudgeProposalState.PENDING
+    val state: NudgeProposalState = NudgeProposalState.PENDING,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "spend_speculations")
@@ -97,7 +112,9 @@ data class SpendSpeculationEntity(
     val expectedDate: LocalDate,
     val confidence: SpeculationConfidence = SpeculationConfidence.MEDIUM,
     val updatedAt: Long = 0L,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null
 )
 
 @Entity(tableName = "spend_guide_days")
@@ -106,7 +123,10 @@ data class SpendGuideDayEntity(
     val guideAmount: Double,
     val spent: Double = 0.0,
     val buffer: Double = 0.0,
-    val marginUsed: Double = 0.0
+    val marginUsed: Double = 0.0,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L
 )
 
 @Entity(tableName = "leave_rules")
@@ -119,7 +139,11 @@ data class LeaveRuleEntity(
     val lng: Double? = null,
     val travelMinutes: Int = 15,
     val bufferMinutes: Int = 5,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "location_points")
@@ -148,7 +172,11 @@ data class ActivityEntryEntity(
     val endAt: LocalDateTime,
     val text: String,
     val source: ActivityEntrySource = ActivityEntrySource.MANUAL,
-    val visitId: Long? = null
+    val visitId: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "checkin_windows")
@@ -156,7 +184,11 @@ data class CheckinWindowEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val startAt: LocalDateTime,
     val endAt: LocalDateTime,
-    val state: CheckinWindowState = CheckinWindowState.PENDING
+    val state: CheckinWindowState = CheckinWindowState.PENDING,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 @Entity(tableName = "job_applications")
@@ -172,5 +204,7 @@ data class JobApplicationEntity(
     val notes: String = "",
     val contact: String = "",
     val updatedAt: Long = 0L,
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    val remoteId: String? = null,
+    val userId: String? = null
 )

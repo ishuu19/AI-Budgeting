@@ -16,7 +16,6 @@ import com.ledgerai.app.data.ai.NetworkAvailability
 import com.ledgerai.app.data.ai.NoteNudgeProposalDto
 import com.ledgerai.app.data.ai.NoteNudgeScanDto
 import com.ledgerai.app.data.ai.NoteSummaryDto
-import com.ledgerai.app.data.ai.ScheduleContextBuilder
 import com.ledgerai.app.data.ai.ScheduleDraftDto
 import com.ledgerai.app.data.ai.ScheduleDraftListDto
 import com.ledgerai.app.data.ai.ParsedIntent
@@ -34,6 +33,11 @@ import java.io.ByteArrayOutputStream
 import java.util.Base64
 import com.ledgerai.app.data.ai.ValidatedAiResponse
 import com.ledgerai.app.domain.model.BillFrequency
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.DebtDirection
+import com.ledgerai.app.domain.model.EventReminder
+import com.ledgerai.app.domain.model.MAX_REMINDERS_PER_EVENT
+import com.ledgerai.app.domain.schedule.labelForMinutesBefore
 import com.ledgerai.app.domain.model.FinancialForecast
 import com.ledgerai.app.domain.model.FinancialHealthScore
 import com.ledgerai.app.domain.model.ParsedTransaction
@@ -62,7 +66,6 @@ class AiRepository @Inject constructor(
     private val router: AiProviderRouter,
     private val config: AiConfig,
     private val contextBuilder: ContextBuilder,
-    private val scheduleContextBuilder: ScheduleContextBuilder,
     private val validator: AiResponseValidator,
     private val insightStore: InsightStore,
     private val network: NetworkAvailability,
@@ -87,12 +90,17 @@ class AiRepository @Inject constructor(
         return Result.success(quickParse(transcript))
     }
 
+    /** First item of [parseVoiceIntents]. */
+    suspend fun parseVoiceIntent(transcript: String): Result<ParsedIntent> =
+        parseVoiceIntents(transcript).map { it.first() }
+
     /**
-     * Multi-intent voice router: TRANSACTION | TASK | REMINDER | ALARM | NOTE | ROUTINE | BILL | GOAL.
-     * DEBT falls through to QuickParse offline when the cloud DTO has no direction field.
-     * Uses structured Edge types when possible; free-form JSON + local heuristics otherwise.
+     * Voice router. One utterance can hold several items, so the result is a list (at least one element):
+     * TRANSACTION | EVENT (task, reminder, alarm, routine, exam) | NOTE | BILL | DEBT | GOAL | BUDGET.
+     * Offline, and when the cloud has no answer, [QuickParse] decides. Text nothing recognises comes back as
+     * [ParsedIntent.Unmatched]. The cloud may answer with an `items` array or a bare array.
      */
-    suspend fun parseVoiceIntent(transcript: String): Result<ParsedIntent> {
+    suspend fun parseVoiceIntents(transcript: String): Result<List<ParsedIntent>> {
         val trimmed = transcript.trim()
         if (trimmed.isEmpty()) {
             return Result.failure(IllegalArgumentException("Empty transcript"))
@@ -100,39 +108,54 @@ class AiRepository @Inject constructor(
 
         if (network.isOnline() && edgeClient.isConfigured()) {
             edgeClient.voiceIntent(nowHint() + "\nUser said: " + trimmed).getOrNull()?.let { raw ->
-                mapVoiceIntentJson(raw, trimmed)?.let { return Result.success(it) }
+                mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
+                    return Result.success(preferLocalForMoneyKinds(it, trimmed))
+                }
             }
         }
 
         if (canCallCloud()) {
             val system = """
-                Classify the user utterance into one intent and extract fields.
+                Split the user utterance into one or more items and classify each. Most utterances hold one item.
                 If money was spent or received, intent is TRANSACTION, not NOTE.
                 merchant and title must be the specific person or place name when one is said. Do not copy the whole sentence into note or body.
-                Reply with ONLY JSON:
-                {"intent":"TRANSACTION|TASK|REMINDER|ALARM|NOTE|ROUTINE","amount":number|null,"category":"FOOD|...","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"body":string,"due_at":"ISO-8601|null","remind_at":"ISO-8601|null","label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0}
+                Reply with ONLY JSON: {"items":[ITEM,...]} where ITEM is:
+                {"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET","amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"name":string,"body":string,"start_at":"ISO-8601 local date and time|null","end_at":"ISO-8601|null","due_at":"ISO-8601|null","reminder_minutes":[0],"label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0,"direction":"I_OWE|THEY_OWE"}
+                For EVENT, TASK, EXAM, REMINDER, ROUTINE and ALARM always set start_at to the full spoken date and time, and title to only what to do (no date or time words).
                 For ALARM, repeat_days is a weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0=one-shot; weekdays=62; every day=127).
                 For ROUTINE, set title and repeat_rule.
+                For BILL set name, amount, repeat_rule (WEEKLY|MONTHLY|QUARTERLY|YEARLY) and due_at. For DEBT set name (the other person), amount, direction and optional due_at. For GOAL set name and amount (the target). For BUDGET set category and amount (the monthly limit).
+                If nothing can be understood, reply {"items":[]}.
             """.trimIndent()
             completeRaw(system, trimmed).getOrNull()?.let { raw ->
-                mapVoiceIntentJson(raw, trimmed)?.let { return Result.success(it) }
-            }
-
-            // Prefer transaction schema when utterance looks financial
-            completeStructured(
-                AiResponseType.TRANSACTION,
-                "Extract a transaction as JSON.",
-                trimmed
-            ).getOrNull()?.let { validated ->
-                val dto = (validated as? ValidatedAiResponse.Transaction)?.dto
-                parseTransactionDto(dto ?: return@let, trimmed)?.let {
-                    return Result.success(ParsedIntent.Transaction.from(it, trimmed))
+                mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
+                    return Result.success(preferLocalForMoneyKinds(it, trimmed))
                 }
             }
         }
 
-        return Result.success(QuickParse.parseVoiceIntent(trimmed))
+        return Result.success(QuickParse.parseVoiceIntents(trimmed))
     }
+
+    /**
+     * The edge function and some models only know a transaction or a note. When the words clearly name a
+     * bill, debt, goal or budget, the offline parse wins for those.
+     */
+    private fun preferLocalForMoneyKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
+        if (cloud.none { it is ParsedIntent.Transaction || it is ParsedIntent.Note }) return cloud
+        val local = QuickParse.parseVoiceIntents(transcript)
+        val special = local.any {
+            it is ParsedIntent.Bill || it is ParsedIntent.Debt || it is ParsedIntent.Goal || it is ParsedIntent.Budget
+        }
+        return if (special) local else cloud
+    }
+
+    /** All items in a cloud reply, checked by [AiResponseValidator]. Empty when nothing maps. */
+    private fun mapVoiceItemsJson(raw: String, transcript: String): List<ParsedIntent> =
+        validator.validateVoiceItems(raw).mapNotNull { mapVoiceDto(it, transcript) }
+
+    /** True when a cloud model can answer right now (online and a provider is configured). */
+    fun isAiAvailable(): Boolean = canCallCloud()
 
     /** True when a recording can be sent to the cloud (online + edge configured). */
     fun canTranscribeInCloud(): Boolean = network.isOnline() && edgeClient.isConfigured()
@@ -156,7 +179,7 @@ class AiRepository @Inject constructor(
             val transcript = JsonParser.parseString(raw).asJsonObject.get("transcript")
                 ?.takeIf { !it.isJsonNull }?.asString?.trim().orEmpty()
             require(transcript.isNotEmpty()) { "Empty transcript" }
-            val intent = mapVoiceIntentJson(raw, transcript)
+            val intent = mapVoiceItemsJson(raw, transcript).firstOrNull()
                 ?: QuickParse.parseVoiceIntent(transcript)
             transcript to intent
         }
@@ -325,6 +348,7 @@ class AiRepository @Inject constructor(
         val context = contextBuilder.buildFromRoom()
         val system = """
             You are LedgerAI. Produce one actionable daily financial insight.
+            The body must be exactly 30 words. No more, no less.
             Reply JSON: {"title":"...","body":"...","severity":"info|watch|alert","actions":["..."]}
         """.trimIndent()
         completeStructured(AiResponseType.INSIGHT, system, context).getOrNull()?.let { validated ->
@@ -346,6 +370,8 @@ class AiRepository @Inject constructor(
     }
 
     fun cachedInsight(): InsightDto? = insightStore.readToday()
+
+    fun insightIsStale(): Boolean = insightStore.isStale()
 
     suspend fun summarizeNote(title: String, body: String): Result<NoteSummaryDto> {
         if (!canCallCloud()) {
@@ -385,7 +411,7 @@ class AiRepository @Inject constructor(
     }
 
     suspend fun suggestScheduleDrafts(): Result<List<ScheduleDraftDto>> {
-        val slice = scheduleContextBuilder.build14DaySlice()
+        val slice = contextBuilder.build14DaySlice()
         val system = """
             You suggest missing tasks/events for a student calendar. Reply ONLY JSON:
             {"drafts":[{"type":"TASK|EVENT|EXAM","title":"...","start_at":"yyyy-MM-ddTHH:mm:ss","reason":"..."}]}
@@ -460,44 +486,12 @@ class AiRepository @Inject constructor(
     private fun canCallCloud(): Boolean =
         network.isOnline() && (edgeClient.isConfigured() || config.hasAnyConfiguredProvider())
 
-    private fun mapVoiceIntentJson(raw: String, transcript: String): ParsedIntent? {
+    private fun mapVoiceDto(dto: ParsedVoiceIntentDto, transcript: String): ParsedIntent? {
         return try {
-            val json = extractJsonObject(raw) ?: return null
-            val dto = gson.fromJson(json, ParsedVoiceIntentDto::class.java) ?: return null
             val confidence = (dto.confidence ?: 0.7f).coerceIn(0f, 1f)
             when (dto.intent?.uppercase()) {
-                "TASK" -> {
-                    val title = dto.title?.takeIf { it.isNotBlank() } ?: return null
-                    ParsedIntent.Task(
-                        title = title,
-                        notes = dto.body ?: dto.note.orEmpty(),
-                        dueAt = parseDateTime(dto.dueAt),
-                        confidence = confidence,
-                        rawTranscript = transcript,
-                    )
-                }
-                "REMINDER" -> {
-                    val remindAt = parseDateTime(dto.remindAt) ?: return null
-                    ParsedIntent.Reminder(
-                        title = dto.title?.ifBlank { "Reminder" } ?: "Reminder",
-                        label = dto.label?.ifBlank { "Reminder" } ?: "Reminder",
-                        remindAt = remindAt,
-                        confidence = confidence,
-                        rawTranscript = transcript,
-                    )
-                }
-                "ALARM" -> {
-                    val time = parseClockTime(dto.time) ?: return null
-                    val repeatDays = dto.repeatDays?.takeIf { it >= 0 }
-                        ?: QuickParse.parseRepeatDays(transcript)
-                    ParsedIntent.Alarm(
-                        label = dto.label?.ifBlank { "Alarm" } ?: dto.title ?: "Alarm",
-                        time = time,
-                        repeatDays = repeatDays,
-                        confidence = confidence,
-                        rawTranscript = transcript,
-                    )
-                }
+                "EVENT", "TASK", "EXAM", "REMINDER", "ALARM", "ROUTINE" ->
+                    mapEventIntent(dto, transcript, confidence)
                 "NOTE" -> {
                     if (dto.amount != null) {
                         val tx = parseTransactionDto(
@@ -523,24 +517,10 @@ class AiRepository @Inject constructor(
                         rawTranscript = transcript,
                     )
                 }
-                "ROUTINE" -> {
-                    val title = dto.title?.takeIf { it.isNotBlank() }
-                        ?: dto.label?.takeIf { it.isNotBlank() }
-                        ?: return null
-                    val rule = dto.repeatRule?.uppercase()?.takeIf {
-                        it in setOf("DAILY", "WEEKLY", "WEEKDAYS", "CUSTOM")
-                    } ?: QuickParse.parseRepeatRule(transcript)
-                    ParsedIntent.Routine(
-                        title = title,
-                        notes = dto.body ?: dto.note.orEmpty(),
-                        repeatRule = rule,
-                        confidence = confidence,
-                        rawTranscript = transcript,
-                    )
-                }
                 "BILL" -> {
                     val amount = dto.amount ?: return null
-                    val name = dto.title?.takeIf { it.isNotBlank() }
+                    val name = dto.name?.takeIf { it.isNotBlank() }
+                        ?: dto.title?.takeIf { it.isNotBlank() }
                         ?: dto.merchant?.takeIf { it.isNotBlank() }
                         ?: dto.label?.takeIf { it.isNotBlank() }
                         ?: return null
@@ -564,9 +544,44 @@ class AiRepository @Inject constructor(
                         confidence = confidence,
                     )
                 }
+                "DEBT" -> {
+                    val amount = dto.amount?.takeIf { it > 0.0 } ?: return null
+                    val friend = dto.name?.takeIf { it.isNotBlank() }
+                        ?: dto.title?.takeIf { it.isNotBlank() }
+                        ?: dto.merchant?.takeIf { it.isNotBlank() }
+                        ?: dto.label?.takeIf { it.isNotBlank() }
+                        ?: return null
+                    val direction = when (dto.direction?.uppercase()?.replace(' ', '_')) {
+                        "I_OWE" -> DebtDirection.I_OWE
+                        "THEY_OWE" -> DebtDirection.THEY_OWE
+                        else -> QuickParse.debtDirection(transcript)
+                    }
+                    ParsedIntent.Debt(
+                        friendName = friend,
+                        amount = amount,
+                        direction = direction,
+                        dueDate = parseDateTime(dto.dueAt)?.toLocalDate(),
+                        rawTranscript = transcript,
+                        confidence = confidence,
+                    )
+                }
+                "BUDGET" -> {
+                    val amount = dto.amount?.takeIf { it > 0.0 } ?: return null
+                    val category = TransactionCategory.entries.find {
+                        it.name.equals(dto.category, ignoreCase = true) ||
+                            it.displayName.equals(dto.category, ignoreCase = true)
+                    } ?: QuickParse.parse(transcript).category
+                    ParsedIntent.Budget(
+                        category = category,
+                        limit = amount,
+                        rawTranscript = transcript,
+                        confidence = confidence,
+                    )
+                }
                 "GOAL" -> {
                     val amount = dto.amount ?: return null
-                    val name = dto.title?.takeIf { it.isNotBlank() }
+                    val name = dto.name?.takeIf { it.isNotBlank() }
+                        ?: dto.title?.takeIf { it.isNotBlank() }
                         ?: dto.merchant?.takeIf { it.isNotBlank() }
                         ?: dto.label?.takeIf { it.isNotBlank() }
                         ?: return null
@@ -577,7 +592,8 @@ class AiRepository @Inject constructor(
                         confidence = confidence,
                     )
                 }
-                else -> {
+                null, "", "TRANSACTION", "EXPENSE", "INCOME" -> {
+                    if ((dto.amount ?: 0.0) <= 0.0) return null
                     val tx = parseTransactionDto(
                         ParsedTransactionDto(
                             amount = dto.amount,
@@ -591,9 +607,82 @@ class AiRepository @Inject constructor(
                     ) ?: return null
                     ParsedIntent.Transaction.from(tx, transcript)
                 }
+                else -> null
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    /** One calendar item from the cloud DTO. The spoken date and the title are always honoured. */
+    private fun mapEventIntent(dto: ParsedVoiceIntentDto, transcript: String, confidence: Float): ParsedIntent? {
+        val today = LocalDate.now()
+        val intent = dto.intent?.uppercase().orEmpty()
+        val kind = when (intent) {
+            "ALARM" -> CalendarEventKind.ALARM
+            "EXAM" -> CalendarEventKind.EXAM
+            "EVENT" -> CalendarEventKind.EVENT
+            "ROUTINE" -> CalendarEventKind.ROUTINE
+            else -> CalendarEventKind.TASK
+        }
+        val spoken = parseDateTime(dto.startAt) ?: parseDateTime(dto.remindAt) ?: parseDateTime(dto.dueAt)
+        val fromText = QuickParse.resolveEventDateTimeFromText(transcript, today)
+        val title = dto.title?.takeIf { it.isNotBlank() }
+            ?: dto.label?.takeIf { it.isNotBlank() && !it.equals("Reminder", true) && !it.equals("Alarm", true) }
+            ?: QuickParse.eventTitleFromText(transcript, if (kind == CalendarEventKind.ALARM) "Alarm" else "Reminder")
+        val notes = dto.body ?: dto.note.orEmpty()
+        val explicit = dto.reminderMinutes.orEmpty().filter { it >= 0 }.distinct().take(MAX_REMINDERS_PER_EVENT)
+            .map { EventReminder(label = labelForMinutesBefore(it.toLong()), offsetMinutes = it) }
+
+        return when (kind) {
+            CalendarEventKind.ALARM -> {
+                val time = parseClockTime(dto.time) ?: spoken?.toLocalTime()
+                    ?: QuickParse.parseClockTimeFromText(transcript.lowercase()) ?: return null
+                val mask = dto.repeatDays?.takeIf { it >= 0 } ?: QuickParse.parseRepeatDays(transcript)
+                ParsedIntent.Event(
+                    title = title.ifBlank { "Alarm" },
+                    startAt = LocalDateTime.of(spoken?.toLocalDate() ?: QuickParse.parseEventDate(transcript, today), time),
+                    kind = kind,
+                    repeat = if (mask == 0) null else QuickParse.repeatFromAlarmMask(mask),
+                    confidence = confidence,
+                    rawTranscript = transcript,
+                )
+            }
+            CalendarEventKind.ROUTINE -> {
+                val start = spoken ?: fromText
+                val rule = dto.repeatRule?.uppercase()?.takeIf { it in setOf("DAILY", "WEEKLY", "WEEKDAYS") }
+                    ?: QuickParse.parseRepeatRule(transcript)
+                ParsedIntent.Event(
+                    title = title,
+                    notes = notes,
+                    startAt = start,
+                    endAt = parseDateTime(dto.endAt)?.takeIf { it.isAfter(start) } ?: start.plusMinutes(30),
+                    kind = kind,
+                    repeat = QuickParse.repeatFromRule(rule, start.toLocalDate()),
+                    reminders = explicit,
+                    confidence = confidence,
+                    rawTranscript = transcript,
+                )
+            }
+            else -> {
+                val start = spoken ?: fromText
+                val isReminder = intent == "REMINDER"
+                ParsedIntent.Event(
+                    title = title,
+                    notes = notes,
+                    startAt = start,
+                    endAt = if (kind == CalendarEventKind.TASK) null
+                    else parseDateTime(dto.endAt)?.takeIf { it.isAfter(start) } ?: start.plusHours(1),
+                    kind = kind,
+                    reminders = when {
+                        explicit.isNotEmpty() -> explicit
+                        isReminder -> listOf(EventReminder(label = "At time", offsetMinutes = 0))
+                        else -> emptyList()
+                    },
+                    confidence = confidence,
+                    rawTranscript = transcript,
+                )
+            }
         }
     }
 

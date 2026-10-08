@@ -5,7 +5,9 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -46,6 +48,7 @@ class SyncWorker @AssistedInject constructor(
 
     companion object {
         private const val WORK_NAME = "periodic_supabase_sync"
+        private const val NOW_WORK_NAME = "supabase_sync_now"
 
         fun schedule(context: Context) {
             val constraints = Constraints.Builder()
@@ -59,6 +62,23 @@ class SyncWorker @AssistedInject constructor(
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
+                request
+            )
+        }
+
+        /** One-shot sync. [ExistingWorkPolicy.KEEP] drops repeats while one is queued or running. */
+        fun syncNow(context: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val request = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setConstraints(constraints)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                NOW_WORK_NAME,
+                ExistingWorkPolicy.KEEP,
                 request
             )
         }

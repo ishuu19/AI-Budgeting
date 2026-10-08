@@ -169,6 +169,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -233,4 +237,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)
+    // Real SQLite on the JVM to run the Room 6 to 7 migration SQL against a v6 fixture.
+    testImplementation("org.xerial:sqlite-jdbc:3.46.1.3")
 }

@@ -28,11 +28,15 @@ class VoiceRecordingService : Service() {
         const val ACTION_STOP_RECORDING = "com.ledgerai.app.STOP_RECORDING"
         const val ACTION_TRANSCRIPTION_RESULT = "com.ledgerai.app.TRANSCRIPTION_RESULT"
         const val EXTRA_TRANSCRIPTION = "transcription"
+        /** Optional short prompt for the notification, for example "Say what to add". */
+        const val EXTRA_PROMPT = "prompt"
+        private const val DEFAULT_PROMPT = "Say what to add"
         const val NOTIFICATION_CHANNEL_ID = "voice_recording"
         const val NOTIFICATION_ID = 1001
     }
 
     private var speechRecognizer: SpeechRecognizer? = null
+    private var prompt: String = DEFAULT_PROMPT
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -44,6 +48,7 @@ class VoiceRecordingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START_RECORDING -> {
+                prompt = intent?.getStringExtra(EXTRA_PROMPT)?.takeIf { it.isNotBlank() } ?: DEFAULT_PROMPT
                 startForeground(NOTIFICATION_ID, buildNotification())
                 startListening()
             }
@@ -60,8 +65,8 @@ class VoiceRecordingService : Service() {
             setRecognitionListener(object : RecognitionListener {
                 override fun onResults(results: android.os.Bundle?) {
                     val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    val transcription = matches?.firstOrNull() ?: return
-                    broadcastResult(transcription)
+                    // No matches still ends the session: an empty result tells the caller to stop waiting.
+                    broadcastResult(matches?.firstOrNull().orEmpty())
                     stopSelf()
                 }
 
@@ -104,8 +109,8 @@ class VoiceRecordingService : Service() {
 
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Listening…")
-            .setContentText("Speak your transaction")
+            .setContentTitle("Listening")
+            .setContentText(prompt)
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)

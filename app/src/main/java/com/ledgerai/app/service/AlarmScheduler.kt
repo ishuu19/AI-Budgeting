@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import com.ledgerai.app.domain.model.AlarmItem
+import com.ledgerai.app.domain.model.CalendarEvent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,8 +19,8 @@ class AlarmScheduler @Inject constructor(
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun schedule(alarm: AlarmItem) {
-        val triggerAt = AlarmTriggerCalc.nextTriggerMillis(alarm.time, alarm.repeatDays)
+    fun schedule(alarm: CalendarEvent) {
+        val triggerAt = nextTriggerMillis(alarm)
         scheduleAt(alarm.id, triggerAt)
     }
 
@@ -54,8 +54,8 @@ class AlarmScheduler @Inject constructor(
     }
 
     /** @see AlarmTriggerCalc.nextTriggerMillis */
-    internal fun nextTriggerMillis(alarm: AlarmItem): Long =
-        AlarmTriggerCalc.nextTriggerMillis(alarm.time, alarm.repeatDays)
+    internal fun nextTriggerMillis(alarm: CalendarEvent): Long =
+        AlarmTriggerCalc.nextTriggerMillis(alarm.startAt.toLocalTime(), alarm.alarmRepeatDays)
 
     private fun pendingIntent(alarmId: Long): PendingIntent {
         val intent = Intent(context, AlarmFireReceiver::class.java).apply {

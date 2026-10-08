@@ -13,7 +13,7 @@ class SyncTimeTest {
 
     @Test
     fun millisIso_roundTrip() {
-        val ms = 1_728_374_400_000L // 2024-10-08T12:00:00Z
+        val ms = 1_728_388_800_000L // 2024-10-08T12:00:00Z
         val iso = SyncTime.millisToIso(ms)
         assertEquals(ms, SyncTime.isoToMillis(iso))
     }
@@ -21,7 +21,7 @@ class SyncTimeTest {
     @Test
     fun isoToMillis_acceptsOffsetDateTime() {
         val ms = SyncTime.isoToMillis("2024-10-08T12:00:00+00:00")
-        assertEquals(1_728_374_400_000L, ms)
+        assertEquals(1_728_388_800_000L, ms)
     }
 
     @Test

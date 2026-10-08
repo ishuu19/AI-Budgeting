@@ -2,20 +2,30 @@ package com.ledgerai.app.data.repository
 
 import android.util.Log
 import androidx.annotation.Nullable
+import com.ledgerai.app.data.ai.InsightStore
+import com.ledgerai.app.data.local.room.LedgerDatabase
 import com.ledgerai.app.data.preferences.UserSession
+import com.ledgerai.app.data.sync.SyncCursorStore
+import com.ledgerai.app.data.sync.SyncRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.Google
 import io.github.jan.supabase.gotrue.providers.builtin.IDToken
 import io.github.jan.supabase.gotrue.user.UserSession as SupabaseUserSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
     @Nullable private val supabase: SupabaseClient?,
-    private val userSession: UserSession
+    private val userSession: UserSession,
+    private val database: LedgerDatabase,
+    private val syncRepository: SyncRepository,
+    private val cursorStore: SyncCursorStore,
+    private val insightStore: InsightStore,
 ) {
 
     val isSupabaseConfigured: Boolean
@@ -28,6 +38,7 @@ class AuthRepository @Inject constructor(
         val client = supabase
             ?: error("Supabase is not configured (SUPABASE_URL / SUPABASE_ANON_KEY empty)")
 
+        val previous = userSession.userInfo.first()
         client.auth.signInWith(IDToken) {
             this.idToken = idToken
             provider = Google
@@ -35,7 +46,25 @@ class AuthRepository @Inject constructor(
 
         val session = client.auth.currentSessionOrNull()
             ?: error("No Supabase session after Google sign-in")
+        val newUserId = session.user?.id.orEmpty()
+        val pendingId = previous.pendingUploadUserId
+        if (pendingId.isNotBlank() && pendingId == newUserId) {
+            persistSupabaseSession(session)
+            syncUploadingPending()
+            return
+        }
+
+        val switching = previous.userId.isNotBlank() && previous.userId != newUserId
+        val foreignPending = pendingId.isNotBlank() && pendingId != newUserId
+        if (switching && previous.hasRemoteUser) {
+            syncUploadingPending()
+        }
+        if (switching || foreignPending || !previous.hasRemoteUser) {
+            wipeLocal()
+            if (foreignPending) userSession.clearPendingUploadUserId()
+        }
         persistSupabaseSession(session)
+        syncUploadingPending()
     }
 
     /**
@@ -69,11 +98,30 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun signOut() {
-        runCatching {
-            val client = supabase ?: return@runCatching
-            client.auth.signOut()
-        }
+        val info = userSession.userInfo.first()
+        val uploaded = if (info.hasRemoteUser) syncUploadingPending() else true
+        runCatching { supabase?.auth?.signOut() }
         userSession.clearSession()
+        if (uploaded) {
+            wipeLocal()
+        } else {
+            userSession.setPendingUploadUserId(info.userId)
+        }
+    }
+
+    /** @return true when [SyncRepository.syncAll] finished; then clears [UserSession] pending upload id. */
+    private suspend fun syncUploadingPending(): Boolean {
+        val uploaded = runCatching { syncRepository.syncAll() }.getOrDefault(false)
+        if (uploaded) userSession.clearPendingUploadUserId()
+        return uploaded
+    }
+
+    private suspend fun wipeLocal() {
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
+        }
+        cursorStore.clear()
+        insightStore.clear()
     }
 
     private suspend fun persistSupabaseSession(

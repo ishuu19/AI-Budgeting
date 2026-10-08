@@ -14,8 +14,9 @@ class WidgetTaskToggleCallback : ActionCallback {
     ) {
         val taskId = parameters[TaskIdKey] ?: return
         val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
-        val task = ep.taskRepository().findById(taskId) ?: return
-        ep.taskRepository().setCompleted(taskId, !task.isCompleted)
+        val repo = ep.calendarRepository()
+        val task = repo.getById(taskId) ?: return
+        repo.setCompleted(taskId, !task.isCompleted, java.time.LocalDate.now())
         WidgetRefresh.refreshAll(context)
     }
 

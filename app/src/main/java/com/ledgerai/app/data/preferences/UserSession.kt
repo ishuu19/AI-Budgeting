@@ -28,6 +28,11 @@ data class UserInfo(
     val refreshToken: String = "",
     /** Access-token expiry instant (epoch millis); 0 if unknown. */
     val expiresAtEpochMs: Long = 0L,
+    /**
+     * Remote user id whose Room rows were kept because sign-out sync failed.
+     * Empty after a successful [com.ledgerai.app.data.sync.SyncRepository.syncAll].
+     */
+    val pendingUploadUserId: String = "",
 ) {
     /** Cloud session: non-local user id + Bearer JWT present. */
     val hasRemoteUser: Boolean
@@ -51,6 +56,7 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
         val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val KEY_EXPIRES_AT = longPreferencesKey("expires_at_epoch_ms")
+        val KEY_PENDING_UPLOAD_USER_ID = stringPreferencesKey("pending_upload_user_id")
     }
 
     val userInfo: Flow<UserInfo> = store.data.map { prefs ->
@@ -63,6 +69,7 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
             accessToken = prefs[KEY_ACCESS_TOKEN] ?: "",
             refreshToken = prefs[KEY_REFRESH_TOKEN] ?: "",
             expiresAtEpochMs = prefs[KEY_EXPIRES_AT] ?: 0L,
+            pendingUploadUserId = prefs[KEY_PENDING_UPLOAD_USER_ID] ?: "",
         )
     }
 
@@ -92,5 +99,16 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
 
     suspend fun clearSession() {
         store.edit { it.clear() }
+    }
+
+    suspend fun setPendingUploadUserId(userId: String) {
+        store.edit { prefs ->
+            if (userId.isBlank()) prefs.remove(KEY_PENDING_UPLOAD_USER_ID)
+            else prefs[KEY_PENDING_UPLOAD_USER_ID] = userId
+        }
+    }
+
+    suspend fun clearPendingUploadUserId() {
+        store.edit { it.remove(KEY_PENDING_UPLOAD_USER_ID) }
     }
 }

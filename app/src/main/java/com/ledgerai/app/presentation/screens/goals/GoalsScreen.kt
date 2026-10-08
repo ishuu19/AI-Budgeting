@@ -1,30 +1,53 @@
 package com.ledgerai.app.presentation.screens.goals
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.GoalRepository
 import com.ledgerai.app.domain.model.Goal
-import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LEmpty
+import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LItemSheet
+import com.ledgerai.app.presentation.components.LKindChips
+import com.ledgerai.app.presentation.components.LProgress
+import com.ledgerai.app.presentation.components.LSection
+import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.money
+import com.ledgerai.app.presentation.screens.money.DecimalField
+import com.ledgerai.app.presentation.screens.money.LimitedGroup
+import com.ledgerai.app.presentation.screens.money.MutedLine
+import com.ledgerai.app.presentation.screens.money.OptionalDateField
+import com.ledgerai.app.presentation.screens.transactions.amountInput
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Period
@@ -39,10 +62,10 @@ class GoalsViewModel @Inject constructor(private val goalRepo: GoalRepository) :
     val goals: StateFlow<List<Goal>> = goalRepo.getAllGoals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addGoal(name: String, target: Double, emoji: String, targetDate: LocalDate?, location: String = "") {
+    fun addGoal(name: String, target: Double, targetDate: LocalDate?, location: String = "") {
         viewModelScope.launch {
             goalRepo.insert(
-                Goal(name = name, targetAmount = target, emoji = emoji, targetDate = targetDate, location = location)
+                Goal(name = name, targetAmount = target, targetDate = targetDate, location = location)
             )
         }
     }
@@ -59,13 +82,12 @@ class GoalsViewModel @Inject constructor(private val goalRepo: GoalRepository) :
         }
     }
 
-    fun updateGoal(goal: Goal, name: String, target: Double, emoji: String, targetDate: LocalDate?, location: String) {
+    fun updateGoal(goal: Goal, name: String, target: Double, targetDate: LocalDate?, location: String) {
         viewModelScope.launch {
             goalRepo.update(
                 goal.copy(
                     name = name,
                     targetAmount = target,
-                    emoji = emoji,
                     targetDate = targetDate,
                     location = location,
                     isCompleted = goal.savedAmount >= target
@@ -79,11 +101,11 @@ class GoalsViewModel @Inject constructor(private val goalRepo: GoalRepository) :
     }
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
+// ─── Section ──────────────────────────────────────────────────────────────────
 
 private val DeadlineFormat = DateTimeFormatter.ofPattern("MMM d, yyyy")
 
-private enum class GoalFilter(val label: String) { ACTIVE("Active"), DONE("Done") }
+enum class GoalFilter(val label: String) { ACTIVE("Active"), DONE("Done") }
 
 private val activeGoalOrder = compareBy<Goal>(
     { it.targetDate ?: LocalDate.MAX },
@@ -102,228 +124,145 @@ private fun monthlyPace(goal: Goal, today: LocalDate): Double? {
     return goal.remaining / monthsUntil(today, date)
 }
 
+private fun isLate(goal: Goal, today: LocalDate): Boolean =
+    !goal.isCompleted && goal.targetDate?.isBefore(today) == true
+
 private fun goalSubline(goal: Goal, today: LocalDate): String? {
     val date = goal.targetDate
     val pace = monthlyPace(goal, today)
     return when {
         pace != null -> "${money(pace)}/mo"
-        date != null && date.isBefore(today) && !goal.isCompleted -> "Late"
+        isLate(goal, today) -> "Late"
         date != null -> date.format(DeadlineFormat)
         else -> null
     }
 }
 
-@Composable
-fun GoalsScreen(
-    onBack: () -> Unit = {},
-    viewModel: GoalsViewModel = hiltViewModel()
-) {
-    val goals by viewModel.goals.collectAsState()
-    var filter by remember { mutableStateOf(GoalFilter.ACTIVE) }
-    var adding by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf<Goal?>(null) }
-    var contributing by remember { mutableStateOf<Goal?>(null) }
-    val today = LocalDate.now()
-
-    val visible = remember(goals, filter) {
-        when (filter) {
-            GoalFilter.ACTIVE -> goals.filter { !it.isCompleted }.sortedWith(activeGoalOrder)
-            GoalFilter.DONE -> goals.filter { it.isCompleted }
-        }
-    }
-    val totalSaved = remember(goals) { goals.sumOf { it.savedAmount } }
-    val totalTarget = remember(goals) { goals.sumOf { it.targetAmount } }
-    val totalLeft = (totalTarget - totalSaved).coerceAtLeast(0.0)
-
-    LScreen(
-        title = "Goals",
-        onBack = onBack,
-        fab = { LFab(Icons.Filled.Add, onClick = { adding = true }) }
-    ) {
-        if (goals.isNotEmpty()) {
-            item(key = "hero") {
-                LHero(
-                    label = "Left",
-                    value = money(totalLeft),
-                    sub = "${money(totalSaved)} of ${money(totalTarget)}"
-                )
-            }
-        }
-
-        item(key = "chips") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GoalFilter.entries.forEach { f ->
-                    LChip(f.label, selected = filter == f, onClick = { filter = f })
-                }
-            }
-        }
-
-        if (visible.isEmpty()) {
-            item(key = "empty") { LEmpty(Icons.Filled.Flag, "No goals") }
-        } else {
-            items(visible, key = { it.id }) { goal ->
-                GoalCard(
-                    goal = goal,
-                    today = today,
-                    onEdit = { editing = goal },
-                    onContribute = { contributing = goal }
-                )
-            }
-        }
-    }
-
-    if (adding) {
-        GoalSheet(
-            existing = null,
-            onDismiss = { adding = false },
-            onSave = { name, target, date, place ->
-                viewModel.addGoal(name, target, "🎯", date, place)
-                adding = false
-            }
-        )
-    }
-
-    editing?.let { goal ->
-        GoalSheet(
-            existing = goal,
-            onDismiss = { editing = null },
-            onSave = { name, target, date, place ->
-                viewModel.updateGoal(goal, name, target, goal.emoji, date, place)
-                editing = null
-            },
-            onDelete = {
-                viewModel.deleteGoal(goal)
-                editing = null
-            }
-        )
-    }
-
-    contributing?.let { goal ->
-        ContributeSheet(
-            goal = goal,
-            onDismiss = { contributing = null },
-            onAdd = { amount ->
-                viewModel.addSavings(goal, amount)
-                contributing = null
-            },
-            onRemove = { amount ->
-                viewModel.addSavings(goal, -amount)
-                contributing = null
-            }
-        )
-    }
-}
-
-@Composable
-private fun GoalCard(
-    goal: Goal,
+/** Goals section for the Money Plan segment. */
+fun LazyListScope.goalItems(
+    goals: List<Goal>,
+    filter: GoalFilter,
+    onFilter: (GoalFilter) -> Unit,
     today: LocalDate,
-    onEdit: () -> Unit,
-    onContribute: () -> Unit
+    onAdd: () -> Unit,
+    onEdit: (Goal) -> Unit,
+    onContribute: (Goal) -> Unit
 ) {
-    val sub = goalSubline(goal, today)
-    LCard(onClick = onEdit) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    goal.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = L.OnBox,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    "${money(goal.savedAmount)} / ${money(goal.targetAmount)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = L.Gold,
-                    maxLines = 1
-                )
-            }
-            Box(
-                Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(L.Gold)
-                    .clickable(onClick = onContribute),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add", tint = L.BoxDeep, modifier = Modifier.size(20.dp))
-            }
+    val visible = when (filter) {
+        GoalFilter.ACTIVE -> goals.filter { !it.isCompleted }.sortedWith(activeGoalOrder)
+        GoalFilter.DONE -> goals.filter { it.isCompleted }
+    }
+    item(key = "goals-header") { LSection("Goals", action = "Add", onAction = onAdd) }
+    if (goals.isNotEmpty()) {
+        item(key = "goals-summary") {
+            MutedLine("Saved ${money(goals.sumOf { it.savedAmount })} of ${money(goals.sumOf { it.targetAmount })}")
         }
-        LProgress(goal.progressPercent / 100f)
-        if (!sub.isNullOrBlank()) {
-            Text(
-                sub,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (sub == "Late") L.Danger else L.OnBoxMuted
-            )
+        item(key = "goals-chips") {
+            LKindChips(GoalFilter.entries.toList(), filter, { it.label }, onFilter)
+        }
+    }
+    if (visible.isEmpty()) {
+        item(key = "goals-empty") { LEmpty(Icons.Filled.Flag, "No goals") }
+    } else {
+        item(key = "goals-group") {
+            LimitedGroup(visible, id = { it.id }, expandKey = "goals-${filter.name}") { goal ->
+                GoalRow(goal, today, onEdit = { onEdit(goal) }, onContribute = { onContribute(goal) })
+            }
         }
     }
 }
 
-private fun parseDate(text: String): LocalDate? =
-    runCatching { LocalDate.parse(text.trim()) }.getOrNull()
+@Composable
+private fun GoalRow(goal: Goal, today: LocalDate, onEdit: () -> Unit, onContribute: () -> Unit) {
+    val sub = goalSubline(goal, today)
+    val late = isLate(goal, today)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEdit)
+            .heightIn(min = 64.dp)
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(Icons.Filled.Flag, contentDescription = null, tint = L.Gold, modifier = Modifier.size(20.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                goal.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = L.OnBox,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                "${money(goal.savedAmount)} / ${money(goal.targetAmount)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = L.Gold,
+                maxLines = 1
+            )
+            LProgress(goal.progressPercent / 100f)
+            if (!sub.isNullOrBlank()) {
+                Text(sub, style = MaterialTheme.typography.bodySmall, color = if (late) L.Danger else L.OnBoxMuted)
+            }
+        }
+        IconButton(onClick = onContribute) {
+            Icon(Icons.Filled.Add, contentDescription = "Add to ${goal.name}", tint = L.Gold)
+        }
+    }
+}
 
 @Composable
-private fun GoalSheet(
+fun GoalSheet(
     existing: Goal?,
     onDismiss: () -> Unit,
     onSave: (String, Double, LocalDate?, String) -> Unit,
-    onDelete: () -> Unit = {}
+    onDelete: (() -> Unit)? = null
 ) {
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var targetText by remember { mutableStateOf(existing?.targetAmount?.toString() ?: "") }
-    var dateText by remember { mutableStateOf(existing?.targetDate?.toString() ?: "") }
-    var place by remember { mutableStateOf(existing?.location ?: "") }
-    var confirmDelete by remember { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
+    var targetText by rememberSaveable { mutableStateOf(existing?.targetAmount?.let(::amountInput) ?: "") }
+    var date by rememberSaveable { mutableStateOf(existing?.targetDate) }
+    var place by rememberSaveable { mutableStateOf(existing?.location ?: "") }
 
     val target = targetText.toDoubleOrNull()
-    val dateValid = dateText.isBlank() || parseDate(dateText) != null
-    val canSave = name.isNotBlank() && target != null && target > 0 && dateValid
+    val canSave = name.isNotBlank() && target != null && target > 0
+    val save = { if (canSave) onSave(name.trim(), target!!, date, place.trim()) }
 
-    LSheet(
-        title = if (existing == null) "New goal" else "Edit goal",
-        onDismiss = onDismiss,
-        primary = "Save",
-        onPrimary = { if (canSave) onSave(name.trim(), target!!, parseDate(dateText), place.trim()) },
-        primaryEnabled = canSave,
-        secondary = if (existing != null) "Delete" else null,
-        onSecondary = { confirmDelete = true }
-    ) {
+    val body: @Composable ColumnScope.() -> Unit = {
         LField(name, { name = it }, "Name")
-        LField(
-            targetText,
-            { targetText = it },
-            "Target",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-        )
+        DecimalField(targetText, { targetText = it }, "Target")
         LField(place, { place = it }, "Place")
-        LField(dateText, { dateText = it }, "Deadline")
+        OptionalDateField("Deadline", date) { date = it }
     }
-
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            containerColor = L.Page,
-            title = { Text("Delete?", color = L.Ink) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete() }) { Text("Delete", color = L.Box) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel", color = L.InkMuted) }
-            }
+    if (existing != null) {
+        LItemSheet(
+            title = "Edit goal",
+            onDismiss = onDismiss,
+            primary = "Save",
+            onPrimary = save,
+            primaryEnabled = canSave,
+            onDelete = onDelete,
+            content = body
+        )
+    } else {
+        LSheet(
+            title = "New goal",
+            onDismiss = onDismiss,
+            primary = "Save",
+            onPrimary = save,
+            primaryEnabled = canSave,
+            content = body
         )
     }
 }
 
 @Composable
-private fun ContributeSheet(
+fun ContributeSheet(
     goal: Goal,
     onDismiss: () -> Unit,
     onAdd: (Double) -> Unit,
     onRemove: (Double) -> Unit
 ) {
-    var amountText by remember { mutableStateOf("") }
+    var amountText by rememberSaveable { mutableStateOf("") }
     val amount = amountText.toDoubleOrNull()
     val canApply = amount != null && amount > 0
 
@@ -336,11 +275,6 @@ private fun ContributeSheet(
         secondary = "Remove",
         onSecondary = { if (canApply) onRemove(amount!!) }
     ) {
-        LField(
-            amountText,
-            { amountText = it },
-            "Amount",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-        )
+        DecimalField(amountText, { amountText = it }, "Amount")
     }
 }

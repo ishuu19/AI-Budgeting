@@ -53,7 +53,7 @@ class AiEdgeClient @Inject constructor(
 
         try {
             val modelTier = when (type) {
-                AiResponseType.TRANSACTION, AiResponseType.TASK, AiResponseType.ALARM ->
+                AiResponseType.TRANSACTION ->
                     "flash-lite"
                 else -> "flash"
             }

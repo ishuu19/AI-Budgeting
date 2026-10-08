@@ -3,11 +3,13 @@ package com.ledgerai.app.presentation.navigation
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.StickyNote2
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.HorizontalDivider
@@ -16,13 +18,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -33,51 +41,44 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.screens.ai.AiAssistantScreen
-import com.ledgerai.app.presentation.screens.alarms.AlarmsScreen
 import com.ledgerai.app.presentation.screens.analytics.AnalyticsScreen
-import com.ledgerai.app.presentation.screens.bills.BillsScreen
-import com.ledgerai.app.presentation.screens.budget.BudgetScreen
-import com.ledgerai.app.presentation.screens.dashboard.DashboardScreen
-import com.ledgerai.app.presentation.screens.debts.DebtsScreen
-import com.ledgerai.app.presentation.screens.forecast.ForecastScreen
-import com.ledgerai.app.presentation.screens.goals.GoalsScreen
-import com.ledgerai.app.presentation.screens.notes.NotesScreen
-import com.ledgerai.app.presentation.screens.calendar.CalendarScreen
 import com.ledgerai.app.presentation.screens.focus.FocusScreen
-import com.ledgerai.app.presentation.screens.life.LifeContainerScreen
-import com.ledgerai.app.presentation.screens.life.LifeTab
+import com.ledgerai.app.presentation.screens.money.MoneyTabScreen
 import com.ledgerai.app.presentation.screens.money.SpendTodayScreen
+import com.ledgerai.app.presentation.screens.plan.PlanTabScreen
 import com.ledgerai.app.presentation.screens.search.SearchScreen
 import com.ledgerai.app.presentation.screens.settings.SettingsScreen
-import com.ledgerai.app.presentation.screens.tasks.TasksScreen
-import com.ledgerai.app.presentation.screens.transactions.TransactionsScreen
-import com.ledgerai.app.presentation.screens.voice.VoiceRecorderScreen
+import com.ledgerai.app.presentation.screens.today.TodayScreen
+import com.ledgerai.app.presentation.screens.voice.VoiceTabScreen
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    object Dashboard    : Screen("dashboard",    "Home",     Icons.Filled.Home)
+    object Today        : Screen("today",        "Today",    Icons.Filled.Today)
+    object Plan         : Screen("plan",         "Plan",     Icons.Filled.CalendarMonth)
+    object Voice        : Screen("voice",        "Voice",    Icons.Filled.Mic)
     object Money        : Screen("money",        "Money",    Icons.Filled.AccountBalanceWallet)
-    object VoiceRecord  : Screen("voice_record", "Voice",    Icons.Filled.Mic)
-    object Life         : Screen("life",         "Life",     Icons.Filled.CalendarMonth)
     object You          : Screen("you",          "You",      Icons.Filled.Person)
 
-    object Transactions : Screen("transactions", "Spend",    Icons.Filled.Receipt)
-    object Budget       : Screen("budget",       "Budget",   Icons.Filled.PieChart)
-    object Today        : Screen("today",        "Today",    Icons.Filled.Today)
-    object Forecast     : Screen("forecast",     "Forecast", Icons.AutoMirrored.Filled.TrendingUp)
-    object Debts        : Screen("debts",        "Debts",    Icons.Filled.People)
-    object Analytics    : Screen("analytics",    "Insights", Icons.Filled.Insights)
-    object Goals        : Screen("goals",        "Goals",    Icons.Filled.Flag)
-    object Bills        : Screen("bills",        "Bills",    Icons.Filled.CreditCard)
-    object Tasks        : Screen("tasks",        "Tasks",    Icons.Filled.CheckCircle)
-    object Calendar     : Screen("calendar",     "Calendar", Icons.Filled.CalendarMonth)
-    object Notes        : Screen("notes",        "Notes",    Icons.AutoMirrored.Filled.StickyNote2)
-    object Alarms       : Screen("alarms",       "Alarms",   Icons.Filled.Alarm)
+    object Insights     : Screen("insights",     "Insights", Icons.Filled.Insights)
+    object SpendGuide   : Screen("spend_guide",  "Safe today", Icons.AutoMirrored.Filled.TrendingUp)
     object AiAssistant  : Screen("ai_assistant", "Ask",      Icons.Filled.AutoAwesome)
-    object Search      : Screen("search",       "Search",   Icons.Filled.Search)
-    object Focus       : Screen("focus",        "Focus",    Icons.Filled.Timer)
+    object Search       : Screen("search",       "Search",   Icons.Filled.Search)
+    object Focus        : Screen("focus",        "Focus",    Icons.Filled.Timer)
 }
 
-private val tabs = listOf(Screen.Dashboard, Screen.Money, Screen.VoiceRecord, Screen.Life, Screen.You)
+private val tabs = listOf(Screen.Today, Screen.Plan, Screen.Voice, Screen.Money, Screen.You)
+
+/** Which tab owns a route, so sub-screens keep their tab highlighted. */
+private fun tabOf(route: String?): Screen? = when {
+    route == null -> null
+    route.startsWith(Screen.Today.route) -> Screen.Today
+    route.startsWith(Screen.Plan.route) -> Screen.Plan
+    route.startsWith(Screen.Voice.route) || route.startsWith(Screen.AiAssistant.route) -> Screen.Voice
+    route.startsWith(Screen.Money.route) || route.startsWith(Screen.Insights.route) || route.startsWith(Screen.SpendGuide.route) -> Screen.Money
+    route.startsWith(Screen.You.route) -> Screen.You
+    route.startsWith(Screen.Focus.route) -> Screen.Plan
+    route.startsWith(Screen.Search.route) -> Screen.Today
+    else -> null
+}
 
 private fun NavHostController.go(route: String) = navigate(route) { launchSingleTop = true }
 
@@ -89,44 +90,58 @@ private fun NavHostController.tab(route: String) = navigate(route) {
 }
 
 @Composable
-fun AppNavigation(
-    openVoice: Boolean = false,
-    openCalendar: Boolean = false,
-    openSpendToday: Boolean = false,
-    openTasks: Boolean = false,
-    openBills: Boolean = false,
-    lifeInitialTab: LifeTab? = null,
-    openFocusBlockId: Long = 0L,
-    focusTopic: String? = null
-) {
+fun AppNavigation(request: LaunchRequest? = null) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
-    val destination = entry?.destination
+    val currentTab = tabOf(entry?.destination?.route)
 
-    LaunchedEffect(openVoice) { if (openVoice) nav.tab(Screen.VoiceRecord.route) }
-    LaunchedEffect(openCalendar, lifeInitialTab) {
-        if (openCalendar) {
-            nav.tab(Screen.Life.route)
-            if (lifeInitialTab == null) {
-                nav.go(Screen.Calendar.route)
+    var planSeg by rememberSaveable { mutableStateOf(PlanSeg.Calendar) }
+    var voiceSeg by rememberSaveable { mutableStateOf(VoiceSeg.Speak) }
+    var moneySeg by rememberSaveable { mutableStateOf(MoneySeg.Overview) }
+    var handledRequest by rememberSaveable { mutableStateOf(0L) }
+    var pendingOpen by remember { mutableStateOf<OpenItem?>(null) }
+    var holdMic by remember { mutableStateOf(false) }
+
+    fun focusRoute(id: Long, topic: String) = "${Screen.Focus.route}/$id?topic=${Uri.encode(topic)}"
+
+    val links = remember(nav) {
+        AppLinks(
+            search = { nav.go(Screen.Search.route) },
+            focus = { id, topic -> nav.go(focusRoute(id, topic)) },
+            plan = { seg -> planSeg = seg; nav.tab(Screen.Plan.route) },
+            money = { seg -> moneySeg = seg; nav.tab(Screen.Money.route) },
+            voice = { seg -> voiceSeg = seg; nav.tab(Screen.Voice.route) },
+            you = { nav.tab(Screen.You.route) },
+            insights = { nav.go(Screen.Insights.route) },
+            spendGuide = { nav.go(Screen.SpendGuide.route) },
+            chat = { insight -> nav.go("${Screen.AiAssistant.route}?insight=${Uri.encode(insight)}") },
+            open = { kind, id ->
+                pendingOpen = OpenItem(kind, id, System.nanoTime())
+                when (kind) {
+                    OpenKind.Event -> { planSeg = PlanSeg.Calendar; nav.tab(Screen.Plan.route) }
+                    OpenKind.Job -> { planSeg = PlanSeg.Jobs; nav.tab(Screen.Plan.route) }
+                    OpenKind.Note -> { voiceSeg = VoiceSeg.Notes; nav.tab(Screen.Voice.route) }
+                    OpenKind.Transaction -> { moneySeg = MoneySeg.Spend; nav.tab(Screen.Money.route) }
+                    OpenKind.Budget, OpenKind.Goal -> { moneySeg = MoneySeg.Plan; nav.tab(Screen.Money.route) }
+                    OpenKind.Bill, OpenKind.Debt -> { moneySeg = MoneySeg.Owed; nav.tab(Screen.Money.route) }
+                }
             }
-        }
+        )
     }
-    LaunchedEffect(openSpendToday) {
-        if (openSpendToday) {
-            nav.tab(Screen.Money.route)
-            nav.go(Screen.Today.route)
-        }
-    }
-    LaunchedEffect(openTasks) {
-        if (openTasks) nav.go(Screen.Tasks.route)
-    }
-    LaunchedEffect(openBills) {
-        if (openBills) nav.go(Screen.Bills.route)
-    }
-    LaunchedEffect(openFocusBlockId) {
-        if (openFocusBlockId != 0L) {
-            nav.go("${Screen.Focus.route}/$openFocusBlockId")
+
+    LaunchedEffect(request?.id) {
+        val r = request ?: return@LaunchedEffect
+        if (r.id == handledRequest) return@LaunchedEffect
+        handledRequest = r.id
+        when {
+            r.voice -> { voiceSeg = VoiceSeg.Speak; nav.tab(Screen.Voice.route) }
+            r.hasFocus -> {
+                nav.tab(Screen.Plan.route)
+                nav.go(focusRoute(r.focusBlockId, r.focusTopic ?: "Focus"))
+            }
+            r.spendGuide -> { moneySeg = MoneySeg.Overview; nav.tab(Screen.Money.route); nav.go(Screen.SpendGuide.route) }
+            r.bills -> { moneySeg = MoneySeg.Owed; nav.tab(Screen.Money.route) }
+            r.plan != null -> { planSeg = r.plan; nav.tab(Screen.Plan.route) }
         }
     }
 
@@ -134,76 +149,54 @@ fun AppNavigation(
         containerColor = L.Page,
         bottomBar = {
             LedgerTabBar(
-                selected = { s -> destination?.hierarchy?.any { it.route == s.route } == true },
-                onSelect = { nav.tab(it.route) }
+                selected = { s -> currentTab == s },
+                onSelect = { nav.tab(it.route) },
+                onVoiceHoldStart = {
+                    voiceSeg = VoiceSeg.Speak
+                    nav.tab(Screen.Voice.route)
+                    holdMic = true
+                },
+                onVoiceHoldEnd = { holdMic = false }
             )
         }
     ) { inner ->
         NavHost(
             navController = nav,
-            startDestination = Screen.Dashboard.route,
+            startDestination = Screen.Today.route,
             modifier = Modifier.padding(inner).consumeWindowInsets(inner)
         ) {
             val back: () -> Unit = { nav.popBackStack() }
+            fun openFor(vararg kinds: OpenKind): OpenItem? = pendingOpen?.takeIf { it.kind in kinds }
+            val opened: () -> Unit = { pendingOpen = null }
 
-            composable(Screen.Dashboard.route) {
-                DashboardScreen(
-                    onNavigateToTransactions = { nav.go(Screen.Transactions.route) },
-                    onNavigateToAnalytics = { nav.go(Screen.Analytics.route) },
-                    onNavigateToVoice = { nav.tab(Screen.VoiceRecord.route) },
-                    onNavigateToSettings = { nav.tab(Screen.You.route) },
-                    onNavigateToSearch = { nav.go(Screen.Search.route) },
-                    onNavigateToChat = { insight ->
-                        nav.go("${Screen.AiAssistant.route}?insight=${Uri.encode(insight)}")
-                    }
-                )
+            composable(Screen.Today.route) { TodayScreen(links) }
+            composable(Screen.Plan.route) {
+                PlanTabScreen(planSeg, { planSeg = it }, links, openFor(OpenKind.Event, OpenKind.Job), opened)
+            }
+            composable(Screen.Voice.route) {
+                VoiceTabScreen(voiceSeg, { voiceSeg = it }, links, openFor(OpenKind.Note), opened, holdMic)
             }
             composable(Screen.Money.route) {
-                HubScreen(
-                    title = "Money",
-                    tiles = listOf(Screen.Today, Screen.Transactions, Screen.Budget, Screen.Bills, Screen.Debts, Screen.Goals, Screen.Forecast, Screen.Analytics, Screen.AiAssistant)
-                        .map { s -> HubTile(s.label, s.icon) { nav.go(s.route) } }
+                MoneyTabScreen(
+                    moneySeg, { moneySeg = it }, links,
+                    openFor(OpenKind.Transaction, OpenKind.Budget, OpenKind.Goal, OpenKind.Bill, OpenKind.Debt), opened
                 )
             }
-            composable(Screen.VoiceRecord.route) { VoiceRecorderScreen(embedded = true) }
-            composable(Screen.Life.route) {
-                LifeContainerScreen(
-                    onBack = { nav.popBackStack() },
-                    onOpenTasks = { nav.go(Screen.Tasks.route) },
-                    onOpenNotes = { nav.go(Screen.Notes.route) },
-                    onOpenFocus = { id -> nav.go("${Screen.Focus.route}/$id") },
-                    initialTab = lifeInitialTab ?: LifeTab.Calendar
-                )
-            }
-            composable(Screen.You.route) {
-                SettingsScreen(onOpenAi = { nav.go(Screen.AiAssistant.route) })
-            }
+            composable(Screen.You.route) { SettingsScreen(onOpenAi = { links.voice(VoiceSeg.Ask) }, onBack = null) }
 
-            composable(Screen.Transactions.route) {
-                TransactionsScreen(onNavigateToVoice = { nav.tab(Screen.VoiceRecord.route) }, onBack = back)
-            }
-            composable(Screen.Today.route) { SpendTodayScreen(onBack = back) }
-            composable(Screen.Budget.route) {
-                BudgetScreen(onNavigateToAi = { nav.go(Screen.AiAssistant.route) }, onBack = back)
-            }
-            composable(Screen.Forecast.route) { ForecastScreen(onBack = back) }
-            composable(Screen.Debts.route) { DebtsScreen(onBack = back) }
-            composable(Screen.Analytics.route) { AnalyticsScreen(onBack = back) }
-            composable(Screen.Goals.route) { GoalsScreen(onBack = back) }
-            composable(Screen.Bills.route) { BillsScreen(onBack = back) }
-            composable(Screen.Tasks.route) { TasksScreen(onBack = back) }
-            composable(Screen.Calendar.route) { CalendarScreen(onBack = back) }
-            composable(Screen.Notes.route) { NotesScreen(onBack = back) }
-            composable(Screen.Alarms.route) { AlarmsScreen(onBack = back) }
-            composable(Screen.Search.route) { SearchScreen(onBack = back) }
+            composable(Screen.Insights.route) { AnalyticsScreen(onBack = back) }
+            composable(Screen.SpendGuide.route) { SpendTodayScreen(onBack = back) }
+            composable(Screen.Search.route) { SearchScreen(onBack = back, links = links) }
             composable(
-                route = "${Screen.Focus.route}/{blockId}",
-                arguments = listOf(navArgument("blockId") { type = NavType.LongType })
+                route = "${Screen.Focus.route}/{blockId}?topic={topic}",
+                arguments = listOf(
+                    navArgument("blockId") { type = NavType.LongType },
+                    navArgument("topic") { type = NavType.StringType; defaultValue = "Focus" }
+                )
             ) { e ->
-                val id = e.arguments?.getLong("blockId") ?: 0L
                 FocusScreen(
-                    blockId = id,
-                    topic = focusTopic ?: "Focus",
+                    blockId = e.arguments?.getLong("blockId") ?: 0L,
+                    topic = e.arguments?.getString("topic").orEmpty().ifBlank { "Focus" },
                     onDone = back
                 )
             }
@@ -218,7 +211,12 @@ fun AppNavigation(
 }
 
 @Composable
-private fun LedgerTabBar(selected: (Screen) -> Boolean, onSelect: (Screen) -> Unit) {
+private fun LedgerTabBar(
+    selected: (Screen) -> Boolean,
+    onSelect: (Screen) -> Unit,
+    onVoiceHoldStart: () -> Unit,
+    onVoiceHoldEnd: () -> Unit
+) {
     Column(Modifier.fillMaxWidth().background(L.Page).navigationBarsPadding()) {
         HorizontalDivider(color = L.Line)
         Row(
@@ -227,7 +225,7 @@ private fun LedgerTabBar(selected: (Screen) -> Boolean, onSelect: (Screen) -> Un
         ) {
             tabs.forEach { screen ->
                 val on = selected(screen)
-                if (screen == Screen.VoiceRecord) {
+                if (screen == Screen.Voice) {
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         Box(
                             Modifier
@@ -235,7 +233,21 @@ private fun LedgerTabBar(selected: (Screen) -> Boolean, onSelect: (Screen) -> Un
                                 .shadow(6.dp, CircleShape)
                                 .clip(CircleShape)
                                 .background(if (on) L.Box else L.Gold)
-                                .clickable { onSelect(screen) },
+                                .semantics { role = Role.Button; contentDescription = "Voice. Hold to record." }
+                                .pointerInput(Unit) {
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            awaitFirstDown()
+                                            val tap = withTimeoutOrNull(200) { waitForUpOrCancellation() }
+                                            if (tap != null) onSelect(screen)
+                                            else {
+                                                onVoiceHoldStart()
+                                                waitForUpOrCancellation()
+                                                onVoiceHoldEnd()
+                                            }
+                                        }
+                                    }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -251,16 +263,19 @@ private fun LedgerTabBar(selected: (Screen) -> Boolean, onSelect: (Screen) -> Un
                         Modifier
                             .weight(1f)
                             .fillMaxHeight()
-                            .clickable(
+                            .selectable(
+                                selected = on,
+                                role = Role.Tab,
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { onSelect(screen) },
+                                indication = null,
+                                onClick = { onSelect(screen) }
+                            ),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             screen.icon,
-                            contentDescription = screen.label,
+                            contentDescription = null,
                             tint = if (on) L.Box else L.InkMuted.copy(alpha = 0.6f),
                             modifier = Modifier.size(24.dp)
                         )

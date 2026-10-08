@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 data class AuthUiState(
@@ -50,7 +49,7 @@ class AuthViewModel @Inject constructor(
             userSession.userInfo.collect { info ->
                 _uiState.update {
                     it.copy(
-                        isSignedIn = info.isLoggedIn,
+                        isSignedIn = info.hasRemoteUser,
                         userId = info.userId,
                         email = info.email,
                         displayName = info.displayName,
@@ -66,30 +65,13 @@ class AuthViewModel @Inject constructor(
             BuildConfig.SUPABASE_GOOGLE_WEB_CLIENT_ID.isNotBlank()
 
     /**
-     * Local-only session. Always available, including when SUPABASE_URL / ANON are empty.
-     */
-    fun continueLocally() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            userSession.saveUser(
-                userId = "local-${UUID.randomUUID()}",
-                name = "Local user",
-                email = "",
-                photoUrl = "",
-                accessToken = ""
-            )
-            _uiState.update { it.copy(isSignedIn = true, isLoading = false) }
-        }
-    }
-
-    /**
      * Credential Manager Google ID token → Supabase [AuthRepository.signInWithIdToken].
      */
     fun signInWithGoogle(activity: Activity) {
         viewModelScope.launch {
             if (!authRepository.isSupabaseConfigured) {
                 _uiState.update {
-                    it.copy(errorMessage = "Supabase not configured. Use Continue locally, or set SUPABASE_URL and SUPABASE_ANON_KEY.")
+                    it.copy(errorMessage = "Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.")
                 }
                 return@launch
             }

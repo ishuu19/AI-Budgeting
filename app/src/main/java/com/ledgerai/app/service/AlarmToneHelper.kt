@@ -83,7 +83,7 @@ object AlarmToneHelper {
 
     /**
      * Copies a user-picked audio URI into app-private storage.
-     * @return stored absolute path suitable for [AlarmItem.toneUri]
+     * @return stored absolute path suitable for [com.ledgerai.app.domain.model.CalendarEvent.alarmToneUri]
      */
     fun copyCustomTone(context: Context, source: Uri): Result<String> {
         return try {

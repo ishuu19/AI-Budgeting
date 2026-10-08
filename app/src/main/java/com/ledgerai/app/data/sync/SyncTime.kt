@@ -49,6 +49,14 @@ internal object SyncTime {
         }
     }
 
+    private val floatingFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
+    /** Wall-clock time without offset, for `timestamp` (without time zone) columns. */
+    fun floatingToString(value: LocalDateTime): String = value.format(floatingFormatter)
+
+    fun optionalDate(value: String?): LocalDate? =
+        value?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+
     fun timeToString(time: LocalTime): String = time.format(timeFormatter)
 
     fun stringToTime(value: String?): LocalTime =

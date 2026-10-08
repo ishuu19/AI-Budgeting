@@ -3,8 +3,10 @@ package com.ledgerai.app.di
 import com.google.gson.Gson
 import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.sync.PostgrestApi
+import com.ledgerai.app.data.sync.ExtraSync
 import dagger.Module
 import dagger.Provides
+import dagger.multibindings.Multibinds
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
@@ -18,6 +20,13 @@ import javax.inject.Singleton
 /**
  * PostgREST (Supabase `/rest/v1`) client. Public anon key only; user JWT is passed per request.
  */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class ExtraSyncBindings {
+    @Multibinds
+    abstract fun extraSyncs(): Set<ExtraSync>
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 object SyncModule {
