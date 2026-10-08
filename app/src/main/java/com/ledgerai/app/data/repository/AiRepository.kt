@@ -124,7 +124,7 @@ class AiRepository @Inject constructor(
                 Reply with ONLY JSON: {"items":[ITEM,...]} where ITEM is:
                 {"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB","amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"name":string,"body":string,"start_at":"ISO-8601 local date and time|null","end_at":"ISO-8601|null","due_at":"ISO-8601|null","reminder_minutes":[0],"label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0,"direction":"I_OWE|THEY_OWE"}
                 For EVENT, TASK, EXAM, REMINDER, ROUTINE and ALARM always set start_at to the full spoken date and time, and title to only what to do (no date or time words).
-                JOB is a job application or interview. Set name to the company, title to the role, label to APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN, start_at to the interview or follow-up, due_at to the day they applied. Never classify a job or interview as EVENT, TASK, or REMINDER.
+                JOB is a job application or interview. name is only the company. title is only the spoken role, such as "Android engineer", never the company and never the word Role. label is APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN. start_at is the interview or follow-up. due_at is the day they applied. Never classify a job or interview as EVENT, TASK, or REMINDER.
                 For ALARM, repeat_days is a weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0=one-shot; weekdays=62; every day=127).
                 For ROUTINE, set title and repeat_rule.
                 For BILL set name, amount, repeat_rule (WEEKLY|MONTHLY|QUARTERLY|YEARLY) and due_at. For DEBT set name (the other person), amount, direction and optional due_at. For GOAL set name and amount (the target). For BUDGET set category and amount (the monthly limit).
@@ -146,7 +146,16 @@ class AiRepository @Inject constructor(
      */
     private fun preferLocalKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
         val local = QuickParse.parseVoiceIntents(transcript)
-        if (local.any { it is ParsedIntent.Job }) return local
+        if (local.any { it is ParsedIntent.Job }) {
+            val cloudJob = cloud.filterIsInstance<ParsedIntent.Job>().firstOrNull()
+            return local.map { item ->
+                if (item !is ParsedIntent.Job || cloudJob == null) item
+                else item.copy(
+                    company = item.company.takeUnless { it.equals("Company", true) } ?: cloudJob.company,
+                    title = pickJobRole(cloudJob.title, item.title)
+                )
+            }
+        }
         if (cloud.none { it is ParsedIntent.Transaction || it is ParsedIntent.Note }) return cloud
         val special = local.any {
             it is ParsedIntent.Bill || it is ParsedIntent.Debt || it is ParsedIntent.Goal || it is ParsedIntent.Budget
@@ -619,6 +628,16 @@ class AiRepository @Inject constructor(
         }
     }
 
+    /** The model's role wins. "Role", "Job", and "Interview" are placeholders, not a role. */
+    private fun pickJobRole(fromModel: String?, fromWords: String?): String {
+        fun usable(raw: String?): String? {
+            val t = raw?.trim().orEmpty()
+            if (t.isBlank() || t.equals("Role", true) || t.equals("Job", true) || t.equals("Interview", true)) return null
+            return t.take(80)
+        }
+        return usable(fromModel) ?: usable(fromWords) ?: fromWords?.trim()?.ifBlank { null } ?: "Role"
+    }
+
     /** A job stays in the jobs list. It is never written onto the main calendar. */
     private fun mapJobIntent(dto: ParsedVoiceIntentDto, transcript: String, confidence: Float): ParsedIntent {
         val local = QuickParse.parseVoiceIntents(transcript).filterIsInstance<ParsedIntent.Job>().firstOrNull()
@@ -636,7 +655,7 @@ class AiRepository @Inject constructor(
                 ?: dto.merchant?.takeIf { it.isNotBlank() }
                 ?: local?.company
                 ?: "Company",
-            title = dto.title?.takeIf { it.isNotBlank() } ?: local?.title ?: "Role",
+            title = pickJobRole(dto.title, local?.title),
             status = status,
             appliedOn = parseDateTime(dto.dueAt)?.toLocalDate() ?: local?.appliedOn ?: today,
             followUpOn = follow,

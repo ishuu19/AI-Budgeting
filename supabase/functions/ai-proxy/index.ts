@@ -204,7 +204,7 @@ Rules:
 - ALARM: time as 24h "HH:mm"; label; repeat_days weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0 = one time, weekdays = 62, every day = 127).
 - NOTE: title, body, up to 5 short tags.
 - ROUTINE: title and repeat_rule DAILY|WEEKLY|WEEKDAYS|CUSTOM.
-- JOB: name is the company, title is the role, label is APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN, start_at is the interview or follow-up. Do not use TASK, REMINDER, or EVENT for a job or interview.
+- JOB: name is only the company. title is only the spoken role, such as "Android engineer", never the company and never the word Role. label is APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN. start_at is the interview or follow-up. Do not use TASK, REMINDER, or EVENT for a job or interview.
 confidence is 0..1. Never invent amounts or times that were not said; leave them null instead.`;
 
 function defaultSystem(type: AiType): string {

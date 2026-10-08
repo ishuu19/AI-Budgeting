@@ -71,6 +71,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LCard
 import com.ledgerai.app.presentation.components.LError
@@ -181,6 +182,12 @@ fun VoiceRecorderScreen(
             }
         }
     ) {
+        item(key = "lang") {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LChip("English", selected = state.speechLang != "bn", onClick = { viewModel.setSpeechLanguage("en") })
+                LChip("বাংলা", selected = state.speechLang == "bn", onClick = { viewModel.setSpeechLanguage("bn") })
+            }
+        }
         item(key = "mic") {
             MicButton(
                 recording = recording,

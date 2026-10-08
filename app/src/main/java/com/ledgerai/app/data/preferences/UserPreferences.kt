@@ -30,6 +30,7 @@ class UserPreferences @Inject constructor(
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         val VOICE_ONLY_WIDGET = booleanPreferencesKey("voice_only_widget")
         val VOICE_ENGINE = stringPreferencesKey("voice_engine")
+        val VOICE_LANGUAGE = stringPreferencesKey("voice_language")
         val TRACK_MODE = stringPreferencesKey("track_mode")
         val CASH_ON_HAND = stringPreferencesKey("cash_on_hand")
         /** One-time local Room wipe (removed demo seed data). */
@@ -115,6 +116,15 @@ class UserPreferences @Inject constructor(
 
     suspend fun setVoiceEngine(id: String) {
         context.dataStore.edit { it[Keys.VOICE_ENGINE] = id }
+    }
+
+    /** "en" or "bn". The mic listens to one language at a time. */
+    val voiceLanguage: Flow<String> = context.dataStore.data.map {
+        if (it[Keys.VOICE_LANGUAGE] == "bn") "bn" else "en"
+    }
+
+    suspend fun setVoiceLanguage(code: String) {
+        context.dataStore.edit { it[Keys.VOICE_LANGUAGE] = if (code == "bn") "bn" else "en" }
     }
 
     /** Clears all Room tables once per device (see [DatabaseSeeder]). */

@@ -91,6 +91,8 @@ data class VoiceUiState(
     val engineLabel: String = OfflineVoiceEngine.SHERPA.label,
     /** True when the selected engine streams live results (no audio file). */
     val liveEngine: Boolean = false,
+    /** "en" or "bn". */
+    val speechLang: String = "en",
     val redo: RedoContext? = null,
     val notice: SavedNotice? = null
 ) {
@@ -126,6 +128,7 @@ class VoiceRecorderViewModel @Inject constructor(
     }
 
     private var engine: OfflineVoiceEngine = OfflineVoiceEngine.SHERPA
+    private var speechLang: String = "en"
 
     private val _uiState = MutableStateFlow(fresh())
     val uiState: StateFlow<VoiceUiState> = _uiState.asStateFlow()
@@ -154,9 +157,24 @@ class VoiceRecorderViewModel @Inject constructor(
                 _uiState.update { it.copy(engineLabel = selected.label, liveEngine = selected.isLive) }
             }
         }
+        viewModelScope.launch {
+            prefs.voiceLanguage.collect { code ->
+                speechLang = code
+                _uiState.update { it.copy(speechLang = code) }
+            }
+        }
     }
 
-    private fun fresh() = VoiceUiState(engineLabel = engine.label, liveEngine = engine.isLive)
+    fun setSpeechLanguage(code: String) {
+        if (_uiState.value.recorderState == VoiceRecorderState.RECORDING) return
+        viewModelScope.launch { prefs.setVoiceLanguage(code) }
+    }
+
+    private fun fresh() = VoiceUiState(
+        engineLabel = engine.label,
+        liveEngine = engine.isLive,
+        speechLang = speechLang
+    )
 
     // --- recording ---------------------------------------------------------------------------
 
@@ -259,7 +277,7 @@ class VoiceRecorderViewModel @Inject constructor(
                     else -> showError(ErrorType.RECORDER_FAILED, message)
                 }
             }
-        })
+        }, if (speechLang == "bn") "bn-BD" else "en-US")
     }
 
     private fun enterRecordingState() {

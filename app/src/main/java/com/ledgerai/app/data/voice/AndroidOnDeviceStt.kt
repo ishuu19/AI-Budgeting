@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import java.util.Locale
 
 /**
  * Live speech recognition through Android's SpeechRecognizer, preferring offline models.
@@ -26,14 +25,17 @@ class AndroidOnDeviceStt(private val context: Context) {
     private var recognizer: SpeechRecognizer? = null
     private var usingOnDevice = false
     private var finished = false
+    private var activeLanguage = "en-US"
 
     val isActive: Boolean get() = recognizer != null && !finished
 
-    fun start(listener: Listener, languageTag: String = Locale.getDefault().toLanguageTag()) {
+    fun start(listener: Listener, languageTag: String = "en-US") {
         destroy()
-        val onDevice = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        val bangla = languageTag.startsWith("bn")
+        activeLanguage = if (bangla) "bn-BD" else "en-US"
+        val onDevice = !bangla && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
-        begin(listener, languageTag, onDevice)
+        begin(listener, activeLanguage, onDevice)
     }
 
     fun stop() {
@@ -68,12 +70,9 @@ class AndroidOnDeviceStt(private val context: Context) {
     }
 
     private fun buildIntent(languageTag: String) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-        val primary = if (languageTag.startsWith("bn")) "bn-BD" else "en-US"
-        val other = if (primary.startsWith("bn")) "en-US" else "bn-BD"
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE, primary)
-        putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", arrayOf(other))
-        putExtra("android.speech.extra.ENABLE_LANGUAGE_SWITCH", "balanced")
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, languageTag)
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
         putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, usingOnDevice)
         putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
@@ -155,7 +154,8 @@ class AndroidOnDeviceStt(private val context: Context) {
         SpeechRecognizer.ERROR_SERVER -> "Offline model missing"
         SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy"
         ERROR_LANGUAGE_NOT_SUPPORTED,
-        ERROR_LANGUAGE_UNAVAILABLE -> "Language unavailable"
+        ERROR_LANGUAGE_UNAVAILABLE ->
+            if (activeLanguage.startsWith("bn")) "Bangla voice not installed" else "Language unavailable"
         else -> "Recognizer error"
     }
 

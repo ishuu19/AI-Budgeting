@@ -360,6 +360,28 @@ class QuickParseIntentTest {
     }
 
     @Test
+    fun alarmAfterTenMinutes_isTenMinutesFromNow() {
+        val now = LocalDateTime.of(today, LocalTime.of(6, 28))
+        val english = QuickParse.parseVoiceIntent("add an alarm after 10 mins", today = today, now = now) as ParsedIntent.Event
+        val later = QuickParse.parseVoiceIntent("alarm 10 minutes later", today = today, now = now) as ParsedIntent.Event
+        val bangla = QuickParse.parseVoiceIntent("অ্যালার্ম দশ মিনিট পরে", today = today, now = now) as ParsedIntent.Event
+        assertEquals(now.plusMinutes(10), english.startAt)
+        assertEquals(now.plusMinutes(10), later.startAt)
+        assertEquals(now.plusMinutes(10), bangla.startAt)
+    }
+
+    @Test
+    fun statedAmPm_isKept() {
+        val morning = LocalDateTime.of(today, LocalTime.of(6, 28))
+        val pm = QuickParse.parseVoiceIntent("alarm at 10 pm", today = today, now = morning) as ParsedIntent.Event
+        val am = QuickParse.parseVoiceIntent("alarm at 10 a.m.", today = today, now = morning) as ParsedIntent.Event
+        val nearest = QuickParse.parseVoiceIntent("alarm at 10", today = today, now = morning) as ParsedIntent.Event
+        assertEquals(LocalDateTime.of(today, LocalTime.of(22, 0)), pm.startAt)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(10, 0)), am.startAt)
+        assertEquals(LocalDateTime.of(today, LocalTime.of(10, 0)), nearest.startAt)
+    }
+
+    @Test
     fun banglaAlarm_usesTheNextClockTime() {
         val now = LocalDateTime.of(today, LocalTime.of(10, 0))
         val event = QuickParse.parseVoiceIntent("অ্যালার্ম ৩:৩২", today = today, now = now) as ParsedIntent.Event
@@ -380,6 +402,9 @@ class QuickParseIntentTest {
         val job = intent as ParsedIntent.Job
         assertEquals("Stripe", job.company)
         assertEquals("Android engineer", job.title)
+        val spoken = QuickParse.parseVoiceIntent("add a job at Google software engineer", today = today) as ParsedIntent.Job
+        assertEquals("Google", spoken.company)
+        assertEquals("Software engineer", spoken.title)
         assertEquals(JobApplicationStatus.APPLIED, job.status)
         assertEquals(today, job.appliedOn)
     }

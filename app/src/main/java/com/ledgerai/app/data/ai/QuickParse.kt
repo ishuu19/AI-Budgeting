@@ -169,7 +169,7 @@ object QuickParse {
     /** True when the utterance names a day or a clock time. */
     fun hasSpokenWhen(input: String): Boolean =
         WHEN_PHRASES.any { it.containsMatchIn(input) } || ORDINAL_DAY.containsMatchIn(input) ||
-            RELATIVE_OFFSET.containsMatchIn(input)
+            RELATIVE_OFFSET.containsMatchIn(input) || RELATIVE_LATER.containsMatchIn(input)
 
     /**
      * Spoken date and time. A clock without am/pm uses the next 12-hour occurrence.
@@ -210,10 +210,15 @@ object QuickParse {
     }
 
     private fun relativeFromNow(lower: String, now: LocalDateTime): LocalDateTime? {
-        val m = RELATIVE_OFFSET.find(lower) ?: return null
-        val n = m.groupValues[1].toLongOrNull() ?: 1L
+        val ahead = RELATIVE_OFFSET.find(lower)
+        val later = RELATIVE_LATER.find(lower)
+        val n = ahead?.groupValues?.get(1)?.toLongOrNull()
+            ?: later?.groupValues?.get(1)?.toLongOrNull()
+            ?: if (ahead != null) 1L else return null
+        val unit = ahead?.groupValues?.get(2)?.takeIf { it.isNotEmpty() }
+            ?: later?.groupValues?.get(2)
+            ?: return null
         if (n < 0) return null
-        val unit = m.groupValues[2]
         val at = when {
             unit.startsWith("h") -> now.plusHours(n)
             unit.startsWith("s") -> now.plusSeconds(n)
@@ -472,8 +477,13 @@ object QuickParse {
     fun normalizeSpeech(input: String): String {
         var text = input
         BN_DIGITS.forEachIndexed { index, digit -> text = text.replace(digit, ('0' + index)) }
+        BN_NUMBERS.forEach { (bn, en) -> text = text.replace(bn, en) }
         BN_PHRASES.forEach { (bn, en) -> text = text.replace(bn, en) }
-        text = text.replace(Regex("""(?i)\b(am|pm)\s+(\d{1,2})(?::(\d{2}))?"""), "$2:$3 $1")
+        text = text.replace(Regex("""(?i)(?<![a-z])a\.?\s*m\.?(?![a-z])"""), "am")
+        text = text.replace(Regex("""(?i)(?<![a-z])p\.?\s*m\.?(?![a-z])"""), "pm")
+        text = text.replace(Regex("""(?i)\bin the morning\b"""), "am")
+        text = text.replace(Regex("""(?i)\b(?:in the afternoon|in the evening|at night)\b"""), "pm")
+        text = text.replace(Regex("""(?i)\b(am|pm)\s+(\d{1,2})(?::(\d{2}))?\b"""), "$2:$3 $1")
         text = text.replace(Regex("""(\d{1,2}):(?!\d)"""), "$1")
         return text.replace(Regex("""\s+"""), " ").trim()
     }
@@ -751,6 +761,9 @@ object QuickParse {
     private val RELATIVE_OFFSET = Regex(
         """(?i)\b(?:in|after)\s+(?:(\d{1,4})|an|a)\s*(minutes?|mins?|hours?|hrs?|seconds?|secs?)\b"""
     )
+    private val RELATIVE_LATER = Regex(
+        """(?i)\b(\d{1,4})\s*(minutes?|mins?|hours?|hrs?|seconds?|secs?)\s*(?:later|after|from now)\b"""
+    )
     private val CLOCK_AMPM = Regex("""(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b""")
     private val CLOCK_COLON = Regex("""\b(\d{1,2}):(\d{2})\b""")
     private val CLOCK_AT = Regex("""\b(?:at|for|by|around)\s+(\d{1,2})(?!\s*(?:min|mins|minute|minutes|hour|hours|hr|hrs))\b""")
@@ -764,7 +777,7 @@ object QuickParse {
         if (Regex("""\bmidnight\b""").containsMatchIn(lower)) return LocalTime.MIDNIGHT
         CLOCK_AMPM.find(lower)?.let { m ->
             var h = m.groupValues[1].toIntOrNull() ?: return@let
-            val min = m.groupValues[2].toIntOrNull() ?: 0
+                val min = m.groupValues[2].toIntOrNull() ?: 0
             val pm = m.groupValues[3] == "pm"
             if (pm && h < 12) h += 12
             if (!pm && h == 12) h = 0
@@ -787,6 +800,18 @@ object QuickParse {
         parseClockTimeFromText(lower)
             ?: Regex("""\b(\d{1,2})\b""").find(lower)?.groupValues?.get(1)?.toIntOrNull()
                 ?.let { h -> runCatching { LocalTime.of(h, 0) }.getOrNull() }
+
+    /** Role words after "for", "as", "role", or the company. Dates and the company name are left out. */
+    private fun jobRole(text: String, company: String): String? {
+        val source = listOf(
+            Regex("""(?i)\b(?:role|position)\s+(.+)$"""),
+            Regex("""(?i)\b(?:for|as)\s+(?:an?\s+)?(.+)$"""),
+            Regex("""(?i)\b(?:at|to|with)\s+\S+\s+(.+)$""")
+        ).firstNotNullOfOrNull { it.find(text)?.groupValues?.get(1) } ?: return null
+        val cleaned = eventTitleFromText(source, "").trim()
+        if (cleaned.isBlank() || cleaned.equals(company, true) || cleaned.equals("Role", true)) return null
+        return cleaned.take(80)
+    }
 
     private fun isJobUtterance(lower: String): Boolean {
         if (lower.containsAny("applied", "application", "recruiter", "hiring")) return true
@@ -813,12 +838,7 @@ object QuickParse {
             ?.replaceFirstChar { it.uppercase() }
             .orEmpty()
             .ifBlank { "Company" }
-        val role = Regex("""(?i)\b(?:for|as)\s+(.+)$""").find(text)?.groupValues?.get(1)
-        val title = when {
-            !role.isNullOrBlank() -> eventTitleFromText(role, "Role").take(80)
-            interview -> "Interview"
-            else -> "Role"
-        }
+        val title = jobRole(text, company) ?: if (interview) "Interview" else "Role"
         val applied = if (interview) today else (spoken ?: today)
         val follow = when {
             interview || lower.contains("follow") -> spoken ?: applied.plusDays(7)
@@ -878,6 +898,27 @@ object QuickParse {
     private fun String.containsAny(vararg terms: String) = terms.any { this.contains(it) }
 
     private val BN_DIGITS = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+    private val BN_NUMBERS = listOf(
+        "পঁয়তাল্লিশ" to "45",
+        "পনেরো" to "15",
+        "এগারো" to "11",
+        "বারো" to "12",
+        "ত্রিশ" to "30",
+        "বিশ" to "20",
+        "ষাট" to "60",
+        "পাঁচ" to "5",
+        "ছয়" to "6",
+        "ছয়" to "6",
+        "সাত" to "7",
+        "আট" to "8",
+        "নয়" to "9",
+        "নয়" to "9",
+        "দশ" to "10",
+        "চার" to "4",
+        "তিন" to "3",
+        "দুই" to "2",
+        "এক" to "1",
+    )
     private val BN_PHRASES = listOf(
         "মনে করিয়ে দিও" to "remind me to",
         "মনে করিয়ে দাও" to "remind me to",
@@ -890,6 +931,7 @@ object QuickParse {
         "আগামীকাল" to "tomorrow",
         "আজকে" to "today",
         "আজ" to "today",
+        "মিনিটের" to "min",
         "মিনিট" to "min",
         "ঘণ্টা" to "hour",
         "ঘন্টা" to "hour",
@@ -899,6 +941,8 @@ object QuickParse {
         "বিকাল" to "pm",
         "রাত" to "pm",
         "পরে" to "after",
+        "বাদে" to "after",
+        "পর" to "after",
         "টায়" to "",
         "টায়" to "",
         "টা" to "",
