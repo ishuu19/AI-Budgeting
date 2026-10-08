@@ -1,38 +1,52 @@
 package com.ledgerai.app.presentation.screens.bills
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.EventRepeat
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.BillRepository
+import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.Bill
 import com.ledgerai.app.domain.model.BillFrequency
+import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
-import com.ledgerai.app.presentation.components.CategoryChip
-import com.ledgerai.app.presentation.components.EmptyStateCard
+import com.ledgerai.app.domain.model.TransactionType
+import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.screens.transactions.CategoryChipsRow
+import com.ledgerai.app.presentation.screens.transactions.ConfirmDelete
+import com.ledgerai.app.presentation.screens.transactions.DatePickChip
+import com.ledgerai.app.presentation.screens.transactions.amountInput
+import com.ledgerai.app.presentation.screens.transactions.shortDate
+import com.ledgerai.app.presentation.screens.transactions.spendIcon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
-class BillsViewModel @Inject constructor(private val billRepo: BillRepository) : ViewModel() {
+class BillsViewModel @Inject constructor(
+    private val billRepo: BillRepository,
+    private val transactionRepo: TransactionRepository
+) : ViewModel() {
 
-    val bills: StateFlow<List<Bill>> = billRepo.getActiveBills()
+    val bills: StateFlow<List<Bill>> = billRepo.getAllBills()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _monthlyTotal = MutableStateFlow(0.0)
@@ -48,158 +62,281 @@ class BillsViewModel @Inject constructor(private val billRepo: BillRepository) :
         viewModelScope.launch {
             billRepo.insert(Bill(name = name, amount = amount, frequency = frequency,
                 nextDueDate = nextDueDate, category = category))
-            _monthlyTotal.value = billRepo.getTotalMonthlyBills()
+            refreshMonthlyTotal()
+        }
+    }
+
+    fun updateBill(
+        bill: Bill,
+        name: String,
+        amount: Double,
+        frequency: BillFrequency,
+        nextDueDate: LocalDate,
+        category: TransactionCategory
+    ) {
+        viewModelScope.launch {
+            billRepo.update(
+                bill.copy(
+                    name = name,
+                    amount = amount,
+                    frequency = frequency,
+                    nextDueDate = nextDueDate,
+                    category = category
+                )
+            )
+            refreshMonthlyTotal()
+        }
+    }
+
+    /** Marks the current cycle paid: expense in Spend, then roll next due. */
+    fun markPaid(bill: Bill) {
+        viewModelScope.launch {
+            transactionRepo.insert(
+                Transaction(
+                    amount = bill.amount,
+                    type = TransactionType.EXPENSE,
+                    category = bill.category,
+                    merchant = bill.name,
+                    date = LocalDate.now()
+                )
+            )
+            billRepo.update(bill.copy(nextDueDate = rollDueDate(bill.nextDueDate, bill.frequency)))
+            refreshMonthlyTotal()
+        }
+    }
+
+    /** Advances one period without recording a payment. */
+    fun skip(bill: Bill) {
+        viewModelScope.launch {
+            billRepo.update(bill.copy(nextDueDate = rollDueDate(bill.nextDueDate, bill.frequency)))
+            refreshMonthlyTotal()
+        }
+    }
+
+    fun setActive(bill: Bill, active: Boolean) {
+        viewModelScope.launch {
+            billRepo.update(bill.copy(isActive = active))
+            refreshMonthlyTotal()
         }
     }
 
     fun deleteBill(bill: Bill) {
         viewModelScope.launch {
             billRepo.delete(bill)
-            _monthlyTotal.value = billRepo.getTotalMonthlyBills()
+            refreshMonthlyTotal()
         }
+    }
+
+    private suspend fun refreshMonthlyTotal() {
+        _monthlyTotal.value = billRepo.getTotalMonthlyBills()
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun rollDueDate(from: LocalDate, frequency: BillFrequency): LocalDate = when (frequency) {
+    BillFrequency.WEEKLY -> from.plusWeeks(1)
+    BillFrequency.MONTHLY -> from.plusMonths(1)
+    BillFrequency.QUARTERLY -> from.plusMonths(3)
+    BillFrequency.YEARLY -> from.plusYears(1)
+}
+
 @Composable
-fun BillsScreen(viewModel: BillsViewModel = hiltViewModel()) {
+fun BillsScreen(onBack: () -> Unit = {}, viewModel: BillsViewModel = hiltViewModel()) {
     val bills by viewModel.bills.collectAsState()
     val monthlyTotal by viewModel.monthlyTotal.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Bill?>(null) }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Bills & Subscriptions") }) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "Add bill")
+    val today = LocalDate.now()
+    val monthEnd = today.withDayOfMonth(today.lengthOfMonth())
+    val soonEnd = today.plusDays(7)
+    val active = remember(bills) { bills.filter { it.isActive }.sortedBy { it.nextDueDate } }
+    val paused = remember(bills) { bills.filter { !it.isActive }.sortedBy { it.nextDueDate } }
+    val overdue = remember(active, today) { active.filter { it.nextDueDate.isBefore(today) } }
+    val dueSoon = remember(active, today, soonEnd) {
+        active.filter { !it.nextDueDate.isBefore(today) && !it.nextDueDate.isAfter(soonEnd) }
+    }
+    val later = remember(active, soonEnd) { active.filter { it.nextDueDate.isAfter(soonEnd) } }
+    val dueThisMonth = active.filter { !it.nextDueDate.isAfter(monthEnd) }.sumOf { it.amount }
+
+    LScreen(
+        title = "Bills",
+        onBack = onBack,
+        fab = { LFab(Icons.Filled.Add, onClick = { adding = true }) }
+    ) {
+        item(key = "hero") {
+            LHero(label = "Due", value = money(dueThisMonth), sub = "${overdue.size} overdue · ${money(monthlyTotal)} / mo")
+        }
+
+        if (bills.isEmpty()) {
+            item(key = "empty") { LEmpty(Icons.Filled.EventRepeat, "No bills") }
+        }
+
+        if (overdue.isNotEmpty()) {
+            item(key = "sec-overdue") { LSection("Overdue") }
+            items(overdue, key = { "overdue-${it.id}" }) { bill ->
+                BillRow(bill, today, onClick = { editing = bill }, onPaid = { viewModel.markPaid(bill) })
             }
         }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            item {
-                Card(modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                    Row(modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Monthly recurring bills", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("\$${"%.2f".format(monthlyTotal)}", style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                }
-            }
 
-            if (bills.isEmpty()) {
-                item {
-                    EmptyStateCard(emoji = "🔄", title = "No bills tracked",
-                        subtitle = "Add recurring bills to never miss a payment")
-                }
-            } else {
-                items(bills, key = { it.id }) { bill ->
-                    BillCard(bill = bill, onDelete = { viewModel.deleteBill(bill) })
-                }
+        if (dueSoon.isNotEmpty()) {
+            item(key = "sec-soon") { LSection("Due soon") }
+            items(dueSoon, key = { "soon-${it.id}" }) { bill ->
+                BillRow(bill, today, onClick = { editing = bill }, onPaid = { viewModel.markPaid(bill) })
+            }
+        }
+
+        if (later.isNotEmpty()) {
+            item(key = "sec-later") { LSection("Later") }
+            items(later, key = { "later-${it.id}" }) { bill ->
+                BillRow(bill, today, onClick = { editing = bill }, onPaid = { viewModel.markPaid(bill) })
+            }
+        }
+
+        if (paused.isNotEmpty()) {
+            item(key = "sec-paused") { LSection("Paused") }
+            items(paused, key = { "paused-${it.id}" }) { bill ->
+                BillRow(bill, today, onClick = { editing = bill })
             }
         }
     }
 
-    if (showAddDialog) {
-        AddBillDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { name, amount, freq, date, cat ->
+    if (adding) {
+        BillSheet(
+            existing = null,
+            onDismiss = { adding = false },
+            onSave = { name, amount, freq, date, cat ->
                 viewModel.addBill(name, amount, freq, date, cat)
-                showAddDialog = false
+                adding = false
             }
         )
     }
-}
 
-@Composable
-private fun BillCard(bill: Bill, onDelete: () -> Unit) {
-    val daysUntilDue = LocalDate.now().until(bill.nextDueDate).days
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.padding(14.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(bill.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    CategoryChip(bill.category)
-                    Text(bill.frequency.displayName, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+    editing?.let { bill ->
+        key(bill.id) {
+            BillSheet(
+                existing = bill,
+                onDismiss = { editing = null },
+                onSave = { name, amount, freq, date, cat ->
+                    viewModel.updateBill(bill, name, amount, freq, date, cat)
+                    editing = null
+                },
+                onPaid = {
+                    viewModel.markPaid(bill)
+                    editing = null
+                },
+                onSkip = {
+                    viewModel.skip(bill)
+                    editing = null
+                },
+                onToggleActive = {
+                    viewModel.setActive(bill, !bill.isActive)
+                    editing = null
+                },
+                onDelete = {
+                    viewModel.deleteBill(bill)
+                    editing = null
                 }
-                Text(
-                    text = when {
-                        daysUntilDue < 0 -> "Overdue!"
-                        daysUntilDue == 0 -> "Due today"
-                        daysUntilDue <= 7 -> "Due in $daysUntilDue days"
-                        else -> "Due ${bill.nextDueDate}"
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (daysUntilDue <= 3) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("\$${"%.2f".format(bill.amount)}", fontWeight = FontWeight.Bold)
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(14.dp))
-                }
-            }
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddBillDialog(onDismiss: () -> Unit, onConfirm: (String, Double, BillFrequency, LocalDate, TransactionCategory) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
-    var selectedFrequency by remember { mutableStateOf(BillFrequency.MONTHLY) }
-    var dueDateText by remember { mutableStateOf(LocalDate.now().plusMonths(1).toString()) }
-    var selectedCategory by remember { mutableStateOf(TransactionCategory.SUBSCRIPTIONS) }
-    var freqExpanded by remember { mutableStateOf(false) }
-    var catExpanded by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Bill / Subscription") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Bill name") },
-                    modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = amountText, onValueChange = { amountText = it },
-                    label = { Text("Amount ($)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(), singleLine = true)
-
-                ExposedDropdownMenuBox(expanded = freqExpanded, onExpandedChange = { freqExpanded = it }) {
-                    OutlinedTextField(value = selectedFrequency.displayName, onValueChange = {}, readOnly = true,
-                        label = { Text("Frequency") }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(freqExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor())
-                    ExposedDropdownMenu(expanded = freqExpanded, onDismissRequest = { freqExpanded = false }) {
-                        BillFrequency.entries.forEach { freq ->
-                            DropdownMenuItem(text = { Text(freq.displayName) }, onClick = { selectedFrequency = freq; freqExpanded = false })
-                        }
-                    }
-                }
-
-                OutlinedTextField(value = dueDateText, onValueChange = { dueDateText = it },
-                    label = { Text("Next due date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+private fun BillRow(
+    bill: Bill,
+    today: LocalDate,
+    onClick: () -> Unit,
+    onPaid: (() -> Unit)? = null
+) {
+    val days = ChronoUnit.DAYS.between(today, bill.nextDueDate)
+    val paidEnd: (@Composable () -> Unit)? = if (onPaid == null) null else {
+        {
+            IconButton(onClick = onPaid, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Outlined.CheckCircle, contentDescription = "Paid", tint = L.OnBoxMuted)
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: return@TextButton
-                    val date = try { LocalDate.parse(dueDateText) } catch (_: Exception) { return@TextButton }
-                    onConfirm(name, amount, selectedFrequency, date, selectedCategory)
-                },
-                enabled = name.isNotBlank() && amountText.toDoubleOrNull() != null
-            ) { Text("Add") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        }
+    }
+    LRow(
+        title = bill.name,
+        sub = "${dueLabel(days, bill.nextDueDate)} · ${bill.frequency.displayName}",
+        trailing = money(bill.amount),
+        trailingColor = if (days < 0) L.Danger else L.Gold,
+        icon = spendIcon(bill.category),
+        onClick = onClick,
+        end = paidEnd
     )
+}
+
+private fun dueLabel(days: Long, date: LocalDate): String = when {
+    days < 0 -> "Overdue"
+    days == 0L -> "Today"
+    days == 1L -> "Tomorrow"
+    days <= 7 -> "In $days days"
+    else -> shortDate(date)
+}
+
+@Composable
+private fun BillSheet(
+    existing: Bill?,
+    onDismiss: () -> Unit,
+    onSave: (String, Double, BillFrequency, LocalDate, TransactionCategory) -> Unit,
+    onPaid: (() -> Unit)? = null,
+    onSkip: (() -> Unit)? = null,
+    onToggleActive: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null
+) {
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var amountText by remember { mutableStateOf(existing?.amount?.let(::amountInput) ?: "") }
+    var frequency by remember { mutableStateOf(existing?.frequency ?: BillFrequency.MONTHLY) }
+    var dueDate by remember { mutableStateOf(existing?.nextDueDate ?: LocalDate.now().plusMonths(1)) }
+    var category by remember { mutableStateOf(existing?.category ?: TransactionCategory.SUBSCRIPTIONS) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    val amount = amountText.toDoubleOrNull()?.takeIf { it > 0 }
+
+    LSheet(
+        title = if (existing != null) "Edit" else "New",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { amount?.let { onSave(name.trim(), it, frequency, dueDate, category) } },
+        primaryEnabled = name.isNotBlank() && amount != null,
+        secondary = if (existing != null && onSkip != null) "Skip" else null,
+        onSecondary = { onSkip?.invoke() }
+    ) {
+        LField(name, { name = it }, label = "Name")
+        LField(
+            value = amountText,
+            onValueChange = { raw ->
+                val cleaned = raw.filter { it.isDigit() || it == '.' }
+                if (cleaned.count { it == '.' } <= 1) amountText = cleaned
+            },
+            label = "Amount",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BillFrequency.entries.forEach { f ->
+                LChip(f.displayName, frequency == f, onClick = { frequency = f })
+            }
+        }
+
+        CategoryChipsRow(selected = category, onSelect = { category = it })
+
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Due", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            DatePickChip(dueDate, selected = true, onDate = { dueDate = it })
+        }
+
+        if (onPaid != null) LGhostButton("Paid", onClick = onPaid)
+        if (onToggleActive != null) {
+            LGhostButton(if (existing?.isActive == true) "Pause" else "Resume", onClick = onToggleActive)
+        }
+        if (onDelete != null) LGhostButton("Delete", onClick = { confirmDelete = true })
+    }
+
+    if (confirmDelete) {
+        ConfirmDelete(
+            onConfirm = { confirmDelete = false; onDelete?.invoke() },
+            onDismiss = { confirmDelete = false }
+        )
+    }
 }

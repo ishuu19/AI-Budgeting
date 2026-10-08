@@ -3,12 +3,23 @@ package com.ledgerai.app.data.repository
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.ledgerai.app.data.ai.AiConfig
+import com.ledgerai.app.data.ai.AiEdgeClient
 import com.ledgerai.app.data.ai.AiProviderRouter
+import com.ledgerai.app.data.ai.AiResponseType
+import com.ledgerai.app.data.ai.AiResponseValidator
 import com.ledgerai.app.data.ai.ContextBuilder
 import com.ledgerai.app.data.ai.ForecastItemDto
 import com.ledgerai.app.data.ai.ForecastListDto
+import com.ledgerai.app.data.ai.InsightDto
+import com.ledgerai.app.data.ai.InsightStore
 import com.ledgerai.app.data.ai.NetworkAvailability
+import com.ledgerai.app.data.ai.NoteSummaryDto
+import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.ParsedTransactionDto
+import com.ledgerai.app.data.ai.ParsedVoiceIntentDto
+import com.ledgerai.app.data.ai.QuickParse
+import com.ledgerai.app.data.ai.ValidatedAiResponse
+import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.FinancialForecast
 import com.ledgerai.app.domain.model.FinancialHealthScore
 import com.ledgerai.app.domain.model.ParsedTransaction
@@ -17,21 +28,28 @@ import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * AI entry point: cascade via [AiProviderRouter] when online and keys exist (debug BuildConfig).
- * Local fallbacks for health score, budget advice, parse, and forecast.
- * Release BuildConfig AI keys are empty — production should use a Supabase Edge Function.
+ * AI entry point.
+ * Production: [AiEdgeClient] → Supabase Edge Function when SUPABASE_URL + JWT.
+ * Interim: [AiProviderRouter] cascade (debug BuildConfig keys).
+ * All structured replies pass [AiResponseValidator] before use.
  */
 @Singleton
 class AiRepository @Inject constructor(
+    private val edgeClient: AiEdgeClient,
     private val router: AiProviderRouter,
     private val config: AiConfig,
     private val contextBuilder: ContextBuilder,
+    private val validator: AiResponseValidator,
+    private val insightStore: InsightStore,
     private val network: NetworkAvailability,
     private val gson: Gson,
 ) {
@@ -40,15 +58,98 @@ class AiRepository @Inject constructor(
         if (canCallCloud()) {
             val system = """
                 You extract a single personal finance transaction from user text.
+                Put the shop or person name in merchant. Never put the whole sentence in note.
+                If a name is said (at Sarah's, from John, Starbucks), merchant is that name.
+                note is only extra detail, or empty.
                 Reply with ONLY compact JSON (no markdown):
                 {"amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0.0-1.0}
             """.trimIndent()
-            val cloud = router.complete(system, transcript)
-            cloud.getOrNull()?.let { raw ->
-                parseTransactionJson(raw, transcript)?.let { return Result.success(it) }
+            completeStructured(AiResponseType.TRANSACTION, system, transcript).getOrNull()?.let { validated ->
+                val dto = (validated as? ValidatedAiResponse.Transaction)?.dto
+                dto?.let { parseTransactionDto(it, transcript)?.let { tx -> return Result.success(tx) } }
             }
         }
         return Result.success(quickParse(transcript))
+    }
+
+    /**
+     * Multi-intent voice router: TRANSACTION | TASK | REMINDER | ALARM | NOTE | ROUTINE | BILL | GOAL.
+     * DEBT falls through to QuickParse offline when the cloud DTO has no direction field.
+     * Uses structured Edge types when possible; free-form JSON + local heuristics otherwise.
+     */
+    suspend fun parseVoiceIntent(transcript: String): Result<ParsedIntent> {
+        val trimmed = transcript.trim()
+        if (trimmed.isEmpty()) {
+            return Result.failure(IllegalArgumentException("Empty transcript"))
+        }
+
+        if (network.isOnline() && edgeClient.isConfigured()) {
+            edgeClient.voiceIntent(nowHint() + "\nUser said: " + trimmed).getOrNull()?.let { raw ->
+                mapVoiceIntentJson(raw, trimmed)?.let { return Result.success(it) }
+            }
+        }
+
+        if (canCallCloud()) {
+            val system = """
+                Classify the user utterance into one intent and extract fields.
+                If money was spent or received, intent is TRANSACTION, not NOTE.
+                merchant and title must be the specific person or place name when one is said. Do not copy the whole sentence into note or body.
+                Reply with ONLY JSON:
+                {"intent":"TRANSACTION|TASK|REMINDER|ALARM|NOTE|ROUTINE","amount":number|null,"category":"FOOD|...","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"body":string,"due_at":"ISO-8601|null","remind_at":"ISO-8601|null","label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0}
+                For ALARM, repeat_days is a weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0=one-shot; weekdays=62; every day=127).
+                For ROUTINE, set title and repeat_rule.
+            """.trimIndent()
+            completeRaw(system, trimmed).getOrNull()?.let { raw ->
+                mapVoiceIntentJson(raw, trimmed)?.let { return Result.success(it) }
+            }
+
+            // Prefer transaction schema when utterance looks financial
+            completeStructured(
+                AiResponseType.TRANSACTION,
+                "Extract a transaction as JSON.",
+                trimmed
+            ).getOrNull()?.let { validated ->
+                val dto = (validated as? ValidatedAiResponse.Transaction)?.dto
+                parseTransactionDto(dto ?: return@let, trimmed)?.let {
+                    return Result.success(ParsedIntent.Transaction.from(it, trimmed))
+                }
+            }
+        }
+
+        return Result.success(QuickParse.parseVoiceIntent(trimmed))
+    }
+
+    /** True when a recording can be sent to the cloud (online + edge configured). */
+    fun canTranscribeInCloud(): Boolean = network.isOnline() && edgeClient.isConfigured()
+
+    /**
+     * Cloud transcription + parsing in one call (Gemini audio).
+     * Failure means the caller should fall back to offline Vosk.
+     */
+    suspend fun parseVoiceAudio(file: java.io.File): Result<Pair<String, ParsedIntent>> {
+        if (!canTranscribeInCloud()) return Result.failure(IllegalStateException("Cloud voice unavailable"))
+        return runCatching {
+            val bytes = file.readBytes()
+            require(bytes.isNotEmpty() && bytes.size <= 6_000_000) { "Audio empty or too large" }
+            val payload = com.ledgerai.app.data.ai.AudioPayload(
+                mimeType = "audio/mp4",
+                data = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP),
+            )
+            val raw = edgeClient.voiceIntent(
+                nowHint() + "\nTranscribe and interpret the attached audio.", payload
+            ).getOrThrow()
+            val transcript = JsonParser.parseString(raw).asJsonObject.get("transcript")
+                ?.takeIf { !it.isJsonNull }?.asString?.trim().orEmpty()
+            require(transcript.isNotEmpty()) { "Empty transcript" }
+            val intent = mapVoiceIntentJson(raw, transcript)
+                ?: QuickParse.parseVoiceIntent(transcript)
+            transcript to intent
+        }
+    }
+
+    private fun nowHint(): String {
+        val now = java.time.ZonedDateTime.now()
+        return "Current local time: ${now.toLocalDateTime().withNano(0)} (${now.zone}), weekday ${now.dayOfWeek}."
     }
 
     suspend fun generateForecast(
@@ -82,7 +183,8 @@ class AiRepository @Inject constructor(
                 Reply with ONLY JSON (no markdown):
                 {"forecasts":[{"month":"Month Year","predicted_spend":number,"recommended_budget":number,"risk_level":"LOW|MEDIUM|HIGH","insight":"short string"}]}
             """.trimIndent()
-            router.complete(system, compact).getOrNull()?.let { raw ->
+            // Forecast stays free-form JSON (not in fixed 6 types); use cascade/edge as chat-like text.
+            completeRaw(system, compact).getOrNull()?.let { raw ->
                 parseForecastJson(raw)?.let { return Result.success(it) }
             }
         }
@@ -134,7 +236,11 @@ class AiRepository @Inject constructor(
             )
         }
 
-        val contextBlock = contextBuilder.fromFinancialContextString(financialContext)
+        val contextBlock = if (financialContext.isNotBlank()) {
+            contextBuilder.fromFinancialContextString(financialContext)
+        } else {
+            contextBuilder.buildFromRoom()
+        }
         val historyBlock = conversationHistory
             .takeLast(8)
             .joinToString("\n") { (role, content) -> "$role: $content" }
@@ -142,6 +248,7 @@ class AiRepository @Inject constructor(
         val system = buildString {
             appendLine("You are LedgerAI, a concise personal finance assistant.")
             appendLine("Be practical, short, and avoid inventing account balances.")
+            appendLine("Reply with JSON: {\"reply\":\"...\"}")
             if (contextBlock.isNotBlank()) {
                 appendLine()
                 appendLine(contextBlock)
@@ -157,7 +264,15 @@ class AiRepository @Inject constructor(
             append("User: $userMessage")
         }.trim()
 
-        return router.complete(system, user)
+        completeStructured(AiResponseType.CHAT, system, user).getOrNull()?.let { validated ->
+            (validated as? ValidatedAiResponse.Chat)?.reply?.let { return Result.success(it) }
+        }
+
+        // Cascade may return plain text when Edge unavailable
+        return completeRaw(system, user).mapCatching { raw ->
+            validator.parseChatReply(raw)
+                ?: throw IllegalStateException("Empty chat reply")
+        }
     }
 
     suspend fun getBudgetAdvice(
@@ -176,13 +291,270 @@ class AiRepository @Inject constructor(
         }
     )
 
-    private fun canCallCloud(): Boolean =
-        network.isOnline() && config.hasAnyConfiguredProvider()
+    /** Daily dashboard insight (type=insight). Caches via [InsightStore]. */
+    suspend fun generateDailyInsight(forceRefresh: Boolean = false): Result<InsightDto> {
+        if (!forceRefresh) {
+            insightStore.readToday()?.let { return Result.success(it) }
+        }
+        if (!canCallCloud()) {
+            val fallback = InsightDto(
+                title = "Track today",
+                body = "Log a few expenses so LedgerAI can spot patterns tomorrow.",
+                severity = "info",
+                actions = listOf("Add by voice"),
+            )
+            insightStore.save(fallback)
+            return Result.success(fallback)
+        }
 
-    private fun parseTransactionJson(raw: String, fallbackNote: String): ParsedTransaction? {
+        val context = contextBuilder.buildFromRoom()
+        val system = """
+            You are LedgerAI. Produce one actionable daily financial insight.
+            Reply JSON: {"title":"...","body":"...","severity":"info|watch|alert","actions":["..."]}
+        """.trimIndent()
+        completeStructured(AiResponseType.INSIGHT, system, context).getOrNull()?.let { validated ->
+            val dto = (validated as? ValidatedAiResponse.Insight)?.dto
+            if (dto != null) {
+                insightStore.save(dto)
+                return Result.success(dto)
+            }
+        }
+
+        val fallback = InsightDto(
+            title = "Stay on budget",
+            body = "Review your top spending category before adding more purchases today.",
+            severity = "info",
+            actions = emptyList(),
+        )
+        insightStore.save(fallback)
+        return Result.success(fallback)
+    }
+
+    fun cachedInsight(): InsightDto? = insightStore.readToday()
+
+    suspend fun summarizeNote(title: String, body: String): Result<NoteSummaryDto> {
+        if (!canCallCloud()) {
+            return Result.failure(IllegalStateException("Cloud AI unavailable for note summary"))
+        }
+        val system = """
+            Summarize the user's note. Reply JSON:
+            {"summary":"...","tags":["..."],"highlights":["..."]}
+        """.trimIndent()
+        val user = "Title: $title\n\n$body"
+        completeStructured(AiResponseType.NOTE_SUMMARY, system, user).getOrNull()?.let { validated ->
+            (validated as? ValidatedAiResponse.NoteSummary)?.dto?.let { return Result.success(it) }
+        }
+        return Result.failure(IllegalStateException("Could not summarize note"))
+    }
+
+    suspend fun tagNote(title: String, body: String): Result<List<String>> {
+        val summary = summarizeNote(title, body).getOrElse { return Result.failure(it) }
+        val tags = summary.tags.orEmpty()
+        return if (tags.isNotEmpty()) Result.success(tags)
+        else Result.failure(IllegalStateException("No tags returned"))
+    }
+
+    suspend fun askAboutNote(title: String, body: String, question: String): Result<String> {
+        if (!canCallCloud()) {
+            return Result.failure(IllegalStateException("Cloud AI unavailable for note Q&A"))
+        }
+        val system = """
+            Answer the user's question about their note. Reply JSON: {"reply":"..."}
+            Stay faithful to the note; do not invent facts.
+        """.trimIndent()
+        val user = "Title: $title\n\nNote:\n$body\n\nQuestion: $question"
+        completeStructured(AiResponseType.CHAT, system, user).getOrNull()?.let { validated ->
+            (validated as? ValidatedAiResponse.Chat)?.reply?.let { return Result.success(it) }
+        }
+        return Result.failure(IllegalStateException("Could not answer about note"))
+    }
+
+    /**
+     * Prefer Edge Function when SUPABASE_URL is configured; fall back to [AiProviderRouter].
+     */
+    private suspend fun completeStructured(
+        type: AiResponseType,
+        system: String,
+        user: String,
+    ): Result<ValidatedAiResponse> {
+        if (network.isOnline() && edgeClient.isConfigured()) {
+            edgeClient.complete(type, system, user).getOrNull()?.let { raw ->
+                validator.validate(type, raw)?.let { return Result.success(it) }
+            }
+        }
+        if (network.isOnline() && config.hasAnyConfiguredProvider()) {
+            router.complete(system, user).getOrNull()?.let { raw ->
+                validator.validate(type, raw)?.let { return Result.success(it) }
+            }
+        }
+        return Result.failure(IllegalStateException("No AI path available for ${type.wireName}"))
+    }
+
+    private suspend fun completeRaw(system: String, user: String): Result<String> {
+        if (network.isOnline() && edgeClient.isConfigured()) {
+            edgeClient.complete(AiResponseType.CHAT, system, user).getOrNull()?.let { return Result.success(it) }
+        }
+        if (network.isOnline() && config.hasAnyConfiguredProvider()) {
+            return router.complete(system, user)
+        }
+        return Result.failure(IllegalStateException("No AI path available"))
+    }
+
+    private fun canCallCloud(): Boolean =
+        network.isOnline() && (edgeClient.isConfigured() || config.hasAnyConfiguredProvider())
+
+    private fun mapVoiceIntentJson(raw: String, transcript: String): ParsedIntent? {
         return try {
             val json = extractJsonObject(raw) ?: return null
-            val dto = gson.fromJson(json, ParsedTransactionDto::class.java) ?: return null
+            val dto = gson.fromJson(json, ParsedVoiceIntentDto::class.java) ?: return null
+            val confidence = (dto.confidence ?: 0.7f).coerceIn(0f, 1f)
+            when (dto.intent?.uppercase()) {
+                "TASK" -> {
+                    val title = dto.title?.takeIf { it.isNotBlank() } ?: return null
+                    ParsedIntent.Task(
+                        title = title,
+                        notes = dto.body ?: dto.note.orEmpty(),
+                        dueAt = parseDateTime(dto.dueAt),
+                        confidence = confidence,
+                        rawTranscript = transcript,
+                    )
+                }
+                "REMINDER" -> {
+                    val remindAt = parseDateTime(dto.remindAt) ?: return null
+                    ParsedIntent.Reminder(
+                        title = dto.title?.ifBlank { "Reminder" } ?: "Reminder",
+                        label = dto.label?.ifBlank { "Reminder" } ?: "Reminder",
+                        remindAt = remindAt,
+                        confidence = confidence,
+                        rawTranscript = transcript,
+                    )
+                }
+                "ALARM" -> {
+                    val time = parseClockTime(dto.time) ?: return null
+                    val repeatDays = dto.repeatDays?.takeIf { it >= 0 }
+                        ?: QuickParse.parseRepeatDays(transcript)
+                    ParsedIntent.Alarm(
+                        label = dto.label?.ifBlank { "Alarm" } ?: dto.title ?: "Alarm",
+                        time = time,
+                        repeatDays = repeatDays,
+                        confidence = confidence,
+                        rawTranscript = transcript,
+                    )
+                }
+                "NOTE" -> {
+                    if (dto.amount != null) {
+                        val tx = parseTransactionDto(
+                            ParsedTransactionDto(
+                                amount = dto.amount,
+                                category = dto.category,
+                                merchant = dto.merchant?.ifBlank { QuickParse.extractName(transcript) },
+                                note = dto.note,
+                                type = dto.type,
+                                confidence = confidence,
+                            ),
+                            transcript
+                        )
+                        if (tx != null) return ParsedIntent.Transaction.from(tx, transcript)
+                    }
+                    val title = dto.title?.takeIf { it.isNotBlank() }
+                        ?: QuickParse.extractName(transcript).ifBlank { "Note" }
+                    ParsedIntent.Note(
+                        title = title,
+                        body = dto.body ?: dto.note.orEmpty(),
+                        tags = dto.tags.orEmpty(),
+                        confidence = confidence,
+                        rawTranscript = transcript,
+                    )
+                }
+                "ROUTINE" -> {
+                    val title = dto.title?.takeIf { it.isNotBlank() }
+                        ?: dto.label?.takeIf { it.isNotBlank() }
+                        ?: return null
+                    val rule = dto.repeatRule?.uppercase()?.takeIf {
+                        it in setOf("DAILY", "WEEKLY", "WEEKDAYS", "CUSTOM")
+                    } ?: QuickParse.parseRepeatRule(transcript)
+                    ParsedIntent.Routine(
+                        title = title,
+                        notes = dto.body ?: dto.note.orEmpty(),
+                        repeatRule = rule,
+                        confidence = confidence,
+                        rawTranscript = transcript,
+                    )
+                }
+                "BILL" -> {
+                    val amount = dto.amount ?: return null
+                    val name = dto.title?.takeIf { it.isNotBlank() }
+                        ?: dto.merchant?.takeIf { it.isNotBlank() }
+                        ?: dto.label?.takeIf { it.isNotBlank() }
+                        ?: return null
+                    val category = TransactionCategory.entries.find {
+                        it.name.equals(dto.category, ignoreCase = true) ||
+                            it.displayName.equals(dto.category, ignoreCase = true)
+                    } ?: TransactionCategory.SUBSCRIPTIONS
+                    val frequency = when (dto.repeatRule?.uppercase()) {
+                        "WEEKLY" -> BillFrequency.WEEKLY
+                        "YEARLY" -> BillFrequency.YEARLY
+                        "QUARTERLY" -> BillFrequency.QUARTERLY
+                        else -> BillFrequency.MONTHLY
+                    }
+                    ParsedIntent.Bill(
+                        name = name,
+                        amount = amount,
+                        frequency = frequency,
+                        nextDueDate = parseDateTime(dto.dueAt)?.toLocalDate() ?: LocalDate.now(),
+                        category = category,
+                        rawTranscript = transcript,
+                        confidence = confidence,
+                    )
+                }
+                "GOAL" -> {
+                    val amount = dto.amount ?: return null
+                    val name = dto.title?.takeIf { it.isNotBlank() }
+                        ?: dto.merchant?.takeIf { it.isNotBlank() }
+                        ?: dto.label?.takeIf { it.isNotBlank() }
+                        ?: return null
+                    ParsedIntent.Goal(
+                        name = name,
+                        targetAmount = amount,
+                        rawTranscript = transcript,
+                        confidence = confidence,
+                    )
+                }
+                else -> {
+                    val tx = parseTransactionDto(
+                        ParsedTransactionDto(
+                            amount = dto.amount,
+                            category = dto.category,
+                            merchant = dto.merchant,
+                            note = dto.note,
+                            type = dto.type,
+                            confidence = confidence,
+                        ),
+                        transcript
+                    ) ?: return null
+                    ParsedIntent.Transaction.from(tx, transcript)
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun parseDateTime(raw: String?): LocalDateTime? {
+        if (raw.isNullOrBlank()) return null
+        return runCatching { LocalDateTime.parse(raw) }.getOrNull()
+            ?: runCatching { LocalDateTime.parse(raw, DateTimeFormatter.ISO_DATE_TIME) }.getOrNull()
+            ?: runCatching { LocalDate.parse(raw).atStartOfDay() }.getOrNull()
+    }
+
+    private fun parseClockTime(raw: String?): LocalTime? {
+        if (raw.isNullOrBlank()) return null
+        return runCatching { LocalTime.parse(raw) }.getOrNull()
+            ?: runCatching { LocalTime.parse(raw, DateTimeFormatter.ofPattern("H:mm")) }.getOrNull()
+    }
+
+    private fun parseTransactionDto(dto: ParsedTransactionDto, fallbackNote: String): ParsedTransaction? {
+        return try {
             val category = TransactionCategory.entries.find {
                 it.name.equals(dto.category, ignoreCase = true) ||
                     it.displayName.equals(dto.category, ignoreCase = true)
@@ -191,12 +563,16 @@ class AiRepository @Inject constructor(
                 "INCOME" -> TransactionType.INCOME
                 else -> TransactionType.EXPENSE
             }
+            val named = dto.merchant?.takeIf { it.isNotBlank() } ?: QuickParse.extractName(fallbackNote)
+            val note = dto.note.orEmpty().let { raw ->
+                if (raw.equals(fallbackNote, ignoreCase = true) && named.isNotBlank()) "" else raw
+            }
             ParsedTransaction(
                 amount = dto.amount,
                 category = category,
-                merchant = dto.merchant.orEmpty(),
+                merchant = named,
                 date = LocalDate.now(),
-                note = dto.note?.ifBlank { fallbackNote } ?: fallbackNote,
+                note = note,
                 type = type,
                 confidence = dto.confidence ?: 0.7f,
             )
@@ -211,7 +587,6 @@ class AiRepository @Inject constructor(
             val listDto = gson.fromJson(json, ForecastListDto::class.java)
             val items = listDto?.forecasts
             if (items.isNullOrEmpty()) {
-                // Allow a bare array
                 val arr = JsonParser.parseString(extractJsonArray(raw) ?: return null).asJsonArray
                 arr.mapNotNull { el ->
                     gson.fromJson(el, ForecastItemDto::class.java)?.toDomain()
@@ -293,65 +668,5 @@ class AiRepository @Inject constructor(
         }
     }
 
-    private fun quickParse(input: String): ParsedTransaction {
-        val amountRegex = Regex("""[$£€]?\s*(\d+(?:[.,]\d{1,2})?)""")
-        val amount = amountRegex.find(input)?.groupValues?.get(1)
-            ?.replace(",", ".")?.toDoubleOrNull()
-        val lower = input.lowercase()
-        val category = when {
-            lower.containsAny(
-                "food", "lunch", "dinner", "breakfast", "coffee",
-                "restaurant", "grocery", "groceries", "eat", "meal"
-            ) -> TransactionCategory.FOOD
-            lower.containsAny(
-                "uber", "lyft", "gas", "fuel", "taxi", "bus", "train",
-                "transport", "metro", "fare"
-            ) -> TransactionCategory.TRANSPORT
-            lower.containsAny(
-                "netflix", "spotify", "subscription", "hulu",
-                "disney", "apple tv", "prime"
-            ) -> TransactionCategory.SUBSCRIPTIONS
-            lower.containsAny(
-                "movie", "game", "concert", "entertainment",
-                "cinema", "theatre"
-            ) -> TransactionCategory.ENTERTAINMENT
-            lower.containsAny(
-                "amazon", "shopping", "clothes", "shoes",
-                "store", "mall", "buy"
-            ) -> TransactionCategory.SHOPPING
-            lower.containsAny(
-                "doctor", "pharmacy", "gym", "health",
-                "medicine", "hospital"
-            ) -> TransactionCategory.HEALTH
-            lower.containsAny(
-                "electric", "water", "internet", "utility",
-                "bill", "wifi"
-            ) -> TransactionCategory.UTILITIES
-            lower.containsAny("rent", "mortgage", "housing") -> TransactionCategory.RENT
-            lower.containsAny(
-                "salary", "paycheck", "income", "paid me",
-                "received", "earned"
-            ) -> TransactionCategory.SALARY
-            else -> TransactionCategory.OTHER
-        }
-        val type = if (category == TransactionCategory.SALARY ||
-            lower.containsAny("received", "earned", "income", "got paid", "deposit")
-        ) TransactionType.INCOME else TransactionType.EXPENSE
-
-        val merchantCandidates = input.split(" ").filter { w ->
-            w.length > 3 && w[0].isUpperCase() && !w.matches(Regex("\\d.*"))
-        }
-        val merchant = merchantCandidates.lastOrNull() ?: ""
-
-        return ParsedTransaction(
-            amount = amount,
-            category = category,
-            merchant = merchant,
-            date = LocalDate.now(),
-            note = input,
-            type = type
-        )
-    }
+    private fun quickParse(input: String): ParsedTransaction = QuickParse.parse(input)
 }
-
-private fun String.containsAny(vararg terms: String) = terms.any { this.contains(it) }

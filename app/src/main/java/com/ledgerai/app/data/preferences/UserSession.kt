@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -20,8 +21,21 @@ data class UserInfo(
     val userId: String = "",
     val displayName: String = "",
     val email: String = "",
-    val photoUrl: String = ""
-)
+    val photoUrl: String = "",
+    /** Supabase access JWT; empty for local-only sessions. */
+    val accessToken: String = "",
+    /** Supabase refresh token; empty for local-only sessions. */
+    val refreshToken: String = "",
+    /** Access-token expiry instant (epoch millis); 0 if unknown. */
+    val expiresAtEpochMs: Long = 0L,
+) {
+    /** Cloud session: non-local user id + Bearer JWT present. */
+    val hasRemoteUser: Boolean
+        get() = isLoggedIn &&
+            userId.isNotBlank() &&
+            !userId.startsWith("local-") &&
+            accessToken.isNotBlank()
+}
 
 @Singleton
 class UserSession @Inject constructor(@ApplicationContext private val context: Context) {
@@ -34,6 +48,9 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
         val KEY_NAME = stringPreferencesKey("display_name")
         val KEY_EMAIL = stringPreferencesKey("email")
         val KEY_PHOTO = stringPreferencesKey("photo_url")
+        val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+        val KEY_EXPIRES_AT = longPreferencesKey("expires_at_epoch_ms")
     }
 
     val userInfo: Flow<UserInfo> = store.data.map { prefs ->
@@ -42,17 +59,34 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
             userId = prefs[KEY_USER_ID] ?: "",
             displayName = prefs[KEY_NAME] ?: "",
             email = prefs[KEY_EMAIL] ?: "",
-            photoUrl = prefs[KEY_PHOTO] ?: ""
+            photoUrl = prefs[KEY_PHOTO] ?: "",
+            accessToken = prefs[KEY_ACCESS_TOKEN] ?: "",
+            refreshToken = prefs[KEY_REFRESH_TOKEN] ?: "",
+            expiresAtEpochMs = prefs[KEY_EXPIRES_AT] ?: 0L,
         )
     }
 
-    suspend fun saveUser(userId: String, name: String, email: String, photoUrl: String) {
+    /** Supabase JWT for Edge Function calls; empty when local-only. */
+    val accessToken: Flow<String> = userInfo.map { it.accessToken }
+
+    suspend fun saveUser(
+        userId: String,
+        name: String,
+        email: String,
+        photoUrl: String,
+        accessToken: String = "",
+        refreshToken: String = "",
+        expiresAtEpochMs: Long = 0L,
+    ) {
         store.edit { prefs ->
             prefs[KEY_LOGGED_IN] = true
             prefs[KEY_USER_ID] = userId
             prefs[KEY_NAME] = name
             prefs[KEY_EMAIL] = email
             prefs[KEY_PHOTO] = photoUrl
+            prefs[KEY_ACCESS_TOKEN] = accessToken
+            prefs[KEY_REFRESH_TOKEN] = refreshToken
+            prefs[KEY_EXPIRES_AT] = expiresAtEpochMs
         }
     }
 

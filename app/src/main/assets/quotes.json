@@ -1,52 +1,1202 @@
 [
-  {"text": "A budget is telling your money where to go instead of wondering where it went.", "author": "John C. Maxwell"},
-  {"text": "Do not save what is left after spending, but spend what is left after saving.", "author": "Warren Buffett"},
-  {"text": "Beware of little expenses; a small leak will sink a great ship.", "author": "Benjamin Franklin"},
-  {"text": "The habit of saving is itself an education.", "author": "T.T. Munger"},
-  {"text": "Financial peace isn't the acquisition of stuff. It's learning to live on less than you make.", "author": "Dave Ramsey"},
-  {"text": "An investment in knowledge pays the best interest.", "author": "Benjamin Franklin"},
-  {"text": "Wealth consists not in having great possessions, but in having few wants.", "author": "Epictetus"},
-  {"text": "The goal isn't more money. The goal is living life on your terms.", "author": "Chris Brogan"},
-  {"text": "Never spend your money before you have it.", "author": "Thomas Jefferson"},
-  {"text": "It's not your salary that makes you rich, it's your spending habits.", "author": "Charles A. Jaffe"},
-  {"text": "Save a part of every dollar you earn.", "author": "George Clason"},
-  {"text": "The best time to plant a tree was twenty years ago. The second best time is now.", "author": "Chinese proverb"},
-  {"text": "Too many people spend money they haven't earned to buy things they don't want.", "author": "Will Rogers"},
-  {"text": "A penny saved is a penny earned.", "author": "Benjamin Franklin"},
-  {"text": "Formal education will make you a living; self-education will make you a fortune.", "author": "Jim Rohn"},
-  {"text": "Money is only a tool. It will take you wherever you wish, but it will not replace you as the driver.", "author": "Ayn Rand"},
-  {"text": "If you buy things you do not need, soon you will have to sell things you need.", "author": "Warren Buffett"},
-  {"text": "The price of anything is the amount of life you exchange for it.", "author": "Henry David Thoreau"},
-  {"text": "Frugality includes all the other virtues.", "author": "Cicero"},
-  {"text": "Do something today that your future self will thank you for.", "author": "Sean Patrick Flanery"},
-  {"text": "Discipline is choosing between what you want now and what you want most.", "author": "Abraham Lincoln"},
-  {"text": "You must gain control over your money or the lack of it will forever control you.", "author": "Dave Ramsey"},
-  {"text": "Rich people have small TVs and big libraries.", "author": "Zig Ziglar"},
-  {"text": "Every time you borrow money, you're robbing your future self.", "author": "Nathan Morris"},
-  {"text": "Success is the sum of small efforts repeated day in and day out.", "author": "Robert Collier"},
-  {"text": "Don't tell me what you value. Show me your budget, and I'll tell you what you value.", "author": "Joe Biden"},
-  {"text": "The art is not in making money, but in keeping it.", "author": "Proverb"},
-  {"text": "Compound interest is the eighth wonder of the world.", "author": "Albert Einstein"},
-  {"text": "Live like no one else now, so later you can live like no one else.", "author": "Dave Ramsey"},
-  {"text": "Money looks better in the bank than on your feet.", "author": "Sophia Amoruso"},
-  {"text": "A simple life is not seeing how little we can get by with—but how efficiently we can put first things first.", "author": "Richard Foster"},
-  {"text": "He who buys what he does not need steals from himself.", "author": "Swedish proverb"},
-  {"text": "The question isn't at what age I want to retire, it's at what income.", "author": "George Foreman"},
-  {"text": "Empty pockets never held anyone back. Only empty heads and empty hearts can do that.", "author": "Norman Vincent Peale"},
-  {"text": "Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness.", "author": "Charles Dickens"},
-  {"text": "What we plant in the soil of contemplation, we shall reap in the harvest of action.", "author": "Meister Eckhart"},
-  {"text": "Small daily improvements over time lead to stunning results.", "author": "Robin Sharma"},
-  {"text": "It is not the man who has too little, but the man who craves more, that is poor.", "author": "Seneca"},
-  {"text": "Budgeting isn't about limiting yourself—it's about making the things that excite you possible.", "author": "Anonymous"},
-  {"text": "Time is more valuable than money. You can get more money, but you cannot get more time.", "author": "Jim Rohn"},
-  {"text": "The safest way to double your money is to fold it over and put it in your pocket.", "author": "Kin Hubbard"},
-  {"text": "Prosperity begins with a clear plan and consistent action.", "author": "LedgerAI"},
-  {"text": "Track every expense once, and you will spend with intention forever.", "author": "LedgerAI"},
-  {"text": "Pay yourself first; the rest of the world can wait its turn.", "author": "George Clason"},
-  {"text": "Clarity about money creates calm about life.", "author": "LedgerAI"},
-  {"text": "A goal without a number and a date is only a wish.", "author": "LedgerAI"},
-  {"text": "Cut the noise, keep the essentials, grow the surplus.", "author": "LedgerAI"},
-  {"text": "Today's small choice is tomorrow's large balance.", "author": "LedgerAI"},
-  {"text": "Know your numbers so your numbers never surprise you.", "author": "LedgerAI"},
-  {"text": "Voice your plan, then follow it with quiet discipline.", "author": "LedgerAI"}
+  {
+    "text": "A budget is telling your money where to go instead of wondering where it went.",
+    "author": "John C. Maxwell"
+  },
+  {
+    "text": "Do not save what is left after spending, but spend what is left after saving.",
+    "author": "Warren Buffett"
+  },
+  {
+    "text": "Beware of little expenses; a small leak will sink a great ship.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "The habit of saving is itself an education.",
+    "author": "T.T. Munger"
+  },
+  {
+    "text": "An investment in knowledge pays the best interest.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "Wealth consists not in having great possessions, but in having few wants.",
+    "author": "Epictetus"
+  },
+  {
+    "text": "Never spend your money before you have it.",
+    "author": "Thomas Jefferson"
+  },
+  {
+    "text": "Save a part of every dollar you earn.",
+    "author": "George Clason"
+  },
+  {
+    "text": "A penny saved is a penny earned.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "The price of anything is the amount of life you exchange for it.",
+    "author": "Henry David Thoreau"
+  },
+  {
+    "text": "Frugality includes all the other virtues.",
+    "author": "Cicero"
+  },
+  {
+    "text": "It is not the man who has too little, but the man who craves more, that is poor.",
+    "author": "Seneca"
+  },
+  {
+    "text": "Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness.",
+    "author": "Charles Dickens"
+  },
+  {
+    "text": "He who buys what he does not need steals from himself.",
+    "author": "Swedish proverb"
+  },
+  {
+    "text": "Economy is a great revenue.",
+    "author": "Cicero"
+  },
+  {
+    "text": "Contentment is natural wealth; luxury is artificial poverty.",
+    "author": "Socrates"
+  },
+  {
+    "text": "He is richest who is content with the least.",
+    "author": "Socrates"
+  },
+  {
+    "text": "Rather go to bed without dinner than to rise in debt.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "Waste neither time nor money.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "If you would be wealthy, think of saving as well as getting.",
+    "author": "Benjamin Franklin"
+  },
+  {
+    "text": "The borrower is servant to the lender.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Diligence is the mother of good fortune.",
+    "author": "Miguel de Cervantes"
+  },
+  {
+    "text": "Enough is a feast.",
+    "author": "Proverb"
+  },
+  {
+    "text": "A fool and his money are soon parted.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Cut your coat according to your cloth.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Willful waste makes woeful want.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Take care of the pence and the pounds will take care of themselves.",
+    "author": "Proverb"
+  },
+  {
+    "text": "He who does not economize will have to agonize.",
+    "author": "Confucius"
+  },
+  {
+    "text": "To be satisfied with little is true wealth.",
+    "author": "Publius Syrus"
+  },
+  {
+    "text": "Desire less and you already own more.",
+    "author": "Epictetus"
+  },
+  {
+    "text": "Live simply that others may simply live.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Thrift is the philosopher's stone.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Little leaks empty large purses.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Empty pockets teach louder than full shelves.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Guard the small coins and the large ones stay.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Pay yourself first before the world asks for more.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "What you do not measure, you cannot improve.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet accounts make loud freedom.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Spend on purpose, not on impulse.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Today's restraint is tomorrow's option.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A clear ledger calms a restless mind.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Save first, enjoy later, regret never.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Order your wants and your wallet follows.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Debt is a claim on days you have not lived.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Prefer needs over noise.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "The best interest is interest you earn, not interest you pay.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Consistency compounds; chaos consumes.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Write the plan before you write the check.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Freedom grows where surplus is protected.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Buy time with thrift, not thrills with debt.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A budget is a map, not a cage.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Know the cost before you love the thing.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Patience is an asset class.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Fortune favors the prepared ledger.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Name every dollar a job.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Industry, thrift, and self-control are not difficult; they are necessary.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A small daily surplus beats a rare windfall.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Track once, decide wisely forever.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Voice your plan, then follow it with quiet discipline.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Know your numbers so your numbers never surprise you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut the noise, keep the essentials, grow the surplus.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Today's small choice is tomorrow's large balance.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Clarity about money creates calm about life.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A goal without a number and a date is only a wish.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Prosperity begins with a clear plan and consistent action.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Track every expense once, and you will spend with intention forever.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Choose boring wealth over exciting debt.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Your calendar reveals your true budget.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Silence the sale; hear the goal.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Small automatic transfers beat big intentions.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Repair before replace when you can.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A rainy-day fund is sunshine stored.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Interest paid is a tax on impatience.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Interest earned is a wage for waiting.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Compare wants to goals, not to neighbors.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Finish the month with room, not rush.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Log the expense while memory is fresh.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Celebrate progress, not purchases.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Delay is a discount you give yourself.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Clarity costs minutes; confusion costs months.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Build buffers before you build lifestyle.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Prefer cash flow over cash flash.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "The cheapest luxury is contentment.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Make saving the default path.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Your future self is a silent partner.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Count blessings and balances alike.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Ask twice before you spend twice.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Protect the first dollar more than the last.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Price tags are questions; answer with values.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Unsubscribe from what you ignore.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cook once, save twice.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Walk when hurry is only habit.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Keep calm and reconcile.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Surplus is freedom rehearsed daily.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A receipt is a teacher if you read it.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Habits beat hacks.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Plan the spend; then spend the plan.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Wealth is options under control.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Impulse is expensive; pause is free.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Earn honestly, spend slowly, give wisely.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "The ledger does not lie; listen.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "One less want is one more win.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Steady beats flashy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Save in silence; spend with intention.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cash on hand is courage on standby.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Budgeting is kindness to future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Debt shrinks dreams; surplus stretches them.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Review weekly; adjust kindly.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Numbers are neutral; choices are not.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Frugal is not fearful; it is free.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Buy tools that earn; skip toys that idle.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Sleep on big purchases.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A written goal outspends a spoken wish.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Keep fees small and focus large.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Maintenance prevents replacement.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Generosity fits best after stability.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Your values should outvote your ads.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Compound patience.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Store value in skills and savings.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Less clutter, more cash.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Honor the budget you wrote when calm.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Track joy per dollar, not only cost.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Avoid lifestyle creep; prefer lifestyle craft.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Pay bills early; pay worries less.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "An emergency fund is a peace treaty.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Separate needs, wants, and noise.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "The richest hour is an hour not wasted.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Choose durable over disposable.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Shop with a list; leave with a plan.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Unused subscriptions are quiet thieves.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Invest in learning before luxury.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Keep a margin for the unexpected.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Thankfulness reduces appetite for more.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Money follows attention.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Protect downside; let upside grow.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Simple systems survive busy weeks.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Record it, then respect it.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "A balanced month is a quiet victory.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Keep 3 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 4 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: skip one impulse buy; bank the difference and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Practice: let a surplus of 6 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 7 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 8 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 9 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 10 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 11 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 12 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 13 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 14 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 15 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 16 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 17 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 18 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 19 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: skip one impulse buy; bank the difference and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Let a surplus of 4 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 5 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 6 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 7 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: name 8 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Quiet tip: raise your savings rate by 9 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Check balances at least 10 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: cook at home 11 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: put 12 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: leave 13 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Note: set aside 14 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: read 15 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Keep 16 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 17 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: let a surplus of 19 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 3 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 4 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 5 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 6 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 7 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 8 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 9 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 10 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 11 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 12 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 13 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 14 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 15 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Let a surplus of 17 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 18 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 19 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 3 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: name 4 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Quiet tip: raise your savings rate by 5 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Check balances at least 6 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: cook at home 7 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: put 8 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: leave 9 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Note: set aside 10 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: read 11 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Keep 12 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 13 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: let a surplus of 15 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 16 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 17 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 18 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 19 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 3 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 4 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 5 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 6 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 7 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 8 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 9 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 10 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 11 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Let a surplus of 13 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 14 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 15 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 16 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: name 17 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Quiet tip: raise your savings rate by 18 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Check balances at least 19 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: cook at home 3 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: put 4 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: leave 5 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Note: set aside 6 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: read 7 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Keep 8 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 9 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: let a surplus of 11 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 12 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 13 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 14 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 15 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 16 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 17 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 18 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 19 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 3 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 4 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 5 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 6 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 7 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Let a surplus of 9 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 10 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 11 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 12 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: name 13 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Quiet tip: raise your savings rate by 14 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Check balances at least 15 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: cook at home 16 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: put 17 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: leave 18 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Note: set aside 19 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: read 3 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Keep 4 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 5 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: let a surplus of 7 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 8 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 9 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 10 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 11 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 12 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 13 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 14 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 15 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 16 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 17 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 18 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 19 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 3 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Let a surplus of 5 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 6 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 7 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 8 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: name 9 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Quiet tip: raise your savings rate by 10 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Check balances at least 11 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: cook at home 12 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: put 13 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: leave 14 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Note: set aside 15 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: read 16 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Keep 17 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: review spending every 18 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: let a surplus of 3 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: transfer 4 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Quiet tip: wait 5 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Cut 6 small leaks this month today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Remember: name 7 expenses you can live without and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Rule: raise your savings rate by 8 points if you can without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: check balances at least 9 times a week with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Note: cook at home 10 more nights this week.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Quiet tip: put 11 toward the highest-interest debt first today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Leave 12 unspent as a buffer and rest easy.",
+    "author": "Anonymous"
+  },
+  {
+    "text": "Remember: set aside 13 for repairs before upgrades without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Rule: read 14 receipts before you discard them with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Practice: keep 15 percent for future you.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Note: review spending every 16 days today.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Let a surplus of 18 grow without applause without drama.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Remember: transfer 19 before you browse the shops with patience.",
+    "author": "Proverb"
+  },
+  {
+    "text": "Rule: wait 3 days before any nonessential buy.",
+    "author": "LedgerAI"
+  },
+  {
+    "text": "Practice: cut 4 small leaks this month today.",
+    "author": "Proverb"
+  }
 ]

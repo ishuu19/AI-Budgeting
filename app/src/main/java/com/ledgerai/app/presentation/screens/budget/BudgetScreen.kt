@@ -1,34 +1,40 @@
 package com.ledgerai.app.presentation.screens.budget
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.domain.model.Budget
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.screens.transactions.CategoryChipsRow
+import com.ledgerai.app.presentation.screens.transactions.ConfirmDelete
+import com.ledgerai.app.presentation.screens.transactions.amountInput
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val AlertSteps = listOf(50, 70, 80, 90)
+
 @Composable
 fun BudgetScreen(
-    onNavigateToAi: () -> Unit = {},
+    onNavigateToAi: () -> Unit,
+    onBack: () -> Unit = {},
     viewModel: BudgetViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showAddDialog by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Budget?>(null) }
 
     LaunchedEffect(state.snackbarMessage) {
         state.snackbarMessage?.let {
@@ -37,188 +43,197 @@ fun BudgetScreen(
         }
     }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Budget Planner") }) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "Add budget")
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        if (state.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            return@Scaffold
-        }
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (state.budgets.isEmpty()) {
-                item {
-                    EmptyStateCard(
-                        emoji = "📊",
-                        title = "No budgets set",
-                        subtitle = "Tap + to set your first monthly budget"
-                    )
-                }
-            } else {
-                items(state.budgets, key = { it.id }) { budget ->
-                    BudgetCard(
-                        budget = budget,
-                        aiAdvice = state.aiAdvice[budget.id],
-                        onGetAdvice = { viewModel.getAiAdvice(budget) },
-                        onDelete = { viewModel.deleteBudget(budget) }
-                    )
-                }
-            }
-        }
+    val daysSub = when {
+        state.daysLeft <= 0 -> "Last day"
+        state.daysLeft == 1 -> "1 day left"
+        else -> "${state.daysLeft} days left"
     }
 
-    if (showAddDialog) {
-        AddBudgetDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { category, limit, threshold ->
-                viewModel.addBudget(category, limit, threshold)
-                showAddDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-private fun BudgetCard(
-    budget: Budget,
-    aiAdvice: String?,
-    onGetAdvice: () -> Unit,
-    onDelete: () -> Unit
-) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    CategoryDot(budget.category)
-                    Text(budget.category.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                }
-                Row {
-                    IconButton(onClick = onGetAdvice, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Filled.AutoAwesome, contentDescription = "AI Advice",
-                            modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("${"%.2f".format(budget.spent)} spent", style = MaterialTheme.typography.bodyMedium)
-                Text("of ${"%.2f".format(budget.monthlyLimit)}", style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            BudgetProgressBar(usagePercent = budget.usagePercent)
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                val statusText = when {
-                    budget.isOverBudget -> "Over budget!"
-                    budget.isNearLimit -> "${budget.usagePercent}% used — near limit"
-                    else -> "${budget.usagePercent}% used"
-                }
-                Text(statusText, style = MaterialTheme.typography.labelSmall,
-                    color = if (budget.isOverBudget) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("${"%.2f".format(budget.remaining)} left", style = MaterialTheme.typography.labelSmall)
-            }
-
-            aiAdvice?.let {
-                HorizontalDivider()
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Filled.AutoAwesome, contentDescription = null,
-                        modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text(it, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Budget?") },
-            text = { Text("Remove budget for ${budget.category.displayName}?") },
-            confirmButton = {
-                TextButton(onClick = { onDelete(); showDeleteDialog = false }) { Text("Delete") }
+    Box(Modifier.fillMaxSize()) {
+        LScreen(
+            title = "Budget",
+            onBack = onBack,
+            action = {
+                LGhostButton("Ask", onNavigateToAi, modifier = Modifier.width(84.dp).height(40.dp))
             },
-            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } }
+            fab = { LFab(Icons.Filled.Add, onClick = { adding = true }) }
+        ) {
+            item(key = "hero") {
+                LHero(
+                    label = "Left",
+                    value = money(state.totalRemaining),
+                    sub = daysSub,
+                    valueColor = if (state.totalRemaining < 0) L.Danger else L.OnBox
+                )
+            }
+
+            item(key = "stats") {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    LStat(
+                        "Daily",
+                        money(state.dailyAllowance),
+                        Modifier.weight(1f),
+                        valueColor = if (state.dailyAllowance < 0) L.Danger else L.OnBox
+                    )
+                    LStat(
+                        "Unbudgeted",
+                        money(state.unbudgetedSpend),
+                        Modifier.weight(1f),
+                        valueColor = if (state.unbudgetedSpend > 0) L.Danger else L.OnBox
+                    )
+                }
+            }
+
+            if (state.canCopyLastMonth) {
+                item(key = "copy") {
+                    LButton("Copy", onClick = { viewModel.copyLastMonth() })
+                }
+            }
+
+            if (!state.isLoading && state.budgets.isEmpty()) {
+                item(key = "empty") { LEmpty(Icons.Filled.PieChart, "No budgets") }
+            }
+
+            items(state.budgets, key = { it.id }) { budget ->
+                BudgetCard(
+                    budget = budget,
+                    advice = state.aiAdvice[budget.id],
+                    daysLeft = state.daysLeft,
+                    onClick = { editing = budget }
+                )
+            }
+        }
+
+        SnackbarHost(
+            snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 88.dp)
         )
+    }
+
+    if (adding) {
+        BudgetSheet(
+            existing = null,
+            advice = null,
+            onDismiss = { adding = false },
+            onSave = { category, limit, threshold ->
+                viewModel.addBudget(category, limit, threshold)
+                adding = false
+            }
+        )
+    }
+
+    editing?.let { budget ->
+        key(budget.id) {
+            BudgetSheet(
+                existing = budget,
+                advice = state.aiAdvice[budget.id],
+                onDismiss = { editing = null },
+                onSave = { category, limit, threshold ->
+                    viewModel.updateBudget(budget, category, limit, threshold)
+                    editing = null
+                },
+                onAdvice = { viewModel.getAiAdvice(budget) },
+                onDelete = {
+                    viewModel.deleteBudget(budget)
+                    editing = null
+                }
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddBudgetDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (TransactionCategory, Double, Int) -> Unit
-) {
-    var limitText by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(TransactionCategory.FOOD) }
-    var threshold by remember { mutableStateOf(80f) }
-    var categoryExpanded by remember { mutableStateOf(false) }
+private fun BudgetCard(budget: Budget, advice: String?, daysLeft: Int, onClick: () -> Unit) {
+    val perDay = budget.remaining / daysLeft.coerceAtLeast(1)
+    LCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                budget.category.displayName,
+                style = MaterialTheme.typography.titleSmall,
+                color = L.OnBox,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                "${money(budget.spent)} / ${money(budget.monthlyLimit)}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (budget.isOverBudget) L.Danger else L.OnBoxMuted
+            )
+        }
+        LProgress(
+            fraction = if (budget.monthlyLimit > 0) (budget.spent / budget.monthlyLimit).toFloat() else 0f,
+            color = if (budget.isOverBudget) L.Danger else L.Gold
+        )
+        Text(
+            "${money(perDay)}/day left",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (perDay < 0) L.Danger else L.OnBoxMuted
+        )
+        if (!advice.isNullOrBlank()) {
+            Text(advice, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+        }
+    }
+}
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Set Monthly Budget") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                ExposedDropdownMenuBox(expanded = categoryExpanded, onExpandedChange = { categoryExpanded = it }) {
-                    OutlinedTextField(
-                        value = selectedCategory.displayName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Category") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
-                    )
-                    ExposedDropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
-                        TransactionCategory.entries.forEach { cat ->
-                            DropdownMenuItem(
-                                text = { Text(cat.displayName) },
-                                onClick = { selectedCategory = cat; categoryExpanded = false }
-                            )
-                        }
-                    }
-                }
-                OutlinedTextField(
-                    value = limitText,
-                    onValueChange = { limitText = it },
-                    label = { Text("Monthly Limit ($)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                Text("Alert at ${threshold.toInt()}%", style = MaterialTheme.typography.bodySmall)
-                Slider(value = threshold, onValueChange = { threshold = it }, valueRange = 50f..95f)
+@Composable
+private fun BudgetSheet(
+    existing: Budget?,
+    advice: String?,
+    onDismiss: () -> Unit,
+    onSave: (TransactionCategory, Double, Int) -> Unit,
+    onAdvice: () -> Unit = {},
+    onDelete: (() -> Unit)? = null
+) {
+    var category by remember { mutableStateOf(existing?.category ?: TransactionCategory.FOOD) }
+    var limitText by remember { mutableStateOf(existing?.monthlyLimit?.let(::amountInput) ?: "") }
+    var threshold by remember { mutableIntStateOf(existing?.alertThreshold ?: 80) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    val limit = limitText.toDoubleOrNull()?.takeIf { it > 0 }
+    val steps = remember { (AlertSteps + threshold).distinct().sorted() }
+
+    LSheet(
+        title = if (existing != null) "Edit" else "New",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { limit?.let { onSave(category, it, threshold) } },
+        primaryEnabled = limit != null,
+        secondary = if (existing != null && onDelete != null) "Delete" else null,
+        onSecondary = { confirmDelete = true }
+    ) {
+        CategoryChipsRow(selected = category, onSelect = { category = it })
+
+        LField(
+            value = limitText,
+            onValueChange = { raw ->
+                val cleaned = raw.filter { it.isDigit() || it == '.' }
+                if (cleaned.count { it == '.' } <= 1) limitText = cleaned
+            },
+            label = "Limit",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+        )
+
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Alert", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            steps.forEach { pct ->
+                LChip("$pct%", threshold == pct, onClick = { threshold = pct })
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val limit = limitText.toDoubleOrNull() ?: return@TextButton
-                    onConfirm(selectedCategory, limit, threshold.toInt())
-                },
-                enabled = limitText.toDoubleOrNull() != null
-            ) { Text("Add") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
+        }
+
+        if (existing != null) {
+            if (!advice.isNullOrBlank()) {
+                Text(advice, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
+            } else {
+                LGhostButton("Advice", onClick = onAdvice)
+            }
+        }
+    }
+
+    if (confirmDelete) {
+        ConfirmDelete(
+            onConfirm = { confirmDelete = false; onDelete?.invoke() },
+            onDismiss = { confirmDelete = false }
+        )
+    }
 }

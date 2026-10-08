@@ -1,3 +1,4 @@
+# LedgerAI — application package: com.ledgerai.app
 # Add project specific ProGuard rules here.
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
@@ -33,6 +34,18 @@
 -keep class javax.inject.** { *; }
 -keep class * extends dagger.hilt.android.internal.managers.ActivityComponentManager { *; }
 
-# App models (keep for Gson/Room serialization)
--keep class com.budgetai.app.data.remote.model.** { *; }
--keep class com.budgetai.app.domain.model.** { *; }
+# App models (keep for Gson/Room serialization) — package com.ledgerai.app
+-keep class com.ledgerai.app.domain.model.** { *; }
+-keep class com.ledgerai.app.data.ai.** { *; }
+-keep class com.ledgerai.app.data.local.room.** { *; }
+-keep class com.ledgerai.app.data.sync.** { *; }
+-keep class com.ledgerai.app.widget.** { *; }
+
+# Vosk / native
+-keep class org.vosk.** { *; }
+-dontwarn org.vosk.**
+
+# Supabase / Kotlin serialization
+-keepattributes *Annotation*, InnerClasses
+-dontwarn kotlinx.serialization.**
+-keep class kotlinx.serialization.** { *; }

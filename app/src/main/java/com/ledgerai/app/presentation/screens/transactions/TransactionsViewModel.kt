@@ -13,13 +13,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import javax.inject.Inject
 
 data class TransactionsUiState(
     val transactions: List<Transaction> = emptyList(),
     val isLoading: Boolean = true,
     val showAddSheet: Boolean = false,
+    val editingTransaction: Transaction? = null,
     val parsedTransaction: ParsedTransaction? = null,
+    val copyDraft: Transaction? = null,
     val isParsingVoice: Boolean = false,
     val snackbarMessage: String? = null
 )
@@ -42,11 +45,51 @@ class TransactionsViewModel @Inject constructor(
     }
 
     fun showAddSheet(parsed: ParsedTransaction? = null) {
-        _uiState.update { it.copy(showAddSheet = true, parsedTransaction = parsed) }
+        _uiState.update {
+            it.copy(showAddSheet = true, parsedTransaction = parsed, copyDraft = null)
+        }
     }
 
     fun hideAddSheet() {
-        _uiState.update { it.copy(showAddSheet = false, parsedTransaction = null) }
+        _uiState.update { it.copy(showAddSheet = false, parsedTransaction = null, copyDraft = null) }
+    }
+
+    fun showEditSheet(transaction: Transaction) {
+        _uiState.update { it.copy(editingTransaction = transaction) }
+    }
+
+    fun hideEditSheet() {
+        _uiState.update { it.copy(editingTransaction = null) }
+    }
+
+    fun copyToNew(
+        amount: Double,
+        type: TransactionType,
+        category: TransactionCategory,
+        merchant: String,
+        note: String,
+        location: String = "",
+        isRecurring: Boolean = false
+    ) {
+        val draft = SpendQuery.duplicateToday(
+            Transaction(
+                amount = amount,
+                type = type,
+                category = category,
+                merchant = merchant,
+                note = note,
+                location = location,
+                isRecurring = isRecurring
+            )
+        )
+        _uiState.update {
+            it.copy(
+                editingTransaction = null,
+                showAddSheet = true,
+                copyDraft = draft,
+                parsedTransaction = null
+            )
+        }
     }
 
     fun parseNaturalLanguage(input: String) {
@@ -54,7 +97,15 @@ class TransactionsViewModel @Inject constructor(
             _uiState.update { it.copy(isParsingVoice = true) }
             aiRepo.parseVoiceTransaction(input).fold(
                 onSuccess = { parsed ->
-                    _uiState.update { it.copy(isParsingVoice = false, parsedTransaction = parsed, showAddSheet = true) }
+                    _uiState.update {
+                        it.copy(
+                            isParsingVoice = false,
+                            parsedTransaction = parsed,
+                            showAddSheet = true,
+                            copyDraft = null,
+                            editingTransaction = null
+                        )
+                    }
                 },
                 onFailure = {
                     _uiState.update { it.copy(isParsingVoice = false, snackbarMessage = "Could not parse transaction") }
@@ -69,7 +120,9 @@ class TransactionsViewModel @Inject constructor(
         category: TransactionCategory,
         merchant: String,
         note: String,
-        date: LocalDate
+        date: LocalDate,
+        location: String = "",
+        isRecurring: Boolean = false
     ) {
         viewModelScope.launch {
             val transaction = Transaction(
@@ -79,10 +132,44 @@ class TransactionsViewModel @Inject constructor(
                 merchant = merchant,
                 note = note,
                 date = date,
+                location = location,
+                isRecurring = isRecurring,
                 createdAt = LocalDateTime.now()
             )
             transactionRepo.insert(transaction)
-            _uiState.update { it.copy(showAddSheet = false, snackbarMessage = "Transaction added") }
+            _uiState.update {
+                it.copy(showAddSheet = false, copyDraft = null, parsedTransaction = null, snackbarMessage = "Transaction added")
+            }
+        }
+    }
+
+    fun updateTransaction(
+        existing: Transaction,
+        amount: Double,
+        type: TransactionType,
+        category: TransactionCategory,
+        merchant: String,
+        note: String,
+        date: LocalDate,
+        location: String = "",
+        isRecurring: Boolean = false
+    ) {
+        viewModelScope.launch {
+            transactionRepo.update(
+                existing.copy(
+                    amount = amount,
+                    type = type,
+                    category = category,
+                    merchant = merchant,
+                    note = note,
+                    date = date,
+                    location = location,
+                    isRecurring = isRecurring
+                )
+            )
+            _uiState.update {
+                it.copy(editingTransaction = null, snackbarMessage = "Transaction updated")
+            }
         }
     }
 
@@ -96,4 +183,38 @@ class TransactionsViewModel @Inject constructor(
     fun clearSnackbar() {
         _uiState.update { it.copy(snackbarMessage = null) }
     }
+}
+
+object SpendQuery {
+    fun inMonth(transactions: List<Transaction>, month: YearMonth): List<Transaction> =
+        transactions.filter { YearMonth.from(it.date) == month }
+
+    fun monthNet(transactions: List<Transaction>): Double = transactions.fold(0.0) { acc, tx ->
+        acc + if (tx.type == TransactionType.INCOME) tx.amount else -tx.amount
+    }
+
+    fun matchesSearch(tx: Transaction, query: String): Boolean {
+        val q = query.trim()
+        if (q.isEmpty()) return true
+        return listOf(tx.merchant, tx.note, tx.category.displayName)
+            .any { it.contains(q, ignoreCase = true) }
+    }
+
+    fun filter(
+        transactions: List<Transaction>,
+        month: YearMonth,
+        type: TransactionType?,
+        category: TransactionCategory?,
+        query: String
+    ): List<Transaction> = inMonth(transactions, month).filter { tx ->
+        val typeOk = type == null || tx.type == type
+        val categoryOk = category == null || tx.category == category
+        typeOk && categoryOk && matchesSearch(tx, query)
+    }
+
+    fun categoriesIn(transactions: List<Transaction>): List<TransactionCategory> =
+        transactions.map { it.category }.distinct()
+
+    fun duplicateToday(source: Transaction, today: LocalDate = LocalDate.now()): Transaction =
+        source.copy(id = 0, remoteId = null, date = today)
 }

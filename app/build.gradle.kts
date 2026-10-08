@@ -116,6 +116,15 @@ android {
             "String", "DEFAULT_CURRENCY_SYMBOL",
             "\"${escapeBuildConfig(secrets.getProperty("DEFAULT_CURRENCY_SYMBOL", "$").orEmpty())}\""
         )
+        // Web OAuth client ID for Credential Manager → Supabase Google ID token exchange.
+        // Prefer SUPABASE_GOOGLE_WEB_CLIENT_ID; fall back to legacy GOOGLE_WEB_CLIENT_ID alias.
+        val googleWebClientId = secrets.getProperty("SUPABASE_GOOGLE_WEB_CLIENT_ID")
+            ?.takeIf { it.isNotBlank() }
+            ?: secrets.getProperty("GOOGLE_WEB_CLIENT_ID", "")
+        buildConfigField(
+            "String", "SUPABASE_GOOGLE_WEB_CLIENT_ID",
+            "\"${escapeBuildConfig(googleWebClientId.orEmpty())}\""
+        )
     }
 
     buildTypes {
@@ -146,6 +155,17 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
+    packaging {
+        jniLibs {
+            // Vosk + JNA may ship overlapping native libs across ABIs.
+            pickFirsts += listOf(
+                "lib/**/libc++_shared.so",
+                "lib/**/libvosk.so",
+                "lib/**/libjnidispatch.so"
+            )
+        }
     }
 }
 
@@ -178,9 +198,16 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
 
-    // Credential Manager stubs ready for Phase 2 Supabase Google auth
+    // Credential Manager + Google ID token (Phase 2 Supabase Google auth)
     implementation(libs.credentials)
     implementation(libs.credentials.play)
+    implementation(libs.googleid)
+
+    // supabase-kt 2.x: gotrue-kt = Auth module (catalog also aliases as supabase-auth)
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.gotrue)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.ktor.client.android)
 
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
@@ -193,5 +220,15 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // Offline STT (Phase 4). Vosk primary + Sherpa-ONNX (sherpa-onnx) as stronger offline fallback.
+    // Keep Vosk as backup for very small devices / quick start.
+    implementation(libs.vosk.android)
+    implementation(libs.jna.aar) { artifact { type = "aar" } }
+
+    // Sherpa-ONNX (offline, CPU, no cloud). Use the Android AAR.
+    // implementation(libs.sherpa.onnx.android)
+
     debugImplementation(libs.androidx.ui.tooling)
+
+    testImplementation(libs.junit)
 }

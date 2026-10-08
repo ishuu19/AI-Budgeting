@@ -16,9 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ledgerai.app.domain.model.TransactionCategory
-import com.ledgerai.app.presentation.theme.CategoryColors
-import com.ledgerai.app.presentation.theme.ExpenseRed
-import com.ledgerai.app.presentation.theme.IncomeGreen
+import com.ledgerai.app.presentation.theme.*
 
 @Composable
 fun SectionTitle(
@@ -27,54 +25,68 @@ fun SectionTitle(
     action: (@Composable () -> Unit)? = null
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold,
+            color = Ink,
+            letterSpacing = (-0.2).sp
         )
         action?.invoke()
     }
 }
 
-/**
- * Single primary KPI for dashboard-style screens (Tableau: big number early).
- * Non-clickable — do not wrap in clickable surfaces that look like buttons.
- */
 @Composable
 fun PrimaryKpi(
     label: String,
     formattedValue: String,
     takeaway: String,
     modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface
+    valueColor: Color = RoyalWhite
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        if (takeaway.isNotBlank()) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = DarkSurface,
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = 0.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandGold.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Text(
-                takeaway,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp)
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = TextSecondary,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.2.sp
             )
+            Text(
+                text = formattedValue,
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = valueColor,
+                lineHeight = 40.sp,
+                letterSpacing = (-0.8).sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (takeaway.isNotBlank()) {
+                Text(
+                    text = takeaway,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = BrandGoldLight,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
-        Text(
-            formattedValue,
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold,
-            color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -86,13 +98,14 @@ fun AmountText(
     modifier: Modifier = Modifier,
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge
 ) {
-    val color = if (isExpense) ExpenseRed else IncomeGreen
+    val color = if (isExpense) Color(0xFFFFC9C2) else BrandGoldLight
     val sign = if (isExpense) "-" else "+"
     Text(
         text = "$prefix$sign${"%.2f".format(amount)}",
         color = color,
         style = style,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.3).sp,
         modifier = modifier
     )
 }
@@ -102,19 +115,18 @@ fun CategoryChip(
     category: TransactionCategory,
     modifier: Modifier = Modifier
 ) {
-    val colorIndex = category.ordinal % CategoryColors.size
-    val color = CategoryColors[colorIndex]
     Surface(
         shape = RoundedCornerShape(50),
-        color = color.copy(alpha = 0.15f),
+        color = BrandGold.copy(alpha = 0.18f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandGold.copy(alpha = 0.45f)),
         modifier = modifier
     ) {
         Text(
             text = category.displayName,
-            color = color,
+            color = BrandGoldLight,
             fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -140,17 +152,16 @@ fun BudgetProgressBar(
     height: Dp = 8.dp
 ) {
     val color = when {
-        usagePercent >= 100 -> ExpenseRed
-        usagePercent >= 80 -> MaterialTheme.colorScheme.error
-        usagePercent >= 60 -> Color(0xFFF59E0B)
-        else -> IncomeGreen
+        usagePercent >= 100 -> Color(0xFFFFC9C2)
+        usagePercent >= 85 -> BrandGold
+        else -> BrandGoldLight
     }
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(BrandEmeraldDark.copy(alpha = 0.45f))
     ) {
         Box(
             modifier = Modifier
@@ -169,38 +180,52 @@ fun EmptyStateCard(
     subtitle: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        color = DarkSurface,
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandGold.copy(alpha = 0.45f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(emoji, fontSize = 40.sp)
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(emoji, fontSize = 36.sp)
             Text(
-                subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+            }
         }
     }
 }
 
 @Composable
 fun LoadingCard(modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = DarkSurface,
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandGold.copy(alpha = 0.45f))
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = BrandGold, strokeWidth = 2.dp)
         }
     }
 }
@@ -209,20 +234,30 @@ fun LoadingCard(modifier: Modifier = Modifier) {
 fun InfoChip(
     label: String,
     value: String,
-    color: Color = MaterialTheme.colorScheme.primary,
+    color: Color = BrandGoldLight,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(14.dp),
+        color = BrandGold.copy(alpha = 0.14f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandGold.copy(alpha = 0.4f)),
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = color)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = color.copy(alpha = 0.8f))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.85f)
+            )
         }
     }
 }

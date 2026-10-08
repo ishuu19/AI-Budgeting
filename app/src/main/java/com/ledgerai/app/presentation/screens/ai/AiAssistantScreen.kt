@@ -1,17 +1,22 @@
 package com.ledgerai.app.presentation.screens.ai
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -19,7 +24,9 @@ import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.ChatMessage
-import com.ledgerai.app.domain.model.TransactionType
+import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LEmpty
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -29,9 +36,7 @@ import javax.inject.Inject
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
 data class AiChatUiState(
-    val messages: List<ChatMessage> = listOf(
-        ChatMessage(content = "Hi! I'm LedgerAI. Cloud chat arrives in Phase 7. Until then I can still help with local health scores and budget tips from your on-device data.", isFromUser = false)
-    ),
+    val messages: List<ChatMessage> = emptyList(),
     val isTyping: Boolean = false,
     val inputText: String = ""
 )
@@ -45,9 +50,32 @@ class AiAssistantViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AiChatUiState())
     val uiState: StateFlow<AiChatUiState> = _uiState.asStateFlow()
     private val now = LocalDate.now()
+    private var seededInsight = false
+
+    fun seedInsight(insight: String) {
+        if (seededInsight || insight.isBlank()) return
+        seededInsight = true
+        _uiState.update {
+            it.copy(
+                inputText = "About this insight: $insight",
+                messages = it.messages + ChatMessage(
+                    content = "You tapped a dashboard insight:\n\n$insight\n\nAsk me anything about it.",
+                    isFromUser = false
+                )
+            )
+        }
+    }
 
     fun updateInput(text: String) {
         _uiState.update { it.copy(inputText = text) }
+    }
+
+    fun seedFromInsight(insight: String) {
+        val trimmed = insight.trim()
+        if (trimmed.isEmpty()) return
+        if (_uiState.value.messages.any { it.isFromUser && it.content == trimmed }) return
+        _uiState.update { it.copy(inputText = trimmed) }
+        sendMessage()
     }
 
     fun sendMessage() {
@@ -64,7 +92,7 @@ class AiAssistantViewModel @Inject constructor(
         viewModelScope.launch {
             val context = buildFinancialContext()
             val history = _uiState.value.messages
-                .dropLast(1) // exclude just-added user message from history param
+                .dropLast(1)
                 .takeLast(10)
                 .map { (if (it.isFromUser) "user" else "assistant") to it.content }
 
@@ -74,7 +102,7 @@ class AiAssistantViewModel @Inject constructor(
                     _uiState.update { it.copy(messages = it.messages + aiMsg, isTyping = false) }
                 },
                 onFailure = {
-                    val errMsg = ChatMessage(content = "Sorry, I had trouble connecting. Please try again.", isFromUser = false)
+                    val errMsg = ChatMessage(content = "Couldn't connect. Try again.", isFromUser = false)
                     _uiState.update { it.copy(messages = it.messages + errMsg, isTyping = false) }
                 }
             )
@@ -102,118 +130,174 @@ class AiAssistantViewModel @Inject constructor(
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val Suggestions = listOf(
+    "This month" to "How am I doing this month?",
+    "Top spend" to "Where is my money going?",
+    "Save more" to "How can I save more?"
+)
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AiAssistantScreen(viewModel: AiAssistantViewModel = hiltViewModel()) {
+fun AiAssistantScreen(
+    initialInsight: String = "",
+    onBack: () -> Unit = {},
+    viewModel: AiAssistantViewModel = hiltViewModel()
+) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val itemCount = state.messages.size + if (state.isTyping) 1 else 0
 
-    LaunchedEffect(state.messages.size) {
-        if (state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(state.messages.size - 1)
-        }
+    LaunchedEffect(initialInsight) {
+        if (initialInsight.isNotBlank()) viewModel.seedFromInsight(initialInsight)
     }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("AI Assistant") }) }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+    LaunchedEffect(itemCount) {
+        if (itemCount > 0) listState.animateScrollToItem(itemCount - 1)
+    }
+
+    Scaffold(containerColor = L.Page) { padding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .imePadding()
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(state.messages, key = { it.id }) { message ->
-                    ChatBubble(message)
+                IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = L.Ink)
                 }
-                if (state.isTyping) {
-                    item {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                            Card(shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                                Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    repeat(3) {
-                                        CircularProgressIndicator(modifier = Modifier.size(6.dp), strokeWidth = 1.5.dp)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                Text(
+                    "Ask",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = L.Ink,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (itemCount == 0) {
+                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    LEmpty(Icons.Filled.AutoAwesome, "Ask anything")
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = L.Gutter, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    itemsIndexed(state.messages) { _, message -> Bubble(message) }
+                    if (state.isTyping) item { TypingBubble() }
                 }
             }
 
-            // Quick suggestions
-            if (state.messages.size <= 2) {
-                val suggestions = listOf("How am I doing this month?", "Where am I spending the most?", "Give me a savings tip")
+            if (state.messages.isEmpty() && !state.isTyping) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = L.Gutter, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    suggestions.take(2).forEach { suggestion ->
-                        SuggestionChip(
-                            onClick = { viewModel.updateInput(suggestion); viewModel.sendMessage() },
-                            label = { Text(suggestion, style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.weight(1f)
-                        )
+                    Suggestions.forEach { (label, prompt) ->
+                        LChip(label, selected = false, onClick = {
+                            viewModel.updateInput(prompt)
+                            viewModel.sendMessage()
+                        })
                     }
                 }
-                Spacer(Modifier.height(8.dp))
             }
 
-            HorizontalDivider()
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = state.inputText,
-                    onValueChange = { viewModel.updateInput(it) },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask LedgerAI anything…") },
-                    maxLines = 4,
-                    shape = RoundedCornerShape(24.dp)
-                )
-                IconButton(
-                    onClick = { viewModel.sendMessage() },
-                    enabled = state.inputText.isNotBlank() && !state.isTyping,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(Icons.Filled.Send, contentDescription = "Send",
-                        tint = if (state.inputText.isNotBlank()) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            InputBar(
+                text = state.inputText,
+                onTextChange = viewModel::updateInput,
+                canSend = state.inputText.isNotBlank() && !state.isTyping,
+                onSend = viewModel::sendMessage
+            )
         }
     }
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun Bubble(message: ChatMessage) {
     val isUser = message.isFromUser
-
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        Card(
-            shape = if (isUser) RoundedCornerShape(16.dp, 4.dp, 16.dp, 16.dp)
-                    else RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isUser) MaterialTheme.colorScheme.primary
-                                 else MaterialTheme.colorScheme.surfaceVariant
-            ),
-            modifier = Modifier.widthIn(max = 280.dp)
+        Text(
+            message.content,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (isUser) L.BoxDeep else L.OnBox,
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .clip(
+                    if (isUser) RoundedCornerShape(L.Radius, 4.dp, L.Radius, L.Radius)
+                    else RoundedCornerShape(4.dp, L.Radius, L.Radius, L.Radius)
+                )
+                .background(if (isUser) L.Gold else L.Box)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        )
+    }
+}
+
+@Composable
+private fun TypingBubble() {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(4.dp, L.Radius, L.Radius, L.Radius))
+                .background(L.Box)
+                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            Text(
-                text = message.content,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+            CircularProgressIndicator(modifier = Modifier.size(14.dp), color = L.Gold, strokeWidth = 2.dp)
+        }
+    }
+}
+
+@Composable
+private fun InputBar(text: String, onTextChange: (String) -> Unit, canSend: Boolean, onSend: () -> Unit) {
+    HorizontalDivider(color = L.Line)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(L.Page)
+            .padding(horizontal = L.Gutter, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = onTextChange,
+            placeholder = { Text("Ask", color = L.InkMuted) },
+            maxLines = 4,
+            shape = RoundedCornerShape(L.RadiusSm),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = L.Box,
+                unfocusedBorderColor = L.Line,
+                cursorColor = L.Box,
+                focusedTextColor = L.Ink,
+                unfocusedTextColor = L.Ink
+            ),
+            modifier = Modifier.weight(1f)
+        )
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(if (canSend) L.Gold else L.Gold.copy(alpha = 0.4f))
+                .clickable(enabled = canSend, onClick = onSend),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.Send,
+                contentDescription = "Send",
+                tint = L.BoxDeep,
+                modifier = Modifier.size(20.dp)
             )
         }
     }

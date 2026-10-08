@@ -7,6 +7,7 @@ data class NoteItem(
     val remoteId: String? = null,
     val title: String,
     val body: String = "",
+    val location: String = "",
     val tags: List<String> = emptyList(),
     val updatedAt: LocalDateTime = LocalDateTime.now(),
     val createdAt: LocalDateTime = LocalDateTime.now()

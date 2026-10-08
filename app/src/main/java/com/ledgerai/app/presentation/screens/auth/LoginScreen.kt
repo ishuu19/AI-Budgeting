@@ -1,23 +1,20 @@
 package com.ledgerai.app.presentation.screens.auth
 
-import androidx.compose.foundation.Image
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ledgerai.app.R
+import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LLogo
 
 @Composable
 fun LoginScreen(
@@ -25,111 +22,70 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val activity = LocalContext.current as? Activity
 
     LaunchedEffect(state.isSignedIn) {
         if (state.isSignedIn) onSignedIn()
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.background
-                    )
-                )
-            )
+            .background(L.Page)
+            .systemBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 72.dp, bottom = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Brand-first hero (upper scan path)
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "LedgerAI",
-                modifier = Modifier
-                    .size(88.dp)
-                    .clip(RoundedCornerShape(20.dp))
-            )
+        Spacer(Modifier.weight(1f))
+        LLogo(88.dp)
+        Spacer(Modifier.height(20.dp))
+        Text("LedgerAI", style = MaterialTheme.typography.headlineMedium, color = L.Ink)
+        Spacer(Modifier.height(4.dp))
+        Text("Money. Simply.", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        Spacer(Modifier.weight(1f))
 
-            Spacer(Modifier.height(20.dp))
-
+        state.errorMessage?.let { error ->
             Text(
-                "LedgerAI",
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                "Track money by voice. Stay on budget.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                error,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Spacer(Modifier.weight(1f))
-
-            // One primary CTA — Maze success path: Continue → home
-            if (state.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                Button(
-                    onClick = { viewModel.continueLocally() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        "Continue",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            state.errorMessage?.let { error ->
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.errorContainer)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Filled.Warning,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        error,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                "Works offline on this device. Cloud sync comes later.",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                textAlign = TextAlign.Center
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
         }
+
+        if (state.isLoading) {
+            Box(Modifier.height(52.dp + 48.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = L.Box)
+            }
+        } else if (state.googleSignInAvailable) {
+            GreenButton(
+                text = "Continue with Google",
+                enabled = activity != null,
+                onClick = { activity?.let { viewModel.signInWithGoogle(it) } }
+            )
+            TextButton(
+                onClick = { viewModel.continueLocally() },
+                modifier = Modifier.padding(top = 4.dp).height(44.dp)
+            ) {
+                Text("Skip", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            }
+        } else {
+            GreenButton(text = "Continue", onClick = { viewModel.continueLocally() })
+            Spacer(Modifier.height(48.dp))
+        }
     }
+}
+
+@Composable
+private fun GreenButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth().height(52.dp),
+        shape = RoundedCornerShape(L.RadiusSm),
+        colors = ButtonDefaults.buttonColors(containerColor = L.Box, contentColor = L.OnBox)
+    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }

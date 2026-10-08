@@ -10,9 +10,14 @@ import androidx.room.TypeConverters
         BudgetEntity::class,
         DebtEntity::class,
         GoalEntity::class,
-        BillEntity::class
+        BillEntity::class,
+        TaskEntity::class,
+        TaskReminderEntity::class,
+        RoutineEntity::class,
+        AlarmEntity::class,
+        NoteEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -22,4 +27,9 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun debtDao(): DebtDao
     abstract fun goalDao(): GoalDao
     abstract fun billDao(): BillDao
+    abstract fun taskDao(): TaskDao
+    abstract fun taskReminderDao(): TaskReminderDao
+    abstract fun routineDao(): RoutineDao
+    abstract fun alarmDao(): AlarmDao
+    abstract fun noteDao(): NoteDao
 }

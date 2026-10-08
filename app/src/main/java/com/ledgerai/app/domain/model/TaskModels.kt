@@ -10,6 +10,8 @@ data class TaskItem(
     val remoteId: String? = null,
     val title: String,
     val notes: String = "",
+    val location: String = "",
+    val links: String = "",
     val dueAt: LocalDateTime? = null,
     val isCompleted: Boolean = false,
     val reminders: List<TaskReminder> = emptyList(),
@@ -24,5 +26,18 @@ data class TaskReminder(
     val label: String,
     /** Absolute fire time for the reminder. */
     val remindAt: LocalDateTime,
+    /** Minutes before the task due time. When set, editing the due time moves this reminder. */
+    val offsetMinutes: Int? = null,
     val isEnabled: Boolean = true
+)
+
+data class RoutineItem(
+    val id: Long = 0,
+    val remoteId: String? = null,
+    val title: String,
+    val notes: String = "",
+    val location: String = "",
+    /** Opaque repeat rule (e.g. DAILY, WEEKLY, WEEKDAYS, or custom). */
+    val repeatRule: String = "",
+    val isActive: Boolean = true
 )

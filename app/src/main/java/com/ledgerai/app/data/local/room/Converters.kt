@@ -7,6 +7,7 @@ import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 class Converters {
 
@@ -21,6 +22,12 @@ class Converters {
 
     @TypeConverter
     fun toLocalDateTime(value: String?): LocalDateTime? = value?.let(LocalDateTime::parse)
+
+    @TypeConverter
+    fun fromLocalTime(value: LocalTime?): String? = value?.toString()
+
+    @TypeConverter
+    fun toLocalTime(value: String?): LocalTime? = value?.let(LocalTime::parse)
 
     @TypeConverter
     fun fromTransactionType(value: TransactionType): String = value.name

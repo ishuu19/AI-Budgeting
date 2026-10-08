@@ -4,8 +4,10 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Dollar sign / budget icon -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M38,32h9v34h21v8h-30z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,20 C54,20 54,22 54,22 C44,22.8 36,29.5 36,38 C36,47.5 44,51 54,53.5 C64,56 70,59 70,65 C70,71.5 63,76 54,76 C45,76 38,71.5 38,65 L30,65 C30,74.5 39,82 51,83.5 L51,88 L57,88 L57,83.5 C69,82 78,74.5 78,65 C78,55.5 70,52 60,49.5 C50,47 44,44 44,38 C44,32 49,28 56,27.5 C63,27 68,30 70,34 L77,31 C73.5,24.5 64.5,21 57,20.5 L57,20 Z" />
+        android:pathData="M58,32h10v22h-10z" />
 </vector>

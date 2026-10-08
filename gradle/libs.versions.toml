@@ -9,6 +9,9 @@ composeBom = "2024.06.00"
 hilt = "2.51.1"
 hiltExt = "1.2.0"
 credentials = "1.3.0"
+googleid = "1.1.1"
+supabase = "2.6.1"
+ktor = "2.3.12"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 gson = "2.10.1"
@@ -19,6 +22,10 @@ datastore = "1.1.1"
 coroutines = "1.8.1"
 splashscreen = "1.0.1"
 room = "2.6.1"
+voskAndroid = "0.3.75"
+jna = "5.13.0"
+sherpaOnnx = "1.10.3"
+junit = "4.13.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +48,13 @@ hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltEx
 hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltExt" }
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
+# gotrue-kt is the Auth module in supabase-kt 2.x (renamed auth-kt in 3.x)
+supabase-gotrue = { group = "io.github.jan-tennert.supabase", name = "gotrue-kt" }
+supabase-auth = { group = "io.github.jan-tennert.supabase", name = "gotrue-kt" }
+supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
@@ -55,6 +69,10 @@ kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutin
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref = "voskAndroid" }
+jna-aar = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+sherpa-onnx-android = { group = "com.k2fsa.sherpa.onnx", name = "sherpa-onnx-android", version.ref = "sherpaOnnx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

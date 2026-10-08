@@ -8,16 +8,10 @@ import android.os.Build
 import android.util.Log
 import com.ledgerai.app.domain.model.AlarmItem
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Thin AlarmManager wrapper. Full ringing UI arrives in a later phase;
- * this schedules a broadcast stub so the shell is wired end-to-end.
- */
+/** AlarmManager wrapper for exact / alarm-clock triggers and snooze. */
 @Singleton
 class AlarmScheduler @Inject constructor(
     @ApplicationContext private val context: Context
@@ -26,8 +20,23 @@ class AlarmScheduler @Inject constructor(
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     fun schedule(alarm: AlarmItem) {
-        val triggerAt = nextTriggerMillis(alarm)
-        val pending = pendingIntent(alarm.id)
+        val triggerAt = AlarmTriggerCalc.nextTriggerMillis(alarm.time, alarm.repeatDays)
+        scheduleAt(alarm.id, triggerAt)
+    }
+
+    fun scheduleSnooze(alarmId: Long, minutes: Int) {
+        val triggerAt = System.currentTimeMillis() + minutes.coerceIn(1, 60) * 60_000L
+        scheduleAt(alarmId, triggerAt)
+        Log.d(TAG, "Snoozed alarm id=$alarmId for ${minutes}m")
+    }
+
+    fun cancel(alarmId: Long) {
+        alarmManager.cancel(pendingIntent(alarmId))
+        Log.d(TAG, "Cancelled alarm id=$alarmId")
+    }
+
+    private fun scheduleAt(alarmId: Long, triggerAt: Long) {
+        val pending = pendingIntent(alarmId)
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 alarmManager.setAlarmClock(
@@ -38,25 +47,15 @@ class AlarmScheduler @Inject constructor(
                 @Suppress("DEPRECATION")
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
             }
-            Log.d(TAG, "Scheduled alarm id=${alarm.id} at $triggerAt")
+            Log.d(TAG, "Scheduled alarm id=$alarmId at $triggerAt")
         } catch (e: SecurityException) {
-            Log.w(TAG, "Exact alarm permission missing; schedule skipped for id=${alarm.id}", e)
+            Log.w(TAG, "Exact alarm permission missing; schedule skipped for id=$alarmId", e)
         }
     }
 
-    fun cancel(alarmId: Long) {
-        alarmManager.cancel(pendingIntent(alarmId))
-        Log.d(TAG, "Cancelled alarm id=$alarmId")
-    }
-
-    private fun nextTriggerMillis(alarm: AlarmItem): Long {
-        val zone = ZoneId.systemDefault()
-        var dateTime = LocalDateTime.of(LocalDate.now(), alarm.time)
-        if (dateTime.isBefore(LocalDateTime.now())) {
-            dateTime = dateTime.plusDays(1)
-        }
-        return dateTime.atZone(zone).toInstant().toEpochMilli()
-    }
+    /** @see AlarmTriggerCalc.nextTriggerMillis */
+    internal fun nextTriggerMillis(alarm: AlarmItem): Long =
+        AlarmTriggerCalc.nextTriggerMillis(alarm.time, alarm.repeatDays)
 
     private fun pendingIntent(alarmId: Long): PendingIntent {
         val intent = Intent(context, AlarmFireReceiver::class.java).apply {

@@ -20,6 +20,7 @@ class NotificationService @Inject constructor(
         const val CHANNEL_BUDGET = "budget_alerts"
         const val CHANNEL_DEBT = "debt_reminders"
         const val CHANNEL_BILLS = "bill_reminders"
+        const val CHANNEL_TASK = "task_reminders"
         const val CHANNEL_AI = "ai_insights"
     }
 
@@ -81,6 +82,26 @@ class NotificationService @Inject constructor(
         notificationManager.notify(notificationId, notification)
     }
 
+    fun showTaskReminder(taskTitle: String, reminderLabel: String, notificationId: Int) {
+        val message = if (reminderLabel.isBlank() || reminderLabel == taskTitle) {
+            taskTitle
+        } else {
+            "$reminderLabel — $taskTitle"
+        }
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_TASK)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Task reminder")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(buildMainActivityPendingIntent())
+            .build()
+
+        notificationManager.notify(notificationId, notification)
+    }
+
     fun showAiInsight(title: String, message: String, notificationId: Int = 9000) {
         val notification = NotificationCompat.Builder(context, CHANNEL_AI)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -116,6 +137,9 @@ class NotificationService @Inject constructor(
                 },
                 NotificationChannel(CHANNEL_BILLS, "Bill Reminders", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Reminders for upcoming bill due dates"
+                },
+                NotificationChannel(CHANNEL_TASK, "Task Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Reminders for your tasks"
                 },
                 NotificationChannel(CHANNEL_AI, "AI Insights", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Weekly AI financial insights and tips"

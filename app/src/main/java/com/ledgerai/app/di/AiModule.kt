@@ -3,6 +3,7 @@ package com.ledgerai.app.di
 import com.google.gson.Gson
 import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.ai.AiConfig
+import com.ledgerai.app.data.ai.AiEdgeApi
 import com.ledgerai.app.data.ai.GeminiApi
 import com.ledgerai.app.data.ai.OpenAiCompatibleApi
 import dagger.Module
@@ -18,8 +19,9 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 /**
- * OkHttp/Retrofit for the AI cascade.
- * Keys come from [AiConfig]/BuildConfig] — empty in release; Edge Function is the production path.
+ * OkHttp/Retrofit for the AI cascade + Edge Function proxy.
+ * Provider keys come from [AiConfig]/BuildConfig] — empty in release.
+ * Production path: [AiEdgeApi] → Supabase `ai-proxy` (keys server-side).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -87,6 +89,26 @@ object AiModule {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(GeminiApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAiEdgeApi(
+        gson: Gson,
+        @Named("aiOkHttp") client: OkHttpClient,
+    ): AiEdgeApi {
+        val root = BuildConfig.SUPABASE_URL.trim().trimEnd('/')
+        val base = if (root.isBlank()) {
+            "https://placeholder.supabase.co/functions/v1/"
+        } else {
+            "$root/functions/v1/"
+        }
+        return Retrofit.Builder()
+            .baseUrl(base)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+            .create(AiEdgeApi::class.java)
+    }
 
     /** DeepSeek accepts /v1/chat/completions; normalize base to include v1 when missing. */
     private fun ensureV1Base(base: String): String {

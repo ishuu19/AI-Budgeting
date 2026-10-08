@@ -3,6 +3,7 @@
     <string name="app_name">LedgerAI</string>
     <string name="widget_label">LedgerAI Quote &amp; Voice</string>
     <string name="widget_tap_to_record">Daily quote, speak aloud, or record</string>
+    <string name="widget_description">Quote and voice</string>
     <string name="nav_tasks">Tasks</string>
     <string name="nav_notes">Notes</string>
     <string name="nav_alarms">Alarms</string>

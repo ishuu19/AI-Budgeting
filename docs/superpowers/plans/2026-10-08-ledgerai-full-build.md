@@ -10,10 +10,12 @@
 
 **Spec:** `PLAN.md` at repo root.
 
+**Wave 1 status (2026-10-08):** Landed — Room, dashboard/login UX, AI cascade + Edge path, Tasks/Notes/Alarms/Quotes, Credential Manager → Supabase Auth, sync worker, alarm ring UI, Vosk STT. Follow-ups: JWT refresh persistence, device QA, live RLS deploy.
+
 ## Global Constraints
 
 - Package: `com.ledgerai.app`; brand name **LedgerAI** only (never BudgetAI).
-- Do **not** put `SUPABASE_SECRET_KEY`, `OPENROUTER_*`, `GEMINI_*`, `DEEPSEEK_*` into release BuildConfig. Debug may inject empty-safe optional fields only if needed for local AI; prefer reading via a sealed `AiSecrets` loaded only in debug.
+- Do **not** put `SUPABASE_SECRET_KEY`, `OPENROUTER_*`, `GEMINI_*`, `DEEPSEEK_*` into release BuildConfig. Debug may inject from `secrets.properties` into BuildConfig for local AI; release must clear those fields. Production target: Edge Function secrets.
 - `allowBackup=false`; BootReceiver `exported=false`.
 - Max **10** reminders per task.
 - No Google Calendar; no Mongo; no play-services-auth Google Sign-In (Credential Manager later).
@@ -32,39 +34,47 @@
 ## Wave 1 (parallel — non-overlapping paths)
 
 ### Task A — Room data layer
-- [ ] Add Room deps to `libs.versions.toml` + `app/build.gradle.kts`
-- [ ] Entities/DAOs for: transactions, budgets, debts, goals, bills (+ soft sync fields `updatedAt`, `deletedAt`, `remoteId`, `userId` nullable for now)
-- [ ] `LedgerDatabase` + Hilt module
-- [ ] Replace `InMemoryStore` usage in repositories with Room DAOs + Flow
-- [ ] Keep `DatabaseSeeder` working against Room
-- [ ] SQL file `supabase/migrations/001_init.sql` with RLS stubs (for later deploy)
+- [x] Add Room deps to `libs.versions.toml` + `app/build.gradle.kts`
+- [x] Entities/DAOs for: transactions, budgets, debts, goals, bills (+ soft sync fields `updatedAt`, `deletedAt`, `remoteId`, `userId` nullable for now)
+- [x] `LedgerDatabase` + Hilt module
+- [x] Replace `InMemoryStore` usage in repositories with Room DAOs + Flow
+- [x] Keep `DatabaseSeeder` working against Room
+- [x] SQL file `supabase/migrations/001_init.sql` with RLS stubs (for later deploy)
 
 ### Task B — Dashboard & auth UX polish
-- [ ] Redesign `DashboardScreen` for Tableau scan path + Clarity CTA placement
-- [ ] Polish `LoginScreen` (one CTA, clearer hierarchy)
-- [ ] Light theme token cleanup if needed; keep `LedgerAITheme`
-- [ ] Do **not** change data layer files
+- [x] Redesign `DashboardScreen` for Tableau scan path + Clarity CTA placement
+- [x] Polish `LoginScreen` (one CTA, clearer hierarchy) — local “Continue” + Google via Credential Manager when secrets set
+- [x] Light theme token cleanup if needed; keep `LedgerAITheme`
+- [x] Do **not** change data layer files (constraint followed for this task)
 
 ### Task C — AI cascade
-- [ ] `data/ai/AiProviderRouter.kt` implementing cascade order from PLAN §5.6
-- [ ] Models/schemas for chat + parse JSON
-- [ ] Rewrite `AiRepository` to use router; keep local health-score fallback
-- [ ] Wire Retrofit clients; keys: create `AiConfig` reading from BuildConfig fields that are **blank by default**; document that Edge Function is production path. For debug builds only, optionally populate from secrets via gradle `buildTypes.debug` — **never release**.
-- [ ] Do **not** redesign Compose screens except fixing compile breaks in AI screen
+- [x] `data/ai/AiProviderRouter.kt` implementing cascade order from PLAN §5.6
+- [x] Models/schemas for chat + parse JSON
+- [x] Rewrite `AiRepository` to use router; keep local health-score fallback
+- [x] Wire Retrofit clients; keys: `AiConfig` from BuildConfig; debug may populate from `secrets.properties`; release fields empty; Edge Function is production path
+- [x] Do **not** redesign Compose screens except fixing compile breaks in AI screen
 
 ### Task D — Tasks, Notes, Alarms, Quotes shells
-- [ ] Domain models + in-memory or Room DAOs if Task A not merged yet — prefer Room entities in `domain` + repositories that compile; if Room DB not ready, use temporary stores under `data/local` named clearly
-- [ ] Screens: Tasks, Notes, Alarms list + basic CRUD
-- [ ] Nav routes + drawer/bottom nav entries
-- [ ] Quotes: bundled JSON asset (~50 quotes ok for v1) + WorkManager stub + Glance widget update for quote+TTS button
-- [ ] Reminders: enforce max 10 in UI + repository
+- [x] Domain models + Room entities/DAOs for Tasks/Reminders/Alarms/Notes (feature `*LocalStore`s removed; finance already on Room)
+- [x] Screens: Tasks, Notes, Alarms list + basic CRUD
+- [x] Nav routes + drawer/bottom nav entries
+- [x] Quotes: bundled JSON asset + `QuoteDailyWorker` + Glance widget quote + TTS button
+- [x] Reminders: enforce max 10 in UI + repository
+- [x] SQL file `supabase/migrations/002_tasks_reminders_alarms_notes.sql` (RLS stubs; for later deploy)
+
+### Wave 1 former stubs (completed)
+- [x] Supabase Auth (Credential Manager → Google ID token → Supabase; local “Continue” fallback)
+- [x] Sync worker / remote sync (Room ↔ Postgrest; soft deletes + cursors)
+- [x] Alarm ring UI (foreground service + full-screen intent)
+- [x] Vosk offline transcription (model download + file STT; sibling `.txt` stub for tests only)
+- [x] JWT refresh: persist `refreshToken` in `UserSession`; `AuthRepository.refreshIfNeeded()` via `SessionGuard` before sync / Edge AI
 
 ## Wave 2 (after Wave 1 integrate)
 
-- Wire finance screens to Room aggregates
-- Voice: keep text parse; soft Vosk placeholder download UI
-- Budget alert worker against Room
-- Empty/error states
+- [x] Wire finance screens to Room aggregates
+- [x] Voice: text parse + Vosk model download / transcribe UI
+- [x] Budget alert worker against Room
+- [x] Empty/error states
 
 ## Review Focus
 
@@ -73,3 +83,4 @@
 3. Dashboard hierarchy / competing CTAs
 4. Reminder max-10 enforcement
 5. Room Flow reactivity after insert
+6. JWT refresh before sync / Edge AI (refresh token persisted)

@@ -2,338 +2,193 @@ package com.ledgerai.app.presentation.screens.dashboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ledgerai.app.domain.model.Transaction
+import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.presentation.components.*
-import com.ledgerai.app.presentation.theme.ExpenseRed
-import com.ledgerai.app.presentation.theme.IncomeGreen
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToVoice: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToChat: (insight: String) -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "LedgerAI",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            state.currentMonth,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNavigateToVoice,
-                icon = { Icon(Icons.Filled.Mic, contentDescription = null) },
-                text = { Text("Add by voice") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    ) { padding ->
+    Scaffold(containerColor = L.Page) { padding ->
         if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = L.Gold)
             }
             return@Scaffold
         }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Title → subtitle takeaway → primary KPI (F-pattern)
-            item {
-                Text(
-                    state.greeting,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(4.dp))
-                PrimaryKpi(
-                    label = "Net this month",
-                    formattedValue = formatSignedCurrency(state.netBalance),
-                    takeaway = state.takeaway,
-                    valueColor = if (state.netBalance >= 0) IncomeGreen else ExpenseRed
-                )
-            }
-
-            // Supporting metrics — muted, not competing with primary KPI
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    SupportingMetric(
-                        label = "Income",
-                        amount = state.monthlyIncome,
-                        accent = IncomeGreen,
+                    LLogo(36.dp)
+                    Text(
+                        if (state.userName.isNotBlank()) "Hi, ${state.userName}" else "Today",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = L.Ink,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    SupportingMetric(
-                        label = "Expenses",
-                        amount = state.monthlyExpenses,
-                        accent = ExpenseRed,
-                        modifier = Modifier.weight(1f)
-                    )
+                    LIconButton(Icons.Filled.Search, "Search", onNavigateToSearch)
+                    LIconButton(Icons.Filled.Mic, "Voice", onNavigateToVoice)
+                    LIconButton(Icons.Filled.Settings, "Settings", onNavigateToSettings)
                 }
             }
 
-            state.healthScore?.let { score ->
-                item {
-                    SectionTitle("Health")
-                    Spacer(Modifier.height(8.dp))
-                    HealthScoreCard(score = score)
+            item {
+                val remaining = state.remainingBudget
+                val cash = state.cashOnHand
+                val heroValue = when {
+                    state.trackExpensesOnly -> state.monthlyExpenses
+                    cash != null -> cash + state.monthlyIncome - state.monthlyExpenses
+                    else -> state.netBalance
                 }
+                LHero(
+                    label = when {
+                        state.trackExpensesOnly -> "Spent"
+                        cash != null -> "On hand"
+                        else -> "Balance"
+                    },
+                    value = money(heroValue),
+                    sub = if (state.trackExpensesOnly) state.currentMonth
+                    else if (remaining != null) "${money(remaining)} left" else state.currentMonth,
+                    valueColor = if (!state.trackExpensesOnly && heroValue < 0) L.Danger else L.OnBox
+                )
             }
 
-            if (state.budgets.isNotEmpty()) {
+            if (!state.trackExpensesOnly) {
                 item {
-                    SectionTitle(
-                        "Budgets",
-                        action = {
-                            TextButton(onClick = onNavigateToAnalytics) {
-                                Text("Details")
-                            }
-                        }
-                    )
-                }
-                item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(state.budgets.take(5)) { budget ->
-                            BudgetMiniCard(budget = budget)
-                        }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LStat("Income", money(state.monthlyIncome), Modifier.weight(1f))
+                        LStat("Spent", money(state.monthlyExpenses), Modifier.weight(1f))
                     }
                 }
             }
 
-            if (state.recentTransactions.isNotEmpty()) {
+            state.healthScore?.let { health ->
                 item {
-                    SectionTitle(
-                        "Recent activity",
-                        action = {
-                            TextButton(onClick = onNavigateToTransactions) {
-                                Text("See all")
-                            }
-                        }
+                    LRow(
+                        title = "Health",
+                        sub = health.grade,
+                        trailing = health.score.toString()
                     )
                 }
-                items(state.recentTransactions) { tx ->
-                    TransactionRow(transaction = tx)
+            }
+
+            val soon = state.upcoming.take(3)
+            if (soon.isNotEmpty()) {
+                item { LSection("Soon") }
+                items(soon, key = { it.id }) { item ->
+                    LRow(title = item.title, sub = item.subtitle)
                 }
+            }
+
+            state.aiInsightCard?.let { card ->
+                item {
+                    LCard(onClick = { onNavigateToChat(card.chatContext) }) {
+                        Text("Insight", style = MaterialTheme.typography.labelMedium, color = L.Gold)
+                        Text(
+                            card.body.ifBlank { card.title },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = L.OnBox,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            if (state.quote.isNotBlank()) {
+                item {
+                    Text(
+                        state.quote,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontStyle = FontStyle.Italic,
+                        color = L.InkMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                    )
+                }
+            }
+
+            item { LSection("Recent", action = "All", onAction = onNavigateToTransactions) }
+
+            if (state.recentTransactions.isEmpty()) {
+                item { LEmpty(Icons.AutoMirrored.Filled.ReceiptLong, "No activity") }
             } else {
-                item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                "No transactions yet",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                "Use Add by voice to log your first entry.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                items(state.recentTransactions.take(5), key = { it.id }) { tx ->
+                    TransactionRow(tx, onClick = onNavigateToTransactions)
                 }
             }
         }
     }
 }
 
-private fun formatSignedCurrency(amount: Double): String {
-    val sign = when {
-        amount > 0 -> "+"
-        amount < 0 -> "-"
-        else -> ""
-    }
-    return "$sign\$${"%.2f".format(kotlin.math.abs(amount))}"
-}
+private val dayFormat = DateTimeFormatter.ofPattern("MMM d", Locale.US)
 
 @Composable
-private fun SupportingMetric(
-    label: String,
-    amount: Double,
-    accent: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = "\$${"%.2f".format(amount)}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = accent
-            )
-        }
-    }
+private fun TransactionRow(tx: Transaction, onClick: () -> Unit) {
+    val isIncome = tx.type == TransactionType.INCOME
+    LRow(
+        title = tx.merchant.ifBlank { tx.category.displayName },
+        sub = tx.date.format(dayFormat),
+        trailing = (if (isIncome) "+" else "") + money(if (isIncome) tx.amount else -tx.amount),
+        trailingColor = if (isIncome) L.Gold else L.OnBox,
+        icon = categoryIcon(tx.category),
+        onClick = onClick
+    )
 }
 
-@Composable
-private fun HealthScoreCard(score: com.ledgerai.app.domain.model.FinancialHealthScore) {
-    val scoreColor = when {
-        score.score >= 80 -> IncomeGreen
-        score.score >= 65 -> Color(0xFF84CC16)
-        score.score >= 50 -> Color(0xFFF59E0B)
-        else -> ExpenseRed
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    score.grade,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = scoreColor
-                )
-                Text(
-                    score.summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
-                )
-            }
-            Text(
-                text = "${score.score}",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = scoreColor
-            )
-        }
-    }
-}
-
-@Composable
-private fun BudgetMiniCard(budget: com.ledgerai.app.domain.model.Budget) {
-    Surface(
-        modifier = Modifier.width(140.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium,
-        tonalElevation = 1.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            CategoryDot(category = budget.category)
-            Text(
-                budget.category.displayName,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1
-            )
-            BudgetProgressBar(usagePercent = budget.usagePercent)
-            Text(
-                "${budget.usagePercent}% used",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun TransactionRow(transaction: com.ledgerai.app.domain.model.Transaction) {
-    val isExpense = transaction.type == TransactionType.EXPENSE
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CategoryDot(transaction.category, size = 10.dp)
-            Column {
-                Text(
-                    transaction.merchant.ifEmpty { transaction.category.displayName },
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    transaction.date.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        AmountText(amount = transaction.amount, isExpense = isExpense, prefix = "$")
-    }
+private fun categoryIcon(category: TransactionCategory): ImageVector = when (category) {
+    TransactionCategory.FOOD -> Icons.Filled.Restaurant
+    TransactionCategory.TRANSPORT -> Icons.Filled.DirectionsCar
+    TransactionCategory.ENTERTAINMENT -> Icons.Filled.Movie
+    TransactionCategory.SHOPPING -> Icons.Filled.ShoppingBag
+    TransactionCategory.HEALTH -> Icons.Filled.Favorite
+    TransactionCategory.RENT -> Icons.Filled.Home
+    TransactionCategory.UTILITIES -> Icons.Filled.Bolt
+    TransactionCategory.SUBSCRIPTIONS -> Icons.Filled.Subscriptions
+    TransactionCategory.EDUCATION -> Icons.Filled.School
+    TransactionCategory.SALARY -> Icons.Filled.Payments
+    TransactionCategory.FREELANCE -> Icons.Filled.Work
+    TransactionCategory.OTHER -> Icons.Filled.Category
 }

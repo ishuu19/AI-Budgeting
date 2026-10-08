@@ -1,5 +1,7 @@
 -- LedgerAI Phase 2 schema: finance tables + RLS
--- Apply in Supabase SQL editor or via CLI. App remains offline-first on Room until sync lands.
+-- Apply in Supabase SQL editor or via CLI (in exact order: 001, 002, 003).
+-- Every table uses RLS policy "xxx_select/insert/update/delete_own" with "user_id = auth.uid()".
+-- App uses PostgREST paths matching table names (e.g. "reminders").
 
 create extension if not exists "pgcrypto";
 

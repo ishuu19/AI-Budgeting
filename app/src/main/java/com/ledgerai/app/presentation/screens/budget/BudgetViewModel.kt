@@ -7,6 +7,7 @@ import com.ledgerai.app.data.repository.BudgetRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.Budget
 import com.ledgerai.app.domain.model.TransactionCategory
+import com.ledgerai.app.domain.model.TransactionType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,7 +18,12 @@ data class BudgetUiState(
     val budgets: List<Budget> = emptyList(),
     val isLoading: Boolean = true,
     val aiAdvice: Map<Long, String> = emptyMap(),
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    val daysLeft: Int = 0,
+    val totalRemaining: Double = 0.0,
+    val dailyAllowance: Double = 0.0,
+    val unbudgetedSpend: Double = 0.0,
+    val canCopyLastMonth: Boolean = false
 )
 
 @HiltViewModel
@@ -31,16 +37,55 @@ class BudgetViewModel @Inject constructor(
     val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
 
     private val now = LocalDate.now()
+    private val lastMonthDate = now.minusMonths(1)
+    private val daysLeft = now.lengthOfMonth() - now.dayOfMonth
+    private val dayDivisor = daysLeft.coerceAtLeast(1)
 
     init {
         viewModelScope.launch {
-            budgetRepo.getBudgetsForMonth(now.monthValue, now.year).collectLatest { budgets ->
-                val enriched = budgets.map { budget ->
-                    val spent = transactionRepo.getSpendingForCategoryMonth(budget.category, now.year, now.monthValue)
-                    budget.copy(spent = spent)
+            combine(
+                budgetRepo.getBudgetsForMonth(now.monthValue, now.year),
+                budgetRepo.getBudgetsForMonth(lastMonthDate.monthValue, lastMonthDate.year),
+                transactionRepo.getTransactionsForMonth(now.year, now.monthValue)
+            ) { budgets, lastBudgets, txs -> Triple(budgets, lastBudgets, txs) }
+                .collectLatest { (budgets, lastBudgets, txs) ->
+                    val spentByCategory = txs
+                        .asSequence()
+                        .filter { it.type == TransactionType.EXPENSE }
+                        .groupBy { it.category }
+                        .mapValues { (_, list) -> list.sumOf { it.amount } }
+
+                    val enriched = budgets
+                        .map { it.copy(spent = spentByCategory[it.category] ?: 0.0) }
+                        .sortedWith(
+                            compareBy<Budget> {
+                                when {
+                                    it.isOverBudget -> 0
+                                    it.isNearLimit -> 1
+                                    else -> 2
+                                }
+                            }.thenByDescending { it.usagePercent }
+                        )
+
+                    val budgeted = enriched.map { it.category }.toSet()
+                    val unbudgetedSpend = spentByCategory
+                        .filterKeys { it !in budgeted }
+                        .values
+                        .sum()
+                    val totalRemaining = enriched.sumOf { it.remaining }
+
+                    _uiState.update {
+                        it.copy(
+                            budgets = enriched,
+                            isLoading = false,
+                            daysLeft = daysLeft,
+                            totalRemaining = totalRemaining,
+                            dailyAllowance = totalRemaining / dayDivisor,
+                            unbudgetedSpend = unbudgetedSpend,
+                            canCopyLastMonth = enriched.isEmpty() && lastBudgets.isNotEmpty()
+                        )
+                    }
                 }
-                _uiState.update { it.copy(budgets = enriched, isLoading = false) }
-            }
         }
     }
 
@@ -58,9 +103,45 @@ class BudgetViewModel @Inject constructor(
         }
     }
 
+    fun updateBudget(budget: Budget, category: TransactionCategory, limit: Double, threshold: Int) {
+        viewModelScope.launch {
+            budgetRepo.update(
+                budget.copy(
+                    category = category,
+                    monthlyLimit = limit,
+                    alertThreshold = threshold
+                )
+            )
+            _uiState.update { it.copy(snackbarMessage = "Budget updated") }
+        }
+    }
+
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             budgetRepo.delete(budget)
+        }
+    }
+
+    fun copyLastMonth() {
+        viewModelScope.launch {
+            val current = budgetRepo.getBudgetsForMonth(now.monthValue, now.year).first()
+            if (current.isNotEmpty()) return@launch
+            val lastBudgets = budgetRepo
+                .getBudgetsForMonth(lastMonthDate.monthValue, lastMonthDate.year)
+                .first()
+            if (lastBudgets.isEmpty()) return@launch
+            lastBudgets.forEach { src ->
+                budgetRepo.insert(
+                    Budget(
+                        category = src.category,
+                        monthlyLimit = src.monthlyLimit,
+                        month = now.monthValue,
+                        year = now.year,
+                        alertThreshold = src.alertThreshold
+                    )
+                )
+            }
+            _uiState.update { it.copy(snackbarMessage = "Copied") }
         }
     }
 

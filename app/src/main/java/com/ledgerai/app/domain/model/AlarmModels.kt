@@ -10,5 +10,6 @@ data class AlarmItem(
     val isEnabled: Boolean = true,
     /** Bitmask Sun=1 … Sat=64; 0 = one-shot today/tomorrow. */
     val repeatDays: Int = 0,
-    val toneUri: String? = null
+    val toneUri: String? = null,
+    val location: String = ""
 )

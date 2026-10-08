@@ -1,0 +1,273 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.6/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/navigation/AppNavigation.kt:44:80 'Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/ai/AiAssistantScreen.kt:185:39 'Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/analytics/AnalyticsScreen.kt:182:13 Variable 'colorIndex' is never used
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/bills/BillsScreen.kt:165:9 Variable 'catExpanded' is never used
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/budget/BudgetScreen.kt:26:5 Parameter 'onNavigateToAi' is never used
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/transactions/TransactionsScreen.kt:30:9 Variable 'showNlpDialog' is never used
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/transactions/TransactionsScreen.kt:31:9 Variable 'nlpInput' is never used
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/voice/VoiceRecorderScreen.kt:70:44 'ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/voice/VoiceRecorderScreen.kt:193:55 'Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send
+w: file:///C:/Users/User/Desktop/Practice/Budget%20App--v2/app/src/main/java/com/ledgerai/app/presentation/screens/voice/VoiceRecorderScreen.kt:509:51 'Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:244)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:175)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:135)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:73)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:170)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:187)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:120)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:162)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:264)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:128)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:133)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:157)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:126)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1570)
+Caused by: java.lang.RuntimeException: java.lang.RuntimeException: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:628)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.doEnumerate(PersistentEnumeratorBase.java:266)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.enumerate(PersistentEnumeratorBase.java:279)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.enumerate(PersistentMapImpl.java:425)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.access$300(PersistentMapImpl.java:46)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:233)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:215)
+	at org.jetbrains.kotlin.com.intellij.util.containers.SLRUMap.clear(SLRUMap.java:172)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.flushAppendCache(PersistentMapImpl.java:930)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.processExistingKeys(PersistentMapImpl.java:524)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.processKeysWithExistingMapping(PersistentHashMap.java:173)
+	at org.jetbrains.kotlin.incremental.storage.CachingLazyStorage.getKeys(CachingLazyStorage.kt:65)
+	at org.jetbrains.kotlin.incremental.storage.LookupMap.getKeys(LookupMap.kt:56)
+	at org.jetbrains.kotlin.incremental.TrackedLookupMap.getKeys(LookupStorage.kt:306)
+	at org.jetbrains.kotlin.incremental.LookupStorage.getLookupSymbols(LookupStorage.kt:89)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$shrinkClasspath$lookupSymbols$1.invoke(ClasspathSnapshotShrinker.kt:37)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$shrinkClasspath$lookupSymbols$1.invoke(ClasspathSnapshotShrinker.kt:36)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$MetricsReporter.getLookupSymbols(ClasspathSnapshotShrinker.kt:122)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker.shrinkClasspath(ClasspathSnapshotShrinker.kt:36)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker.shrinkClasspath$default(ClasspathSnapshotShrinker.kt:31)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinkerKt.shrinkAndSaveClasspathSnapshot(ClasspathSnapshotShrinker.kt:285)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.performWorkAfterCompilation(IncrementalJvmCompilerRunner.kt:475)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.performWorkAfterCompilation(IncrementalJvmCompilerRunner.kt:62)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileImpl(IncrementalCompilerRunner.kt:402)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:281)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:125)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:657)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:105)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1624)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:714)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:598)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:844)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:721)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:720)
+	... 3 more
+Caused by: java.lang.RuntimeException: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:628)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.valueOf(PersistentEnumeratorBase.java:429)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.valueOf(PersistentBTreeEnumerator.java:667)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.isKeyAtIndex(PersistentEnumeratorBase.java:373)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.enumerateImpl(PersistentBTreeEnumerator.java:528)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.lambda$doEnumerate$0(PersistentEnumeratorBase.java:267)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:608)
+	... 43 more
+Caused by: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.incremental.storage.LookupSymbolKeyDescriptor.read(externalizers.kt:62)
+	at org.jetbrains.kotlin.incremental.storage.LookupSymbolKeyDescriptor.read(externalizers.kt:51)
+	at org.jetbrains.kotlin.com.intellij.util.io.keyStorage.AppendableStorageBackedByResizableMappedFile.read(AppendableStorageBackedByResizableMappedFile.java:94)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.findValueFor(PersistentEnumeratorBase.java:438)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.lambda$valueOf$2(PersistentEnumeratorBase.java:430)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:608)
+	... 49 more
+
+Failed to compile with Kotlin daemon: java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:244)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:175)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:135)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:73)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:199)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:170)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:187)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:120)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:162)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:264)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:128)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:133)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:157)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:126)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1570)
+Caused by: java.lang.RuntimeException: java.lang.RuntimeException: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:628)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.doEnumerate(PersistentEnumeratorBase.java:266)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.enumerate(PersistentEnumeratorBase.java:279)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.enumerate(PersistentMapImpl.java:425)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.access$300(PersistentMapImpl.java:46)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:233)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:215)
+	at org.jetbrains.kotlin.com.intellij.util.containers.SLRUMap.clear(SLRUMap.java:172)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.flushAppendCache(PersistentMapImpl.java:930)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentMapImpl.processExistingKeys(PersistentMapImpl.java:524)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentHashMap.processKeysWithExistingMapping(PersistentHashMap.java:173)
+	at org.jetbrains.kotlin.incremental.storage.CachingLazyStorage.getKeys(CachingLazyStorage.kt:65)
+	at org.jetbrains.kotlin.incremental.storage.LookupMap.getKeys(LookupMap.kt:56)
+	at org.jetbrains.kotlin.incremental.TrackedLookupMap.getKeys(LookupStorage.kt:306)
+	at org.jetbrains.kotlin.incremental.LookupStorage.getLookupSymbols(LookupStorage.kt:89)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$shrinkClasspath$lookupSymbols$1.invoke(ClasspathSnapshotShrinker.kt:37)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$shrinkClasspath$lookupSymbols$1.invoke(ClasspathSnapshotShrinker.kt:36)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker$MetricsReporter.getLookupSymbols(ClasspathSnapshotShrinker.kt:122)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker.shrinkClasspath(ClasspathSnapshotShrinker.kt:36)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinker.shrinkClasspath$default(ClasspathSnapshotShrinker.kt:31)
+	at org.jetbrains.kotlin.incremental.classpathDiff.ClasspathSnapshotShrinkerKt.shrinkAndSaveClasspathSnapshot(ClasspathSnapshotShrinker.kt:285)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.performWorkAfterCompilation(IncrementalJvmCompilerRunner.kt:475)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.performWorkAfterCompilation(IncrementalJvmCompilerRunner.kt:62)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileImpl(IncrementalCompilerRunner.kt:402)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:281)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:125)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:657)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:105)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1624)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:714)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:598)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:844)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:721)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:720)
+	... 3 more
+Caused by: java.lang.RuntimeException: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:628)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.valueOf(PersistentEnumeratorBase.java:429)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.valueOf(PersistentBTreeEnumerator.java:667)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.isKeyAtIndex(PersistentEnumeratorBase.java:373)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentBTreeEnumerator.enumerateImpl(PersistentBTreeEnumerator.java:528)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.lambda$doEnumerate$0(PersistentEnumeratorBase.java:267)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:608)
+	... 43 more
+Caused by: java.lang.IllegalStateException: Unexpected byte value for storeFullFqNames: 111
+	at org.jetbrains.kotlin.incremental.storage.LookupSymbolKeyDescriptor.read(externalizers.kt:62)
+	at org.jetbrains.kotlin.incremental.storage.LookupSymbolKeyDescriptor.read(externalizers.kt:51)
+	at org.jetbrains.kotlin.com.intellij.util.io.keyStorage.AppendableStorageBackedByResizableMappedFile.read(AppendableStorageBackedByResizableMappedFile.java:94)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.findValueFor(PersistentEnumeratorBase.java:438)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.lambda$valueOf$2(PersistentEnumeratorBase.java:430)
+	at org.jetbrains.kotlin.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:608)
+	... 49 more
+Using fallback strategy: Compile without Kotlin daemon
+Try ./gradlew --stop if this issue persists.
+exception: app\src\main\java\com\ledgerai\app\presentation\navigation\AppNavigation.kt:44:80: warning: 'Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes
+exception:     object Notes        : Screen("notes",        "Notes",         Icons.Filled.Notes)
+exception:                                                                                ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\ai\AiAssistantScreen.kt:185:39: warning: 'Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send
+exception:                     Icon(Icons.Filled.Send, contentDescription = "Send",
+exception:                                       ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\analytics\AnalyticsScreen.kt:182:13: warning: variable 'colorIndex' is never used
+exception:         val colorIndex = cat.ordinal % CategoryColors.size
+exception:             ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\bills\BillsScreen.kt:165:9: warning: variable 'catExpanded' is never used
+exception:     var catExpanded by remember { mutableStateOf(false) }
+exception:         ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\budget\BudgetScreen.kt:26:5: warning: parameter 'onNavigateToAi' is never used
+exception:     onNavigateToAi: () -> Unit = {},
+exception:     ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\transactions\TransactionsScreen.kt:30:9: warning: variable 'showNlpDialog' is never used
+exception:     var showNlpDialog by remember { mutableStateOf(false) }
+exception:         ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\transactions\TransactionsScreen.kt:31:9: warning: variable 'nlpInput' is never used
+exception:     var nlpInput by remember { mutableStateOf("") }
+exception:         ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\voice\VoiceRecorderScreen.kt:70:44: warning: 'ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack
+exception:                     }) { Icon(Icons.Filled.ArrowBack, "Back") }
+exception:                                            ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\voice\VoiceRecorderScreen.kt:193:55: warning: 'Send: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Send
+exception:                                     Icon(Icons.Filled.Send, "Parse",
+exception:                                                       ^
+exception: app\src\main\java\com\ledgerai\app\presentation\screens\voice\VoiceRecorderScreen.kt:509:51: warning: 'Notes: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Notes
+exception:                 leadingIcon = { Icon(Icons.Filled.Notes, null) }
+exception:                                                   ^
+w: Detected multiple Kotlin daemon sessions at kotlin\sessions
+
+BUILD SUCCESSFUL in 3m 25s
+17 actionable tasks: 2 executed, 15 up-to-date

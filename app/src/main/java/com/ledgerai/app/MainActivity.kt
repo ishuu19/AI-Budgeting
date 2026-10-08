@@ -37,7 +37,11 @@ class MainActivity : ComponentActivity() {
                     )
 
                     if (userInfo.isLoggedIn) {
-                        AppNavigation()
+                        val openVoice = intent?.getBooleanExtra(
+                            com.ledgerai.app.widget.VoiceTransactionWidget.EXTRA_OPEN_VOICE,
+                            false
+                        ) == true
+                        AppNavigation(openVoice = openVoice)
                     } else {
                         LoginScreen(onSignedIn = { /* state update triggers recomposition */ })
                     }

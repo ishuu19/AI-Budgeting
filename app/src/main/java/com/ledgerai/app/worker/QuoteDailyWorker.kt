@@ -26,7 +26,7 @@ class QuoteDailyWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            quoteRepository.persistForWidget(quoteRepository.todaysQuote())
+            quoteRepository.persistForWidgetRemote()
             VoiceTransactionWidget().updateAll(applicationContext)
             Result.success()
         } catch (_: Exception) {

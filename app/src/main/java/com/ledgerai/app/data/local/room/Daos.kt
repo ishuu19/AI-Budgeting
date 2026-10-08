@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.DebtDirection
@@ -81,6 +82,12 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM transactions WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<TransactionEntity>
+
+    @Query("SELECT * FROM transactions WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): TransactionEntity?
 }
 
 @Dao
@@ -114,6 +121,12 @@ interface BudgetDao {
 
     @Query("UPDATE budgets SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM budgets WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<BudgetEntity>
+
+    @Query("SELECT * FROM budgets WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): BudgetEntity?
 }
 
 @Dao
@@ -150,6 +163,12 @@ interface DebtDao {
 
     @Query("UPDATE debts SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM debts WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<DebtEntity>
+
+    @Query("SELECT * FROM debts WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): DebtEntity?
 }
 
 @Dao
@@ -174,6 +193,12 @@ interface GoalDao {
 
     @Query("UPDATE goals SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM goals WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<GoalEntity>
+
+    @Query("SELECT * FROM goals WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): GoalEntity?
 }
 
 @Dao
@@ -207,4 +232,229 @@ interface BillDao {
 
     @Query("UPDATE bills SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM bills WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<BillEntity>
+
+    @Query("SELECT * FROM bills WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): BillEntity?
+}
+
+@Dao
+interface TaskDao {
+
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<TaskEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL ORDER BY createdAt DESC")
+    fun observeWithReminders(): Flow<List<TaskWithReminders>>
+
+    @Query(
+        """
+        SELECT * FROM tasks
+        WHERE deletedAt IS NULL AND isCompleted = 0
+        ORDER BY dueAt ASC
+        """
+    )
+    fun observeIncomplete(): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM tasks WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): TaskEntity?
+
+    /** Includes soft-deleted rows (sync / reminder FK resolution). */
+    @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
+    suspend fun getByIdAny(id: Long): TaskEntity?
+
+    @Transaction
+    @Query("SELECT * FROM tasks WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getWithReminders(id: Long): TaskWithReminders?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: TaskEntity): Long
+
+    @Update
+    suspend fun update(entity: TaskEntity)
+
+    @Query("UPDATE tasks SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM tasks WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<TaskEntity>
+
+    @Query("SELECT * FROM tasks WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): TaskEntity?
+}
+
+@Dao
+interface TaskReminderDao {
+
+    @Query(
+        """
+        SELECT * FROM task_reminders
+        WHERE deletedAt IS NULL AND taskId = :taskId
+        ORDER BY remindAt ASC
+        """
+    )
+    fun observeForTask(taskId: Long): Flow<List<TaskReminderEntity>>
+
+    @Query(
+        """
+        SELECT * FROM task_reminders
+        WHERE deletedAt IS NULL AND taskId = :taskId
+        ORDER BY remindAt ASC
+        """
+    )
+    suspend fun listForTask(taskId: Long): List<TaskReminderEntity>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM task_reminders
+        WHERE deletedAt IS NULL AND taskId = :taskId
+        """
+    )
+    suspend fun countActiveForTask(taskId: Long): Int
+
+    @Query("SELECT * FROM task_reminders WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): TaskReminderEntity?
+
+    @Query(
+        """
+        SELECT * FROM task_reminders
+        WHERE deletedAt IS NULL AND isEnabled = 1
+        ORDER BY remindAt ASC
+        """
+    )
+    suspend fun listEnabled(): List<TaskReminderEntity>
+
+    @Query(
+        """
+        SELECT * FROM task_reminders
+        WHERE deletedAt IS NULL AND taskId = :taskId AND isEnabled = 1
+        """
+    )
+    suspend fun listEnabledForTask(taskId: Long): List<TaskReminderEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: TaskReminderEntity): Long
+
+    @Update
+    suspend fun update(entity: TaskReminderEntity)
+
+    @Query(
+        """
+        UPDATE task_reminders
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE id = :id
+        """
+    )
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query(
+        """
+        UPDATE task_reminders
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE taskId = :taskId AND deletedAt IS NULL
+        """
+    )
+    suspend fun softDeleteForTask(taskId: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM task_reminders WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<TaskReminderEntity>
+
+    @Query("SELECT * FROM task_reminders WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): TaskReminderEntity?
+}
+
+@Dao
+interface RoutineDao {
+
+    @Query(
+        """
+        SELECT * FROM routines
+        WHERE deletedAt IS NULL AND isActive = 1
+        ORDER BY title ASC
+        """
+    )
+    fun observeActive(): Flow<List<RoutineEntity>>
+
+    @Query("SELECT * FROM routines WHERE deletedAt IS NULL ORDER BY title ASC")
+    fun observeAll(): Flow<List<RoutineEntity>>
+
+    @Query("SELECT * FROM routines WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): RoutineEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: RoutineEntity): Long
+
+    @Update
+    suspend fun update(entity: RoutineEntity)
+
+    @Query("UPDATE routines SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM routines WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<RoutineEntity>
+
+    @Query("SELECT * FROM routines WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): RoutineEntity?
+}
+
+@Dao
+interface AlarmDao {
+
+    @Query("SELECT * FROM alarms WHERE deletedAt IS NULL ORDER BY time ASC")
+    fun observeAll(): Flow<List<AlarmEntity>>
+
+    @Query(
+        """
+        SELECT * FROM alarms
+        WHERE deletedAt IS NULL AND isEnabled = 1
+        ORDER BY time ASC
+        """
+    )
+    fun observeEnabled(): Flow<List<AlarmEntity>>
+
+    @Query("SELECT * FROM alarms WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): AlarmEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: AlarmEntity): Long
+
+    @Update
+    suspend fun update(entity: AlarmEntity)
+
+    @Query("UPDATE alarms SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM alarms WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<AlarmEntity>
+
+    @Query("SELECT * FROM alarms WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): AlarmEntity?
+}
+
+@Dao
+interface NoteDao {
+
+    @Query("SELECT * FROM notes WHERE deletedAt IS NULL ORDER BY editedAt DESC")
+    fun observeAll(): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM notes WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): NoteEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: NoteEntity): Long
+
+    @Update
+    suspend fun update(entity: NoteEntity)
+
+    @Query("UPDATE notes SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query("SELECT * FROM notes WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    suspend fun listForSync(sinceMs: Long): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: String): NoteEntity?
 }
