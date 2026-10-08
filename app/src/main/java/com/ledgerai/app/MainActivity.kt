@@ -21,6 +21,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val EXTRA_OPEN_FOCUS_BLOCK_ID = "open_focus_block_id"
+        const val EXTRA_FOCUS_TOPIC = "focus_topic"
+    }
+
     @Inject
     lateinit var userSession: UserSession
 
@@ -41,7 +46,18 @@ class MainActivity : ComponentActivity() {
                             com.ledgerai.app.widget.VoiceTransactionWidget.EXTRA_OPEN_VOICE,
                             false
                         ) == true
-                        AppNavigation(openVoice = openVoice)
+                        val openCalendar = intent?.getBooleanExtra(
+                            com.ledgerai.app.widget.DayScheduleWidget.EXTRA_OPEN_CALENDAR,
+                            false
+                        ) == true
+                        val focusBlockId = intent?.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L) ?: 0L
+                        val focusTopic = intent?.getStringExtra(EXTRA_FOCUS_TOPIC)
+                        AppNavigation(
+                            openVoice = openVoice,
+                            openCalendar = openCalendar,
+                            openFocusBlockId = focusBlockId,
+                            focusTopic = focusTopic
+                        )
                     } else {
                         LoginScreen(onSignedIn = { /* state update triggers recomposition */ })
                     }

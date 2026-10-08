@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.ledgerai.app.BuildConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,8 @@ class UserPreferences @Inject constructor(
         val VOICE_ENGINE = stringPreferencesKey("voice_engine")
         val TRACK_MODE = stringPreferencesKey("track_mode")
         val CASH_ON_HAND = stringPreferencesKey("cash_on_hand")
+        /** One-time local Room wipe (removed demo seed data). */
+        val FRESH_LOCAL_RESET_DONE = booleanPreferencesKey("fresh_local_reset_oct_2026_done")
     }
 
     val currency: Flow<String> = context.dataStore.data.map {
@@ -112,5 +115,13 @@ class UserPreferences @Inject constructor(
 
     suspend fun setVoiceEngine(id: String) {
         context.dataStore.edit { it[Keys.VOICE_ENGINE] = id }
+    }
+
+    /** Clears all Room tables once per device (see [DatabaseSeeder]). */
+    suspend fun runFreshLocalResetIfNeeded(block: suspend () -> Unit) {
+        val done = context.dataStore.data.first()[Keys.FRESH_LOCAL_RESET_DONE] == true
+        if (done) return
+        block()
+        context.dataStore.edit { it[Keys.FRESH_LOCAL_RESET_DONE] = true }
     }
 }

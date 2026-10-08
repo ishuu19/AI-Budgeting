@@ -7,6 +7,10 @@ import com.ledgerai.app.domain.model.Debt
 import com.ledgerai.app.domain.model.Goal
 import com.ledgerai.app.domain.model.NoteItem
 import com.ledgerai.app.domain.model.RoutineItem
+import com.ledgerai.app.domain.model.CalendarEvent
+import com.ledgerai.app.domain.model.Course
+import com.ledgerai.app.domain.model.RoutineSlotReminder
+import com.ledgerai.app.domain.model.ScheduleSlot
 import com.ledgerai.app.domain.model.TaskItem
 import com.ledgerai.app.domain.model.TaskReminder
 import com.ledgerai.app.domain.model.Transaction
@@ -189,6 +193,8 @@ fun TaskEntity.toDomain(reminders: List<TaskReminder> = emptyList()) = TaskItem(
     location = location,
     links = links,
     dueAt = dueAt,
+    courseId = courseId,
+    eventKind = eventKind,
     isCompleted = isCompleted,
     reminders = reminders,
     createdAt = createdAt
@@ -214,6 +220,8 @@ fun TaskItem.toEntity(
     location = location,
     links = links,
     dueAt = dueAt,
+    courseId = courseId,
+    eventKind = eventKind,
     isCompleted = isCompleted,
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -337,3 +345,104 @@ private fun String.toTagList(): List<String> =
 
 private fun List<String>.toTagsStorage(): String =
     joinToString(",") { it.trim() }.trim(',')
+
+fun CourseEntity.toDomain() = Course(
+    id = id,
+    remoteId = remoteId,
+    code = code,
+    name = name,
+    defaultLocation = defaultLocation,
+    colorToken = colorToken,
+    notes = notes
+)
+
+fun Course.toEntity(
+    userId: String? = null,
+    updatedAt: Long = System.currentTimeMillis(),
+    deletedAt: Long? = null
+) = CourseEntity(
+    id = id,
+    remoteId = remoteId,
+    userId = userId,
+    code = code,
+    name = name,
+    defaultLocation = defaultLocation,
+    colorToken = colorToken,
+    notes = notes,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt
+)
+
+fun ScheduleSlotEntity.toDomain(
+    reminders: List<RoutineSlotReminder> = emptyList(),
+    skippedDates: Set<java.time.LocalDate> = emptySet()
+) = ScheduleSlot(
+    id = id,
+    remoteId = remoteId,
+    routineId = routineId,
+    courseId = courseId,
+    title = title,
+    dayOfWeek = dayOfWeek,
+    startTime = startTime,
+    endTime = endTime,
+    location = location,
+    recurrenceUntil = recurrenceUntil,
+    skippedDates = skippedDates,
+    reminders = reminders
+)
+
+fun ScheduleSlotWithReminders.toDomain(skippedDates: Set<java.time.LocalDate> = emptySet()) =
+    slot.toDomain(
+        reminders = reminders
+            .filter { it.deletedAt == null }
+            .sortedBy { it.remindAt }
+            .map { it.toDomain() },
+        skippedDates = skippedDates
+    )
+
+fun ScheduleSlot.toEntity(
+    userId: String? = null,
+    updatedAt: Long = System.currentTimeMillis(),
+    deletedAt: Long? = null
+) = ScheduleSlotEntity(
+    id = id,
+    remoteId = remoteId,
+    userId = userId,
+    routineId = routineId,
+    courseId = courseId,
+    title = title,
+    dayOfWeek = dayOfWeek,
+    startTime = startTime,
+    endTime = endTime,
+    location = location,
+    recurrenceUntil = recurrenceUntil,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt
+)
+
+fun RoutineSlotReminderEntity.toDomain() = RoutineSlotReminder(
+    id = id,
+    label = label,
+    remindAt = remindAt,
+    offsetMinutes = offsetMinutes,
+    isEnabled = isEnabled
+)
+
+fun RoutineSlotReminder.toEntity(
+    slotId: Long,
+    userId: String? = null,
+    updatedAt: Long = System.currentTimeMillis(),
+    deletedAt: Long? = null
+) = RoutineSlotReminderEntity(
+    id = id,
+    remoteId = null,
+    userId = userId,
+    slotId = slotId,
+    label = label,
+    remindAt = remindAt,
+    offsetMinutes = offsetMinutes,
+    isEnabled = isEnabled,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt
+)
+

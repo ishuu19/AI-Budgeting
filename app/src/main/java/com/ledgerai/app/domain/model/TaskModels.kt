@@ -13,6 +13,8 @@ data class TaskItem(
     val location: String = "",
     val links: String = "",
     val dueAt: LocalDateTime? = null,
+    val courseId: Long? = null,
+    val eventKind: TaskEventKind = TaskEventKind.TASK,
     val isCompleted: Boolean = false,
     val reminders: List<TaskReminder> = emptyList(),
     val createdAt: LocalDateTime = LocalDateTime.now()

@@ -8,8 +8,11 @@ import com.ledgerai.app.data.repository.QuoteRepository
 import com.ledgerai.app.di.DatabaseSeeder
 import com.ledgerai.app.worker.BillReminderWorker
 import com.ledgerai.app.worker.BudgetCheckWorker
+import com.ledgerai.app.worker.CheckinWorker
 import com.ledgerai.app.worker.InsightDailyWorker
+import com.ledgerai.app.worker.NoteScanWorker
 import com.ledgerai.app.worker.QuoteDailyWorker
+import com.ledgerai.app.worker.SpendGuideMorningWorker
 import com.ledgerai.app.worker.SyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -37,11 +40,14 @@ class LedgerApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        databaseSeeder.seedIfEmpty()
+        databaseSeeder.onApplicationStart()
         BudgetCheckWorker.schedule(this)
         BillReminderWorker.schedule(this)
         QuoteDailyWorker.schedule(this)
         InsightDailyWorker.schedule(this)
+        CheckinWorker.schedule(this)
+        SpendGuideMorningWorker.schedule(this)
+        NoteScanWorker.schedule(this)
         appScope.launch {
             runCatching { quoteRepository.persistForWidgetRemote() }
             userSession.userInfo

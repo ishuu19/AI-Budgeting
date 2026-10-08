@@ -220,6 +220,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation(libs.mlkit.text.recognition)
+
     // Offline STT (Phase 4). Vosk primary + Sherpa-ONNX (sherpa-onnx) as stronger offline fallback.
     // Keep Vosk as backup for very small devices / quick start.
     implementation(libs.vosk.android)

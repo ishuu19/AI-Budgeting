@@ -22,6 +22,7 @@ import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.ai.NoteSummaryDto
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.NoteRepository
+import com.ledgerai.app.data.repository.NudgeProposalRepository
 import com.ledgerai.app.domain.model.NoteItem
 import com.ledgerai.app.presentation.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,7 @@ private val SUGGESTED_TAGS = listOf("finance", "ideas", "goals", "shopping", "wo
 class NotesViewModel @Inject constructor(
     private val noteRepo: NoteRepository,
     private val aiRepo: AiRepository,
+    private val nudgeRepo: NudgeProposalRepository,
 ) : ViewModel() {
 
     val notes: StateFlow<List<NoteItem>> = noteRepo.observeNotes()
@@ -117,6 +119,15 @@ class NotesViewModel @Inject constructor(
                     _aiMessage.value = "Suggested ${it.size} tag(s)."
                 }
                 .onFailure { _aiMessage.value = it.message ?: "Tag failed" }
+            _aiBusy.value = false
+        }
+    }
+
+    fun nudgeFromNote(note: NoteItem) {
+        viewModelScope.launch {
+            _aiBusy.value = true
+            val count = nudgeRepo.scanNote(note.id, note.body).size
+            _aiMessage.value = if (count > 0) "$count nudge(s) proposed" else "No nudges found"
             _aiBusy.value = false
         }
     }
@@ -268,6 +279,9 @@ fun NotesScreen(onBack: () -> Unit = {}, viewModel: NotesViewModel = hiltViewMod
             onAsk = { title, body, question, onAnswer ->
                 viewModel.askAboutNote(title, body, question, onAnswer)
             },
+            onNudge = { note ->
+                viewModel.nudgeFromNote(note)
+            },
         )
     }
 }
@@ -282,6 +296,7 @@ private fun NoteEditorSheet(
     onSummarize: (title: String, body: String, apply: (NoteSummaryDto) -> Unit) -> Unit,
     onTag: (title: String, body: String, applyTags: (List<String>) -> Unit) -> Unit,
     onAsk: (title: String, body: String, question: String, onAnswer: (String) -> Unit) -> Unit,
+    onNudge: (NoteItem) -> Unit,
 ) {
     var title by remember(state) { mutableStateOf(state.title) }
     var body by remember(state) { mutableStateOf(state.body) }
@@ -336,6 +351,13 @@ private fun NoteEditorSheet(
                 if (aiBusy || !hasText) return@LButton
                 onTag(title, body) { suggested -> tags = (tags + suggested).distinct() }
             }, enabled = hasText && !aiBusy)
+
+            LButton("Nudge", onClick = {
+                val existing = state.existing
+                if (!aiBusy && hasText && existing != null) {
+                    onNudge(existing.copy(title = title, body = body, tags = tags))
+                }
+            }, enabled = hasText && !aiBusy && state.existing != null)
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 LField(askQuestion, { askQuestion = it }, "Ask", modifier = Modifier.weight(1f))

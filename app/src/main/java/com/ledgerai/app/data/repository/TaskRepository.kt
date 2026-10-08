@@ -5,8 +5,10 @@ import com.ledgerai.app.data.local.room.TaskReminderDao
 import com.ledgerai.app.data.local.room.toDomain
 import com.ledgerai.app.data.local.room.toEntity
 import com.ledgerai.app.domain.model.MAX_REMINDERS_PER_TASK
+import com.ledgerai.app.domain.model.LeaveRefType
 import com.ledgerai.app.domain.model.TaskItem
 import com.ledgerai.app.domain.model.TaskReminder
+import com.ledgerai.app.domain.schedule.defaultBeforeEventOptions
 import com.ledgerai.app.worker.TaskReminderScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,13 +20,17 @@ import javax.inject.Singleton
 class TaskRepository @Inject constructor(
     private val dao: TaskDao,
     private val reminderDao: TaskReminderDao,
-    private val reminderScheduler: TaskReminderScheduler
+    private val reminderScheduler: TaskReminderScheduler,
+    private val calendarRepository: CalendarRepository,
+    private val leaveByRepository: LeaveByRepository
 ) {
 
     fun observeTasks(): Flow<List<TaskItem>> =
         dao.observeWithReminders().map { list ->
             list.map { it.toDomain() }.thenByDue()
         }
+
+    suspend fun findById(id: Long): TaskItem? = dao.getById(id)?.toDomain()
 
     suspend fun insert(task: TaskItem): Long {
         val capped = task.copy(reminders = task.reminders.take(MAX_REMINDERS_PER_TASK))
@@ -43,6 +49,7 @@ class TaskRepository @Inject constructor(
             capped.id
         }
         replaceReminders(taskId, capped.reminders, userId = dao.getById(taskId)?.userId)
+        syncCalendar(taskId)
         return taskId
     }
 
@@ -58,6 +65,7 @@ class TaskRepository @Inject constructor(
             )
         )
         replaceReminders(task.id, capped.reminders, userId = existing?.userId)
+        syncCalendar(task.id)
     }
 
     suspend fun delete(task: TaskItem) {
@@ -66,6 +74,8 @@ class TaskRepository @Inject constructor(
         val now = System.currentTimeMillis()
         reminderDao.softDeleteForTask(task.id, deletedAt = now, updatedAt = now)
         dao.softDelete(task.id, deletedAt = now, updatedAt = now)
+        calendarRepository.removeForTask(task.id)
+        leaveByRepository.removeForRef(LeaveRefType.TASK, task.id)
     }
 
     suspend fun setCompleted(id: Long, completed: Boolean) {
@@ -78,6 +88,7 @@ class TaskRepository @Inject constructor(
         )
         if (completed) {
             cancelScheduledForTask(id)
+            leaveByRepository.removeForRef(LeaveRefType.TASK, id)
         } else {
             reminderDao.listEnabledForTask(id).forEach { reminder ->
                 reminderScheduler.schedule(reminder, entity.title)
@@ -104,6 +115,27 @@ class TaskRepository @Inject constructor(
         )
         reminderScheduler.schedule(id, task.title, label, remindAt)
         return true
+    }
+
+    /**
+     * Schedules [offsets] (or the standard 10m / 1h / 3h set) before [eventAt].
+     * Skips times that are not in the future or when the task is at the reminder cap.
+     */
+    suspend fun seedBeforeEventReminders(
+        taskId: Long,
+        eventAt: LocalDateTime,
+        offsets: List<Pair<String, Long>> = defaultBeforeEventOptions()
+    ): Int {
+        val now = LocalDateTime.now()
+        var added = 0
+        for ((label, minutes) in offsets.distinctBy { it.second }) {
+            if (minutes < 0) continue
+            val at = eventAt.minusMinutes(minutes)
+            if (!at.isAfter(now)) continue
+            val offset = minutes.toInt().takeIf { minutes > 0 }
+            if (addReminder(taskId, label, at, offset)) added++
+        }
+        return added
     }
 
     suspend fun removeReminder(taskId: Long, reminderId: Long) {
@@ -140,6 +172,18 @@ class TaskRepository @Inject constructor(
         val ids = reminderDao.listForTask(taskId).map { it.id } +
             reminderDao.listEnabledForTask(taskId).map { it.id }
         reminderScheduler.cancelAll(ids.distinct())
+    }
+
+    private suspend fun syncCalendar(taskId: Long) {
+        val entity = dao.getById(taskId) ?: return
+        calendarRepository.syncFromTask(
+            taskId = taskId,
+            title = entity.title,
+            courseId = entity.courseId,
+            startAt = entity.dueAt,
+            eventKind = entity.eventKind,
+            location = entity.location
+        )
     }
 
     private fun List<TaskItem>.thenByDue(): List<TaskItem> =

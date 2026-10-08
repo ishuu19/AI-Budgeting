@@ -34,6 +34,8 @@ class AiConfig @Inject constructor() {
         BuildConfig.AI_MODEL_OPENROUTER_FREE.ifBlank { "deepseek/deepseek-chat-v3-0324:free" }
     val modelGemini: String =
         BuildConfig.AI_MODEL_GEMINI.ifBlank { "gemini-flash-latest" }
+    /** Vision timetable OCR (Gemini multimodal). */
+    val modelGeminiVision: String = "gemini-2.0-flash"
     val modelDeepSeek: String =
         BuildConfig.AI_MODEL_DEEPSEEK.ifBlank { "deepseek-chat" }
     val modelOpenRouter: String =

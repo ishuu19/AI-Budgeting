@@ -54,6 +54,13 @@
         </activity>
 
         <activity
+            android:name=".service.WidgetVoiceCaptureActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:taskAffinity="" />
+
+        <activity
             android:name=".service.SpeakQuoteActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
@@ -81,8 +88,24 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <service
+            android:name=".service.FocusForegroundService"
+            android:exported="false" />
+
+        <service
             android:name=".service.NotificationService"
             android:exported="false" />
+
+        <activity
+            android:name=".service.JobShareActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
 
         <receiver
             android:name=".service.BootReceiver"
@@ -102,6 +125,40 @@
         </receiver>
 
         <receiver
+            android:name=".service.LeaveByFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.LEAVE_BY_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.PlanBlockFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.PLAN_BLOCK_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.HabitNudgeFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.HABIT_NUDGE_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.HabitNudgeActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.HABIT_NUDGE_START" />
+                <action android:name="com.ledgerai.app.action.HABIT_NUDGE_SNOOZE" />
+                <action android:name="com.ledgerai.app.action.HABIT_NUDGE_SKIP" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".widget.VoiceTransactionWidgetReceiver"
             android:exported="true"
             android:label="@string/widget_label">
@@ -111,6 +168,30 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/voice_transaction_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.DayScheduleWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_day_schedule_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/day_schedule_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.CalendarEventsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_calendar_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/calendar_events_widget_info" />
         </receiver>
 
         <provider

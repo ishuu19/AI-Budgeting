@@ -52,7 +52,13 @@ data class GeminiContent(
 )
 
 data class GeminiPart(
-    val text: String,
+    val text: String? = null,
+    @SerializedName("inlineData") val inlineData: GeminiInlineData? = null,
+)
+
+data class GeminiInlineData(
+    @SerializedName("mimeType") val mimeType: String,
+    val data: String,
 )
 
 data class GeminiGenerationConfig(
@@ -290,4 +296,30 @@ data class NoteSummaryDto(
     val summary: String? = null,
     val tags: List<String>? = null,
     val highlights: List<String>? = null,
+)
+
+data class ScheduleDraftListDto(
+    val drafts: List<ScheduleDraftDto>? = null,
+)
+
+data class ScheduleDraftDto(
+    val type: String? = null,
+    val title: String? = null,
+    @SerializedName("start_at") val startAt: String? = null,
+    val reason: String? = null,
+)
+
+data class NoteNudgeScanDto(
+    val proposals: List<NoteNudgeProposalDto>? = null,
+)
+
+data class NoteNudgeProposalDto(
+    val message: String? = null,
+    @SerializedName("suggested_at") val suggestedAt: String? = null,
+    val reason: String? = null,
+)
+
+data class SpendGuideExplainDto(
+    val headline: String? = null,
+    val reasons: List<String>? = null,
 )

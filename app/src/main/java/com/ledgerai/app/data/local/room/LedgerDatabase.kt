@@ -15,9 +15,28 @@ import androidx.room.TypeConverters
         TaskReminderEntity::class,
         RoutineEntity::class,
         AlarmEntity::class,
-        NoteEntity::class
+        NoteEntity::class,
+        CourseEntity::class,
+        ScheduleSlotEntity::class,
+        RoutineSlotReminderEntity::class,
+        CalendarEventEntity::class,
+        ScheduleSlotExceptionEntity::class,
+        StudyPlanEntity::class,
+        PlanBlockEntity::class,
+        HabitEntity::class,
+        HabitLogEntity::class,
+        FocusSessionEntity::class,
+        NudgeProposalEntity::class,
+        SpendSpeculationEntity::class,
+        SpendGuideDayEntity::class,
+        LeaveRuleEntity::class,
+        LocationPointEntity::class,
+        VisitEntity::class,
+        ActivityEntryEntity::class,
+        CheckinWindowEntity::class,
+        JobApplicationEntity::class
     ],
-    version = 3,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,4 +51,25 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun routineDao(): RoutineDao
     abstract fun alarmDao(): AlarmDao
     abstract fun noteDao(): NoteDao
+    abstract fun courseDao(): CourseDao
+    abstract fun scheduleSlotDao(): ScheduleSlotDao
+    abstract fun routineSlotReminderDao(): RoutineSlotReminderDao
+    abstract fun calendarEventDao(): CalendarEventDao
+
+    abstract fun scheduleSlotExceptionDao(): ScheduleSlotExceptionDao
+
+    abstract fun studyPlanDao(): StudyPlanDao
+    abstract fun planBlockDao(): PlanBlockDao
+    abstract fun habitDao(): HabitDao
+    abstract fun habitLogDao(): HabitLogDao
+    abstract fun focusSessionDao(): FocusSessionDao
+    abstract fun nudgeProposalDao(): NudgeProposalDao
+    abstract fun spendSpeculationDao(): SpendSpeculationDao
+    abstract fun spendGuideDayDao(): SpendGuideDayDao
+    abstract fun leaveRuleDao(): LeaveRuleDao
+    abstract fun locationPointDao(): LocationPointDao
+    abstract fun visitDao(): VisitDao
+    abstract fun activityEntryDao(): ActivityEntryDao
+    abstract fun checkinWindowDao(): CheckinWindowDao
+    abstract fun jobApplicationDao(): JobApplicationDao
 }

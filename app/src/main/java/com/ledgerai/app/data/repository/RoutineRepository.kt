@@ -61,4 +61,6 @@ class RoutineRepository @Inject constructor(
         val now = System.currentTimeMillis()
         dao.softDelete(routine.id, deletedAt = now, updatedAt = now)
     }
+
+    suspend fun findById(id: Long): RoutineItem? = dao.getById(id)?.toDomain()
 }

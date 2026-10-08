@@ -458,3 +458,218 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE remoteId = :remoteId LIMIT 1")
     suspend fun getByRemoteId(remoteId: String): NoteEntity?
 }
+
+@Dao
+interface CourseDao {
+
+    @Query("SELECT * FROM courses WHERE deletedAt IS NULL ORDER BY code ASC, name ASC")
+    fun observeAll(): Flow<List<CourseEntity>>
+
+    @Query("SELECT * FROM courses WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): CourseEntity?
+
+    @Query(
+        """
+        SELECT * FROM courses
+        WHERE deletedAt IS NULL AND code = :code COLLATE NOCASE
+        LIMIT 1
+        """
+    )
+    suspend fun findByCode(code: String): CourseEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: CourseEntity): Long
+
+    @Update
+    suspend fun update(entity: CourseEntity)
+
+    @Query("UPDATE courses SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+}
+
+@Dao
+interface ScheduleSlotDao {
+
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM schedule_slots
+        WHERE deletedAt IS NULL AND routineId = :routineId
+        ORDER BY dayOfWeek ASC, startTime ASC
+        """
+    )
+    fun observeWithReminders(routineId: Long): Flow<List<ScheduleSlotWithReminders>>
+
+    @Query("SELECT * FROM schedule_slots WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): ScheduleSlotEntity?
+
+    @Transaction
+    @Query("SELECT * FROM schedule_slots WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getWithReminders(id: Long): ScheduleSlotWithReminders?
+
+    @Query(
+        """
+        SELECT id FROM schedule_slots
+        WHERE routineId = :routineId AND deletedAt IS NULL
+        """
+    )
+    suspend fun listActiveIds(routineId: Long): List<Long>
+
+    @Query("SELECT * FROM schedule_slots WHERE deletedAt IS NULL")
+    fun observeAll(): Flow<List<ScheduleSlotEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: ScheduleSlotEntity): Long
+
+    @Update
+    suspend fun update(entity: ScheduleSlotEntity)
+
+    @Query(
+        """
+        UPDATE schedule_slots
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE routineId = :routineId AND deletedAt IS NULL
+        """
+    )
+    suspend fun softDeleteForRoutine(routineId: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query(
+        """
+        UPDATE schedule_slots
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE id = :id
+        """
+    )
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+}
+
+@Dao
+interface ScheduleSlotExceptionDao {
+
+    @Query("SELECT * FROM schedule_slot_exceptions")
+    fun observeAll(): Flow<List<ScheduleSlotExceptionEntity>>
+
+    @Query("SELECT * FROM schedule_slot_exceptions WHERE slotId = :slotId")
+    suspend fun listForSlot(slotId: Long): List<ScheduleSlotExceptionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(entity: ScheduleSlotExceptionEntity)
+
+    @Query("DELETE FROM schedule_slot_exceptions WHERE slotId = :slotId")
+    suspend fun clearForSlot(slotId: Long)
+}
+
+@Dao
+interface RoutineSlotReminderDao {
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM routine_slot_reminders
+        WHERE deletedAt IS NULL AND slotId = :slotId
+        """
+    )
+    suspend fun countActiveForSlot(slotId: Long): Int
+
+    @Query("SELECT * FROM routine_slot_reminders WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): RoutineSlotReminderEntity?
+
+    @Query(
+        """
+        SELECT * FROM routine_slot_reminders
+        WHERE deletedAt IS NULL AND isEnabled = 1
+        ORDER BY remindAt ASC
+        """
+    )
+    suspend fun listEnabled(): List<RoutineSlotReminderEntity>
+
+    @Query(
+        """
+        SELECT * FROM routine_slot_reminders
+        WHERE deletedAt IS NULL AND slotId = :slotId
+        ORDER BY remindAt ASC
+        """
+    )
+    suspend fun listActiveForSlot(slotId: Long): List<RoutineSlotReminderEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: RoutineSlotReminderEntity): Long
+
+    @Update
+    suspend fun update(entity: RoutineSlotReminderEntity)
+
+    @Query(
+        """
+        UPDATE routine_slot_reminders
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE slotId = :slotId AND deletedAt IS NULL
+        """
+    )
+    suspend fun softDeleteForSlot(slotId: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query(
+        """
+        UPDATE routine_slot_reminders
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE id = :id
+        """
+    )
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+}
+
+@Dao
+interface CalendarEventDao {
+
+    @Query(
+        """
+        SELECT * FROM calendar_events
+        WHERE deletedAt IS NULL
+        AND startAt < :to
+        AND (
+            recurrenceFrequency != 'NONE'
+            OR (startAt >= :from AND startAt < :to)
+        )
+        AND (recurrenceUntil IS NULL OR recurrenceUntil >= :fromDate)
+        ORDER BY startAt ASC
+        """
+    )
+    fun observeForMonth(from: String, to: String, fromDate: String): Flow<List<CalendarEventEntity>>
+
+    @Query("SELECT * FROM calendar_events WHERE id = :id AND deletedAt IS NULL LIMIT 1")
+    suspend fun getById(id: Long): CalendarEventEntity?
+
+    @Query(
+        """
+        SELECT * FROM calendar_events
+        WHERE deletedAt IS NULL AND startAt >= :from AND startAt < :to
+        ORDER BY startAt ASC
+        """
+    )
+    suspend fun listBetween(from: String, to: String): List<CalendarEventEntity>
+
+    @Query("SELECT * FROM calendar_events WHERE taskId = :taskId AND deletedAt IS NULL LIMIT 1")
+    suspend fun getByTaskId(taskId: Long): CalendarEventEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: CalendarEventEntity): Long
+
+    @Update
+    suspend fun update(entity: CalendarEventEntity)
+
+    @Query(
+        """
+        UPDATE calendar_events
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE taskId = :taskId AND deletedAt IS NULL
+        """
+    )
+    suspend fun softDeleteForTask(taskId: Long, deletedAt: Long, updatedAt: Long)
+
+    @Query(
+        """
+        UPDATE calendar_events
+        SET deletedAt = :deletedAt, updatedAt = :updatedAt
+        WHERE id = :id AND deletedAt IS NULL
+        """
+    )
+    suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
+}

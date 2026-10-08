@@ -5,7 +5,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.ledgerai.app.domain.model.BillFrequency
+import com.ledgerai.app.domain.model.CalendarEventKind
+import com.ledgerai.app.domain.model.RecurrenceFrequency
 import com.ledgerai.app.domain.model.DebtDirection
+import com.ledgerai.app.domain.model.TaskEventKind
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
 import java.time.LocalDate
@@ -112,6 +115,8 @@ data class TaskEntity(
     val location: String = "",
     val links: String = "",
     val dueAt: LocalDateTime? = null,
+    val courseId: Long? = null,
+    val eventKind: TaskEventKind = TaskEventKind.TASK,
     val isCompleted: Boolean = false,
     val createdAt: LocalDateTime,
     val updatedAt: Long = 0L,
@@ -186,6 +191,83 @@ data class NoteEntity(
     val deletedAt: Long? = null
 )
 
+@Entity(tableName = "courses")
+data class CourseEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val code: String = "",
+    val name: String,
+    val defaultLocation: String = "",
+    val colorToken: String = "emerald",
+    val notes: String = "",
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
+)
+
+@Entity(tableName = "schedule_slots")
+data class ScheduleSlotEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val routineId: Long,
+    val courseId: Long? = null,
+    val title: String,
+    /** 1 = Monday … 7 = Sunday */
+    val dayOfWeek: Int,
+    val startTime: LocalTime,
+    val endTime: LocalTime,
+    val location: String = "",
+    val recurrenceUntil: LocalDate? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
+)
+
+@Entity(
+    tableName = "schedule_slot_exceptions",
+    primaryKeys = ["slotId", "exceptionDate"]
+)
+data class ScheduleSlotExceptionEntity(
+    val slotId: Long,
+    val exceptionDate: LocalDate
+)
+
+@Entity(tableName = "routine_slot_reminders")
+data class RoutineSlotReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val slotId: Long,
+    val label: String,
+    val remindAt: LocalDateTime,
+    val offsetMinutes: Int? = null,
+    val isEnabled: Boolean = true,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
+)
+
+@Entity(tableName = "calendar_events")
+data class CalendarEventEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val remoteId: String? = null,
+    val userId: String? = null,
+    val title: String,
+    val courseId: Long? = null,
+    val taskId: Long? = null,
+    val startAt: LocalDateTime,
+    val endAt: LocalDateTime,
+    val kind: CalendarEventKind = CalendarEventKind.PERSONAL,
+    val location: String = "",
+    val recurrenceFrequency: RecurrenceFrequency = RecurrenceFrequency.NONE,
+    val recurrenceInterval: Int = 1,
+    val recurrenceWeekdays: String = "",
+    val specificDatesJson: String = "",
+    val recurrenceUntil: LocalDate? = null,
+    val excludedDatesJson: String = "",
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null
+)
+
 /** Task row with related reminder rows (filter soft-deletes in mappers/repos). */
 data class TaskWithReminders(
     @Embedded val task: TaskEntity,
@@ -195,4 +277,14 @@ data class TaskWithReminders(
         entity = TaskReminderEntity::class
     )
     val reminders: List<TaskReminderEntity> = emptyList()
+)
+
+data class ScheduleSlotWithReminders(
+    @Embedded val slot: ScheduleSlotEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "slotId",
+        entity = RoutineSlotReminderEntity::class
+    )
+    val reminders: List<RoutineSlotReminderEntity> = emptyList()
 )

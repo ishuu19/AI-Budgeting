@@ -20,12 +20,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.RoutineRepository
+import com.ledgerai.app.data.repository.ScheduleRepository
+import com.ledgerai.app.data.schedule.ScheduleImportService
 import com.ledgerai.app.domain.model.RoutineItem
+import com.ledgerai.app.domain.model.RoutineSlotReminder
+import com.ledgerai.app.domain.model.ScheduleSlot
 import com.ledgerai.app.presentation.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -43,11 +45,76 @@ private val REPEAT_PRESETS = listOf(
 
 @HiltViewModel
 class RoutinesViewModel @Inject constructor(
-    private val routineRepo: RoutineRepository
+    private val routineRepo: RoutineRepository,
+    private val scheduleRepo: ScheduleRepository,
+    private val scheduleImport: ScheduleImportService
 ) : ViewModel() {
+
+    private val _importMessage = MutableStateFlow<String?>(null)
+    val importMessage: StateFlow<String?> = _importMessage.asStateFlow()
+
+    fun clearImportMessage() {
+        _importMessage.value = null
+    }
 
     val routines: StateFlow<List<RoutineItem>> = routineRepo.observeRoutines()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _timetableRoutineId = MutableStateFlow<Long?>(null)
+    val timetableRoutineId: StateFlow<Long?> = _timetableRoutineId.asStateFlow()
+
+    val timetableSlots: StateFlow<List<ScheduleSlot>> = _timetableRoutineId
+        .flatMapLatest { id ->
+            if (id == null) flowOf(emptyList()) else scheduleRepo.observeSlots(id)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun openTimetable(routineId: Long) {
+        _timetableRoutineId.value = routineId
+    }
+
+    fun closeTimetable() {
+        _timetableRoutineId.value = null
+    }
+
+    fun importPaste(routineId: Long, text: String, replace: Boolean = false) {
+        viewModelScope.launch {
+            scheduleImport.importText(text, routineId, replace)
+                .onSuccess { n -> _importMessage.value = "Imported $n class blocks" }
+                .onFailure { _importMessage.value = it.message }
+        }
+    }
+
+    fun importImage(routineId: Long, uri: android.net.Uri, replace: Boolean = false) {
+        viewModelScope.launch {
+            scheduleImport.importImageUri(uri, routineId, replace)
+                .onSuccess { n -> _importMessage.value = "Imported $n class blocks" }
+                .onFailure { _importMessage.value = it.message }
+        }
+    }
+
+    suspend fun importTextSuspend(routineId: Long, text: String, replace: Boolean) =
+        scheduleImport.importText(text, routineId, replace)
+
+    suspend fun importCsvSuspend(routineId: Long, uri: android.net.Uri, replace: Boolean) =
+        scheduleImport.importCsvUri(uri, routineId, replace)
+
+    suspend fun importImageSuspend(routineId: Long, uri: android.net.Uri, replace: Boolean) =
+        scheduleImport.importImageUri(uri, routineId, replace)
+
+    fun addSlotReminder(slotId: Long, minutesBefore: Long) {
+        viewModelScope.launch { scheduleRepo.addBeforeClassReminder(slotId, minutesBefore) }
+    }
+
+    suspend fun loadSlot(slotId: Long): ScheduleSlot? = scheduleRepo.getSlot(slotId)
+
+    fun saveSlot(slotId: Long, location: String, reminders: List<RoutineSlotReminder>, dayOfWeek: Int) {
+        viewModelScope.launch {
+            scheduleRepo.updateSlotLocation(slotId, location)
+            scheduleRepo.updateSlotDayOfWeek(slotId, dayOfWeek)
+            scheduleRepo.replaceSlotReminders(slotId, reminders)
+        }
+    }
 
     fun addRoutine(title: String, notes: String, repeatRule: String, location: String = "") {
         if (title.isBlank()) return
@@ -187,8 +254,12 @@ fun RoutinesScreen(onBack: () -> Unit = {}, viewModel: RoutinesViewModel = hiltV
         .mapNotNull { routine -> nextRunAt(parseRule(routine.repeatRule), now)?.let { at -> at to routine } }
         .minByOrNull { it.first }
 
+    val timetableId by viewModel.timetableRoutineId.collectAsState()
+    val timetableSlots by viewModel.timetableSlots.collectAsState()
+    val importMsg by viewModel.importMessage.collectAsState()
+
     LScreen(
-        title = "Routines",
+        title = "Daily Routine",
         onBack = onBack,
         fab = { LFab(Icons.Filled.Add, onClick = { sheet = RoutineSheet(null) }) }
     ) {
@@ -241,6 +312,29 @@ fun RoutinesScreen(onBack: () -> Unit = {}, viewModel: RoutinesViewModel = hiltV
                 onDelete = {
                     existing?.let { viewModel.deleteRoutine(it) }
                     sheet = null
+                },
+                onTimetable = existing?.let { r -> { viewModel.openTimetable(r.id); sheet = null } }
+            )
+        }
+    }
+
+    timetableId?.let { id ->
+        val routine = routines.firstOrNull { it.id == id }
+        if (routine == null) {
+            LaunchedEffect(id) { viewModel.closeTimetable() }
+        } else {
+            RoutineTimetableSheet(
+                routineId = id,
+                routineTitle = routine.title,
+                slots = timetableSlots,
+                importMessage = importMsg,
+                onDismiss = { viewModel.closeTimetable() },
+                onImportText = { text, replace -> viewModel.importTextSuspend(id, text, replace) },
+                onImportCsv = { uri, replace -> viewModel.importCsvSuspend(id, uri, replace) },
+                onImportImage = { uri, replace -> viewModel.importImageSuspend(id, uri, replace) },
+                onLoadSlot = { slotId -> viewModel.loadSlot(slotId) },
+                onSaveSlot = { slotId, loc, reminders, dow ->
+                    viewModel.saveSlot(slotId, loc, reminders, dow)
                 }
             )
         }
@@ -320,7 +414,8 @@ private fun RoutineEditSheet(
     existing: RoutineItem?,
     onDismiss: () -> Unit,
     onSave: (title: String, notes: String, repeatRule: String, location: String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onTimetable: (() -> Unit)? = null
 ) {
     val initial = remember { parseRule(existing?.repeatRule ?: "DAILY") }
     val fallbackBase = if (initial.mask == 0 && existing != null) initial.base else ""
@@ -374,6 +469,9 @@ private fun RoutineEditSheet(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     TimePicker(state = timeState, colors = lTimeColors())
                 }
+            }
+            if (onTimetable != null) {
+                LGhostButton("Weekly timetable (CSV / image)", onClick = onTimetable)
             }
         }
     }

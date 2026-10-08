@@ -66,6 +66,13 @@ object QuickParse {
         }
     }
 
+    /** When no date is in the utterance, uses [today]; time defaults to 9:00 if not spoken. */
+    fun resolveEventDateTimeFromText(input: String, today: LocalDate = LocalDate.now()): LocalDateTime {
+        val date = parseRelativeDate(input, today)
+        val time = parseClockTimeFromText(input.lowercase()) ?: LocalTime.of(9, 0)
+        return LocalDateTime.of(date, time)
+    }
+
     fun parseBillFrequency(input: String): BillFrequency {
         val lower = input.lowercase()
         return when {
@@ -180,7 +187,7 @@ object QuickParse {
                 ParsedIntent.Reminder(
                     title = trimmed.take(80),
                     label = "Reminder",
-                    remindAt = LocalDateTime.now().plusHours(1),
+                    remindAt = resolveEventDateTimeFromText(trimmed, today),
                     rawTranscript = trimmed,
                 )
             lower.containsAny("routine", "habit") -> {
@@ -200,7 +207,11 @@ object QuickParse {
                     .replace(Regex("(?i)^(add\\s+task|todo|to-do|task:)\\s*"), "")
                     .trim()
                     .ifBlank { trimmed }
-                ParsedIntent.Task(title = stripped, rawTranscript = trimmed)
+                ParsedIntent.Task(
+                    title = stripped,
+                    dueAt = resolveEventDateTimeFromText(stripped, today),
+                    rawTranscript = trimmed
+                )
             }
             amount != null && isBillUtterance(trimmed) -> {
                 val parsed = parse(trimmed, today)

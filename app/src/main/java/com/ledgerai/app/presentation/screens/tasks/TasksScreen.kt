@@ -22,10 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.repository.LeaveByRepository
 import com.ledgerai.app.data.repository.TaskRepository
+import com.ledgerai.app.domain.model.LeaveRefType
 import com.ledgerai.app.domain.model.MAX_REMINDERS_PER_TASK
+import com.ledgerai.app.domain.model.TaskEventKind
 import com.ledgerai.app.domain.model.TaskItem
 import com.ledgerai.app.domain.model.TaskReminder
+import com.ledgerai.app.domain.schedule.allBeforeEventOptions
+import com.ledgerai.app.domain.schedule.defaultBeforeEventOptions
+import com.ledgerai.app.domain.schedule.resolveEventDateTime
 import com.ledgerai.app.presentation.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -34,6 +40,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -45,7 +52,8 @@ data class TasksUiState(
 
 @HiltViewModel
 class TasksViewModel @Inject constructor(
-    private val taskRepo: TaskRepository
+    private val taskRepo: TaskRepository,
+    private val leaveByRepo: LeaveByRepository
 ) : ViewModel() {
 
     private val _message = MutableStateFlow<String?>(null)
@@ -64,7 +72,11 @@ class TasksViewModel @Inject constructor(
     fun addTask(title: String, notes: String) {
         if (title.isBlank()) return
         viewModelScope.launch {
-            taskRepo.insert(TaskItem(title = title.trim(), notes = notes.trim()))
+            val due = LocalDate.now().atTime(9, 0)
+            val id = taskRepo.insert(
+                TaskItem(title = title.trim(), notes = notes.trim(), dueAt = due)
+            )
+            taskRepo.seedBeforeEventReminders(id, due)
         }
     }
 
@@ -76,7 +88,9 @@ class TasksViewModel @Inject constructor(
         dueAt: LocalDateTime?,
         beforeDue: List<Pair<String, Long>> = emptyList(),
         location: String = "",
-        links: String = ""
+        links: String = "",
+        eventKind: TaskEventKind = TaskEventKind.TASK,
+        leaveByEnabled: Boolean = false
     ) {
         if (title.isBlank()) return
         viewModelScope.launch {
@@ -91,7 +105,9 @@ class TasksViewModel @Inject constructor(
                         notes = cleanNotes,
                         dueAt = dueAt,
                         location = place,
-                        links = linkText
+                        links = linkText,
+                        courseId = null,
+                        eventKind = eventKind
                     )
                 )
             } else {
@@ -103,20 +119,28 @@ class TasksViewModel @Inject constructor(
                         dueAt = dueAt,
                         location = place,
                         links = linkText,
+                        courseId = null,
+                        eventKind = eventKind,
                         reminders = reminders
                     )
                 )
                 existing.id
             }
-            if (existing != null || dueAt == null) return@launch
-            val now = LocalDateTime.now()
-            beforeDue.distinctBy { it.second }.take(MAX_REMINDERS_PER_TASK).forEach { (label, minutes) ->
-                val at = dueAt.minusMinutes(minutes)
-                if (!at.isAfter(now)) {
-                    _message.value = "Reminder time must be in the future"
-                } else if (!taskRepo.addReminder(taskId, label, at, minutes.toInt())) {
-                    _message.value = "Maximum $MAX_REMINDERS_PER_TASK reminders per task"
-                }
+            leaveByRepo.setLeaveBy(
+                refType = LeaveRefType.TASK,
+                refId = taskId,
+                enabled = leaveByEnabled,
+                placeLabel = place,
+                eventStart = dueAt,
+                title = cleanTitle
+            )
+            if (dueAt == null) return@launch
+            val seedDefaults = existing == null || existing.reminders.isEmpty()
+            if (!seedDefaults) return@launch
+            val offsets = beforeDue.ifEmpty { defaultBeforeEventOptions() }
+            val added = taskRepo.seedBeforeEventReminders(taskId, dueAt, offsets)
+            if (added == 0) {
+                _message.value = "Reminder times must be in the future"
             }
         }
     }
@@ -154,6 +178,9 @@ class TasksViewModel @Inject constructor(
     fun removeReminder(task: TaskItem, reminder: TaskReminder) {
         viewModelScope.launch { taskRepo.removeReminder(task.id, reminder.id) }
     }
+
+    suspend fun isLeaveByEnabled(taskId: Long): Boolean =
+        leaveByRepo.isEnabled(LeaveRefType.TASK, taskId)
 }
 
 /** Moves reminders with the due time. Offsets stay; absolute reminders shift by the same amount. */
@@ -185,19 +212,7 @@ private enum class TaskFilter(val label: String) {
 /** Sheet target: `null` id = new task. */
 private data class TaskSheet(val id: Long?)
 
-/** Minutes before the due time, same idea as a calendar event. */
-private val reminderOffsets: List<Pair<String, Long>> = listOf(
-    "At time" to 0L,
-    "5 min before" to 5L,
-    "10 min before" to 10L,
-    "15 min before" to 15L,
-    "30 min before" to 30L,
-    "1 hour before" to 60L,
-    "2 hours before" to 120L,
-    "1 day before" to 1_440L,
-    "2 days before" to 2_880L,
-    "1 week before" to 10_080L
-)
+private val reminderOffsets: List<Pair<String, Long>> = allBeforeEventOptions()
 
 private fun TaskItem.isOverdue(now: LocalDateTime = LocalDateTime.now()): Boolean =
     !isCompleted && dueAt?.isBefore(now) == true
@@ -296,11 +311,18 @@ fun TasksScreen(onBack: () -> Unit = {}, viewModel: TasksViewModel = hiltViewMod
         if (target.id != null && existing == null) {
             LaunchedEffect(target) { sheet = null }
         } else {
+            var initialLeaveBy by remember(existing?.id) { mutableStateOf(false) }
+            LaunchedEffect(existing?.id) {
+                initialLeaveBy = existing?.id?.let { viewModel.isLeaveByEnabled(it) } ?: false
+            }
             TaskEditSheet(
                 existing = existing,
+                initialLeaveBy = initialLeaveBy,
                 onDismiss = { sheet = null },
-                onSave = { title, notes, dueAt, beforeDue, location, links ->
-                    viewModel.saveTask(existing, title, notes, dueAt, beforeDue, location, links)
+                onSave = { title, notes, dueAt, beforeDue, location, links, eventKind, leaveBy ->
+                    viewModel.saveTask(
+                        existing, title, notes, dueAt, beforeDue, location, links, eventKind, leaveBy
+                    )
                     sheet = null
                 },
                 onDelete = {
@@ -320,9 +342,14 @@ fun TasksScreen(onBack: () -> Unit = {}, viewModel: TasksViewModel = hiltViewMod
 private fun TaskRow(task: TaskItem, onToggle: () -> Unit, onClick: () -> Unit) {
     val done = task.isCompleted
     val overdue = task.isOverdue()
+    val kind = when (task.eventKind) {
+        TaskEventKind.EXAM -> "Exam"
+        TaskEventKind.EVENT -> "Event"
+        TaskEventKind.TASK -> null
+    }
     LRow(
         title = task.title,
-        sub = task.notes.takeIf { it.isNotBlank() },
+        sub = listOfNotNull(kind, task.notes.takeIf { it.isNotBlank() }).joinToString(" · ").ifBlank { null },
         trailing = task.dueAt?.let { dueLabel(it) },
         trailingColor = if (overdue) L.Danger else L.Gold,
         onClick = onClick,
@@ -342,8 +369,18 @@ private fun TaskRow(task: TaskItem, onToggle: () -> Unit, onClick: () -> Unit) {
 @Composable
 private fun TaskEditSheet(
     existing: TaskItem?,
+    initialLeaveBy: Boolean = false,
     onDismiss: () -> Unit,
-    onSave: (title: String, notes: String, dueAt: LocalDateTime?, beforeDue: List<Pair<String, Long>>, location: String, links: String) -> Unit,
+    onSave: (
+        title: String,
+        notes: String,
+        dueAt: LocalDateTime?,
+        beforeDue: List<Pair<String, Long>>,
+        location: String,
+        links: String,
+        eventKind: TaskEventKind,
+        leaveByEnabled: Boolean
+    ) -> Unit,
     onDelete: () -> Unit,
     onAddReminder: (label: String, at: LocalDateTime, offsetMinutes: Int) -> Unit,
     onRemoveReminder: (TaskReminder) -> Unit
@@ -353,23 +390,35 @@ private fun TaskEditSheet(
     var notes by remember { mutableStateOf(existing?.notes.orEmpty()) }
     var location by remember { mutableStateOf(existing?.location.orEmpty()) }
     var links by remember { mutableStateOf(existing?.links.orEmpty()) }
+    var eventKind by remember { mutableStateOf(existing?.eventKind ?: TaskEventKind.TASK) }
     var dueDate by remember { mutableStateOf(existing?.dueAt?.toLocalDate()) }
-    var pending by remember { mutableStateOf(listOf<Pair<String, Long>>()) }
+    var dateCleared by remember { mutableStateOf(false) }
+    var pending by remember { mutableStateOf(defaultBeforeEventOptions()) }
     var showOffsets by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var leaveByEnabled by remember(existing?.id, initialLeaveBy) { mutableStateOf(initialLeaveBy) }
     val timeState = rememberTimePickerState(
         initialHour = existing?.dueAt?.hour ?: 9,
         initialMinute = existing?.dueAt?.minute ?: 0,
         is24Hour = false
     )
-    val dueAt = dueDate?.atTime(timeState.hour, timeState.minute)
+    val eventTime = LocalTime.of(timeState.hour, timeState.minute)
+    val resolvedDue = resolveEventDateTime(
+        date = dueDate,
+        time = eventTime,
+        isNew = existing == null,
+        explicitNoDate = dateCleared && existing != null
+    )
 
     LSheet(
         title = if (existing == null) "New task" else "Task",
         onDismiss = onDismiss,
         primary = "Save",
         onPrimary = {
-            onSave(title, notes, dueAt, if (existing == null) pending else emptyList(), location, links)
+            onSave(
+                title, notes, resolvedDue, if (existing == null) pending else emptyList(),
+                location, links, eventKind, leaveByEnabled
+            )
         },
         primaryEnabled = title.isNotBlank(),
         secondary = if (existing != null) "Delete" else null,
@@ -383,26 +432,51 @@ private fun TaskEditSheet(
         ) {
             LField(title, { title = it }, "Title")
             LField(notes, { notes = it }, "Notes", singleLine = false, minLines = 2)
-            LField(location, { location = it }, "Place")
+            LPlaceField(
+                location = location,
+                onLocationChange = { location = it },
+                links = links,
+                onLinksChange = { links = it },
+                label = "Place"
+            )
+            LeaveByToggle(
+                enabled = leaveByEnabled,
+                onEnabledChange = { leaveByEnabled = it },
+                eventStart = resolvedDue
+            )
             LField(links, { links = it }, "Links", singleLine = false, minLines = 2)
 
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TaskEventKind.entries.forEach { kind ->
+                    LChip(
+                        kind.name.lowercase().replaceFirstChar { it.titlecase() },
+                        selected = eventKind == kind,
+                        onClick = { eventKind = kind }
+                    )
+                }
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LChip(
-                    dueDate?.format(dateFmt) ?: "Date",
-                    selected = dueDate != null,
+                    when {
+                        dueDate != null -> dueDate!!.format(dateFmt)
+                        existing == null || !dateCleared -> "Today"
+                        else -> "No date"
+                    },
+                    selected = dueDate != null || (existing == null && !dateCleared),
                     onClick = { showDatePicker = true }
                 )
-                if (dueDate != null) {
-                    LChip("None", selected = false, onClick = { dueDate = null })
+                if (existing != null && (dueDate != null || !dateCleared)) {
+                    LChip("None", selected = false, onClick = {
+                        dueDate = null
+                        dateCleared = true
+                    })
                 }
             }
-            if (dueDate != null) {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TimePicker(state = timeState, colors = lTimeColors())
-                }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                TimePicker(state = timeState, colors = lTimeColors())
             }
 
             Text("Reminders", style = MaterialTheme.typography.titleSmall, color = L.Ink)
@@ -414,7 +488,7 @@ private fun TaskEditSheet(
             }
             if (existing == null) {
                 pending.forEach { (label, minutes) ->
-                    val whenLabel = dueAt?.minusMinutes(minutes)?.format(dateTimeFmt) ?: label
+                    val whenLabel = resolvedDue?.minusMinutes(minutes)?.format(dateTimeFmt) ?: label
                     ReminderLine(text = "$label · $whenLabel", onRemove = {
                         pending = pending.filterNot { it.second == minutes }
                     })
@@ -424,7 +498,7 @@ private fun TaskEditSheet(
             if (savedCount < MAX_REMINDERS_PER_TASK) {
                 Box {
                     IconButton(onClick = {
-                        if (dueAt == null) {
+                        if (resolvedDue == null) {
                             Toast.makeText(context, "Set a time first", Toast.LENGTH_SHORT).show()
                         } else {
                             showOffsets = true
@@ -438,7 +512,7 @@ private fun TaskEditSheet(
                                 text = { Text(label) },
                                 onClick = {
                                     showOffsets = false
-                                    val at = dueAt?.minusMinutes(minutes) ?: return@DropdownMenuItem
+                                    val at = resolvedDue?.minusMinutes(minutes) ?: return@DropdownMenuItem
                                     if (existing == null) {
                                         if (pending.none { it.second == minutes }) {
                                             pending = pending + (label to minutes)
@@ -466,6 +540,7 @@ private fun TaskEditSheet(
                 TextButton(onClick = {
                     pickerState.selectedDateMillis?.let { ms ->
                         dueDate = Instant.ofEpochMilli(ms).atZone(ZoneOffset.UTC).toLocalDate()
+                        dateCleared = false
                     }
                     showDatePicker = false
                 }) { Text("Done", color = L.Box) }

@@ -26,6 +26,7 @@ voskAndroid = "0.3.75"
 jna = "5.13.0"
 sherpaOnnx = "1.10.3"
 junit = "4.13.2"
+mlkitText = "16.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -73,6 +74,7 @@ vosk-android = { group = "com.alphacephei", name = "vosk-android", version.ref =
 jna-aar = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
 sherpa-onnx-android = { group = "com.k2fsa.sherpa.onnx", name = "sherpa-onnx-android", version.ref = "sherpaOnnx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitText" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

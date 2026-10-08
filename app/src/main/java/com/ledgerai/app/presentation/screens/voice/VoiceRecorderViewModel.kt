@@ -385,13 +385,15 @@ class VoiceRecorderViewModel @Inject constructor(
         val trimmed = title.trim()
         if (trimmed.isBlank()) return
         viewModelScope.launch {
-            taskRepo.insert(
+            val whenAt = dueAt ?: java.time.LocalDate.now().atTime(9, 0)
+            val id = taskRepo.insert(
                 TaskItem(
                     title = trimmed,
                     notes = notes.trim(),
-                    dueAt = dueAt
+                    dueAt = whenAt
                 )
             )
+            taskRepo.seedBeforeEventReminders(id, whenAt)
             markSaved("Task")
         }
     }
@@ -399,18 +401,18 @@ class VoiceRecorderViewModel @Inject constructor(
     fun confirmReminder(title: String, label: String, remindAt: LocalDateTime) {
         val trimmed = title.trim().ifBlank { "Reminder" }
         viewModelScope.launch {
-            taskRepo.insert(
+            val eventAt = java.time.LocalDateTime.of(
+                java.time.LocalDate.now(),
+                remindAt.toLocalTime()
+            )
+            val id = taskRepo.insert(
                 TaskItem(
                     title = trimmed,
                     notes = "",
-                    reminders = listOf(
-                        TaskReminder(
-                            label = label.trim().ifBlank { "Reminder" },
-                            remindAt = remindAt
-                        )
-                    )
+                    dueAt = eventAt
                 )
             )
+            taskRepo.seedBeforeEventReminders(id, eventAt)
             markSaved("Reminder")
         }
     }

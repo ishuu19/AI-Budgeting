@@ -13,11 +13,25 @@ import com.ledgerai.app.data.ai.ForecastListDto
 import com.ledgerai.app.data.ai.InsightDto
 import com.ledgerai.app.data.ai.InsightStore
 import com.ledgerai.app.data.ai.NetworkAvailability
+import com.ledgerai.app.data.ai.NoteNudgeProposalDto
+import com.ledgerai.app.data.ai.NoteNudgeScanDto
 import com.ledgerai.app.data.ai.NoteSummaryDto
+import com.ledgerai.app.data.ai.ScheduleContextBuilder
+import com.ledgerai.app.data.ai.ScheduleDraftDto
+import com.ledgerai.app.data.ai.ScheduleDraftListDto
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.ParsedTransactionDto
 import com.ledgerai.app.data.ai.ParsedVoiceIntentDto
 import com.ledgerai.app.data.ai.QuickParse
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import com.ledgerai.app.data.schedule.ParsedScheduleRow
+import com.ledgerai.app.data.schedule.ScheduleTimetableJson
+import com.ledgerai.app.data.schedule.ScheduleTimeParser
+import java.io.ByteArrayOutputStream
+import java.util.Base64
 import com.ledgerai.app.data.ai.ValidatedAiResponse
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.FinancialForecast
@@ -48,6 +62,7 @@ class AiRepository @Inject constructor(
     private val router: AiProviderRouter,
     private val config: AiConfig,
     private val contextBuilder: ContextBuilder,
+    private val scheduleContextBuilder: ScheduleContextBuilder,
     private val validator: AiResponseValidator,
     private val insightStore: InsightStore,
     private val network: NetworkAvailability,
@@ -369,6 +384,48 @@ class AiRepository @Inject constructor(
         return Result.failure(IllegalStateException("Could not answer about note"))
     }
 
+    suspend fun suggestScheduleDrafts(): Result<List<ScheduleDraftDto>> {
+        val slice = scheduleContextBuilder.build14DaySlice()
+        val system = """
+            You suggest missing tasks/events for a student calendar. Reply ONLY JSON:
+            {"drafts":[{"type":"TASK|EVENT|EXAM","title":"...","start_at":"yyyy-MM-ddTHH:mm:ss","reason":"..."}]}
+            Max 5 drafts. Do not duplicate items already in the schedule slice.
+        """.trimIndent()
+        if (!canCallCloud()) {
+            return Result.success(emptyList())
+        }
+        return completeRaw(system, slice).mapCatching { raw ->
+            val json = extractJsonObject(raw)
+            if (json == null) {
+                emptyList()
+            } else {
+                gson.fromJson(json, ScheduleDraftListDto::class.java)?.drafts?.filter {
+                    !it.title.isNullOrBlank()
+                } ?: emptyList()
+            }
+        }
+    }
+
+    suspend fun scanNoteForNudges(noteBody: String): Result<List<NoteNudgeProposalDto>> {
+        val system = """
+            Extract up to 3 notification proposals from the note. Reply ONLY JSON:
+            {"proposals":[{"message":"...","suggested_at":"yyyy-MM-ddTHH:mm:ss","reason":"..."}]}
+        """.trimIndent()
+        if (!canCallCloud()) {
+            return Result.failure(IllegalStateException("AI offline"))
+        }
+        return completeRaw(system, noteBody.take(4000)).mapCatching { raw ->
+            val json = extractJsonObject(raw)
+            if (json == null) {
+                emptyList()
+            } else {
+                gson.fromJson(json, NoteNudgeScanDto::class.java)?.proposals?.filter {
+                    !it.message.isNullOrBlank()
+                } ?: emptyList()
+            }
+        }
+    }
+
     /**
      * Prefer Edge Function when SUPABASE_URL is configured; fall back to [AiProviderRouter].
      */
@@ -669,4 +726,67 @@ class AiRepository @Inject constructor(
     }
 
     private fun quickParse(input: String): ParsedTransaction = QuickParse.parse(input)
+
+    /**
+     * Turns messy timetable text (CSV, OCR, or bullet list) into weekly rows.
+     * Falls back to empty list — caller should use [com.ledgerai.app.data.schedule.ScheduleCsvParser].
+     */
+    suspend fun parseTimetable(raw: String): Result<List<ParsedScheduleRow>> {
+        if (!canCallCloud()) return Result.failure(IllegalStateException("AI offline"))
+        val system = timetableJsonSystemPrompt()
+        return runCatching {
+            parseTimetableJson(completeRaw(system, raw.take(12_000)).getOrThrow())
+        }
+    }
+
+    suspend fun parseTimetableFromImage(context: Context, uri: Uri): Result<List<ParsedScheduleRow>> {
+        val (mime, base64) = loadImageBase64(context, uri)
+            ?: return Result.failure(IllegalArgumentException("Could not read image"))
+        val system = timetableJsonSystemPrompt()
+        val user = "Read this timetable image. Output JSON only."
+        return runCatching {
+            val raw = router.completeVision(system, user, mime, base64).getOrThrow()
+            parseTimetableJson(raw)
+        }
+    }
+
+    private fun timetableJsonSystemPrompt(): String = """
+        You extract a school/university weekly timetable.
+        Reply with ONLY JSON (no markdown). Use this shape:
+        {"version":1,"classes":[{"day":"Monday","dayOfWeek":1,"startTime":"09:00","endTime":"10:30","title":"Class name","courseCode":"","location":"Room"}]}
+        Rules:
+        - "day" is the full English weekday name; "dayOfWeek" is 1=Monday … 7=Sunday.
+        - Times 24h HH:mm. Include every class block you see.
+        - If the grid shows days as columns, assign each block to the correct column's weekday.
+    """.trimIndent()
+
+    private fun loadImageBase64(context: Context, uri: Uri): Pair<String, String>? {
+        val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            ?: return null
+        val scaled = scaleForVision(bitmap)
+        val out = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, 88, out)
+        if (scaled != bitmap) scaled.recycle()
+        bitmap.recycle()
+        val b64 = Base64.getEncoder().encodeToString(out.toByteArray())
+        return "image/jpeg" to b64
+    }
+
+    private fun scaleForVision(source: Bitmap): Bitmap {
+        val max = 1600
+        val w = source.width
+        val h = source.height
+        if (w <= max && h <= max) return source
+        val scale = minOf(max.toFloat() / w, max.toFloat() / h)
+        val nw = (w * scale).toInt().coerceAtLeast(1)
+        val nh = (h * scale).toInt().coerceAtLeast(1)
+        return Bitmap.createScaledBitmap(source, nw, nh, true)
+    }
+
+    private fun parseTimetableJson(raw: String): List<ParsedScheduleRow> {
+        val fromDoc = ScheduleTimetableJson.parseRowsFromAiJson(raw)
+        if (fromDoc.isNotEmpty()) return fromDoc
+        val arrText = extractJsonArray(raw) ?: return emptyList()
+        return ScheduleTimetableJson.parseRowsFromAiJson(arrText)
+    }
 }

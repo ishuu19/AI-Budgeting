@@ -57,6 +57,31 @@ class AiProviderRouter @Inject constructor(
         )
     }
 
+    /** Gemini vision first (best for timetable photos); no OpenRouter vision fallback yet. */
+    suspend fun completeVision(
+        systemPrompt: String,
+        userPrompt: String,
+        imageMimeType: String,
+        imageBase64: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val keys = buildList {
+            if (config.geminiApiKey.isNotBlank()) add(config.geminiApiKey)
+            addAll(config.geminiApiKeys.filter { it !in this })
+        }
+        if (keys.isEmpty()) {
+            return@withContext Result.failure(IllegalStateException("Gemini API key required for vision"))
+        }
+        var last: Throwable? = null
+        for ((index, key) in keys.withIndex()) {
+            when (val outcome = callGeminiVision(key, systemPrompt, userPrompt, imageMimeType, imageBase64, "gemini-vision-$index")) {
+                is StageOutcome.Success -> return@withContext Result.success(outcome.text)
+                is StageOutcome.Failover -> last = outcome.error
+                is StageOutcome.HardFail -> return@withContext Result.failure(outcome.error)
+            }
+        }
+        Result.failure(last ?: IllegalStateException("Vision failed"))
+    }
+
     private fun buildStages(
         systemPrompt: String,
         userPrompt: String,
@@ -155,6 +180,46 @@ class AiProviderRouter @Inject constructor(
         }
     }
 
+    private suspend fun callGeminiVision(
+        apiKey: String,
+        systemPrompt: String,
+        userPrompt: String,
+        mimeType: String,
+        base64: String,
+        label: String,
+    ): StageOutcome {
+        return try {
+            val body = GeminiGenerateRequest(
+                contents = listOf(
+                    GeminiContent(
+                        role = "user",
+                        parts = listOf(
+                            GeminiPart(text = userPrompt),
+                            GeminiPart(
+                                inlineData = GeminiInlineData(
+                                    mimeType = mimeType,
+                                    data = base64
+                                )
+                            )
+                        ),
+                    )
+                ),
+                systemInstruction = GeminiContent(
+                    parts = listOf(GeminiPart(text = systemPrompt)),
+                ),
+                generationConfig = GeminiGenerationConfig(maxOutputTokens = 8192, temperature = 0.2),
+            )
+            val response = geminiApi.generateContent(
+                model = config.modelGeminiVision,
+                apiKey = apiKey,
+                body = body,
+            )
+            mapGeminiResponse(response, label)
+        } catch (e: Exception) {
+            classifyException(e, label)
+        }
+    }
+
     private suspend fun callGemini(
         apiKey: String,
         systemPrompt: String,
@@ -233,7 +298,7 @@ class AiProviderRouter @Inject constructor(
             ?.firstOrNull()
             ?.content
             ?.parts
-            ?.joinToString("") { it.text }
+            ?.joinToString("") { it.text.orEmpty() }
             ?.trim()
             .orEmpty()
         return if (text.isBlank()) {

@@ -4,6 +4,10 @@
     <string name="widget_label">LedgerAI Quote &amp; Voice</string>
     <string name="widget_tap_to_record">Daily quote, speak aloud, or record</string>
     <string name="widget_description">Quote and voice</string>
+    <string name="widget_calendar_label">Calendar</string>
+    <string name="widget_calendar_description">Next 3 days of exams and events</string>
+    <string name="widget_day_schedule_label">Today · Calendar</string>
+    <string name="widget_day_schedule_description">Full day schedule, tasks, and voice add</string>
     <string name="nav_tasks">Tasks</string>
     <string name="nav_notes">Notes</string>
     <string name="nav_alarms">Alarms</string>

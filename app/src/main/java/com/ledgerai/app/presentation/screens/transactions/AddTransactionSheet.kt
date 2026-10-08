@@ -22,6 +22,7 @@ import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LPlaceField
 import com.ledgerai.app.presentation.components.LGhostButton
 import com.ledgerai.app.presentation.components.LSheet
 import java.math.BigDecimal
@@ -48,6 +49,7 @@ fun AddTransactionSheet(
     var merchant by remember { mutableStateOf(seed?.merchant ?: prefilled?.merchant ?: "") }
     var note by remember { mutableStateOf(seed?.note ?: prefilled?.note ?: "") }
     var location by remember { mutableStateOf(seed?.location ?: prefilled?.location ?: "") }
+    var placeLinks by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(seed?.type ?: prefilled?.type ?: TransactionType.EXPENSE) }
     var category by remember {
         mutableStateOf(seed?.category ?: prefilled?.category ?: TransactionCategory.OTHER)
@@ -64,7 +66,11 @@ fun AddTransactionSheet(
         onDismiss = onDismiss,
         primary = "Save",
         onPrimary = {
-            amount?.let { onConfirm(it, type, category, merchant.trim(), note.trim(), date, location.trim(), isRecurring) }
+            val noteOut = if (placeLinks.isNotBlank()) {
+                val url = placeLinks.lines().firstOrNull { it.contains("google.com/maps") } ?: placeLinks.trim()
+                listOf(note.trim(), url).filter { it.isNotEmpty() }.joinToString("\n")
+            } else note.trim()
+            amount?.let { onConfirm(it, type, category, merchant.trim(), noteOut, date, location.trim(), isRecurring) }
         },
         primaryEnabled = amount != null,
         secondary = when {
@@ -94,7 +100,16 @@ fun AddTransactionSheet(
         CategoryChipsRow(selected = category, onSelect = { category = it })
 
         LField(merchant, { merchant = it }, label = "Name")
-        LField(location, { location = it }, label = "Place")
+        LPlaceField(
+            location = location,
+            onLocationChange = { location = it },
+            links = placeLinks,
+            onLinksChange = { placeLinks = it },
+            label = "Place"
+        )
+        if (placeLinks.isNotBlank()) {
+            LField(placeLinks, { placeLinks = it }, label = "Maps link", singleLine = false, minLines = 2)
+        }
         LField(note, { note = it }, label = "Note")
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -42,7 +42,10 @@ import com.ledgerai.app.presentation.screens.debts.DebtsScreen
 import com.ledgerai.app.presentation.screens.forecast.ForecastScreen
 import com.ledgerai.app.presentation.screens.goals.GoalsScreen
 import com.ledgerai.app.presentation.screens.notes.NotesScreen
-import com.ledgerai.app.presentation.screens.routines.RoutinesScreen
+import com.ledgerai.app.presentation.screens.calendar.CalendarScreen
+import com.ledgerai.app.presentation.screens.focus.FocusScreen
+import com.ledgerai.app.presentation.screens.life.LifeContainerScreen
+import com.ledgerai.app.presentation.screens.money.SpendTodayScreen
 import com.ledgerai.app.presentation.screens.search.SearchScreen
 import com.ledgerai.app.presentation.screens.settings.SettingsScreen
 import com.ledgerai.app.presentation.screens.tasks.TasksScreen
@@ -58,17 +61,19 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 
     object Transactions : Screen("transactions", "Spend",    Icons.Filled.Receipt)
     object Budget       : Screen("budget",       "Budget",   Icons.Filled.PieChart)
+    object Today        : Screen("today",        "Today",    Icons.Filled.Today)
     object Forecast     : Screen("forecast",     "Forecast", Icons.AutoMirrored.Filled.TrendingUp)
     object Debts        : Screen("debts",        "Debts",    Icons.Filled.People)
     object Analytics    : Screen("analytics",    "Insights", Icons.Filled.Insights)
     object Goals        : Screen("goals",        "Goals",    Icons.Filled.Flag)
     object Bills        : Screen("bills",        "Bills",    Icons.Filled.CreditCard)
     object Tasks        : Screen("tasks",        "Tasks",    Icons.Filled.CheckCircle)
-    object Routines     : Screen("routines",     "Routines", Icons.Filled.Repeat)
+    object Calendar     : Screen("calendar",     "Calendar", Icons.Filled.CalendarMonth)
     object Notes        : Screen("notes",        "Notes",    Icons.AutoMirrored.Filled.StickyNote2)
     object Alarms       : Screen("alarms",       "Alarms",   Icons.Filled.Alarm)
     object AiAssistant  : Screen("ai_assistant", "Ask",      Icons.Filled.AutoAwesome)
     object Search      : Screen("search",       "Search",   Icons.Filled.Search)
+    object Focus       : Screen("focus",        "Focus",    Icons.Filled.Timer)
 }
 
 private val tabs = listOf(Screen.Dashboard, Screen.Money, Screen.VoiceRecord, Screen.Life, Screen.You)
@@ -83,12 +88,28 @@ private fun NavHostController.tab(route: String) = navigate(route) {
 }
 
 @Composable
-fun AppNavigation(openVoice: Boolean = false) {
+fun AppNavigation(
+    openVoice: Boolean = false,
+    openCalendar: Boolean = false,
+    openFocusBlockId: Long = 0L,
+    focusTopic: String? = null
+) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val destination = entry?.destination
 
     LaunchedEffect(openVoice) { if (openVoice) nav.tab(Screen.VoiceRecord.route) }
+    LaunchedEffect(openCalendar) {
+        if (openCalendar) {
+            nav.tab(Screen.Life.route)
+            nav.go(Screen.Calendar.route)
+        }
+    }
+    LaunchedEffect(openFocusBlockId) {
+        if (openFocusBlockId != 0L) {
+            nav.go("${Screen.Focus.route}/$openFocusBlockId")
+        }
+    }
 
     Scaffold(
         containerColor = L.Page,
@@ -121,16 +142,17 @@ fun AppNavigation(openVoice: Boolean = false) {
             composable(Screen.Money.route) {
                 HubScreen(
                     title = "Money",
-                    tiles = listOf(Screen.Transactions, Screen.Budget, Screen.Bills, Screen.Debts, Screen.Goals, Screen.Forecast, Screen.Analytics, Screen.AiAssistant)
+                    tiles = listOf(Screen.Today, Screen.Transactions, Screen.Budget, Screen.Bills, Screen.Debts, Screen.Goals, Screen.Forecast, Screen.Analytics, Screen.AiAssistant)
                         .map { s -> HubTile(s.label, s.icon) { nav.go(s.route) } }
                 )
             }
             composable(Screen.VoiceRecord.route) { VoiceRecorderScreen(embedded = true) }
             composable(Screen.Life.route) {
-                HubScreen(
-                    title = "Life",
-                    tiles = listOf(Screen.Tasks, Screen.Routines, Screen.Notes, Screen.Alarms)
-                        .map { s -> HubTile(s.label, s.icon) { nav.go(s.route) } }
+                LifeContainerScreen(
+                    onBack = { nav.popBackStack() },
+                    onOpenTasks = { nav.go(Screen.Tasks.route) },
+                    onOpenNotes = { nav.go(Screen.Notes.route) },
+                    onOpenFocus = { id -> nav.go("${Screen.Focus.route}/$id") }
                 )
             }
             composable(Screen.You.route) {
@@ -140,6 +162,7 @@ fun AppNavigation(openVoice: Boolean = false) {
             composable(Screen.Transactions.route) {
                 TransactionsScreen(onNavigateToVoice = { nav.tab(Screen.VoiceRecord.route) }, onBack = back)
             }
+            composable(Screen.Today.route) { SpendTodayScreen(onBack = back) }
             composable(Screen.Budget.route) {
                 BudgetScreen(onNavigateToAi = { nav.go(Screen.AiAssistant.route) }, onBack = back)
             }
@@ -149,10 +172,21 @@ fun AppNavigation(openVoice: Boolean = false) {
             composable(Screen.Goals.route) { GoalsScreen(onBack = back) }
             composable(Screen.Bills.route) { BillsScreen(onBack = back) }
             composable(Screen.Tasks.route) { TasksScreen(onBack = back) }
-            composable(Screen.Routines.route) { RoutinesScreen(onBack = back) }
+            composable(Screen.Calendar.route) { CalendarScreen(onBack = back) }
             composable(Screen.Notes.route) { NotesScreen(onBack = back) }
             composable(Screen.Alarms.route) { AlarmsScreen(onBack = back) }
             composable(Screen.Search.route) { SearchScreen(onBack = back) }
+            composable(
+                route = "${Screen.Focus.route}/{blockId}",
+                arguments = listOf(navArgument("blockId") { type = NavType.LongType })
+            ) { e ->
+                val id = e.arguments?.getLong("blockId") ?: 0L
+                FocusScreen(
+                    blockId = id,
+                    topic = focusTopic ?: "Focus",
+                    onDone = back
+                )
+            }
             composable(
                 route = "${Screen.AiAssistant.route}?insight={insight}",
                 arguments = listOf(navArgument("insight") { type = NavType.StringType; defaultValue = "" })
