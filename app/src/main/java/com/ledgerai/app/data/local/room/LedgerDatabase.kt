@@ -3,6 +3,18 @@ package com.ledgerai.app.data.local.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.ledgerai.app.data.household.HouseholdDao
+import com.ledgerai.app.data.household.HouseholdEntity
+import com.ledgerai.app.data.household.HouseholdMemberEntity
+import com.ledgerai.app.data.inventory.ItemDao
+import com.ledgerai.app.data.inventory.ItemEntity
+import com.ledgerai.app.data.inventory.ShoppingItemDao
+import com.ledgerai.app.data.inventory.ShoppingItemEntity
+import com.ledgerai.app.data.inventory.ShoppingListDao
+import com.ledgerai.app.data.inventory.ShoppingListEntity
+import com.ledgerai.app.data.receipts.ReceiptDao
+import com.ledgerai.app.data.receipts.ReceiptEntity
+import com.ledgerai.app.data.receipts.ReceiptLineEntity
 
 @Database(
     entities = [
@@ -28,9 +40,18 @@ import androidx.room.TypeConverters
         ActivityEntryEntity::class,
         CheckinWindowEntity::class,
         JobApplicationEntity::class,
-        VoiceHistoryEntity::class
+        VoiceHistoryEntity::class,
+        AssistantActionEntity::class,
+        EventLogEntity::class,
+        HouseholdEntity::class,
+        HouseholdMemberEntity::class,
+        ItemEntity::class,
+        ShoppingListEntity::class,
+        ShoppingItemEntity::class,
+        ReceiptEntity::class,
+        ReceiptLineEntity::class,
     ],
-    version = 10,
+    version = 14,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -59,4 +80,10 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun checkinWindowDao(): CheckinWindowDao
     abstract fun jobApplicationDao(): JobApplicationDao
     abstract fun voiceHistoryDao(): VoiceHistoryDao
+    abstract fun assistantAuditDao(): AssistantAuditDao
+    abstract fun householdDao(): HouseholdDao
+    abstract fun itemDao(): ItemDao
+    abstract fun shoppingListDao(): ShoppingListDao
+    abstract fun shoppingItemDao(): ShoppingItemDao
+    abstract fun receiptDao(): ReceiptDao
 }

@@ -41,6 +41,12 @@ class AiConfig @Inject constructor() {
     val modelOpenRouter: String =
         BuildConfig.AI_MODEL_OPENROUTER.ifBlank { "deepseek/deepseek-chat" }
 
+    /** Fast general model for the assistant, served through OpenRouter. */
+    val modelFast: String = BuildConfig.AI_MODEL_FAST.ifBlank { "google/gemini-3.1-flash-lite" }
+
+    /** The AI-first path needs an OpenRouter key; without one the older layers answer. */
+    val hasFastModelKey: Boolean = openRouterApiKey.isNotBlank() || openRouterApiKeys.isNotEmpty()
+
     /** Key for stage 1: free OpenRouter key, else primary OpenRouter key. */
     val openRouterFreeEffectiveKey: String =
         openRouterFreeApiKey.ifBlank { openRouterApiKey }

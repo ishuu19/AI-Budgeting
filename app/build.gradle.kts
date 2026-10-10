@@ -34,6 +34,7 @@ val aiBuildConfigKeys = listOf(
     "AI_MODEL_GEMINI",
     "AI_MODEL_DEEPSEEK",
     "AI_MODEL_OPENROUTER",
+    "AI_MODEL_FAST",
 )
 
 fun com.android.build.api.dsl.ApplicationBuildType.emptyAiBuildConfigFields() {
@@ -76,6 +77,10 @@ fun com.android.build.api.dsl.ApplicationBuildType.debugAiBuildConfigFields() {
     buildConfigField(
         "String", "AI_MODEL_OPENROUTER",
         "\"${secretOrEmpty("AI_MODEL_OPENROUTER", "deepseek/deepseek-chat")}\""
+    )
+    buildConfigField(
+        "String", "AI_MODEL_FAST",
+        "\"${secretOrEmpty("AI_MODEL_FAST", "google/gemini-3.1-flash-lite")}\""
     )
 }
 

@@ -21,7 +21,14 @@ data class ChatCompletionRequest(
     val messages: List<ChatMessageDto>,
     val temperature: Double = 0.3,
     @SerializedName("max_tokens") val maxTokens: Int? = 1024,
+    @SerializedName("response_format") val responseFormat: ResponseFormatDto? = null,
+    /** OpenRouter routing preferences, e.g. sort by latency. */
+    val provider: ProviderPrefsDto? = null,
 )
+
+data class ResponseFormatDto(val type: String)
+
+data class ProviderPrefsDto(val sort: String)
 
 data class ChatMessageDto(
     val role: String,

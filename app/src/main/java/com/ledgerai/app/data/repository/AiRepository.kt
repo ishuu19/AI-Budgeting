@@ -27,6 +27,7 @@ import com.ledgerai.app.data.ai.PlaceMatch
 import com.ledgerai.app.data.ai.ParsedTransactionDto
 import com.ledgerai.app.data.ai.ParsedVoiceIntentDto
 import com.ledgerai.app.data.ai.QuickParse
+import com.ledgerai.app.data.ai.IntentSource
 import com.ledgerai.app.data.ai.RoutedIntents
 import com.ledgerai.app.data.ai.RuleLexicon
 import com.ledgerai.app.data.ai.VoiceIntentRouter
@@ -64,6 +65,10 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+
+/** How long the AI-first parse may take before the on-device path answers instead. */
+private const val FAST_TIMEOUT_MS = 6_000L
 
 /**
  * AI entry point.
@@ -134,6 +139,11 @@ class AiRepository @Inject constructor(
         }
         LearnedRules.current = LearnedRules.parse(runCatching { prefs.learnedRulesNow() }.getOrDefault(""))
         val cloudEnabled = runCatching { prefs.cloudFallback.first() }.getOrDefault(true)
+        // AI first: one fast general model understands the whole message. Anything that fails or times out
+        // falls through to the on-device model, rules and the older cloud path below.
+        if (cloudEnabled) {
+            fastVoiceItems(trimmed)?.let { return Result.success(RoutedIntents(it, IntentSource.AI, cloudCalled = true)) }
+        }
         val routed = VoiceIntentRouter.route(
             trimmed,
             cloudEnabled,
@@ -150,6 +160,24 @@ class AiRepository @Inject constructor(
         val items = if (needsPlaces) snapPlaces(routed.items, knownPlaces()) else routed.items
         return Result.success(RoutedIntents(items, routed.source, routed.cloudCalled))
     }
+
+    /** The fast OpenRouter model, bounded so a slow network never blocks the on-device path. Null means "use the next layer". */
+    private suspend fun fastVoiceItems(trimmed: String): List<ParsedIntent>? {
+        if (!network.isOnline() || !config.hasFastModelKey) return null
+        val places = knownPlaces()
+        val raw = withTimeoutOrNull(FAST_TIMEOUT_MS) {
+            router.completeFast(voiceSystemPrompt(places), nowHint() + "\nUser said: " + trimmed).getOrNull()
+        } ?: return null
+        val items = mapVoiceItemsJson(raw, trimmed).filter { it !is ParsedIntent.Unmatched }
+        return preferLocalKinds(items, trimmed).takeIf { it.isNotEmpty() }
+    }
+
+    private fun voiceSystemPrompt(places: List<String>): String = """
+        EN/BN. JSON only {"items":[{"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB|DELETE|EDIT","amount":n|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":"","note":"","type":"INCOME|EXPENSE","title":"","name":"","body":"","start_at":"local ISO|null","due_at":null,"label":"","repeat_rule":"","direction":"I_OWE|THEY_OWE"}]}.
+        Dates named by the user stay that date. Money is TRANSACTION. JOB name=company title=role merchant=site note=place body=labeled dates. DELETE/EDIT do not create a new item. Empty if unknown.
+        One message can hold several items: return one item for each. Never invent an amount, date or name the user did not say; use null.
+        ${placeHint(places)}
+    """.trimIndent()
 
     /** Edge function first, then the direct provider. Empty when offline, unconfigured or nothing maps. */
     private suspend fun cloudVoiceItems(trimmed: String): List<ParsedIntent> {

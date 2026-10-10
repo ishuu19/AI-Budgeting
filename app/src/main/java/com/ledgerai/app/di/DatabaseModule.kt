@@ -11,8 +11,22 @@ import com.ledgerai.app.data.local.room.EventReminderDao
 import com.ledgerai.app.data.local.room.MIGRATION_6_7
 import com.ledgerai.app.data.local.room.MIGRATION_7_8
 import com.ledgerai.app.data.local.room.MIGRATION_8_9
+import com.ledgerai.app.data.local.room.AssistantAuditDao
 import com.ledgerai.app.data.local.room.MIGRATION_9_10
+import com.ledgerai.app.data.local.room.MIGRATION_10_11
+import com.ledgerai.app.data.local.room.MIGRATION_11_12
+import com.ledgerai.app.data.local.room.MIGRATION_12_13
+import com.ledgerai.app.data.local.room.MIGRATION_13_14
 import com.ledgerai.app.data.local.room.VoiceHistoryDao
+import com.ledgerai.app.data.household.HouseholdDao
+import com.ledgerai.app.data.household.HouseholdRepository
+import com.ledgerai.app.data.inventory.InventoryRepository
+import com.ledgerai.app.data.inventory.ItemDao
+import com.ledgerai.app.data.inventory.ShoppingItemDao
+import com.ledgerai.app.data.inventory.ShoppingListDao
+import com.ledgerai.app.data.receipts.ReceiptDao
+import com.ledgerai.app.data.receipts.ReceiptRepository
+import com.ledgerai.app.data.receipts.RoomReceiptStore
 import com.ledgerai.app.data.local.room.DebtDao
 import com.ledgerai.app.data.local.room.GoalDao
 import com.ledgerai.app.data.local.room.LedgerDatabase
@@ -47,7 +61,7 @@ object DatabaseModule {
     @Singleton
     fun provideLedgerDatabase(@ApplicationContext context: Context): LedgerDatabase =
         Room.databaseBuilder(context, LedgerDatabase::class.java, "ledgerai.db")
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
             .fallbackToDestructiveMigrationFrom(1)
             .build()
 
@@ -91,6 +105,36 @@ object DatabaseModule {
     @Provides fun provideCheckinWindowDao(db: LedgerDatabase): CheckinWindowDao = db.checkinWindowDao()
     @Provides fun provideJobApplicationDao(db: LedgerDatabase): JobApplicationDao = db.jobApplicationDao()
     @Provides fun provideVoiceHistoryDao(db: LedgerDatabase): VoiceHistoryDao = db.voiceHistoryDao()
+    @Provides fun provideAssistantAuditDao(db: LedgerDatabase): AssistantAuditDao = db.assistantAuditDao()
+
+    @Provides
+    fun provideHouseholdDao(db: LedgerDatabase): HouseholdDao = db.householdDao()
+
+    @Provides
+    fun provideHouseholdRepository(dao: HouseholdDao): HouseholdRepository = HouseholdRepository(dao)
+
+    @Provides
+    fun provideItemDao(db: LedgerDatabase): ItemDao = db.itemDao()
+
+    @Provides
+    fun provideShoppingListDao(db: LedgerDatabase): ShoppingListDao = db.shoppingListDao()
+
+    @Provides
+    fun provideShoppingItemDao(db: LedgerDatabase): ShoppingItemDao = db.shoppingItemDao()
+
+    @Provides
+    fun provideInventoryRepository(
+        items: ItemDao,
+        lists: ShoppingListDao,
+        lines: ShoppingItemDao,
+    ): InventoryRepository = InventoryRepository(items, lists, lines)
+
+    @Provides
+    fun provideReceiptDao(db: LedgerDatabase): ReceiptDao = db.receiptDao()
+
+    @Provides
+    fun provideReceiptRepository(dao: ReceiptDao): ReceiptRepository =
+        ReceiptRepository(RoomReceiptStore(dao))
 }
 
 private val MIGRATION_5_6 = object : Migration(5, 6) {

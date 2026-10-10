@@ -1,0 +1,4 @@
+-- Stage 4. wardrobe_items, outfits
+-- See docs/life-os/data-model.md. Follow conventions in 007_jobs.sql
+-- (user_id default auth.uid(), updated_at, deleted_at, RLS on, length checks).
+-- TODO: write when its stage starts. Numbering is provisional.

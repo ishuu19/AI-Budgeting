@@ -14,9 +14,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -156,6 +159,9 @@ private enum class YouSheet { None, Profile, Voice, Money, Alerts, About }
 fun SettingsScreen(
     /** Kept for the nav graph. Ask AI now lives in the Voice tab only. */
     onOpenAi: () -> Unit = {},
+    onOpenHousehold: () -> Unit = {},
+    onOpenInventory: () -> Unit = {},
+    onOpenReceipt: () -> Unit = {},
     onBack: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
@@ -180,6 +186,30 @@ fun SettingsScreen(
                     icon = Icons.Filled.Person,
                     trailing = if (isLocal) "Sign in" else null,
                     onClick = { sheet = YouSheet.Profile },
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Households",
+                    sub = "People who share a home",
+                    icon = Icons.Filled.Home,
+                    onClick = onOpenHousehold,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Pantry",
+                    sub = "Stock and shopping",
+                    icon = Icons.Filled.Kitchen,
+                    onClick = onOpenInventory,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Receipt",
+                    sub = "Review a saved receipt",
+                    icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                    onClick = onOpenReceipt,
                     end = { Chevron() }
                 )
                 LGroupDivider()

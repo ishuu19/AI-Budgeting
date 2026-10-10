@@ -57,6 +57,44 @@ class AiProviderRouter @Inject constructor(
         )
     }
 
+    /**
+     * Assistant path: one fast OpenRouter call in JSON mode, routed by latency.
+     * Falls back to the normal cascade if OpenRouter is unconfigured or fails.
+     */
+    suspend fun completeFast(
+        systemPrompt: String,
+        userPrompt: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val key = config.openRouterApiKey.ifBlank { config.openRouterApiKeys.firstOrNull().orEmpty() }
+        if (key.isNotBlank()) {
+            val outcome = try {
+                val body = ChatCompletionRequest(
+                    model = config.modelFast,
+                    messages = listOf(
+                        ChatMessageDto(role = "system", content = systemPrompt),
+                        ChatMessageDto(role = "user", content = userPrompt),
+                    ),
+                    temperature = 0.0,
+                    maxTokens = 600,
+                    responseFormat = ResponseFormatDto("json_object"),
+                    provider = ProviderPrefsDto(sort = "latency"),
+                )
+                mapOpenAiResponse(
+                    openRouterApi.createChatCompletion(authorization = "Bearer $key", body = body),
+                    "openrouter-fast",
+                )
+            } catch (e: Exception) {
+                classifyException(e, "openrouter-fast")
+            }
+            when (outcome) {
+                is StageOutcome.Success -> return@withContext Result.success(outcome.text)
+                is StageOutcome.Failover -> Log.w(TAG, "Fast path failover: ${outcome.error.message}")
+                is StageOutcome.HardFail -> Log.w(TAG, "Fast path failed: ${outcome.error.message}")
+            }
+        }
+        complete(systemPrompt, userPrompt)
+    }
+
     /** Gemini vision first (best for timetable photos); no OpenRouter vision fallback yet. */
     suspend fun completeVision(
         systemPrompt: String,
