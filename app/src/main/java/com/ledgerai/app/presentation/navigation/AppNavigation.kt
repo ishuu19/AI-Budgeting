@@ -45,13 +45,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ledgerai.app.data.household.HouseholdRepository
 import com.ledgerai.app.data.inventory.InventoryRepository
+import com.ledgerai.app.data.memory.MemoryRepository
+import com.ledgerai.app.data.people.CommitmentRepository
+import com.ledgerai.app.data.people.InteractionRepository
+import com.ledgerai.app.data.people.PeopleRepository
 import com.ledgerai.app.data.receipts.ReceiptRepository
+import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.data.subscriptions.SubscriptionRepository
+import com.ledgerai.app.data.wardrobe.WardrobeRepository
+import com.ledgerai.app.domain.home.homeSnapshot
 import com.ledgerai.app.domain.receipts.Receipt
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.screens.auth.AuthViewModel
+import com.ledgerai.app.presentation.screens.home.HomeRoute
+import com.ledgerai.app.presentation.screens.home.HomeScreen
 import com.ledgerai.app.presentation.screens.household.HouseholdScreen
+import com.ledgerai.app.presentation.screens.memory.PersonMemoryScreen
+import com.ledgerai.app.presentation.screens.people.PeopleScreen
 import com.ledgerai.app.presentation.screens.inventory.InventoryScreen
 import com.ledgerai.app.presentation.screens.inventory.InventoryViewModel
 import com.ledgerai.app.presentation.screens.receipts.ReceiptReviewScreen
@@ -60,6 +72,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import java.time.LocalDate
 import com.ledgerai.app.presentation.screens.ai.AiAssistantScreen
 import com.ledgerai.app.presentation.screens.analytics.AnalyticsScreen
 import com.ledgerai.app.presentation.screens.focus.FocusScreen
@@ -68,6 +81,9 @@ import com.ledgerai.app.presentation.screens.money.SpendTodayScreen
 import com.ledgerai.app.presentation.screens.plan.PlanTabScreen
 import com.ledgerai.app.presentation.screens.search.SearchScreen
 import com.ledgerai.app.presentation.screens.settings.SettingsScreen
+import com.ledgerai.app.presentation.screens.subscriptions.SubscriptionsScreen
+import com.ledgerai.app.presentation.screens.subscriptions.SubscriptionsViewModel
+import com.ledgerai.app.presentation.screens.wardrobe.WardrobeScreen
 import com.ledgerai.app.presentation.screens.today.TodayScreen
 import com.ledgerai.app.presentation.screens.voice.VoiceTabScreen
 
@@ -86,6 +102,10 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Household    : Screen("household",    "Households", Icons.Filled.Home)
     object Inventory    : Screen("inventory",    "Pantry",     Icons.Filled.Kitchen)
     object Receipt      : Screen("receipt/{id}", "Receipt",    Icons.AutoMirrored.Filled.ReceiptLong)
+    object People       : Screen("people",       "People",     Icons.Filled.Groups)
+    object PersonMemory : Screen("person/{personId}", "Person", Icons.Filled.Person)
+    object Subscriptions : Screen("subscriptions", "Subscriptions", Icons.Filled.Subscriptions)
+    object Wardrobe      : Screen("wardrobe",      "Wardrobe",     Icons.Filled.Checkroom)
 }
 
 private val tabs = listOf(Screen.Today, Screen.Plan, Screen.Voice, Screen.Money, Screen.You)
@@ -97,7 +117,7 @@ private fun tabOf(route: String?): Screen? = when {
     route.startsWith(Screen.Plan.route) -> Screen.Plan
     route.startsWith(Screen.Voice.route) || route.startsWith(Screen.AiAssistant.route) -> Screen.Voice
     route.startsWith(Screen.Money.route) || route.startsWith(Screen.Insights.route) || route.startsWith(Screen.SpendGuide.route) -> Screen.Money
-    route.startsWith(Screen.You.route) || route.startsWith(Screen.Household.route) || route.startsWith(Screen.Inventory.route) || route.startsWith("receipt/") -> Screen.You
+    route == HomeRoute || route.startsWith(Screen.You.route) || route.startsWith(Screen.Household.route) || route.startsWith(Screen.Inventory.route) || route.startsWith("receipt/") || route.startsWith(Screen.People.route) || route.startsWith("person/") || route.startsWith(Screen.Subscriptions.route) || route.startsWith(Screen.Wardrobe.route) -> Screen.You
     route.startsWith(Screen.Focus.route) -> Screen.Plan
     route.startsWith(Screen.Search.route) -> Screen.Today
     else -> null
@@ -205,6 +225,24 @@ fun AppNavigation(request: LaunchRequest? = null) {
             val opened: () -> Unit = { pendingOpen = null }
 
             composable(Screen.Today.route) { TodayScreen(links) }
+            composable(HomeRoute) {
+                val appContext = LocalContext.current.applicationContext
+                val repository = remember(appContext) {
+                    EntryPointAccessors.fromApplication(
+                        appContext,
+                        TransactionEntryPoint::class.java,
+                    ).transactionRepository()
+                }
+                val transactions by repository.getAllTransactions()
+                    .collectAsState(initial = emptyList())
+                HomeScreen(
+                    snapshot = homeSnapshot(transactions, LocalDate.now()),
+                    onReviewSpending = {
+                        moneySeg = MoneySeg.Spend
+                        nav.tab(Screen.Money.route)
+                    },
+                )
+            }
             composable(Screen.Plan.route) {
                 PlanTabScreen(planSeg, { planSeg = it }, links, openFor(OpenKind.Event, OpenKind.Job), opened)
             }
@@ -235,6 +273,10 @@ fun AppNavigation(request: LaunchRequest? = null) {
                     onOpenHousehold = { nav.go(Screen.Household.route) },
                     onOpenInventory = { nav.go(Screen.Inventory.route) },
                     onOpenReceipt = { nav.go("receipt/0") },
+                    onOpenPeople = { nav.go(Screen.People.route) },
+                    onOpenSubscriptions = { nav.go(Screen.Subscriptions.route) },
+                    onOpenWardrobe = { nav.go(Screen.Wardrobe.route) },
+                    onOpenHome = { nav.go(HomeRoute) },
                     onBack = null,
                 )
             }
@@ -294,6 +336,85 @@ fun AppNavigation(request: LaunchRequest? = null) {
                         item { LEmpty(Icons.AutoMirrored.Filled.ReceiptLong, "No receipt on this phone") }
                     }
                 }
+            }
+
+            composable(Screen.People.route) {
+                val auth: AuthViewModel = hiltViewModel()
+                val user by auth.uiState.collectAsState()
+                val appContext = LocalContext.current.applicationContext
+                val people = remember(appContext) {
+                    EntryPointAccessors.fromApplication(
+                        appContext,
+                        PeopleEntryPoint::class.java,
+                    ).peopleRepository()
+                }
+                PeopleScreen(
+                    userId = user.userId,
+                    repository = people,
+                    onOpenPerson = { person -> nav.go("person/${Uri.encode(person.id)}") },
+                    onBack = back,
+                )
+            }
+            composable(
+                route = Screen.PersonMemory.route,
+                arguments = listOf(navArgument("personId") { type = NavType.StringType }),
+            ) { entry ->
+                val personId = entry.arguments?.getString("personId").orEmpty()
+                val auth: AuthViewModel = hiltViewModel()
+                val user by auth.uiState.collectAsState()
+                val appContext = LocalContext.current.applicationContext
+                val gate = remember(appContext) {
+                    EntryPointAccessors.fromApplication(
+                        appContext,
+                        PeopleEntryPoint::class.java,
+                    )
+                }
+                val people = remember(gate) { gate.peopleRepository() }
+                val memories = remember(gate) { gate.memoryRepository() }
+                val interactions = remember(gate) { gate.interactionRepository() }
+                val commitments = remember(gate) { gate.commitmentRepository() }
+                PersonMemoryScreen(
+                    userId = user.userId,
+                    personId = personId,
+                    people = people,
+                    memories = memories,
+                    interactions = interactions,
+                    commitments = commitments,
+                    onBack = back,
+                )
+            }
+
+            composable(Screen.Subscriptions.route) {
+                val auth: AuthViewModel = hiltViewModel()
+                val user by auth.uiState.collectAsState()
+                val appContext = LocalContext.current.applicationContext
+                val repository = remember(appContext) {
+                    EntryPointAccessors.fromApplication(
+                        appContext,
+                        SubscriptionEntryPoint::class.java,
+                    ).subscriptionRepository()
+                }
+                val viewModel: SubscriptionsViewModel = viewModel(key = user.userId) {
+                    SubscriptionsViewModel(repository, user.userId.ifBlank { null })
+                }
+                SubscriptionsScreen(viewModel = viewModel, onBack = back)
+            }
+
+            composable(Screen.Wardrobe.route) {
+                val auth: AuthViewModel = hiltViewModel()
+                val user by auth.uiState.collectAsState()
+                val appContext = LocalContext.current.applicationContext
+                val repository = remember(appContext) {
+                    EntryPointAccessors.fromApplication(
+                        appContext,
+                        WardrobeEntryPoint::class.java,
+                    ).wardrobeRepository()
+                }
+                WardrobeScreen(
+                    userId = user.userId,
+                    repository = repository,
+                    onBack = back,
+                )
             }
 
             composable(Screen.Insights.route) { AnalyticsScreen(onBack = back) }
@@ -406,6 +527,12 @@ private fun LedgerTabBar(
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
+interface TransactionEntryPoint {
+    fun transactionRepository(): TransactionRepository
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
 interface HouseholdEntryPoint {
     fun householdRepository(): HouseholdRepository
 }
@@ -420,4 +547,25 @@ interface InventoryEntryPoint {
 @InstallIn(SingletonComponent::class)
 interface ReceiptEntryPoint {
     fun receiptRepository(): ReceiptRepository
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface PeopleEntryPoint {
+    fun peopleRepository(): PeopleRepository
+    fun memoryRepository(): MemoryRepository
+    fun interactionRepository(): InteractionRepository
+    fun commitmentRepository(): CommitmentRepository
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface SubscriptionEntryPoint {
+    fun subscriptionRepository(): SubscriptionRepository
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WardrobeEntryPoint {
+    fun wardrobeRepository(): WardrobeRepository
 }

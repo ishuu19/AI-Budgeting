@@ -74,11 +74,44 @@ class SubscriptionRepositoryTest {
         assertEquals("active", dao.rows.single().status)
     }
 
+    @Test
+    fun listActive_excludesSoftDeletedRows() = runBlocking {
+        repository.add("user-1", draft(SubscriptionAmount.Known(4.0), "Kept"))
+        dao.insert(deletedRow(merchant = "Dropped", amount = null))
+        val listed = repository.listActive("user-1")
+        assertEquals(listOf("Kept"), listed.map { it.merchant })
+        assertTrue(listed.none { it.deletedAt != null })
+    }
+
+    @Test
+    fun markCancelled_doesNotTouchASoftDeletedRowOrContactTheMerchant() = runBlocking {
+        val id = dao.insert(deletedRow(merchant = "Hulu", amount = 7.99))
+        val result = repository.markCancelled(id, "user-1")
+        assertFalse(result.updated)
+        assertFalse(result.merchantContacted)
+        assertEquals(SubscriptionStatus.CANCEL_REQUESTED, result.status)
+        val row = dao.rows.single()
+        assertEquals("active", row.status)
+        assertEquals(9L, row.deletedAt)
+        assertTrue(repository.listActive("user-1").isEmpty())
+    }
+
     private fun draft(amount: SubscriptionAmount, merchant: String) = NewSubscription(
         merchant = merchant,
         amount = amount,
         period = SubscriptionPeriod.YEARLY,
         nextRenewalOn = LocalDate.of(2026, 12, 1)
+    )
+
+    private fun deletedRow(merchant: String, amount: Double?) = SubscriptionEntity(
+        userId = "user-1",
+        merchant = merchant,
+        amount = amount,
+        period = SubscriptionPeriod.MONTHLY.wire,
+        nextRenewalOn = LocalDate.of(2026, 10, 1),
+        status = SubscriptionStatus.ACTIVE.wire,
+        updatedAt = 2L,
+        deletedAt = 9L
     )
 }
 

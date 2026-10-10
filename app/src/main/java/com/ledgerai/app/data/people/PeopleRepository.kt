@@ -62,3 +62,11 @@ class PeopleRepository(
         store.upsert(existing.copy(deletedAt = now, updatedAt = now))
     }
 }
+
+class RoomPersonStore(private val dao: PersonDao) : PersonStore {
+    override suspend fun upsert(person: Person) {
+        dao.upsert(person.toEntity())
+    }
+
+    override suspend fun all(): List<Person> = dao.listAll().map { it.toDomain() }
+}

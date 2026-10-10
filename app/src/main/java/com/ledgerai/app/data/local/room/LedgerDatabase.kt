@@ -12,9 +12,23 @@ import com.ledgerai.app.data.inventory.ShoppingItemDao
 import com.ledgerai.app.data.inventory.ShoppingItemEntity
 import com.ledgerai.app.data.inventory.ShoppingListDao
 import com.ledgerai.app.data.inventory.ShoppingListEntity
+import com.ledgerai.app.data.memory.MemoryDao
+import com.ledgerai.app.data.memory.MemoryEntity
+import com.ledgerai.app.data.people.CommitmentDao
+import com.ledgerai.app.data.people.CommitmentEntity
+import com.ledgerai.app.data.people.InteractionDao
+import com.ledgerai.app.data.people.InteractionEntity
+import com.ledgerai.app.data.people.PersonDao
+import com.ledgerai.app.data.people.PersonEntity
 import com.ledgerai.app.data.receipts.ReceiptDao
 import com.ledgerai.app.data.receipts.ReceiptEntity
 import com.ledgerai.app.data.receipts.ReceiptLineEntity
+import com.ledgerai.app.data.subscriptions.SubscriptionDao
+import com.ledgerai.app.data.subscriptions.SubscriptionEntity
+import com.ledgerai.app.data.wardrobe.OutfitDao
+import com.ledgerai.app.data.wardrobe.OutfitEntity
+import com.ledgerai.app.data.wardrobe.WardrobeItemDao
+import com.ledgerai.app.data.wardrobe.WardrobeItemEntity
 
 @Database(
     entities = [
@@ -50,8 +64,15 @@ import com.ledgerai.app.data.receipts.ReceiptLineEntity
         ShoppingItemEntity::class,
         ReceiptEntity::class,
         ReceiptLineEntity::class,
+        PersonEntity::class,
+        InteractionEntity::class,
+        CommitmentEntity::class,
+        MemoryEntity::class,
+        SubscriptionEntity::class,
+        WardrobeItemEntity::class,
+        OutfitEntity::class,
     ],
-    version = 14,
+    version = 17,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -86,4 +107,11 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun shoppingListDao(): ShoppingListDao
     abstract fun shoppingItemDao(): ShoppingItemDao
     abstract fun receiptDao(): ReceiptDao
+    abstract fun personDao(): PersonDao
+    abstract fun interactionDao(): InteractionDao
+    abstract fun commitmentDao(): CommitmentDao
+    abstract fun memoryDao(): MemoryDao
+    abstract fun subscriptionDao(): SubscriptionDao
+    abstract fun wardrobeItemDao(): WardrobeItemDao
+    abstract fun outfitDao(): OutfitDao
 }

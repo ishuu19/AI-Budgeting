@@ -17,16 +17,40 @@ import com.ledgerai.app.data.local.room.MIGRATION_10_11
 import com.ledgerai.app.data.local.room.MIGRATION_11_12
 import com.ledgerai.app.data.local.room.MIGRATION_12_13
 import com.ledgerai.app.data.local.room.MIGRATION_13_14
+import com.ledgerai.app.data.local.room.MIGRATION_14_15
+import com.ledgerai.app.data.local.room.MIGRATION_15_16
+import com.ledgerai.app.data.local.room.MIGRATION_16_17
 import com.ledgerai.app.data.local.room.VoiceHistoryDao
 import com.ledgerai.app.data.household.HouseholdDao
 import com.ledgerai.app.data.household.HouseholdRepository
+import com.ledgerai.app.data.memory.MemoryDao
+import com.ledgerai.app.data.memory.MemoryRepository
+import com.ledgerai.app.data.memory.MemoryStore
+import com.ledgerai.app.data.memory.RoomMemoryStore
 import com.ledgerai.app.data.inventory.InventoryRepository
 import com.ledgerai.app.data.inventory.ItemDao
 import com.ledgerai.app.data.inventory.ShoppingItemDao
 import com.ledgerai.app.data.inventory.ShoppingListDao
+import com.ledgerai.app.data.people.CommitmentDao
+import com.ledgerai.app.data.people.CommitmentRepository
+import com.ledgerai.app.data.people.CommitmentStore
+import com.ledgerai.app.data.people.InteractionDao
+import com.ledgerai.app.data.people.InteractionRepository
+import com.ledgerai.app.data.people.InteractionStore
+import com.ledgerai.app.data.people.PeopleRepository
+import com.ledgerai.app.data.people.PersonDao
+import com.ledgerai.app.data.people.PersonStore
+import com.ledgerai.app.data.people.RoomCommitmentStore
+import com.ledgerai.app.data.people.RoomInteractionStore
+import com.ledgerai.app.data.people.RoomPersonStore
 import com.ledgerai.app.data.receipts.ReceiptDao
 import com.ledgerai.app.data.receipts.ReceiptRepository
 import com.ledgerai.app.data.receipts.RoomReceiptStore
+import com.ledgerai.app.data.subscriptions.SubscriptionDao
+import com.ledgerai.app.data.subscriptions.SubscriptionRepository
+import com.ledgerai.app.data.wardrobe.OutfitDao
+import com.ledgerai.app.data.wardrobe.WardrobeItemDao
+import com.ledgerai.app.data.wardrobe.WardrobeRepository
 import com.ledgerai.app.data.local.room.DebtDao
 import com.ledgerai.app.data.local.room.GoalDao
 import com.ledgerai.app.data.local.room.LedgerDatabase
@@ -61,7 +85,7 @@ object DatabaseModule {
     @Singleton
     fun provideLedgerDatabase(@ApplicationContext context: Context): LedgerDatabase =
         Room.databaseBuilder(context, LedgerDatabase::class.java, "ledgerai.db")
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
             .fallbackToDestructiveMigrationFrom(1)
             .build()
 
@@ -135,6 +159,70 @@ object DatabaseModule {
     @Provides
     fun provideReceiptRepository(dao: ReceiptDao): ReceiptRepository =
         ReceiptRepository(RoomReceiptStore(dao))
+
+    @Provides
+    fun providePersonDao(db: LedgerDatabase): PersonDao = db.personDao()
+
+    @Provides
+    fun provideInteractionDao(db: LedgerDatabase): InteractionDao = db.interactionDao()
+
+    @Provides
+    fun provideCommitmentDao(db: LedgerDatabase): CommitmentDao = db.commitmentDao()
+
+    @Provides
+    fun provideMemoryDao(db: LedgerDatabase): MemoryDao = db.memoryDao()
+
+    @Provides
+    fun providePersonStore(dao: PersonDao): PersonStore = RoomPersonStore(dao)
+
+    @Provides
+    fun provideInteractionStore(dao: InteractionDao): InteractionStore = RoomInteractionStore(dao)
+
+    @Provides
+    fun provideCommitmentStore(dao: CommitmentDao): CommitmentStore = RoomCommitmentStore(dao)
+
+    @Provides
+    fun provideMemoryStore(dao: MemoryDao): MemoryStore = RoomMemoryStore(dao)
+
+    @Provides
+    fun providePeopleRepository(store: PersonStore): PeopleRepository = PeopleRepository(store)
+
+    @Provides
+    fun provideInteractionRepository(
+        people: PeopleRepository,
+        store: InteractionStore,
+    ): InteractionRepository = InteractionRepository(people, store)
+
+    @Provides
+    fun provideCommitmentRepository(
+        people: PeopleRepository,
+        store: CommitmentStore,
+    ): CommitmentRepository = CommitmentRepository(people, store)
+
+    @Provides
+    fun provideMemoryRepository(
+        people: PeopleRepository,
+        store: MemoryStore,
+    ): MemoryRepository = MemoryRepository(people, store)
+
+    @Provides
+    fun provideSubscriptionDao(db: LedgerDatabase): SubscriptionDao = db.subscriptionDao()
+
+    @Provides
+    fun provideSubscriptionRepository(dao: SubscriptionDao): SubscriptionRepository =
+        SubscriptionRepository(dao)
+
+    @Provides
+    fun provideWardrobeItemDao(db: LedgerDatabase): WardrobeItemDao = db.wardrobeItemDao()
+
+    @Provides
+    fun provideOutfitDao(db: LedgerDatabase): OutfitDao = db.outfitDao()
+
+    @Provides
+    fun provideWardrobeRepository(
+        items: WardrobeItemDao,
+        outfits: OutfitDao,
+    ): WardrobeRepository = WardrobeRepository(items, outfits)
 }
 
 private val MIGRATION_5_6 = object : Migration(5, 6) {

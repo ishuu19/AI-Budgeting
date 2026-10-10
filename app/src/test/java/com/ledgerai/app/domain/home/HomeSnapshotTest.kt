@@ -24,6 +24,20 @@ class HomeSnapshotTest {
     }
 
     @Test
+    fun spendToday_countsThatExpense_andLeavesEarlierDaysOutOfToday() {
+        val snapshot = homeSnapshot(
+            listOf(
+                tx(1, 18.0, TransactionType.EXPENSE, today),
+                tx(2, 7.0, TransactionType.EXPENSE, today.minusDays(1)),
+            ),
+            today,
+        )
+
+        assertEquals(18.0, snapshot.todaySpend, 0.0)
+        assertEquals(25.0, snapshot.monthSpend, 0.0)
+    }
+
+    @Test
     fun incomeDoesNotCountAsSpend_negativeExpenseReducesTheSum() {
         val snapshot = homeSnapshot(
             listOf(

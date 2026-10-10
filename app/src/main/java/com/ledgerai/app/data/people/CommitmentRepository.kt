@@ -87,3 +87,11 @@ class CommitmentRepository(
         store.upsert(existing.copy(deletedAt = now, updatedAt = now))
     }
 }
+
+class RoomCommitmentStore(private val dao: CommitmentDao) : CommitmentStore {
+    override suspend fun upsert(commitment: Commitment) {
+        dao.upsert(commitment.toEntity())
+    }
+
+    override suspend fun all(): List<Commitment> = dao.listAll().map { it.toDomain() }
+}

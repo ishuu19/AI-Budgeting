@@ -15,12 +15,15 @@ class WardrobeRulesTest {
         assertEquals(listOf(WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf("  ")))
         assertEquals(listOf(WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf("unknown")))
         assertEquals(listOf(WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf("N/A")))
+        assertEquals(listOf(WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf("?", "na", "NA")))
+        assertEquals(listOf(WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf(" ? ")))
         assertEquals("unknown", WardrobeRules.colorsOrUnknown(listOf("")).single())
     }
 
     @Test
     fun namedColorIsKeptAndNotReplaced() {
         assertEquals(listOf("Navy"), WardrobeRules.colorsOrUnknown(listOf(" Navy ")))
+        assertEquals(listOf("burgundy"), WardrobeRules.colorsOrUnknown(listOf(" burgundy ")))
         assertEquals(listOf("Navy", WardrobeRules.UNKNOWN), WardrobeRules.colorsOrUnknown(listOf("Navy", "")))
     }
 
@@ -35,9 +38,14 @@ class WardrobeRulesTest {
     fun blankTypeAndLaundryStayUnknown() {
         assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.typeOrUnknown(null))
         assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.typeOrUnknown("  "))
+        assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.typeOrUnknown("unknown"))
+        assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.typeOrUnknown("?"))
+        assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.typeOrUnknown("n/a"))
         assertEquals("outer", WardrobeRules.typeOrUnknown(" outer "))
+        assertEquals("poncho", WardrobeRules.typeOrUnknown(" poncho "))
         assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.laundryOrUnknown(null))
         assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.laundryOrUnknown("  "))
+        assertEquals(WardrobeRules.UNKNOWN, WardrobeRules.laundryOrUnknown("n/a"))
         assertEquals("clean", WardrobeRules.laundryOrUnknown(" clean "))
     }
 

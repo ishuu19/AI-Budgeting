@@ -8,10 +8,12 @@
  * - Never performs direct Postgres queries or uses DB client beyond auth.getUser()
  *
  * Provider order: Gemini (free tier) -> OpenRouter FREE model (text only, best effort).
+ * Exception: type fast_completion is one OpenRouter call only (no Gemini, no DB).
  * Voice: audio goes to Gemini (transcribe + parse in one call); no cloud backup for audio -
  * the app falls back to offline Vosk on the phone.
- * Secrets: GEMINI_API_KEY, OPENROUTER_API_KEY (optional, free models only),
- *          SUPABASE_URL, SUPABASE_ANON_KEY (auth verify only; never service_role)
+ * Secrets: GEMINI_API_KEY, OPENROUTER_API_KEY (optional, free models only; required for fast_completion),
+ *          SUPABASE_URL, SUPABASE_ANON_KEY (auth verify only; never service_role).
+ * fast_completion model: env AI_MODEL_FAST, or google/gemini-3.1-flash-lite.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
@@ -29,7 +31,11 @@ type AiType =
   | "insight"
   | "note_summary"
   | "chat"
-  | "voice_intent";
+  | "voice_intent"
+  | "fast_completion";
+
+/** Types that use the fixed response schemas. fast_completion does not. */
+type SchemaType = Exclude<AiType, "fast_completion">;
 
 interface ProxyRequest {
   type: AiType;
@@ -50,7 +56,7 @@ const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60_000;
 const rateBuckets = new Map<string, RateBucket>();
 
-const SCHEMAS: Record<AiType, Record<string, unknown>> = {
+const SCHEMAS: Record<SchemaType, Record<string, unknown>> = {
   transaction: {
     type: "object",
     properties: {
@@ -223,6 +229,8 @@ function defaultSystem(type: AiType): string {
       return "You are LedgerAI, a concise personal finance assistant. Do not invent balances.";
     case "voice_intent":
       return VOICE_SYSTEM;
+    case "fast_completion":
+      return "Reply with one JSON object. Leave unknown amount, merchant, and start_at null. Do not invent items.";
   }
 }
 
@@ -294,7 +302,21 @@ async function callOpenRouter(
   user: string,
   schema: Record<string, unknown>,
   model: string,
+  limits?: {
+    temperature?: number;
+    maxTokens?: number;
+    /** OpenRouter provider.sort. Omitted unless set, so other types stay unchanged. */
+    providerSort?: string;
+    /** Default true. fast_completion sends the client system text with no schema appendix. */
+    appendSchema?: boolean;
+  },
 ): Promise<string> {
+  const temperature = limits?.temperature ?? 0.2;
+  const maxTokens = limits?.maxTokens ?? 1500;
+  const appendSchema = limits?.appendSchema !== false;
+  const systemContent = appendSchema
+    ? `${system}\nReply with ONLY a JSON object matching this JSON schema (include all required fields; use null for unknown nullable fields):\n${JSON.stringify(schema)}`
+    : system;
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -303,14 +325,12 @@ async function callOpenRouter(
     },
     body: JSON.stringify({
       model,
-      temperature: 0.2,
-      max_tokens: 1500,
+      temperature,
+      max_tokens: maxTokens,
       response_format: { type: "json_object" },
+      ...(limits?.providerSort ? { provider: { sort: limits.providerSort } } : {}),
       messages: [
-        {
-          role: "system",
-          content: `${system}\nReply with ONLY a JSON object matching this JSON schema (include all required fields; use null for unknown nullable fields):\n${JSON.stringify(schema)}`,
-        },
+        { role: "system", content: systemContent },
         { role: "user", content: user },
       ],
     }),
@@ -365,7 +385,7 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as ProxyRequest;
     if (!body?.type) return json(400, { error: "Body requires type" });
-    if (!(body.type in SCHEMAS)) {
+    if (body.type !== "fast_completion" && !(body.type in SCHEMAS)) {
       return json(400, { error: `Unsupported type: ${body.type}` });
     }
     const audio = body.type === "voice_intent" ? body.audio : undefined;
@@ -375,8 +395,42 @@ Deno.serve(async (req) => {
     const userText = (body.user ?? "").trim().slice(0, 8000);
     if (!userText && !audio) return json(400, { error: "Body requires user text or audio" });
 
-    const schema = SCHEMAS[body.type];
     const system = (body.system?.trim() || defaultSystem(body.type)).slice(0, 4000);
+
+    // One OpenRouter JSON completion. Client temperature, max tokens, model, and
+    // response format are ignored. Provider key comes only from Edge secrets.
+    if (body.type === "fast_completion") {
+      const openRouterKey = Deno.env.get("OPENROUTER_API_KEY")?.trim();
+      if (!openRouterKey) {
+        return json(503, { error: "No AI provider keys configured on Edge" });
+      }
+      const model = Deno.env.get("AI_MODEL_FAST")?.trim() || "google/gemini-3.1-flash-lite";
+      let rawJson: string;
+      try {
+        rawJson = await callOpenRouter(openRouterKey, system, userText, {}, model, {
+          temperature: 0,
+          maxTokens: 600,
+          providerSort: "latency",
+          appendSchema: false,
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        return json(502, { error: message.slice(0, 600) || "All providers failed" });
+      }
+      let data: unknown;
+      try {
+        data = JSON.parse(rawJson);
+        if (typeof data === "string") data = JSON.parse(data);
+      } catch {
+        return json(502, { error: "Provider returned non-JSON", raw: rawJson.slice(0, 500) });
+      }
+      if (data === null || typeof data !== "object") {
+        return json(502, { error: "Provider returned non-JSON", raw: rawJson.slice(0, 500) });
+      }
+      return json(200, { type: body.type, data, provider: "openrouter" });
+    }
+
+    const schema = SCHEMAS[body.type];
     const lite = body.modelTier === "flash-lite" && !audio;
     const geminiModel = lite
       ? (Deno.env.get("GEMINI_MODEL_LITE") ?? "gemini-flash-lite-latest")

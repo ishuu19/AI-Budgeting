@@ -138,6 +138,44 @@ class AiEdgeClient @Inject constructor(
             }
         }
 
+    /**
+     * Fast model via the `fast_completion` edge type. The body is [fastCompletionRequest]:
+     * system, user, and type only. The provider key stays on the Edge Function.
+     * Returns the proxy envelope so the caller can drop errors and missing data.
+     */
+    suspend fun fastCompletion(system: String, user: String): Result<AiProxyResponse> =
+        withContext(Dispatchers.IO) {
+            if (!isConfigured()) {
+                return@withContext Result.failure(IllegalStateException("Edge AI not configured"))
+            }
+            if (!sessionGuard.ensureFreshSession()) {
+                return@withContext Result.failure(IllegalStateException("Session expired - sign in again"))
+            }
+            val jwt = session.userInfo.first().accessToken.trim()
+            if (jwt.isBlank()) {
+                return@withContext Result.failure(IllegalStateException("No auth JWT - sign in required"))
+            }
+            try {
+                val response = api.complete(
+                    authorization = "Bearer $jwt",
+                    apiKey = BuildConfig.SUPABASE_ANON_KEY.trim(),
+                    body = fastCompletionRequest(system, user),
+                )
+                if (!response.isSuccessful) {
+                    val err = response.errorBody()?.string()?.take(200)
+                    return@withContext Result.failure(
+                        IllegalStateException("Edge AI HTTP ${response.code()}: $err")
+                    )
+                }
+                val body = response.body()
+                    ?: return@withContext Result.failure(IllegalStateException("Empty Edge AI data"))
+                Result.success(body)
+            } catch (e: Exception) {
+                Log.w(TAG, "fast_completion failed: ${e.message}")
+                Result.failure(e)
+            }
+        }
+
     companion object {
         private const val TAG = "AiEdgeClient"
     }

@@ -2,9 +2,11 @@ package com.ledgerai.app.data.repository
 
 import com.google.gson.Gson
 import com.google.gson.JsonParser
+import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.ai.AiConfig
 import com.ledgerai.app.data.ai.AiEdgeClient
 import com.ledgerai.app.data.ai.AiProviderRouter
+import com.ledgerai.app.data.ai.fastCompletionJson
 import com.ledgerai.app.data.ai.AiResponseType
 import com.ledgerai.app.data.ai.AiResponseValidator
 import com.ledgerai.app.data.ai.ContextBuilder
@@ -42,6 +44,8 @@ import com.ledgerai.app.data.schedule.ScheduleTimeParser
 import java.io.ByteArrayOutputStream
 import java.util.Base64
 import com.ledgerai.app.data.ai.ValidatedAiResponse
+import com.ledgerai.app.domain.ai.FastChannel
+import com.ledgerai.app.domain.ai.chooseFastChannel
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
@@ -142,7 +146,9 @@ class AiRepository @Inject constructor(
         // AI first: one fast general model understands the whole message. Anything that fails or times out
         // falls through to the on-device model, rules and the older cloud path below.
         if (cloudEnabled) {
-            fastVoiceItems(trimmed)?.let { return Result.success(RoutedIntents(it, IntentSource.AI, cloudCalled = true)) }
+            fastVoiceItems(trimmed, cloudEnabled)?.let {
+                return Result.success(RoutedIntents(it, IntentSource.AI, cloudCalled = true))
+            }
         }
         val routed = VoiceIntentRouter.route(
             trimmed,
@@ -161,13 +167,31 @@ class AiRepository @Inject constructor(
         return Result.success(RoutedIntents(items, routed.source, routed.cloudCalled))
     }
 
-    /** The fast OpenRouter model, bounded so a slow network never blocks the on-device path. Null means "use the next layer". */
-    private suspend fun fastVoiceItems(trimmed: String): List<ParsedIntent>? {
-        if (!network.isOnline() || !config.hasFastModelKey) return null
+    /** Fast model, bounded so a slow reply never blocks the on-device path. Null means "use the next layer". */
+    private suspend fun fastVoiceItems(trimmed: String, cloudEnabled: Boolean): List<ParsedIntent>? {
+        val channel = chooseFastChannel(
+            cloudEnabled = cloudEnabled,
+            online = network.isOnline(),
+            allowClientKey = BuildConfig.DEBUG,
+            hasClientOpenRouterKey = config.hasFastModelKey,
+            edgeConfigured = edgeClient.isConfigured(),
+        )
+        if (channel == FastChannel.SKIP) return null
         val places = knownPlaces()
-        val raw = withTimeoutOrNull(FAST_TIMEOUT_MS) {
-            router.completeFast(voiceSystemPrompt(places), nowHint() + "\nUser said: " + trimmed).getOrNull()
-        } ?: return null
+        val system = voiceSystemPrompt(places)
+        val user = nowHint() + "\nUser said: " + trimmed
+        val raw = when (channel) {
+            FastChannel.DIRECT -> withTimeoutOrNull(FAST_TIMEOUT_MS) {
+                router.completeFast(system, user).getOrNull()
+            } ?: return null
+            FastChannel.PROXY -> {
+                val response = withTimeoutOrNull(FAST_TIMEOUT_MS) {
+                    edgeClient.fastCompletion(system, user).getOrNull()
+                } ?: return null
+                fastCompletionJson(response) ?: return null
+            }
+            FastChannel.SKIP -> return null
+        }
         val items = mapVoiceItemsJson(raw, trimmed).filter { it !is ParsedIntent.Unmatched }
         return preferLocalKinds(items, trimmed).takeIf { it.isNotEmpty() }
     }

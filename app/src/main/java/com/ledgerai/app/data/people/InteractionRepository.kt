@@ -77,3 +77,11 @@ class InteractionRepository(
         store.upsert(existing.copy(deletedAt = now, updatedAt = now))
     }
 }
+
+class RoomInteractionStore(private val dao: InteractionDao) : InteractionStore {
+    override suspend fun upsert(interaction: Interaction) {
+        dao.upsert(interaction.toEntity())
+    }
+
+    override suspend fun all(): List<Interaction> = dao.listAll().map { it.toDomain() }
+}

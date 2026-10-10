@@ -16,16 +16,18 @@ class WardrobeRepositoryTest {
     @Test
     fun blankColorTypeAndLaundryStayUnknown() = runBlocking {
         val repo = memoryWardrobeRepository()
-        repo.addGarment(
+        val id = repo.addGarment(
             userId = "a",
-            name = "Coat",
-            type = " ",
-            colors = listOf("  "),
+            name = "Navy shirt",
+            type = "?",
+            colors = listOf("n/a", "unknown"),
             seasons = listOf(" "),
             photoPath = "  ",
             laundryStatus = " ",
         )
+        assertTrue(id > 0L)
         val item = repo.listGarments("a").single()
+        assertEquals("Navy shirt", item.name)
         assertEquals(listOf("unknown"), item.colors)
         assertEquals("unknown", item.type)
         assertEquals(emptyList<String>(), item.seasons)
@@ -58,9 +60,10 @@ class WardrobeRepositoryTest {
     fun listIsUserScopedAndSkipsSoftDeleted() = runBlocking {
         val repo = memoryWardrobeRepository()
         val id = repo.addGarment(userId = "a", name = "Coat", type = "outer", colors = listOf("Navy"))
+        repo.addGarment(userId = "a", name = "Scarf", type = "neck", colors = listOf("Red"))
         repo.addGarment(userId = "b", name = "Hat", type = "head", colors = listOf("Black"))
         repo.softDeleteGarment("a", id)
-        assertTrue(repo.listGarments("a").isEmpty())
+        assertEquals(listOf("Scarf"), repo.listGarments("a").map { it.name })
         assertEquals(listOf("Hat"), repo.listGarments("b").map { it.name })
     }
 
@@ -81,7 +84,9 @@ class WardrobeRepositoryTest {
         val second = repo.logWear("a", listOf(coat), day)
         assertTrue(first is WearLog.Saved)
         assertTrue(second is WearLog.DuplicateSameDay)
-        assertEquals(1, repo.listOutfits("a").size)
+        val saved = repo.listOutfits("a").single()
+        assertEquals(day, saved.wornOn)
+        assertEquals(listOf(coat), saved.itemIds)
         assertTrue(repo.logWear("a", listOf(coat), day.plusDays(1)) is WearLog.Saved)
     }
 
@@ -100,9 +105,14 @@ class WardrobeRepositoryTest {
     fun wearRequiresAGarmentThisUserStillHas() = runBlocking {
         val repo = memoryWardrobeRepository()
         val hat = repo.addGarment(userId = "b", name = "Hat", type = "head", colors = listOf("Black"))
+        val coat = repo.addGarment(userId = "a", name = "Coat", type = "outer", colors = listOf("Navy"))
         val day = LocalDate.of(2026, 10, 11)
         assertTrue(repo.logWear("a", listOf(hat), day) is WearLog.UnknownGarment)
         assertTrue(repo.logWear("a", emptyList(), day) is WearLog.UnknownGarment)
+        assertTrue(repo.logWear("  ", listOf(coat), day) is WearLog.UnknownGarment)
+        repo.softDeleteGarment("a", coat)
+        assertTrue(repo.listGarments("a").isEmpty())
+        assertTrue(repo.logWear("a", listOf(coat), day) is WearLog.UnknownGarment)
         assertTrue(repo.listOutfits("a").isEmpty())
         assertTrue(repo.listOutfits("b").isEmpty())
     }

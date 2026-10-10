@@ -88,3 +88,11 @@ class MemoryRepository(
         store.upsert(existing.copy(deletedAt = now, updatedAt = now))
     }
 }
+
+class RoomMemoryStore(private val dao: MemoryDao) : MemoryStore {
+    override suspend fun upsert(memory: Memory) {
+        dao.upsert(memory.toEntity())
+    }
+
+    override suspend fun all(): List<Memory> = dao.listAll().map { it.toDomain() }
+}

@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 
 /**
- * Room row for data-model `subscriptions`. Not registered on LedgerDatabase yet.
+ * Room row for data-model `subscriptions`. Registered on LedgerDatabase.
  * period and status are wire strings so no new TypeConverter is required.
  * amount null means unknown, not zero.
  */

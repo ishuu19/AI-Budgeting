@@ -43,6 +43,16 @@ class SubscriptionChargesTest {
     }
 
     @Test
+    fun nextChargeDate_clampsWhenTheMonthHasNoAnchorDay() {
+        val next = SubscriptionCharges.nextChargeDate(
+            LocalDate.of(2026, 1, 31),
+            SubscriptionPeriod.MONTHLY,
+            LocalDate.of(2026, 2, 1)
+        )
+        assertEquals(LocalDate.of(2026, 2, 28), next)
+    }
+
+    @Test
     fun nextChargeDate_rollsWeeklyQuarterlyAndYearly() {
         assertEquals(
             LocalDate.of(2026, 10, 15),

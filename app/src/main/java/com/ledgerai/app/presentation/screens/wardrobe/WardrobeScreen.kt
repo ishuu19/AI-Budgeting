@@ -79,16 +79,26 @@ class WardrobeViewModel(
         }
     }
 
-    fun logWearToday(itemId: Long) {
+    fun logWear(itemId: Long, wornOn: LocalDate) {
         viewModelScope.launch {
-            _message.value = when (repository.logWear(userId, listOf(itemId), LocalDate.now())) {
-                is WearLog.Saved -> "Logged for today"
-                WearLog.DuplicateSameDay -> "Already logged for today"
+            _message.value = when (repository.logWear(userId, listOf(itemId), wornOn)) {
+                is WearLog.Saved -> "Logged for $wornOn"
+                WearLog.DuplicateSameDay -> "Already logged for $wornOn"
                 WearLog.UnknownGarment -> "That garment is not in your wardrobe"
             }
         }
     }
 }
+
+/**
+ * Garments for [userId] from [WardrobeRepository.observeGarments], plus a wear log
+ * when [WardrobeRepository.logWear] is available.
+ *
+ * Route it the same way as subscriptions: a `wardrobe` destination on the You tab,
+ * then `WardrobeScreen(userId, repository, onBack)`. [WardrobeRepository] is not in
+ * Hilt until the wardrobe DAOs are on the database. This screen stores a photo path
+ * only and logs a wear only for a date the user typed (`yyyy-MM-dd`).
+ */
 
 @Composable
 fun WardrobeScreen(
@@ -109,6 +119,11 @@ fun WardrobeScreen(
     var season by rememberSaveable { mutableStateOf("") }
     var laundry by rememberSaveable { mutableStateOf("") }
     var photoPath by rememberSaveable { mutableStateOf("") }
+    var logging by rememberSaveable { mutableStateOf(false) }
+    var loggingId by rememberSaveable { mutableStateOf(0L) }
+    var loggingName by rememberSaveable { mutableStateOf("") }
+    var wearDate by rememberSaveable { mutableStateOf("") }
+    val wearDay = typedDate(wearDate)
 
     LScreen(title = "Wardrobe", onBack = onBack) {
         item {
@@ -132,8 +147,13 @@ fun WardrobeScreen(
                     sub = garmentLine(garment),
                     end = {
                         IconButton(
-                            onClick = { viewModel.logWearToday(garment.id) },
-                            modifier = Modifier.semantics { contentDescription = "Log wear for today" },
+                            onClick = {
+                                loggingId = garment.id
+                                loggingName = garment.name
+                                wearDate = ""
+                                logging = true
+                            },
+                            modifier = Modifier.semantics { contentDescription = "Log a wear" },
                         ) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = L.Gold)
                         }
@@ -185,6 +205,34 @@ fun WardrobeScreen(
             )
         }
     }
+
+    if (logging) {
+        LSheet(
+            title = "Log wear",
+            onDismiss = {
+                logging = false
+                wearDate = ""
+            },
+            primary = "Save",
+            onPrimary = {
+                val day = wearDay
+                if (day != null) {
+                    viewModel.logWear(loggingId, day)
+                    wearDate = ""
+                    logging = false
+                }
+            },
+            primaryEnabled = wearDay != null,
+        ) {
+            Text(loggingName, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
+            LField(wearDate, { wearDate = it }, "Date")
+            Text(
+                "Enter the day you wore it as yyyy-MM-dd.",
+                style = MaterialTheme.typography.bodySmall,
+                color = L.InkMuted,
+            )
+        }
+    }
 }
 
 private fun garmentLine(item: WardrobeItem): String =
@@ -203,3 +251,9 @@ private fun wornSub(outfit: Outfit): String {
 }
 
 private val WORN_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+
+private fun typedDate(raw: String): LocalDate? {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return null
+    return runCatching { LocalDate.parse(trimmed) }.getOrNull()
+}

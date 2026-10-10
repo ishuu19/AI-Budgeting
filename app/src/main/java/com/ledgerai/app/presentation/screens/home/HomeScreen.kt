@@ -23,7 +23,7 @@ import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.money
 
-/** Route an integrator should register for [HomeScreen]. Not in the NavHost yet. */
+/** Route registered in the NavHost for [HomeScreen]. */
 const val HomeRoute = "home"
 
 /**

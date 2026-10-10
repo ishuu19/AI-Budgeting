@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
 /**
- * Garments and wear log for one user. Not a Hilt entry point: the database
- * does not expose these DAOs yet. Construct it once they are provided.
+ * Garments and wear log for one user. Hilt provides the Room DAOs.
+ * Unit tests still pass in-memory DAO fakes and construct this class directly.
  *
  * [photoPath] is stored as text. This repository does not open or upload files.
  */

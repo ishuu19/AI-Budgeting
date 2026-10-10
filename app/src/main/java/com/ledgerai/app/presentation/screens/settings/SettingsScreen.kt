@@ -16,13 +16,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Subscriptions
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -162,6 +166,10 @@ fun SettingsScreen(
     onOpenHousehold: () -> Unit = {},
     onOpenInventory: () -> Unit = {},
     onOpenReceipt: () -> Unit = {},
+    onOpenPeople: () -> Unit = {},
+    onOpenSubscriptions: () -> Unit = {},
+    onOpenWardrobe: () -> Unit = {},
+    onOpenHome: () -> Unit = {},
     onBack: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
@@ -210,6 +218,38 @@ fun SettingsScreen(
                     sub = "Review a saved receipt",
                     icon = Icons.AutoMirrored.Filled.ReceiptLong,
                     onClick = onOpenReceipt,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "People",
+                    sub = "Memories and commitments",
+                    icon = Icons.Filled.Groups,
+                    onClick = onOpenPeople,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Subscriptions",
+                    sub = "Renewals on this phone",
+                    icon = Icons.Filled.Subscriptions,
+                    onClick = onOpenSubscriptions,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Wardrobe",
+                    sub = "Clothes and wear log",
+                    icon = Icons.Filled.Checkroom,
+                    onClick = onOpenWardrobe,
+                    end = { Chevron() }
+                )
+                LGroupDivider()
+                LGroupRow(
+                    title = "Home",
+                    sub = "Spent today",
+                    icon = Icons.Filled.Today,
+                    onClick = onOpenHome,
                     end = { Chevron() }
                 )
                 LGroupDivider()
