@@ -1,0 +1,1811 @@
+# phrase<TAB>kind (DEADLINE,BIRTHDAY,PAYMENT,APPOINTMENT,FOLLOWUP,TRAVEL,HABIT)
+deadline	DEADLINE
+deadlines	DEADLINE
+due date	DEADLINE
+due by	DEADLINE
+due on	DEADLINE
+due today	DEADLINE
+due tomorrow	DEADLINE
+due tonight	DEADLINE
+due this week	DEADLINE
+due next week	DEADLINE
+due friday	DEADLINE
+due monday	DEADLINE
+overdue	DEADLINE
+past due	DEADLINE
+last date	DEADLINE
+last day	DEADLINE
+last day to	DEADLINE
+final date	DEADLINE
+final day	DEADLINE
+closing date	DEADLINE
+closing day	DEADLINE
+cutoff	DEADLINE
+cut-off	DEADLINE
+cut off	DEADLINE
+submission date	DEADLINE
+submission deadline	DEADLINE
+submit by	DEADLINE
+submit before	DEADLINE
+submit on	DEADLINE
+submitted by	DEADLINE
+hand in by	DEADLINE
+hand-in	DEADLINE
+turn in by	DEADLINE
+expires	DEADLINE
+expiry	DEADLINE
+expiry date	DEADLINE
+expires on	DEADLINE
+expires today	DEADLINE
+expires tomorrow	DEADLINE
+expiring	DEADLINE
+expiring soon	DEADLINE
+valid till	DEADLINE
+valid until	DEADLINE
+valid through	DEADLINE
+offer ends	DEADLINE
+offer expires	DEADLINE
+sale ends	DEADLINE
+ends on	DEADLINE
+ends today	DEADLINE
+ends tomorrow	DEADLINE
+ends soon	DEADLINE
+last chance	DEADLINE
+last call	DEADLINE
+hurry	DEADLINE
+time running out	DEADLINE
+running out of time	DEADLINE
+before it's too late	DEADLINE
+before deadline	DEADLINE
+before the deadline	DEADLINE
+by deadline	DEADLINE
+by the deadline	DEADLINE
+on deadline	DEADLINE
+deadline approaching	DEADLINE
+deadline is near	DEADLINE
+deadline soon	DEADLINE
+due soon	DEADLINE
+coming up	DEADLINE
+upcoming	DEADLINE
+upcoming deadline	DEADLINE
+application deadline	DEADLINE
+registration deadline	DEADLINE
+enrollment deadline	DEADLINE
+enrolment deadline	DEADLINE
+payment deadline	DEADLINE
+tax deadline	DEADLINE
+filing deadline	DEADLINE
+project deadline	DEADLINE
+assignment due	DEADLINE
+assignment deadline	DEADLINE
+homework due	DEADLINE
+report due	DEADLINE
+thesis due	DEADLINE
+paper due	DEADLINE
+proposal due	DEADLINE
+exam form last date	DEADLINE
+form fillup last date	DEADLINE
+admission last date	DEADLINE
+application last date	DEADLINE
+apply by	DEADLINE
+apply before	DEADLINE
+register by	DEADLINE
+register before	DEADLINE
+renew by	DEADLINE
+renew before	DEADLINE
+last date of submission	DEADLINE
+last date of application	DEADLINE
+last date of payment	DEADLINE
+last date of registration	DEADLINE
+jama deyar last date	DEADLINE
+jama deyar shesh tarikh	DEADLINE
+shesh tarikh	DEADLINE
+shesh din	DEADLINE
+sesh tarikh	DEADLINE
+sesh din	DEADLINE
+shesh somoy	DEADLINE
+shesh shomoy	DEADLINE
+sesh somoy	DEADLINE
+sesh shomoy	DEADLINE
+shesh date	DEADLINE
+sesh date	DEADLINE
+last date ache	DEADLINE
+last date kobe	DEADLINE
+last date kal	DEADLINE
+last date aj	DEADLINE
+deadline ache	DEADLINE
+deadline kobe	DEADLINE
+deadline kal	DEADLINE
+deadline aj	DEADLINE
+deadline ashche	DEADLINE
+deadline chole ashche	DEADLINE
+deadline kache	DEADLINE
+deadline eshe gese	DEADLINE
+deadline eshe geche	DEADLINE
+deadline cole gese	DEADLINE
+deadline ses	DEADLINE
+deadline shesh	DEADLINE
+somoy shesh	DEADLINE
+shomoy shesh	DEADLINE
+somoy ses	DEADLINE
+somoyshima	DEADLINE
+shomoyshima	DEADLINE
+somoy sima	DEADLINE
+shomoy sima	DEADLINE
+সময়সীমা	DEADLINE
+শেষ তারিখ	DEADLINE
+শেষ দিন	DEADLINE
+শেষ সময়	DEADLINE
+শেষ সময়সীমা	DEADLINE
+জমা দেওয়ার শেষ তারিখ	DEADLINE
+আবেদনের শেষ তারিখ	DEADLINE
+পেমেন্টের শেষ তারিখ	DEADLINE
+রেজিস্ট্রেশনের শেষ তারিখ	DEADLINE
+ডেডলাইন	DEADLINE
+মেয়াদ	DEADLINE
+মেয়াদ শেষ	DEADLINE
+মেয়াদ শেষ হবে	DEADLINE
+মেয়াদোত্তীর্ণ	DEADLINE
+বৈধ	DEADLINE
+বৈধতা	DEADLINE
+birthday	BIRTHDAY
+birthdays	BIRTHDAY
+bday	BIRTHDAY
+b-day	BIRTHDAY
+b day	BIRTHDAY
+bdays	BIRTHDAY
+born	BIRTHDAY
+born on	BIRTHDAY
+date of birth	BIRTHDAY
+dob	BIRTHDAY
+jonmodin	BIRTHDAY
+jonmodiner	BIRTHDAY
+janmadin	BIRTHDAY
+jonmodin ache	BIRTHDAY
+jonmodin kal	BIRTHDAY
+jonmodin aj	BIRTHDAY
+jonmodin ashche	BIRTHDAY
+jonmodin asche	BIRTHDAY
+jonmodin chole ashche	BIRTHDAY
+jonmodin kache	BIRTHDAY
+jonmodin eshe gese	BIRTHDAY
+jonmodin ta	BIRTHDAY
+jonmodiner shubhechha	BIRTHDAY
+jonmodiner subhechha	BIRTHDAY
+jonmodiner wish	BIRTHDAY
+janmodiner	BIRTHDAY
+জন্মদিন	BIRTHDAY
+জন্মদিনের	BIRTHDAY
+জন্মদিনের শুভেচ্ছা	BIRTHDAY
+জন্মদিন আছে	BIRTHDAY
+জন্মদিন কাল	BIRTHDAY
+জন্মদিন আজ	BIRTHDAY
+জন্মদিন আসছে	BIRTHDAY
+জন্মতারিখ	BIRTHDAY
+জন্ম তারিখ	BIRTHDAY
+হ্যাপি বার্থডে	BIRTHDAY
+বার্থডে	BIRTHDAY
+বার্থডে উইশ	BIRTHDAY
+happy birthday	BIRTHDAY
+hbd	BIRTHDAY
+many happy returns	BIRTHDAY
+wish birthday	BIRTHDAY
+wish happy birthday	BIRTHDAY
+birthday wish	BIRTHDAY
+birthday wishes	BIRTHDAY
+birthday gift	BIRTHDAY
+birthday cake	BIRTHDAY
+birthday party	BIRTHDAY
+birthday dinner	BIRTHDAY
+birthday lunch	BIRTHDAY
+birthday surprise	BIRTHDAY
+birthday call	BIRTHDAY
+birthday message	BIRTHDAY
+birthday text	BIRTHDAY
+send birthday wishes	BIRTHDAY
+call for birthday	BIRTHDAY
+anniversary	BIRTHDAY
+anniversaries	BIRTHDAY
+wedding anniversary	BIRTHDAY
+marriage anniversary	BIRTHDAY
+work anniversary	BIRTHDAY
+relationship anniversary	BIRTHDAY
+anniversary gift	BIRTHDAY
+anniversary dinner	BIRTHDAY
+anniversary wish	BIRTHDAY
+anniversary wishes	BIRTHDAY
+happy anniversary	BIRTHDAY
+biye barshiki	BIRTHDAY
+biyer barshiki	BIRTHDAY
+biyer barshikir	BIRTHDAY
+বিবাহবার্ষিকী	BIRTHDAY
+বিয়ের বার্ষিকী	BIRTHDAY
+বিয়ের বর্ষপূর্তি	BIRTHDAY
+বর্ষপূর্তি	BIRTHDAY
+বার্ষিকী	BIRTHDAY
+remember birthday	BIRTHDAY
+dont forget birthday	BIRTHDAY
+don't forget birthday	BIRTHDAY
+dont forget anniversary	BIRTHDAY
+don't forget anniversary	BIRTHDAY
+special day	BIRTHDAY
+special occasion	BIRTHDAY
+important day	BIRTHDAY
+important date	BIRTHDAY
+occasion	BIRTHDAY
+celebration	BIRTHDAY
+celebrate	BIRTHDAY
+celebrating	BIRTHDAY
+milestone birthday	BIRTHDAY
+18th birthday	BIRTHDAY
+21st birthday	BIRTHDAY
+25th birthday	BIRTHDAY
+30th birthday	BIRTHDAY
+40th birthday	BIRTHDAY
+50th birthday	BIRTHDAY
+60th birthday	BIRTHDAY
+first birthday	BIRTHDAY
+1st birthday	BIRTHDAY
+baby birthday	BIRTHDAY
+kid birthday	BIRTHDAY
+son birthday	BIRTHDAY
+daughter birthday	BIRTHDAY
+mom birthday	BIRTHDAY
+dad birthday	BIRTHDAY
+mom's birthday	BIRTHDAY
+dad's birthday	BIRTHDAY
+wife birthday	BIRTHDAY
+husband birthday	BIRTHDAY
+wife's birthday	BIRTHDAY
+husband's birthday	BIRTHDAY
+brother birthday	BIRTHDAY
+sister birthday	BIRTHDAY
+friend birthday	BIRTHDAY
+friend's birthday	BIRTHDAY
+boss birthday	BIRTHDAY
+colleague birthday	BIRTHDAY
+ammur jonmodin	BIRTHDAY
+abbur jonmodin	BIRTHDAY
+ammu r jonmodin	BIRTHDAY
+abbu r jonmodin	BIRTHDAY
+bhaiyer jonmodin	BIRTHDAY
+apur jonmodin	BIRTHDAY
+bondhur jonmodin	BIRTHDAY
+bouyer jonmodin	BIRTHDAY
+bou er jonmodin	BIRTHDAY
+bor er jonmodin	BIRTHDAY
+boror jonmodin	BIRTHDAY
+shamir jonmodin	BIRTHDAY
+stri r jonmodin	BIRTHDAY
+chelor jonmodin	BIRTHDAY
+meyer jonmodin	BIRTHDAY
+payment	PAYMENT
+payments	PAYMENT
+pay due	PAYMENT
+pay now	PAYMENT
+pay today	PAYMENT
+pay tomorrow	PAYMENT
+pay by	PAYMENT
+pay before	PAYMENT
+pay on	PAYMENT
+pay the	PAYMENT
+pay bill	PAYMENT
+pay bills	PAYMENT
+pay rent	PAYMENT
+pay fee	PAYMENT
+pay fees	PAYMENT
+pay tuition	PAYMENT
+pay installment	PAYMENT
+pay emi	PAYMENT
+pay loan	PAYMENT
+pay card	PAYMENT
+pay credit card	PAYMENT
+pay tax	PAYMENT
+pay insurance	PAYMENT
+pay premium	PAYMENT
+pay subscription	PAYMENT
+pay invoice	PAYMENT
+pay back	PAYMENT
+pay back loan	PAYMENT
+pay back friend	PAYMENT
+repay	PAYMENT
+repayment	PAYMENT
+repay loan	PAYMENT
+settle	PAYMENT
+settle up	PAYMENT
+settle dues	PAYMENT
+settle bill	PAYMENT
+settle payment	PAYMENT
+clear dues	PAYMENT
+clear due	PAYMENT
+clear bill	PAYMENT
+clear balance	PAYMENT
+clear outstanding	PAYMENT
+outstanding	PAYMENT
+outstanding balance	PAYMENT
+outstanding amount	PAYMENT
+outstanding payment	PAYMENT
+balance due	PAYMENT
+amount due	PAYMENT
+total due	PAYMENT
+minimum due	PAYMENT
+minimum payment	PAYMENT
+min due	PAYMENT
+bill due	PAYMENT
+bill is due	PAYMENT
+bills due	PAYMENT
+bill reminder	PAYMENT
+bill payment	PAYMENT
+bill pay	PAYMENT
+rent due	PAYMENT
+rent is due	PAYMENT
+rent payment	PAYMENT
+rent reminder	PAYMENT
+emi due	PAYMENT
+emi payment	PAYMENT
+emi reminder	PAYMENT
+kisti due	PAYMENT
+kisti payment	PAYMENT
+kisti reminder	PAYMENT
+kisti dite hobe	PAYMENT
+kisti dibo	PAYMENT
+kisti dewar	PAYMENT
+kisti deya	PAYMENT
+kistir date	PAYMENT
+kistir tarikh	PAYMENT
+kistir taka	PAYMENT
+installment due	PAYMENT
+installment payment	PAYMENT
+installment reminder	PAYMENT
+subscription due	PAYMENT
+subscription renewal	PAYMENT
+subscription renews	PAYMENT
+renews on	PAYMENT
+renewal due	PAYMENT
+renewal date	PAYMENT
+renewal reminder	PAYMENT
+renew subscription	PAYMENT
+renew membership	PAYMENT
+renew insurance	PAYMENT
+renew policy	PAYMENT
+renew license	PAYMENT
+renew licence	PAYMENT
+renew passport	PAYMENT
+renew visa	PAYMENT
+renew domain	PAYMENT
+renew hosting	PAYMENT
+auto debit	PAYMENT
+auto-debit	PAYMENT
+autopay	PAYMENT
+auto pay	PAYMENT
+scheduled payment	PAYMENT
+standing order	PAYMENT
+direct debit	PAYMENT
+due for payment	PAYMENT
+payment due	PAYMENT
+payment due date	PAYMENT
+payment reminder	PAYMENT
+payment pending	PAYMENT
+pending payment	PAYMENT
+pending bill	PAYMENT
+unpaid	PAYMENT
+unpaid bill	PAYMENT
+unpaid rent	PAYMENT
+unpaid invoice	PAYMENT
+unpaid fee	PAYMENT
+unpaid dues	PAYMENT
+late fee	PAYMENT
+late fees	PAYMENT
+late payment	PAYMENT
+late charge	PAYMENT
+penalty	PAYMENT
+penalty fee	PAYMENT
+overdue payment	PAYMENT
+overdue bill	PAYMENT
+overdue rent	PAYMENT
+overdue invoice	PAYMENT
+credit card due	PAYMENT
+credit card bill	PAYMENT
+credit card payment	PAYMENT
+card due	PAYMENT
+card bill	PAYMENT
+card payment	PAYMENT
+loan due	PAYMENT
+loan payment	PAYMENT
+loan repayment	PAYMENT
+loan emi	PAYMENT
+mortgage due	PAYMENT
+mortgage payment	PAYMENT
+tax due	PAYMENT
+tax payment	PAYMENT
+tax bill	PAYMENT
+vat due	PAYMENT
+vat payment	PAYMENT
+utility due	PAYMENT
+utility bill	PAYMENT
+electricity bill	PAYMENT
+gas bill	PAYMENT
+water bill	PAYMENT
+internet bill	PAYMENT
+wifi bill	PAYMENT
+phone bill	PAYMENT
+mobile bill	PAYMENT
+recharge due	PAYMENT
+recharge now	PAYMENT
+recharge needed	PAYMENT
+recharge reminder	PAYMENT
+low balance	PAYMENT
+balance low	PAYMENT
+balance running out	PAYMENT
+top up needed	PAYMENT
+tuition due	PAYMENT
+tuition fee due	PAYMENT
+school fee due	PAYMENT
+fee due	PAYMENT
+fees due	PAYMENT
+hostel fee due	PAYMENT
+semester fee due	PAYMENT
+exam fee due	PAYMENT
+admission fee due	PAYMENT
+donation due	PAYMENT
+chanda due	PAYMENT
+zakat due	PAYMENT
+fitrah due	PAYMENT
+salary due	PAYMENT
+wages due	PAYMENT
+pay salary	PAYMENT
+pay wages	PAYMENT
+pay staff	PAYMENT
+pay maid	PAYMENT
+pay bua	PAYMENT
+pay driver	PAYMENT
+pay guard	PAYMENT
+pay tutor	PAYMENT
+pay teacher	PAYMENT
+pay landlord	PAYMENT
+pay bari wala	PAYMENT
+pay shop	PAYMENT
+pay dokandar	PAYMENT
+pay mudi	PAYMENT
+pay baki	PAYMENT
+taka dite hobe	PAYMENT
+taka dibo	PAYMENT
+taka dewar	PAYMENT
+taka deya	PAYMENT
+taka ferot dite hobe	PAYMENT
+taka ferot dibo	PAYMENT
+taka ferot dewar	PAYMENT
+taka mitabo	PAYMENT
+taka mitate hobe	PAYMENT
+taka mitano	PAYMENT
+bill dite hobe	PAYMENT
+bill dibo	PAYMENT
+bill dewar	PAYMENT
+bill deya	PAYMENT
+bill mitabo	PAYMENT
+bill mitate hobe	PAYMENT
+bill mitano	PAYMENT
+bill pay korbo	PAYMENT
+bill pay korte hobe	PAYMENT
+bill pay kora	PAYMENT
+bhara dite hobe	PAYMENT
+bhara dibo	PAYMENT
+bhara dewar	PAYMENT
+bhara deya	PAYMENT
+bhara mitabo	PAYMENT
+bhara mitate hobe	PAYMENT
+rent dite hobe	PAYMENT
+rent dibo	PAYMENT
+rent dewar	PAYMENT
+rent deya	PAYMENT
+rent mitabo	PAYMENT
+rent mitate hobe	PAYMENT
+fee dite hobe	PAYMENT
+fee dibo	PAYMENT
+fee dewar	PAYMENT
+fee deya	PAYMENT
+fee mitabo	PAYMENT
+fee mitate hobe	PAYMENT
+baki dite hobe	PAYMENT
+baki dibo	PAYMENT
+baki dewar	PAYMENT
+baki deya	PAYMENT
+baki mitabo	PAYMENT
+baki mitate hobe	PAYMENT
+dhar shodh korte hobe	PAYMENT
+dhar shodh korbo	PAYMENT
+dhar shodh dewar	PAYMENT
+dhar mitabo	PAYMENT
+dhar mitate hobe	PAYMENT
+dhar ferot dite hobe	PAYMENT
+dhar ferot dibo	PAYMENT
+dhar ferot dewar	PAYMENT
+dena shodh korte hobe	PAYMENT
+dena shodh korbo	PAYMENT
+dena mitabo	PAYMENT
+dena mitate hobe	PAYMENT
+পেমেন্ট	PAYMENT
+পেমেন্ট করতে হবে	PAYMENT
+পেমেন্ট দিতে হবে	PAYMENT
+পেমেন্ট বাকি	PAYMENT
+পরিশোধ	PAYMENT
+পরিশোধ করতে হবে	PAYMENT
+বিল দিতে হবে	PAYMENT
+বিল পরিশোধ	PAYMENT
+বিল পরিশোধ করতে হবে	PAYMENT
+বিলের শেষ তারিখ	PAYMENT
+ভাড়া দিতে হবে	PAYMENT
+ভাড়া পরিশোধ	PAYMENT
+কিস্তি দিতে হবে	PAYMENT
+কিস্তি পরিশোধ	PAYMENT
+কিস্তির তারিখ	PAYMENT
+ফি দিতে হবে	PAYMENT
+ফি পরিশোধ	PAYMENT
+বাকি দিতে হবে	PAYMENT
+বাকি পরিশোধ	PAYMENT
+ধার শোধ করতে হবে	PAYMENT
+ধার শোধ	PAYMENT
+দেনা শোধ	PAYMENT
+টাকা দিতে হবে	PAYMENT
+টাকা পরিশোধ করতে হবে	PAYMENT
+টাকা মিটাতে হবে	PAYMENT
+রিচার্জ করতে হবে	PAYMENT
+রিচার্জ দিতে হবে	PAYMENT
+নবায়ন করতে হবে	PAYMENT
+রিনিউ করতে হবে	PAYMENT
+বকেয়া	PAYMENT
+বকেয়া বিল	PAYMENT
+বকেয়া ভাড়া	PAYMENT
+বকেয়া টাকা	PAYMENT
+বকেয়া পরিশোধ	PAYMENT
+appointment	APPOINTMENT
+appointments	APPOINTMENT
+appt	APPOINTMENT
+appt.	APPOINTMENT
+booking	APPOINTMENT
+booked	APPOINTMENT
+book appointment	APPOINTMENT
+book an appointment	APPOINTMENT
+book a slot	APPOINTMENT
+time slot	APPOINTMENT
+reservation	APPOINTMENT
+reserved	APPOINTMENT
+reserve a table	APPOINTMENT
+table booking	APPOINTMENT
+book table	APPOINTMENT
+doctor appointment	APPOINTMENT
+doctor's appointment	APPOINTMENT
+dr appointment	APPOINTMENT
+dr appt	APPOINTMENT
+doctor visit	APPOINTMENT
+dr visit	APPOINTMENT
+doctor tomorrow	APPOINTMENT
+doctor today	APPOINTMENT
+see doctor	APPOINTMENT
+see the doctor	APPOINTMENT
+see a doctor	APPOINTMENT
+visit doctor	APPOINTMENT
+visit the doctor	APPOINTMENT
+checkup	APPOINTMENT
+check-up	APPOINTMENT
+check up	APPOINTMENT
+medical checkup	APPOINTMENT
+health checkup	APPOINTMENT
+annual checkup	APPOINTMENT
+follow-up visit	APPOINTMENT
+follow up visit	APPOINTMENT
+follow-up appointment	APPOINTMENT
+follow up appointment	APPOINTMENT
+dentist	APPOINTMENT
+dentist appointment	APPOINTMENT
+dentist visit	APPOINTMENT
+dental appointment	APPOINTMENT
+dental checkup	APPOINTMENT
+dental cleaning	APPOINTMENT
+eye test	APPOINTMENT
+eye checkup	APPOINTMENT
+eye appointment	APPOINTMENT
+eye doctor	APPOINTMENT
+optician	APPOINTMENT
+optometrist	APPOINTMENT
+vaccination appointment	APPOINTMENT
+vaccine appointment	APPOINTMENT
+vaccination	APPOINTMENT
+vaccine	APPOINTMENT
+lab test	APPOINTMENT
+lab appointment	APPOINTMENT
+blood test	APPOINTMENT
+test appointment	APPOINTMENT
+scan appointment	APPOINTMENT
+x-ray appointment	APPOINTMENT
+mri appointment	APPOINTMENT
+ultrasound appointment	APPOINTMENT
+physio appointment	APPOINTMENT
+physio session	APPOINTMENT
+physiotherapy session	APPOINTMENT
+therapy appointment	APPOINTMENT
+therapy session	APPOINTMENT
+counseling session	APPOINTMENT
+counselling session	APPOINTMENT
+consultation	APPOINTMENT
+consultation appointment	APPOINTMENT
+specialist appointment	APPOINTMENT
+specialist visit	APPOINTMENT
+hospital appointment	APPOINTMENT
+hospital visit	APPOINTMENT
+clinic appointment	APPOINTMENT
+clinic visit	APPOINTMENT
+salon appointment	APPOINTMENT
+haircut appointment	APPOINTMENT
+haircut booked	APPOINTMENT
+barber appointment	APPOINTMENT
+spa appointment	APPOINTMENT
+massage appointment	APPOINTMENT
+nail appointment	APPOINTMENT
+beauty appointment	APPOINTMENT
+parlour appointment	APPOINTMENT
+vet appointment	APPOINTMENT
+vet visit	APPOINTMENT
+car service appointment	APPOINTMENT
+bike service appointment	APPOINTMENT
+mechanic appointment	APPOINTMENT
+service appointment	APPOINTMENT
+repair appointment	APPOINTMENT
+bank appointment	APPOINTMENT
+bank visit	APPOINTMENT
+visa appointment	APPOINTMENT
+visa interview	APPOINTMENT
+visa interview date	APPOINTMENT
+passport appointment	APPOINTMENT
+passport interview	APPOINTMENT
+passport collection	APPOINTMENT
+biometric appointment	APPOINTMENT
+biometrics appointment	APPOINTMENT
+embassy appointment	APPOINTMENT
+consulate appointment	APPOINTMENT
+court date	APPOINTMENT
+court hearing	APPOINTMENT
+hearing date	APPOINTMENT
+legal appointment	APPOINTMENT
+lawyer appointment	APPOINTMENT
+lawyer meeting	APPOINTMENT
+notary appointment	APPOINTMENT
+interview	APPOINTMENT
+job interview	APPOINTMENT
+interview scheduled	APPOINTMENT
+interview tomorrow	APPOINTMENT
+interview today	APPOINTMENT
+interview at	APPOINTMENT
+interview on	APPOINTMENT
+meeting	APPOINTMENT
+meeting scheduled	APPOINTMENT
+meeting tomorrow	APPOINTMENT
+meeting today	APPOINTMENT
+meeting at	APPOINTMENT
+meeting on	APPOINTMENT
+call scheduled	APPOINTMENT
+call at	APPOINTMENT
+call on	APPOINTMENT
+scheduled call	APPOINTMENT
+zoom call	APPOINTMENT
+zoom meeting	APPOINTMENT
+google meet	APPOINTMENT
+teams meeting	APPOINTMENT
+video call	APPOINTMENT
+phone call scheduled	APPOINTMENT
+catch up call	APPOINTMENT
+catch-up	APPOINTMENT
+1:1	APPOINTMENT
+one on one	APPOINTMENT
+one-on-one	APPOINTMENT
+parent teacher meeting	APPOINTMENT
+ptm	APPOINTMENT
+school meeting	APPOINTMENT
+school appointment	APPOINTMENT
+admission interview	APPOINTMENT
+admission test	APPOINTMENT
+admission appointment	APPOINTMENT
+exam date	APPOINTMENT
+exam schedule	APPOINTMENT
+viva date	APPOINTMENT
+viva schedule	APPOINTMENT
+defense date	APPOINTMENT
+defence date	APPOINTMENT
+presentation date	APPOINTMENT
+appointment ache	APPOINTMENT
+appointment kal	APPOINTMENT
+appointment aj	APPOINTMENT
+appointment hobe	APPOINTMENT
+appointment nibo	APPOINTMENT
+appointment nite hobe	APPOINTMENT
+appointment neya	APPOINTMENT
+appointment ashche	APPOINTMENT
+serial	APPOINTMENT
+serial ache	APPOINTMENT
+serial nibo	APPOINTMENT
+serial nite hobe	APPOINTMENT
+serial neya	APPOINTMENT
+serial kal	APPOINTMENT
+serial aj	APPOINTMENT
+serial dewa	APPOINTMENT
+serial deya	APPOINTMENT
+doctor er serial	APPOINTMENT
+daktar er serial	APPOINTMENT
+doctor er appointment	APPOINTMENT
+daktar er appointment	APPOINTMENT
+doctor er kache jabo	APPOINTMENT
+daktar er kache jabo	APPOINTMENT
+doctor dekhabo	APPOINTMENT
+daktar dekhabo	APPOINTMENT
+daktar dekhate hobe	APPOINTMENT
+doctor dekhate hobe	APPOINTMENT
+daktar dekhate jabo	APPOINTMENT
+doctor dekhate jabo	APPOINTMENT
+check up korabo	APPOINTMENT
+checkup korabo	APPOINTMENT
+checkup korate hobe	APPOINTMENT
+test korabo	APPOINTMENT
+test korate hobe	APPOINTMENT
+dater daktar	APPOINTMENT
+dant er daktar	APPOINTMENT
+chokher daktar	APPOINTMENT
+interview ache	APPOINTMENT
+interview kal	APPOINTMENT
+interview aj	APPOINTMENT
+interview hobe	APPOINTMENT
+interview dibo	APPOINTMENT
+interview dite hobe	APPOINTMENT
+interview dite jabo	APPOINTMENT
+meeting ache	APPOINTMENT
+meeting kal	APPOINTMENT
+meeting aj	APPOINTMENT
+meeting hobe	APPOINTMENT
+meeting korbo	APPOINTMENT
+meeting korte hobe	APPOINTMENT
+dekha korbo	APPOINTMENT
+dekha korte hobe	APPOINTMENT
+dekha hobe	APPOINTMENT
+dekha ache	APPOINTMENT
+dekha kal	APPOINTMENT
+dekha aj	APPOINTMENT
+sakkhat	APPOINTMENT
+shakkhat	APPOINTMENT
+saksat	APPOINTMENT
+সাক্ষাৎ	APPOINTMENT
+সাক্ষাৎকার	APPOINTMENT
+অ্যাপয়েন্টমেন্ট	APPOINTMENT
+অ্যাপয়েন্টমেন্ট আছে	APPOINTMENT
+অ্যাপয়েন্টমেন্ট নিতে হবে	APPOINTMENT
+সিরিয়াল	APPOINTMENT
+সিরিয়াল নিতে হবে	APPOINTMENT
+সিরিয়াল আছে	APPOINTMENT
+ডাক্তারের সিরিয়াল	APPOINTMENT
+ডাক্তারের অ্যাপয়েন্টমেন্ট	APPOINTMENT
+ডাক্তার দেখাতে হবে	APPOINTMENT
+ডাক্তার দেখাব	APPOINTMENT
+চেকআপ	APPOINTMENT
+চেকআপ করাতে হবে	APPOINTMENT
+টেস্ট করাতে হবে	APPOINTMENT
+ইন্টারভিউ	APPOINTMENT
+ইন্টারভিউ আছে	APPOINTMENT
+ইন্টারভিউ কাল	APPOINTMENT
+মিটিং	APPOINTMENT
+মিটিং আছে	APPOINTMENT
+মিটিং কাল	APPOINTMENT
+ভিসা ইন্টারভিউ	APPOINTMENT
+পাসপোর্ট অ্যাপয়েন্টমেন্ট	APPOINTMENT
+বায়োমেট্রিক	APPOINTMENT
+শুনানি	APPOINTMENT
+আদালতে হাজিরা	APPOINTMENT
+হাজিরা	APPOINTMENT
+follow up	FOLLOWUP
+follow-up	FOLLOWUP
+followup	FOLLOWUP
+follow up with	FOLLOWUP
+follow up on	FOLLOWUP
+follow up about	FOLLOWUP
+follow up email	FOLLOWUP
+follow up call	FOLLOWUP
+follow up message	FOLLOWUP
+follow up needed	FOLLOWUP
+need to follow up	FOLLOWUP
+remember to follow up	FOLLOWUP
+don't forget to follow up	FOLLOWUP
+circle back	FOLLOWUP
+circle back with	FOLLOWUP
+circle back on	FOLLOWUP
+touch base	FOLLOWUP
+touch base with	FOLLOWUP
+check in with	FOLLOWUP
+check-in with	FOLLOWUP
+check in on	FOLLOWUP
+check back	FOLLOWUP
+check back with	FOLLOWUP
+check back later	FOLLOWUP
+check status	FOLLOWUP
+check on status	FOLLOWUP
+status update	FOLLOWUP
+ask for update	FOLLOWUP
+ask for status	FOLLOWUP
+remind them	FOLLOWUP
+remind him	FOLLOWUP
+remind her	FOLLOWUP
+nudge	FOLLOWUP
+nudge them	FOLLOWUP
+nudge him	FOLLOWUP
+nudge her	FOLLOWUP
+ping them	FOLLOWUP
+ping him	FOLLOWUP
+ping her	FOLLOWUP
+chase up	FOLLOWUP
+chase them	FOLLOWUP
+chase payment	FOLLOWUP
+chase invoice	FOLLOWUP
+chase client	FOLLOWUP
+chase reply	FOLLOWUP
+awaiting reply	FOLLOWUP
+awaiting response	FOLLOWUP
+awaiting update	FOLLOWUP
+awaiting confirmation	FOLLOWUP
+awaiting approval	FOLLOWUP
+waiting for reply	FOLLOWUP
+waiting for response	FOLLOWUP
+waiting for update	FOLLOWUP
+waiting for confirmation	FOLLOWUP
+waiting for approval	FOLLOWUP
+waiting on	FOLLOWUP
+waiting to hear	FOLLOWUP
+haven't heard back	FOLLOWUP
+havent heard back	FOLLOWUP
+no reply yet	FOLLOWUP
+no response yet	FOLLOWUP
+no update yet	FOLLOWUP
+still waiting	FOLLOWUP
+still pending	FOLLOWUP
+pending reply	FOLLOWUP
+pending response	FOLLOWUP
+pending update	FOLLOWUP
+pending confirmation	FOLLOWUP
+pending approval	FOLLOWUP
+get back to	FOLLOWUP
+get back to them	FOLLOWUP
+get back to him	FOLLOWUP
+get back to her	FOLLOWUP
+reply to	FOLLOWUP
+reply to email	FOLLOWUP
+reply to message	FOLLOWUP
+respond to	FOLLOWUP
+respond to email	FOLLOWUP
+respond to message	FOLLOWUP
+call back	FOLLOWUP
+callback	FOLLOWUP
+call them back	FOLLOWUP
+call him back	FOLLOWUP
+call her back	FOLLOWUP
+return call	FOLLOWUP
+return the call	FOLLOWUP
+return missed call	FOLLOWUP
+missed call	FOLLOWUP
+missed calls	FOLLOWUP
+missed call from	FOLLOWUP
+text back	FOLLOWUP
+message back	FOLLOWUP
+write back	FOLLOWUP
+email back	FOLLOWUP
+send reminder	FOLLOWUP
+send a reminder	FOLLOWUP
+send follow up	FOLLOWUP
+send follow-up	FOLLOWUP
+second follow up	FOLLOWUP
+second follow-up	FOLLOWUP
+final follow up	FOLLOWUP
+final follow-up	FOLLOWUP
+thank you email	FOLLOWUP
+thank you note	FOLLOWUP
+thank-you email	FOLLOWUP
+thank you message	FOLLOWUP
+send thanks	FOLLOWUP
+say thanks	FOLLOWUP
+thank them	FOLLOWUP
+thank him	FOLLOWUP
+thank her	FOLLOWUP
+send resume	FOLLOWUP
+send cv	FOLLOWUP
+send portfolio	FOLLOWUP
+send documents	FOLLOWUP
+send details	FOLLOWUP
+send invoice	FOLLOWUP
+send quote	FOLLOWUP
+send proposal	FOLLOWUP
+send report	FOLLOWUP
+send update	FOLLOWUP
+send photos	FOLLOWUP
+send pictures	FOLLOWUP
+send link	FOLLOWUP
+send file	FOLLOWUP
+send files	FOLLOWUP
+send money	FOLLOWUP
+send gift	FOLLOWUP
+collect payment	FOLLOWUP
+collect money	FOLLOWUP
+collect dues	FOLLOWUP
+collect rent	FOLLOWUP
+get payment	FOLLOWUP
+get paid	FOLLOWUP
+get back money	FOLLOWUP
+ask for money	FOLLOWUP
+ask for payment	FOLLOWUP
+ask for refund	FOLLOWUP
+ask for reimbursement	FOLLOWUP
+claim refund	FOLLOWUP
+claim reimbursement	FOLLOWUP
+claim insurance	FOLLOWUP
+follow up refund	FOLLOWUP
+follow up claim	FOLLOWUP
+follow up application	FOLLOWUP
+follow up interview	FOLLOWUP
+follow up offer	FOLLOWUP
+follow up on offer	FOLLOWUP
+follow up on application	FOLLOWUP
+follow up on interview	FOLLOWUP
+follow up with recruiter	FOLLOWUP
+follow up with hr	FOLLOWUP
+follow up with manager	FOLLOWUP
+follow up with client	FOLLOWUP
+follow up with customer	FOLLOWUP
+follow up with vendor	FOLLOWUP
+follow up with supplier	FOLLOWUP
+follow up with landlord	FOLLOWUP
+follow up with bank	FOLLOWUP
+follow up with school	FOLLOWUP
+follow up with doctor	FOLLOWUP
+follow up with lawyer	FOLLOWUP
+follow up with agent	FOLLOWUP
+follow up with team	FOLLOWUP
+follow up kora	FOLLOWUP
+follow up korbo	FOLLOWUP
+follow up korte hobe	FOLLOWUP
+followup korbo	FOLLOWUP
+followup korte hobe	FOLLOWUP
+follow-up korbo	FOLLOWUP
+follow-up korte hobe	FOLLOWUP
+khobor nibo	FOLLOWUP
+khobor nite hobe	FOLLOWUP
+khobor neya	FOLLOWUP
+khobor nebo	FOLLOWUP
+khoj nibo	FOLLOWUP
+khoj nite hobe	FOLLOWUP
+khoj neya	FOLLOWUP
+jiggesh korbo	FOLLOWUP
+jiggesh korte hobe	FOLLOWUP
+jigyesh korbo	FOLLOWUP
+jigyesh korte hobe	FOLLOWUP
+jigyasha korbo	FOLLOWUP
+jigyasha korte hobe	FOLLOWUP
+janabo	FOLLOWUP
+janate hobe	FOLLOWUP
+jana	FOLLOWUP
+janiye dibo	FOLLOWUP
+janiye dite hobe	FOLLOWUP
+jana lagbe	FOLLOWUP
+jana dorkar	FOLLOWUP
+reply dibo	FOLLOWUP
+reply dite hobe	FOLLOWUP
+reply deya	FOLLOWUP
+reply dewa	FOLLOWUP
+reply pai nai	FOLLOWUP
+reply pai ni	FOLLOWUP
+reply pacchi na	FOLLOWUP
+reply asheni	FOLLOWUP
+reply ashe nai	FOLLOWUP
+reply ashe ni	FOLLOWUP
+jabab dibo	FOLLOWUP
+jabab dite hobe	FOLLOWUP
+jabab pai nai	FOLLOWUP
+jabab pai ni	FOLLOWUP
+uttor dibo	FOLLOWUP
+uttor dite hobe	FOLLOWUP
+uttor pai nai	FOLLOWUP
+uttor pai ni	FOLLOWUP
+call back korbo	FOLLOWUP
+call back korte hobe	FOLLOWUP
+callback korbo	FOLLOWUP
+callback korte hobe	FOLLOWUP
+abar call korbo	FOLLOWUP
+abar call korte hobe	FOLLOWUP
+abar phone korbo	FOLLOWUP
+abar phone korte hobe	FOLLOWUP
+abar message dibo	FOLLOWUP
+abar message dite hobe	FOLLOWUP
+abar mail korbo	FOLLOWUP
+abar mail korte hobe	FOLLOWUP
+abar jiggesh korbo	FOLLOWUP
+abar jiggesh korte hobe	FOLLOWUP
+abar dekha korbo	FOLLOWUP
+abar dekha korte hobe	FOLLOWUP
+abar dekhbo	FOLLOWUP
+abar dekhte hobe	FOLLOWUP
+pore call korbo	FOLLOWUP
+pore call korte hobe	FOLLOWUP
+pore phone korbo	FOLLOWUP
+pore phone korte hobe	FOLLOWUP
+pore message dibo	FOLLOWUP
+pore message dite hobe	FOLLOWUP
+pore mail korbo	FOLLOWUP
+pore mail korte hobe	FOLLOWUP
+pore jiggesh korbo	FOLLOWUP
+pore jiggesh korte hobe	FOLLOWUP
+pore dekha korbo	FOLLOWUP
+pore dekha korte hobe	FOLLOWUP
+pore dekhbo	FOLLOWUP
+pore dekhte hobe	FOLLOWUP
+ফলো আপ	FOLLOWUP
+ফলো-আপ	FOLLOWUP
+ফলোআপ	FOLLOWUP
+ফলো আপ করতে হবে	FOLLOWUP
+ফলো আপ করব	FOLLOWUP
+খোঁজ নিতে হবে	FOLLOWUP
+খোঁজ নিব	FOLLOWUP
+খবর নিতে হবে	FOLLOWUP
+খবর নিব	FOLLOWUP
+জিজ্ঞেস করতে হবে	FOLLOWUP
+জিজ্ঞেস করব	FOLLOWUP
+জানাতে হবে	FOLLOWUP
+জানাব	FOLLOWUP
+জানিয়ে দিব	FOLLOWUP
+জানিয়ে দিতে হবে	FOLLOWUP
+রিপ্লাই দিতে হবে	FOLLOWUP
+রিপ্লাই দিব	FOLLOWUP
+উত্তর দিতে হবে	FOLLOWUP
+উত্তর দিব	FOLLOWUP
+জবাব দিতে হবে	FOLLOWUP
+জবাব দিব	FOLLOWUP
+জবাব পাইনি	FOLLOWUP
+রিপ্লাই পাইনি	FOLLOWUP
+কোনো খবর নেই	FOLLOWUP
+কোনো উত্তর নেই	FOLLOWUP
+ফিরতি কল	FOLLOWUP
+ফিরতি কল করতে হবে	FOLLOWUP
+আবার কল করব	FOLLOWUP
+আবার কল করতে হবে	FOLLOWUP
+পরে কল করব	FOLLOWUP
+পরে কল করতে হবে	FOLLOWUP
+মিসড কল	FOLLOWUP
+মিসড কল এসেছিল	FOLLOWUP
+ধন্যবাদ জানাতে হবে	FOLLOWUP
+ধন্যবাদ জানাব	FOLLOWUP
+travel	TRAVEL
+travelling	TRAVEL
+traveling	TRAVEL
+trip	TRAVEL
+trips	TRAVEL
+tour	TRAVEL
+tours	TRAVEL
+journey	TRAVEL
+voyage	TRAVEL
+flight	TRAVEL
+flights	TRAVEL
+flight tomorrow	TRAVEL
+flight today	TRAVEL
+flight at	TRAVEL
+flight on	TRAVEL
+flight booked	TRAVEL
+flight booking	TRAVEL
+flight ticket	TRAVEL
+flight details	TRAVEL
+flight number	TRAVEL
+flight time	TRAVEL
+flight departs	TRAVEL
+flight leaves	TRAVEL
+flight lands	TRAVEL
+flight arrives	TRAVEL
+flight delayed	TRAVEL
+flight cancelled	TRAVEL
+flight canceled	TRAVEL
+departure	TRAVEL
+departs	TRAVEL
+departing	TRAVEL
+departure time	TRAVEL
+departure date	TRAVEL
+arrival	TRAVEL
+arrives	TRAVEL
+arriving	TRAVEL
+arrival time	TRAVEL
+arrival date	TRAVEL
+take off	TRAVEL
+takeoff	TRAVEL
+take-off	TRAVEL
+landing	TRAVEL
+lands	TRAVEL
+layover	TRAVEL
+connecting flight	TRAVEL
+transit	TRAVEL
+boarding	TRAVEL
+boarding time	TRAVEL
+boarding pass	TRAVEL
+gate number	TRAVEL
+terminal	TRAVEL
+check in	TRAVEL
+check-in	TRAVEL
+web check-in	TRAVEL
+online check-in	TRAVEL
+check in online	TRAVEL
+check out	TRAVEL
+check-out	TRAVEL
+checkout	TRAVEL
+hotel check in	TRAVEL
+hotel check-in	TRAVEL
+hotel check out	TRAVEL
+hotel check-out	TRAVEL
+hotel booking	TRAVEL
+hotel booked	TRAVEL
+hotel reservation	TRAVEL
+booking reference	TRAVEL
+booking number	TRAVEL
+confirmation number	TRAVEL
+pnr	TRAVEL
+ticket booked	TRAVEL
+ticket booking	TRAVEL
+ticket confirmed	TRAVEL
+e-ticket	TRAVEL
+eticket	TRAVEL
+train ticket	TRAVEL
+train tomorrow	TRAVEL
+train today	TRAVEL
+train at	TRAVEL
+train on	TRAVEL
+train departs	TRAVEL
+train leaves	TRAVEL
+train arrives	TRAVEL
+platform	TRAVEL
+platform number	TRAVEL
+bus ticket	TRAVEL
+bus tomorrow	TRAVEL
+bus today	TRAVEL
+bus at	TRAVEL
+bus on	TRAVEL
+bus departs	TRAVEL
+bus leaves	TRAVEL
+bus arrives	TRAVEL
+bus counter	TRAVEL
+launch ticket	TRAVEL
+launch tomorrow	TRAVEL
+launch today	TRAVEL
+ferry	TRAVEL
+ferry ticket	TRAVEL
+cruise	TRAVEL
+cruise ticket	TRAVEL
+taxi booked	TRAVEL
+cab booked	TRAVEL
+ride booked	TRAVEL
+pickup time	TRAVEL
+pick-up	TRAVEL
+drop-off	TRAVEL
+dropoff	TRAVEL
+airport	TRAVEL
+airport pickup	TRAVEL
+airport drop	TRAVEL
+airport transfer	TRAVEL
+airport at	TRAVEL
+reach airport	TRAVEL
+reach the airport	TRAVEL
+leave for airport	TRAVEL
+leave for the airport	TRAVEL
+head to airport	TRAVEL
+go to airport	TRAVEL
+go to the airport	TRAVEL
+railway station	TRAVEL
+bus station	TRAVEL
+bus stand	TRAVEL
+kamalapur	TRAVEL
+kamalapur station	TRAVEL
+airport railway station	TRAVEL
+sayedabad	TRAVEL
+gabtoli	TRAVEL
+mohakhali bus stand	TRAVEL
+fakirapul	TRAVEL
+arambagh	TRAVEL
+saidabad	TRAVEL
+sadarghat	TRAVEL
+sadarghat launch terminal	TRAVEL
+hazrat shahjalal airport	TRAVEL
+shahjalal airport	TRAVEL
+hsia	TRAVEL
+hazrat shah amanat airport	TRAVEL
+osmani airport	TRAVEL
+passport	TRAVEL
+passport ready	TRAVEL
+passport expiry	TRAVEL
+passport valid	TRAVEL
+visa	TRAVEL
+visa ready	TRAVEL
+visa approved	TRAVEL
+visa expiry	TRAVEL
+visa valid	TRAVEL
+packing	TRAVEL
+pack	TRAVEL
+pack bags	TRAVEL
+pack luggage	TRAVEL
+pack suitcase	TRAVEL
+packing list	TRAVEL
+packing checklist	TRAVEL
+things to pack	TRAVEL
+luggage	TRAVEL
+baggage	TRAVEL
+baggage allowance	TRAVEL
+bag drop	TRAVEL
+travel insurance	TRAVEL
+travel documents	TRAVEL
+travel plan	TRAVEL
+travel plans	TRAVEL
+travel itinerary	TRAVEL
+itinerary	TRAVEL
+itinerary details	TRAVEL
+itinerary shared	TRAVEL
+trip plan	TRAVEL
+trip details	TRAVEL
+trip starts	TRAVEL
+trip ends	TRAVEL
+trip tomorrow	TRAVEL
+trip today	TRAVEL
+trip next week	TRAVEL
+trip on	TRAVEL
+trip at	TRAVEL
+tour starts	TRAVEL
+tour ends	TRAVEL
+tour tomorrow	TRAVEL
+tour today	TRAVEL
+vacation	TRAVEL
+vacation starts	TRAVEL
+vacation ends	TRAVEL
+holiday	TRAVEL
+holiday starts	TRAVEL
+holiday ends	TRAVEL
+leave starts	TRAVEL
+leave ends	TRAVEL
+leave tomorrow	TRAVEL
+leave from	TRAVEL
+leave application	TRAVEL
+apply leave	TRAVEL
+apply for leave	TRAVEL
+take leave	TRAVEL
+take a day off	TRAVEL
+day off	TRAVEL
+off day	TRAVEL
+long weekend	TRAVEL
+weekend trip	TRAVEL
+weekend getaway	TRAVEL
+getaway	TRAVEL
+road trip	TRAVEL
+honeymoon	TRAVEL
+hajj	TRAVEL
+umrah	TRAVEL
+hajj flight	TRAVEL
+umrah flight	TRAVEL
+hajj departure	TRAVEL
+umrah departure	TRAVEL
+hajj date	TRAVEL
+umrah date	TRAVEL
+homecoming	TRAVEL
+going home	TRAVEL
+going to village	TRAVEL
+go to village	TRAVEL
+bari jabo	TRAVEL
+bari jete hobe	TRAVEL
+bari jachchi	TRAVEL
+bari jacchi	TRAVEL
+bari jaitesi	TRAVEL
+bari jaitechi	TRAVEL
+bari jaoa	TRAVEL
+bari jawa	TRAVEL
+gram e jabo	TRAVEL
+gram e jete hobe	TRAVEL
+gramer bari	TRAVEL
+gramer bari jabo	TRAVEL
+desh e jabo	TRAVEL
+desh e jete hobe	TRAVEL
+desher bari	TRAVEL
+desher bari jabo	TRAVEL
+ghurte jabo	TRAVEL
+ghurte jete hobe	TRAVEL
+ghurte jachchi	TRAVEL
+ghurte jacchi	TRAVEL
+ghurte jaitesi	TRAVEL
+ghurte jaitechi	TRAVEL
+ghurbo	TRAVEL
+bhromone jabo	TRAVEL
+bhromone jete hobe	TRAVEL
+bhromone jachchi	TRAVEL
+bhromone jacchi	TRAVEL
+bhromone jaitesi	TRAVEL
+bhromone jaitechi	TRAVEL
+bhromon	TRAVEL
+bhramon	TRAVEL
+trip e jabo	TRAVEL
+trip e jete hobe	TRAVEL
+tour e jabo	TRAVEL
+tour e jete hobe	TRAVEL
+flight ache	TRAVEL
+flight kal	TRAVEL
+flight aj	TRAVEL
+flight hobe	TRAVEL
+flight dhorte hobe	TRAVEL
+flight dhorbo	TRAVEL
+flight miss	TRAVEL
+flight miss hobe	TRAVEL
+flight miss na hoy	TRAVEL
+train ache	TRAVEL
+train kal	TRAVEL
+train aj	TRAVEL
+train dhorte hobe	TRAVEL
+train dhorbo	TRAVEL
+train miss	TRAVEL
+train miss hobe	TRAVEL
+train miss na hoy	TRAVEL
+bus ache	TRAVEL
+bus kal	TRAVEL
+bus aj	TRAVEL
+bus dhorte hobe	TRAVEL
+bus dhorbo	TRAVEL
+bus miss	TRAVEL
+bus miss hobe	TRAVEL
+bus miss na hoy	TRAVEL
+launch ache	TRAVEL
+launch kal	TRAVEL
+launch aj	TRAVEL
+launch dhorte hobe	TRAVEL
+launch dhorbo	TRAVEL
+ticket kinte hobe	TRAVEL
+ticket kinbo	TRAVEL
+ticket katte hobe	TRAVEL
+ticket katbo	TRAVEL
+ticket kata	TRAVEL
+ticket book korte hobe	TRAVEL
+ticket book korbo	TRAVEL
+ticket confirm	TRAVEL
+ticket confirm korte hobe	TRAVEL
+ticket confirm korbo	TRAVEL
+ticket confirm hoyeche	TRAVEL
+ticket confirm hoise	TRAVEL
+ticket confirm hoilo	TRAVEL
+ফ্লাইট	TRAVEL
+ফ্লাইট আছে	TRAVEL
+ফ্লাইট কাল	TRAVEL
+ফ্লাইট আজ	TRAVEL
+ফ্লাইট ধরতে হবে	TRAVEL
+ট্রেন	TRAVEL
+ট্রেন আছে	TRAVEL
+ট্রেন কাল	TRAVEL
+ট্রেন আজ	TRAVEL
+ট্রেন ধরতে হবে	TRAVEL
+বাস আছে	TRAVEL
+বাস কাল	TRAVEL
+বাস আজ	TRAVEL
+বাস ধরতে হবে	TRAVEL
+লঞ্চ	TRAVEL
+লঞ্চ আছে	TRAVEL
+লঞ্চ কাল	TRAVEL
+লঞ্চ আজ	TRAVEL
+লঞ্চ ধরতে হবে	TRAVEL
+টিকেট	TRAVEL
+টিকেট কিনতে হবে	TRAVEL
+টিকিট কাটতে হবে	TRAVEL
+টিকেট কনফার্ম	TRAVEL
+বিমানবন্দর	TRAVEL
+বিমানবন্দরে	TRAVEL
+এয়ারপোর্ট	TRAVEL
+এয়ারপোর্টে	TRAVEL
+স্টেশন	TRAVEL
+কমলাপুর	TRAVEL
+সায়েদাবাদ	TRAVEL
+গাবতলী	TRAVEL
+সদরঘাট	TRAVEL
+বোর্ডিং	TRAVEL
+বোর্ডিং পাস	TRAVEL
+চেক ইন	TRAVEL
+চেক-ইন	TRAVEL
+হোটেল বুকিং	TRAVEL
+প্যাকিং	TRAVEL
+ব্যাগ গোছানো	TRAVEL
+ব্যাগ গুছাতে হবে	TRAVEL
+ঘুরতে যাব	TRAVEL
+ঘুরতে যেতে হবে	TRAVEL
+ভ্রমণ	TRAVEL
+ভ্রমণে যাব	TRAVEL
+ট্যুর	TRAVEL
+ট্যুরে যাব	TRAVEL
+ট্রিপ	TRAVEL
+ট্রিপে যাব	TRAVEL
+ছুটিতে যাব	TRAVEL
+দেশে যাব	TRAVEL
+বাড়ি যাব	TRAVEL
+বাড়ি যেতে হবে	TRAVEL
+গ্রামে যাব	TRAVEL
+হজ	TRAVEL
+ওমরাহ	TRAVEL
+ভিসা	TRAVEL
+পাসপোর্ট	TRAVEL
+habit	HABIT
+habits	HABIT
+daily habit	HABIT
+daily habits	HABIT
+habit tracker	HABIT
+habit streak	HABIT
+daily streak	HABIT
+keep the streak	HABIT
+maintain streak	HABIT
+don't break the streak	HABIT
+routine	HABIT
+routines	HABIT
+daily routine	HABIT
+morning routine	HABIT
+evening routine	HABIT
+night routine	HABIT
+bedtime routine	HABIT
+weekly routine	HABIT
+every day	HABIT
+everyday	HABIT
+each day	HABIT
+every morning	HABIT
+every evening	HABIT
+every night	HABIT
+every afternoon	HABIT
+every week	HABIT
+every month	HABIT
+every weekday	HABIT
+every weekend	HABIT
+every monday	HABIT
+every tuesday	HABIT
+every wednesday	HABIT
+every thursday	HABIT
+every friday	HABIT
+every saturday	HABIT
+every sunday	HABIT
+daily goal	HABIT
+daily target	HABIT
+daily reminder	HABIT
+daily check-in	HABIT
+daily checkin	HABIT
+daily review	HABIT
+daily log	HABIT
+daily journal	HABIT
+daily reading	HABIT
+daily walk	HABIT
+daily run	HABIT
+daily workout	HABIT
+daily exercise	HABIT
+daily yoga	HABIT
+daily meditation	HABIT
+daily prayer	HABIT
+daily prayers	HABIT
+daily quran	HABIT
+daily dua	HABIT
+daily dhikr	HABIT
+daily study	HABIT
+daily practice	HABIT
+daily coding	HABIT
+daily writing	HABIT
+daily gratitude	HABIT
+daily affirmation	HABIT
+daily savings	HABIT
+daily save	HABIT
+daily budget check	HABIT
+daily expense log	HABIT
+daily expense entry	HABIT
+log expenses	HABIT
+log expense	HABIT
+log spending	HABIT
+log today's expenses	HABIT
+record expenses	HABIT
+record expense	HABIT
+record spending	HABIT
+track expenses	HABIT
+track expense	HABIT
+track spending	HABIT
+update expenses	HABIT
+update ledger	HABIT
+update budget	HABIT
+review budget	HABIT
+budget review	HABIT
+weekly review	HABIT
+weekly budget review	HABIT
+monthly review	HABIT
+monthly budget review	HABIT
+check balance	HABIT
+check bank balance	HABIT
+check wallet	HABIT
+check bkash balance	HABIT
+check nagad balance	HABIT
+drink water	HABIT
+drink more water	HABIT
+water reminder	HABIT
+hydrate	HABIT
+hydration	HABIT
+take a break	HABIT
+take breaks	HABIT
+stretching	HABIT
+stand up	HABIT
+stand up and stretch	HABIT
+walk around	HABIT
+go for a walk	HABIT
+morning walk	HABIT
+evening walk	HABIT
+night walk	HABIT
+after dinner walk	HABIT
+workout	HABIT
+work out	HABIT
+go to gym	HABIT
+hit the gym	HABIT
+gym time	HABIT
+leg day	HABIT
+chest day	HABIT
+back day	HABIT
+arm day	HABIT
+shoulder day	HABIT
+rest day	HABIT
+meditation	HABIT
+mindfulness	HABIT
+breathing exercise	HABIT
+deep breathing	HABIT
+journaling	HABIT
+write journal	HABIT
+gratitude journal	HABIT
+reading	HABIT
+read a book	HABIT
+read before bed	HABIT
+read 10 pages	HABIT
+read 20 pages	HABIT
+read 30 minutes	HABIT
+study time	HABIT
+study session	HABIT
+practice guitar	HABIT
+practice piano	HABIT
+practice coding	HABIT
+practice english	HABIT
+practice speaking	HABIT
+practice writing	HABIT
+learn something new	HABIT
+language practice	HABIT
+duolingo	HABIT
+anki	HABIT
+flashcards	HABIT
+leetcode	HABIT
+solve one problem	HABIT
+solve a problem	HABIT
+code daily	HABIT
+commit daily	HABIT
+write code	HABIT
+side project time	HABIT
+deep work	HABIT
+focus time	HABIT
+no phone	HABIT
+no phone time	HABIT
+screen time	HABIT
+limit screen time	HABIT
+digital detox	HABIT
+sleep early	HABIT
+sleep on time	HABIT
+go to bed early	HABIT
+bedtime	HABIT
+wake up early	HABIT
+wake up on time	HABIT
+early rise	HABIT
+get up early	HABIT
+take medicine	HABIT
+take medication	HABIT
+take pills	HABIT
+take vitamins	HABIT
+take supplements	HABIT
+medicine time	HABIT
+medicine reminder	HABIT
+pill reminder	HABIT
+brush teeth	HABIT
+floss	HABIT
+skin care routine	HABIT
+sunscreen	HABIT
+moisturize	HABIT
+wash face	HABIT
+cook at home	HABIT
+home cooked	HABIT
+meal prep	HABIT
+no junk food	HABIT
+no sugar	HABIT
+no soda	HABIT
+eat healthy	HABIT
+eat fruits	HABIT
+eat vegetables	HABIT
+drink green tea	HABIT
+avoid sugar	HABIT
+avoid junk	HABIT
+no smoking	HABIT
+quit smoking	HABIT
+no cigarette	HABIT
+no alcohol	HABIT
+no spend	HABIT
+no spend day	HABIT
+no spend challenge	HABIT
+save money	HABIT
+save daily	HABIT
+save weekly	HABIT
+save monthly	HABIT
+pay yourself first	HABIT
+put aside	HABIT
+set aside	HABIT
+transfer to savings	HABIT
+move to savings	HABIT
+invest monthly	HABIT
+invest weekly	HABIT
+invest daily	HABIT
+call mom	HABIT
+call mom every week	HABIT
+call dad	HABIT
+call home	HABIT
+call parents	HABIT
+call family	HABIT
+call a friend	HABIT
+text a friend	HABIT
+check on a friend	HABIT
+family time	HABIT
+date night	HABIT
+quality time	HABIT
+play with kids	HABIT
+read to kids	HABIT
+help kids with homework	HABIT
+clean room	HABIT
+clean house	HABIT
+tidy up	HABIT
+declutter	HABIT
+make bed	HABIT
+make the bed	HABIT
+do dishes	HABIT
+do laundry	HABIT
+laundry day	HABIT
+take out trash	HABIT
+water plants	HABIT
+feed the cat	HABIT
+feed the dog	HABIT
+walk the dog	HABIT
+roj	HABIT
+roj roj	HABIT
+roj kori	HABIT
+roj korbo	HABIT
+roj korte hobe	HABIT
+roj kora	HABIT
+protidin	HABIT
+protidin kori	HABIT
+protidin korbo	HABIT
+protidin korte hobe	HABIT
+protidin kora	HABIT
+proti shokale	HABIT
+proti raate	HABIT
+proti bikele	HABIT
+proti sondhay	HABIT
+prottohik	HABIT
+dainik	HABIT
+dainondin	HABIT
+dainandin	HABIT
+obbhash	HABIT
+obhyash	HABIT
+obbhasher	HABIT
+obhyasher	HABIT
+obbhash gora	HABIT
+obhyash gora	HABIT
+obbhash gorte hobe	HABIT
+obhyash gorte hobe	HABIT
+shokale uthbo	HABIT
+shokale uthte hobe	HABIT
+shokale hatbo	HABIT
+shokale hatte jabo	HABIT
+shokale daurabo	HABIT
+shokale gym e jabo	HABIT
+shokale gym korbo	HABIT
+shokale exercise korbo	HABIT
+shokale yoga korbo	HABIT
+shokale porbo	HABIT
+shokale quran porbo	HABIT
+shokale tilawat korbo	HABIT
+raate ghumabo	HABIT
+raate tarata ri ghumabo	HABIT
+raate tara tari ghumabo	HABIT
+tara tari ghumabo	HABIT
+taratari ghumabo	HABIT
+taratari uthbo	HABIT
+tara tari uthbo	HABIT
+pani khabo	HABIT
+pani khete hobe	HABIT
+pani khawa	HABIT
+pani khaoya	HABIT
+beshi pani khabo	HABIT
+beshi pani khete hobe	HABIT
+hatbo	HABIT
+hatte hobe	HABIT
+hatte jabo	HABIT
+haata	HABIT
+hata	HABIT
+hanta	HABIT
+daurabo	HABIT
+daurate hobe	HABIT
+dour	HABIT
+dour dibo	HABIT
+dour dite hobe	HABIT
+byayam korbo	HABIT
+byayam korte hobe	HABIT
+byayam kora	HABIT
+beyam korbo	HABIT
+beyam korte hobe	HABIT
+jim e jabo	HABIT
+jim e jete hobe	HABIT
+jim korbo	HABIT
+jim korte hobe	HABIT
+gym korbo	HABIT
+gym korte hobe	HABIT
+gym e jabo	HABIT
+gym e jete hobe	HABIT
+yoga korbo	HABIT
+yoga korte hobe	HABIT
+dhyan korbo	HABIT
+dhyan korte hobe	HABIT
+medition korbo	HABIT
+meditation korbo	HABIT
+meditation korte hobe	HABIT
+boi porbo	HABIT
+boi porte hobe	HABIT
+boi pora	HABIT
+porbo	HABIT
+porte hobe	HABIT
+pora	HABIT
+quran porbo	HABIT
+quran porte hobe	HABIT
+quran pora	HABIT
+tilawat korbo	HABIT
+tilawat korte hobe	HABIT
+tilawat kora	HABIT
+namaz porbo	HABIT
+namaz porte hobe	HABIT
+namaz pora	HABIT
+namaz porar obbhash	HABIT
+namaz porar obhyash	HABIT
+zikr korbo	HABIT
+zikr korte hobe	HABIT
+zikr kora	HABIT
+dua porbo	HABIT
+dua porte hobe	HABIT
+dua pora	HABIT
+ওষুধ খেতে হবে	HABIT
+ওষুধ খাব	HABIT
+ওষুধ খাওয়া	HABIT
+পানি খাব	HABIT
+পানি খেতে হবে	HABIT
+বেশি পানি খাব	HABIT
+হাঁটব	HABIT
+হাঁটতে হবে	HABIT
+হাঁটতে যাব	HABIT
+দৌড়াব	HABIT
+দৌড়াতে হবে	HABIT
+ব্যায়াম করব	HABIT
+ব্যায়াম করতে হবে	HABIT
+জিমে যাব	HABIT
+জিমে যেতে হবে	HABIT
+যোগব্যায়াম করব	HABIT
+ধ্যান করব	HABIT
+মেডিটেশন করব	HABIT
+বই পড়ব	HABIT
+বই পড়তে হবে	HABIT
+কুরআন পড়ব	HABIT
+কুরআন তিলাওয়াত করব	HABIT
+নামাজ পড়ব	HABIT
+নামাজ পড়তে হবে	HABIT
+জিকির করব	HABIT
+দোয়া পড়ব	HABIT
+সকালে উঠব	HABIT
+সকালে উঠতে হবে	HABIT
+তাড়াতাড়ি ঘুমাব	HABIT
+তাড়াতাড়ি ঘুমাতে হবে	HABIT
+তাড়াতাড়ি উঠব	HABIT
+প্রতিদিন	HABIT
+রোজ	HABIT
+নিয়মিত	HABIT
+অভ্যাস	HABIT
+দৈনন্দিন	HABIT
+দৈনিক	HABIT
+রুটিন	HABIT

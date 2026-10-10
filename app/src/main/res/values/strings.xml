@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">LedgerAI</string>
     <string name="widget_home_label">LedgerAI Home</string>
-    <string name="widget_home_description">Safe spend, schedule, tasks, and quick actions</string>
+    <string name="widget_home_description">Today’s schedule, voice, and a note</string>
     <string name="widget_quick_actions_label">Quick Actions</string>
     <string name="widget_quick_actions_description">Voice, spend, task, and focus shortcuts</string>
     <string name="widget_focus_label">Focus</string>

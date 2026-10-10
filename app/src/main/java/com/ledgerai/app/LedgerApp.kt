@@ -5,8 +5,12 @@ import android.net.ConnectivityManager
 import android.net.Network
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.ledgerai.app.data.ai.LocalParseModel
 import com.ledgerai.app.data.preferences.UserSession
+import com.ledgerai.app.data.repository.CalendarRepository
 import com.ledgerai.app.data.repository.QuoteRepository
+import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.widget.WidgetRefresh
 import com.ledgerai.app.di.DatabaseSeeder
 import com.ledgerai.app.worker.BillReminderWorker
 import com.ledgerai.app.worker.BudgetCheckWorker
@@ -21,6 +25,8 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -33,6 +39,9 @@ class LedgerApp : Application(), Configuration.Provider {
     @Inject lateinit var databaseSeeder: DatabaseSeeder
     @Inject lateinit var quoteRepository: QuoteRepository
     @Inject lateinit var userSession: UserSession
+    @Inject lateinit var calendarRepository: CalendarRepository
+    @Inject lateinit var transactionRepository: TransactionRepository
+    @Inject lateinit var localParseModel: LocalParseModel
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var syncNetworkCallback: ConnectivityManager.NetworkCallback? = null
@@ -53,6 +62,8 @@ class LedgerApp : Application(), Configuration.Provider {
         SpendGuideMorningWorker.schedule(this)
         NoteScanWorker.schedule(this)
         WidgetRefreshWorker.schedule(this)
+        watchWidgetData()
+        appScope.launch { localParseModel.prepare() }
         appScope.launch {
             runCatching { quoteRepository.persistForWidgetRemote() }
             userSession.userInfo
@@ -67,6 +78,26 @@ class LedgerApp : Application(), Configuration.Provider {
                         SyncWorker.cancel(this@LedgerApp)
                     }
                 }
+        }
+    }
+
+    /** Reloads the home widget whenever today's events or spending change. */
+    private fun watchWidgetData() {
+        appScope.launch(Dispatchers.IO) {
+            launch {
+                calendarRepository.observeAll()
+                    .map { rows -> rows.joinToString { "${it.id}|${it.title}|${it.startAt}|${it.isCompleted}|${it.isEnabled}" } }
+                    .distinctUntilChanged()
+                    .debounce(400)
+                    .collectLatest { WidgetRefresh.refreshAll(this@LedgerApp) }
+            }
+            launch {
+                transactionRepository.getAllTransactions()
+                    .map { rows -> rows.joinToString { "${it.id}|${it.amount}|${it.date}|${it.type}" } }
+                    .distinctUntilChanged()
+                    .debounce(400)
+                    .collectLatest { WidgetRefresh.refreshAll(this@LedgerApp) }
+            }
         }
     }
 

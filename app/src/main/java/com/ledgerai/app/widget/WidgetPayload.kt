@@ -3,6 +3,8 @@ package com.ledgerai.app.widget
 data class WidgetNextItem(
     val time: String,
     val title: String,
+    val mark: String = "",
+    val id: Long = 0,
 )
 
 data class WidgetTaskLine(
@@ -22,6 +24,8 @@ data class WidgetPayload(
     val safeTodayLabel: String,
     val safeTodayAmount: String,
     val spentTodayLabel: String,
+    val spentTodayAmount: String,
+    val spentMonthAmount: String,
     val guideProgress: Float,
     val overGuide: Boolean,
     val nearGuide: Boolean,

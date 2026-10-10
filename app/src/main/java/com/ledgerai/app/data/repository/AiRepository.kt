@@ -18,10 +18,19 @@ import com.ledgerai.app.data.ai.NoteNudgeScanDto
 import com.ledgerai.app.data.ai.NoteSummaryDto
 import com.ledgerai.app.data.ai.ScheduleDraftDto
 import com.ledgerai.app.data.ai.ScheduleDraftListDto
+import com.ledgerai.app.data.ai.LearnedRules
+import com.ledgerai.app.data.ai.LocalParseAnswer
+import com.ledgerai.app.data.ai.LocalParseModel
+import com.ledgerai.app.data.ai.LocalParsePrompt
 import com.ledgerai.app.data.ai.ParsedIntent
+import com.ledgerai.app.data.ai.PlaceMatch
 import com.ledgerai.app.data.ai.ParsedTransactionDto
 import com.ledgerai.app.data.ai.ParsedVoiceIntentDto
 import com.ledgerai.app.data.ai.QuickParse
+import com.ledgerai.app.data.ai.RoutedIntents
+import com.ledgerai.app.data.ai.RuleLexicon
+import com.ledgerai.app.data.ai.VoiceIntentRouter
+import com.ledgerai.app.data.preferences.UserPreferences
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -54,6 +63,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 /**
  * AI entry point.
@@ -71,7 +81,16 @@ class AiRepository @Inject constructor(
     private val insightStore: InsightStore,
     private val network: NetworkAvailability,
     private val gson: Gson,
+    private val jobs: JobRepository,
+    private val calendar: CalendarRepository,
+    private val prefs: UserPreferences,
+    private val localModel: LocalParseModel,
+    lexicon: RuleLexicon,
 ) {
+
+    init {
+        QuickParse.lexicon = lexicon
+    }
 
     suspend fun parseVoiceTransaction(transcript: String): Result<ParsedTransaction> {
         if (canCallCloud()) {
@@ -101,44 +120,82 @@ class AiRepository @Inject constructor(
      * Offline, and when the cloud has no answer, [QuickParse] decides. Text nothing recognises comes back as
      * [ParsedIntent.Unmatched]. The cloud may answer with an `items` array or a bare array.
      */
-    suspend fun parseVoiceIntents(transcript: String): Result<List<ParsedIntent>> {
+    suspend fun parseVoiceIntents(transcript: String): Result<List<ParsedIntent>> =
+        parseVoiceIntentsRouted(transcript).map { it.items }
+
+    /**
+     * The on-phone model is the first layer. Rules keep any field they already proved.
+     * The cloud is asked only when the phone model has no answer and the rules are unsure.
+     */
+    suspend fun parseVoiceIntentsRouted(transcript: String): Result<RoutedIntents> {
         val trimmed = transcript.trim()
         if (trimmed.isEmpty()) {
             return Result.failure(IllegalArgumentException("Empty transcript"))
         }
+        LearnedRules.current = LearnedRules.parse(runCatching { prefs.learnedRulesNow() }.getOrDefault(""))
+        val cloudEnabled = runCatching { prefs.cloudFallback.first() }.getOrDefault(true)
+        val routed = VoiceIntentRouter.route(
+            trimmed,
+            cloudEnabled,
+            cloud = { cloudVoiceItems(trimmed) },
+            local = local@{
+                val raw = localModel.complete(LocalParsePrompt.of(trimmed)) ?: return@local emptyList()
+                val fromModel = mapVoiceItemsJson(raw, trimmed).ifEmpty {
+                    listOfNotNull(LocalParseAnswer.read(raw, trimmed))
+                }
+                preferLocalKinds(fromModel, trimmed)
+            }
+        )
+        val needsPlaces = routed.items.any { it is ParsedIntent.Job && it.location.isNotBlank() }
+        val items = if (needsPlaces) snapPlaces(routed.items, knownPlaces()) else routed.items
+        return Result.success(RoutedIntents(items, routed.source, routed.cloudCalled))
+    }
 
+    /** Edge function first, then the direct provider. Empty when offline, unconfigured or nothing maps. */
+    private suspend fun cloudVoiceItems(trimmed: String): List<ParsedIntent> {
+        if (!canCallCloud()) return emptyList()
+        val places = knownPlaces()
         if (network.isOnline() && edgeClient.isConfigured()) {
-            edgeClient.voiceIntent(nowHint() + "\nUser said: " + trimmed).getOrNull()?.let { raw ->
+            edgeClient.voiceIntent(nowHint() + placeHint(places) + "\nUser said: " + trimmed).getOrNull()?.let { raw ->
                 mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
-                    return Result.success(preferLocalKinds(it, trimmed))
+                    return preferLocalKinds(it, trimmed)
                 }
             }
         }
 
         if (canCallCloud()) {
             val system = """
-                The user may speak English or Bangla, or mix the two. Understand both.
-                Split the user utterance into one or more items and classify each. Most utterances hold one item.
-                If money was spent or received, intent is TRANSACTION, not NOTE.
-                merchant and title must be the specific person or place name when one is said. Do not copy the whole sentence into note or body.
-                Reply with ONLY JSON: {"items":[ITEM,...]} where ITEM is:
-                {"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB","amount":number|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":string,"note":string,"type":"INCOME|EXPENSE","confidence":0-1,"title":string,"name":string,"body":string,"start_at":"ISO-8601 local date and time|null","end_at":"ISO-8601|null","due_at":"ISO-8601|null","reminder_minutes":[0],"label":string,"time":"HH:mm","tags":["..."],"repeat_rule":"DAILY|WEEKLY|WEEKDAYS|CUSTOM","repeat_days":0,"direction":"I_OWE|THEY_OWE"}
-                For EVENT, TASK, EXAM, REMINDER, ROUTINE and ALARM always set start_at to the full spoken date and time, and title to only what to do (no date or time words).
-                JOB is a job application or interview. name is only the company. title is only the spoken role, such as "Android engineer", never the company and never the word Role. label is APPLIED|SCREENING|INTERVIEW|OFFER|REJECTED|WITHDRAWN. start_at is the interview or follow-up. due_at is the day they applied. Never classify a job or interview as EVENT, TASK, or REMINDER.
-                For ALARM, repeat_days is a weekday bitmask Sun=1,Mon=2,Tue=4,Wed=8,Thu=16,Fri=32,Sat=64 (0=one-shot; weekdays=62; every day=127).
-                For ROUTINE, set title and repeat_rule.
-                For BILL set name, amount, repeat_rule (WEEKLY|MONTHLY|QUARTERLY|YEARLY) and due_at. For DEBT set name (the other person), amount, direction and optional due_at. For GOAL set name and amount (the target). For BUDGET set category and amount (the monthly limit).
-                If nothing can be understood, reply {"items":[]}.
+                EN/BN. JSON only {"items":[{"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB|DELETE|EDIT","amount":n|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":"","note":"","type":"INCOME|EXPENSE","title":"","name":"","body":"","start_at":"local ISO|null","due_at":null,"label":"","repeat_rule":"","direction":"I_OWE|THEY_OWE"}]}.
+                Dates named by the user stay that date. Money is TRANSACTION. JOB name=company title=role merchant=site note=place body=labeled dates. DELETE/EDIT do not create a new item. Empty if unknown.
+                ${placeHint(places)}
             """.trimIndent()
             completeRaw(system, trimmed).getOrNull()?.let { raw ->
                 mapVoiceItemsJson(raw, trimmed).takeIf { it.isNotEmpty() }?.let {
-                    return Result.success(preferLocalKinds(it, trimmed))
+                    return preferLocalKinds(it, trimmed)
                 }
             }
         }
 
-        return Result.success(QuickParse.parseVoiceIntents(trimmed))
+        return emptyList()
     }
+
+    /** Places already saved on jobs and calendar events, so a misspelling can be corrected. */
+    private suspend fun knownPlaces(): List<String> {
+        val fromJobs = jobs.observeAll().first().map { it.location }
+        val fromEvents = calendar.observeAll().first().map { it.location }
+        return (fromJobs + fromEvents).map { it.trim() }.filter { it.length >= 2 }.distinctBy { it.lowercase() }.take(40)
+    }
+
+    private fun placeHint(places: List<String>): String =
+        if (places.isEmpty()) ""
+        else "\nKnown places: ${places.joinToString(", ")}. If a job location is close to one of these, use that exact place."
+
+    private fun snapPlaces(items: List<ParsedIntent>, places: List<String>): List<ParsedIntent> =
+        items.map { item ->
+            if (item is ParsedIntent.Job && item.location.isNotBlank()) {
+                item.copy(location = PlaceMatch.snap(item.location, places))
+            } else item
+        }
 
     /**
      * The edge function and some models only know a transaction or a note. When the words clearly name a
@@ -146,13 +203,15 @@ class AiRepository @Inject constructor(
      */
     private fun preferLocalKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
         val local = QuickParse.parseVoiceIntents(transcript)
+        if (local.any { it is ParsedIntent.Adjust }) return local
         if (local.any { it is ParsedIntent.Job }) {
             val cloudJob = cloud.filterIsInstance<ParsedIntent.Job>().firstOrNull()
             return local.map { item ->
                 if (item !is ParsedIntent.Job || cloudJob == null) item
                 else item.copy(
                     company = item.company.takeUnless { it.equals("Company", true) } ?: cloudJob.company,
-                    title = pickJobRole(cloudJob.title, item.title)
+                    title = pickJobRole(cloudJob.title, item.title),
+                    location = item.location.ifBlank { cloudJob.location }
                 )
             }
         }
@@ -205,10 +264,23 @@ class AiRepository @Inject constructor(
 
     suspend fun generateForecast(
         recentTransactions: List<Transaction>,
-        currentBudgets: Map<TransactionCategory, Double>
+        currentBudgets: Map<TransactionCategory, Double>,
+        bills: List<com.ledgerai.app.domain.model.Bill> = emptyList(),
+        useCloud: Boolean = false,
     ): Result<List<FinancialForecast>> {
         if (recentTransactions.isEmpty()) {
             return Result.failure(IllegalStateException("Need recent transactions to forecast"))
+        }
+
+        // Rules first: recurring bills plus average weekday spend against the income pattern.
+        // The cloud is only asked when the caller opts in, and then only as an alternative view.
+        if (!useCloud) {
+            return Result.success(
+                com.ledgerai.app.data.insight.ForecastRules.project(
+                    recentTransactions, currentBudgets, bills, LocalDate.now(),
+                    fmt = { com.ledgerai.app.presentation.components.money(it) }
+                )
+            )
         }
 
         if (canCallCloud()) {
@@ -343,9 +415,33 @@ class AiRepository @Inject constructor(
     )
 
     /** Daily dashboard insight (type=insight). Caches via [InsightStore]. */
-    suspend fun generateDailyInsight(forceRefresh: Boolean = false): Result<InsightDto> {
+    suspend fun generateDailyInsight(forceRefresh: Boolean = false, rewordWithCloud: Boolean = false): Result<InsightDto> {
         if (!forceRefresh) {
             insightStore.readToday()?.let { return Result.success(it) }
+        }
+        // Rules first: the detectors in InsightEngine and InsightRules decide what to say and every number in it.
+        val ruled = runCatching {
+            com.ledgerai.app.data.insight.InsightRules.dailyInsight(
+                contextBuilder.insightInputs(),
+                fmt = { com.ledgerai.app.presentation.components.money(it) }
+            )
+        }.getOrNull()
+        if (ruled != null) {
+            if (rewordWithCloud && canCallCloud()) {
+                val system = "Reword this insight in at most 30 words. Keep every number and currency symbol exactly. " +
+                    "Reply JSON: {\"title\":\"...\",\"body\":\"...\",\"severity\":\"info|watch|alert\",\"actions\":[\"...\"]}"
+                val user = "Title: ${ruled.title}\nBody: ${ruled.body}\nSeverity: ${ruled.severity}"
+                val reworded = completeStructured(AiResponseType.INSIGHT, system, user).getOrNull()
+                    ?.let { (it as? ValidatedAiResponse.Insight)?.dto }
+                    ?.takeIf { dto -> dto.body?.let { b -> Regex("\\d[\\d,.]*").findAll(ruled.body.orEmpty()).all { n -> b.contains(n.value) } } == true }
+                if (reworded != null) {
+                    val out = reworded.copy(severity = ruled.severity, source = com.ledgerai.app.data.ai.SOURCE_AI)
+                    insightStore.save(out)
+                    return Result.success(out)
+                }
+            }
+            insightStore.save(ruled)
+            return Result.success(ruled)
         }
         if (!canCallCloud()) {
             val fallback = InsightDto(
@@ -486,6 +582,15 @@ class AiRepository @Inject constructor(
         return Result.failure(IllegalStateException("No AI path available for ${type.wireName}"))
     }
 
+    /**
+     * One short call that turns a few saved lines into phrase rules. The reply is at most a handful of JSON objects.
+     */
+    suspend fun learnRules(compactLines: String): String? {
+        if (!canCallCloud() || compactLines.isBlank()) return null
+        val system = """JSON only {"rules":[{"p":"phrase","k":"Spend|Income|Task|Reminder|Event|Exam|Routine|Alarm|Budget|Bill|Debt|Goal|Job|Note"}]}. Max 4. No prose."""
+        return completeRaw(system, compactLines.take(400)).getOrNull()?.take(500)
+    }
+
     private suspend fun completeRaw(system: String, user: String): Result<String> {
         if (network.isOnline() && edgeClient.isConfigured()) {
             edgeClient.complete(AiResponseType.CHAT, system, user).getOrNull()?.let { return Result.success(it) }
@@ -503,6 +608,7 @@ class AiRepository @Inject constructor(
         return try {
             val confidence = (dto.confidence ?: 0.7f).coerceIn(0f, 1f)
             when (dto.intent?.uppercase()) {
+                "DELETE", "EDIT" -> QuickParse.parseVoiceIntent(transcript)
                 "JOB" -> mapJobIntent(dto, transcript, confidence)
                 "EVENT", "TASK", "EXAM", "REMINDER", "ALARM", "ROUTINE" ->
                     mapEventIntent(dto, transcript, confidence)
@@ -656,6 +762,13 @@ class AiRepository @Inject constructor(
                 ?: local?.company
                 ?: "Company",
             title = pickJobRole(dto.title, local?.title),
+            source = local?.source.orEmpty(),
+            url = local?.url.orEmpty(),
+            location = local?.location?.takeIf { it.isNotBlank() }
+                ?: dto.note?.trim()?.takeIf { it.length in 2..40 && '.' !in it }
+                ?: "",
+            extraDates = local?.extraDates.orEmpty(),
+            appliedSpoken = local?.appliedSpoken == true,
             status = status,
             appliedOn = parseDateTime(dto.dueAt)?.toLocalDate() ?: local?.appliedOn ?: today,
             followUpOn = follow,

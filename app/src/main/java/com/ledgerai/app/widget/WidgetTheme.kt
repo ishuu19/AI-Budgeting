@@ -34,33 +34,20 @@ object WidgetTheme {
 
     fun palette(context: Context, forceDark: Boolean? = null): WidgetPalette {
         val night = forceDark ?: isNight(context)
-        return if (night) {
-            WidgetPalette(
-                canvasBg = R.drawable.widget_canvas_dark,
-                tileBg = R.drawable.widget_tile_bg,
-                tileRaised = R.drawable.widget_tile_raised,
-                onTile = ColorProvider(Color(0xFFFFFDF8)),
-                onTileMuted = ColorProvider(Color(0xCCD4C48A)),
-                onCanvas = ColorProvider(Color(0xFFFFFDF8)),
-                gold = ColorProvider(Color(0xFFD4AF37)),
-                danger = ColorProvider(Color(0xFFE5645A)),
-                success = ColorProvider(Color(0xFF3FBF84)),
-                amber = ColorProvider(Color(0xFFE8B84A)),
-            )
-        } else {
-            WidgetPalette(
-                canvasBg = R.drawable.widget_canvas_light,
-                tileBg = R.drawable.widget_tile_bg,
-                tileRaised = R.drawable.widget_tile_raised,
-                onTile = ColorProvider(Color(0xFFFFFDF8)),
-                onTileMuted = ColorProvider(Color(0xCCD4C48A)),
-                onCanvas = ColorProvider(Color(0xFF0C2F24)),
-                gold = ColorProvider(Color(0xFFD4AF37)),
-                danger = ColorProvider(Color(0xFFC0392B)),
-                success = ColorProvider(Color(0xFF2E8B57)),
-                amber = ColorProvider(Color(0xFFD4A017)),
-            )
-        }
+        val ink = ColorProvider(Color(0xFFE2F0EC))
+        val muted = ColorProvider(Color(0xFF8FA89B))
+        return WidgetPalette(
+            canvasBg = if (night) R.drawable.widget_canvas_dark else R.drawable.widget_canvas_light,
+            tileBg = R.drawable.widget_tile_bg,
+            tileRaised = R.drawable.widget_tile_raised,
+            onTile = ink,
+            onTileMuted = muted,
+            onCanvas = ink,
+            gold = ColorProvider(Color(0xFFD4AF37)),
+            danger = ColorProvider(Color(0xFFE5645A)),
+            success = ColorProvider(Color(0xFF3FBF84)),
+            amber = ColorProvider(Color(0xFFE8B84A)),
+        )
     }
 
     private fun isNight(context: Context): Boolean {

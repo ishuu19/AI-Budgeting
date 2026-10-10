@@ -31,8 +31,12 @@ data class OpenItem(val kind: OpenKind, val id: Long, val nonce: Long)
 data class LaunchRequest(
     val id: Long,
     val voice: Boolean = false,
+    /** Words from the widget mic or quick note. The voice screen turns them into a suggestion. */
+    val voiceSeed: String? = null,
+    val notes: Boolean = false,
     val plan: PlanSeg? = null,
     val spendGuide: Boolean = false,
+    val addTransaction: Boolean = false,
     val bills: Boolean = false,
     val focusBlockId: Long = 0L,
     val focusTopic: String? = null,

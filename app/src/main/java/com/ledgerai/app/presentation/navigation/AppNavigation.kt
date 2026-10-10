@@ -101,6 +101,8 @@ fun AppNavigation(request: LaunchRequest? = null) {
     var handledRequest by rememberSaveable { mutableStateOf(0L) }
     var pendingOpen by remember { mutableStateOf<OpenItem?>(null) }
     var holdMic by remember { mutableStateOf(false) }
+    var voiceSeed by remember { mutableStateOf<String?>(null) }
+    var addSpend by remember { mutableStateOf(false) }
 
     fun focusRoute(id: Long, topic: String) = "${Screen.Focus.route}/$id?topic=${Uri.encode(topic)}"
 
@@ -134,10 +136,20 @@ fun AppNavigation(request: LaunchRequest? = null) {
         if (r.id == handledRequest) return@LaunchedEffect
         handledRequest = r.id
         when {
-            r.voice -> { voiceSeg = VoiceSeg.Speak; nav.tab(Screen.Voice.route) }
+            r.voice -> {
+                voiceSeg = VoiceSeg.Speak
+                voiceSeed = r.voiceSeed
+                nav.tab(Screen.Voice.route)
+            }
+            r.notes -> { voiceSeg = VoiceSeg.Notes; nav.tab(Screen.Voice.route) }
             r.hasFocus -> {
                 nav.tab(Screen.Plan.route)
                 nav.go(focusRoute(r.focusBlockId, r.focusTopic ?: "Focus"))
+            }
+            r.addTransaction -> {
+                moneySeg = MoneySeg.Spend
+                addSpend = true
+                nav.tab(Screen.Money.route)
             }
             r.spendGuide -> { moneySeg = MoneySeg.Overview; nav.tab(Screen.Money.route); nav.go(Screen.SpendGuide.route) }
             r.bills -> { moneySeg = MoneySeg.Owed; nav.tab(Screen.Money.route) }
@@ -174,12 +186,24 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 PlanTabScreen(planSeg, { planSeg = it }, links, openFor(OpenKind.Event, OpenKind.Job), opened)
             }
             composable(Screen.Voice.route) {
-                VoiceTabScreen(voiceSeg, { voiceSeg = it }, links, openFor(OpenKind.Note), opened, holdMic)
+                VoiceTabScreen(
+                    voiceSeg,
+                    { voiceSeg = it },
+                    links,
+                    openFor(OpenKind.Note),
+                    opened,
+                    holdMic,
+                    seed = voiceSeed,
+                    onSeedConsumed = { voiceSeed = null }
+                )
             }
             composable(Screen.Money.route) {
                 MoneyTabScreen(
                     moneySeg, { moneySeg = it }, links,
-                    openFor(OpenKind.Transaction, OpenKind.Budget, OpenKind.Goal, OpenKind.Bill, OpenKind.Debt), opened
+                    openFor(OpenKind.Transaction, OpenKind.Budget, OpenKind.Goal, OpenKind.Bill, OpenKind.Debt),
+                    opened,
+                    addSpend = addSpend,
+                    onAddSpendConsumed = { addSpend = false }
                 )
             }
             composable(Screen.You.route) { SettingsScreen(onOpenAi = { links.voice(VoiceSeg.Ask) }, onBack = null) }

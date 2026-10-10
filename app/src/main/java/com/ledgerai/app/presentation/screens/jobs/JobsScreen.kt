@@ -97,7 +97,8 @@ internal fun parseJobLine(line: String): Pair<String, String> {
 
 @HiltViewModel
 class JobsViewModel @Inject constructor(
-    private val repo: JobRepository
+    private val repo: JobRepository,
+    private val lexicon: com.ledgerai.app.data.ai.JobLexiconProvider
 ) : ViewModel() {
     private val _state = MutableStateFlow(JobsUiState())
     val state: StateFlow<JobsUiState> = _state.asStateFlow()
@@ -119,14 +120,21 @@ class JobsViewModel @Inject constructor(
         if (text.isBlank()) return
         viewModelScope.launch {
             val today = LocalDate.now()
-            val apps = text.lines().filter { it.isNotBlank() }.map { line ->
-                val (company, title) = parseJobLine(line)
+            // Rules read company, role, link, source, status and dates. Several one-line jobs become several rows.
+            val apps = com.ledgerai.app.data.ai.JobPasteParser.parseMany(text, today, lexicon.lexicon).map { p ->
+                val fallback = parseJobLine(p.notes.lines().firstOrNull { it.isNotBlank() } ?: text)
+                val applied = p.appliedOn ?: today
                 JobApplication(
-                    company = company,
-                    title = title,
-                    url = Regex("https?://\\S+").find(line)?.value.orEmpty(),
-                    appliedOn = today,
-                    followUpOn = repo.defaultFollowUp(today)
+                    company = p.company.ifBlank { fallback.first },
+                    title = p.title.ifBlank { fallback.second },
+                    url = p.url,
+                    source = p.source,
+                    status = p.status,
+                    appliedOn = applied,
+                    followUpOn = p.followUpOn ?: repo.defaultFollowUp(applied),
+                    notes = if (p.notes.contains('\n')) p.notes else "",
+                    location = p.location,
+                    extraDates = p.extraDates
                 )
             }
             repo.saveBatch(apps)
@@ -318,7 +326,12 @@ fun JobsScreen(
                                 if (i > 0) LGroupDivider()
                                 LGroupRow(
                                     title = job.title,
-                                    sub = job.company + " · " + (job.followUpOn ?: job.appliedOn).format(dateFmt),
+                                    sub = listOfNotNull(
+                                        job.company,
+                                        job.location.takeIf { it.isNotBlank() },
+                                        job.source.takeIf { it.isNotBlank() },
+                                        (job.followUpOn ?: job.appliedOn).format(dateFmt)
+                                    ).joinToString(" · "),
                                     trailing = job.status.label(),
                                     onClick = { sheetId = job.id }
                                 )
@@ -374,6 +387,9 @@ private fun JobSheet(
     var company by rememberSaveable(job.id) { mutableStateOf(job.company) }
     var title by rememberSaveable(job.id) { mutableStateOf(job.title) }
     var url by rememberSaveable(job.id) { mutableStateOf(job.url) }
+    var site by rememberSaveable(job.id) { mutableStateOf(job.source) }
+    var location by rememberSaveable(job.id) { mutableStateOf(job.location) }
+    var extraDates by rememberSaveable(job.id) { mutableStateOf(job.extraDates) }
     var notes by rememberSaveable(job.id) { mutableStateOf(job.notes) }
     var contact by rememberSaveable(job.id) { mutableStateOf(job.contact) }
     var statusName by rememberSaveable(job.id) { mutableStateOf(job.status.name) }
@@ -391,6 +407,9 @@ private fun JobSheet(
                     company = company.trim().ifBlank { job.company },
                     title = title.trim().ifBlank { job.title },
                     url = url.trim(),
+                    source = site.trim(),
+                    location = location.trim(),
+                    extraDates = extraDates.trim(),
                     notes = notes.trim(),
                     contact = contact.trim(),
                     status = JobApplicationStatus.valueOf(statusName),
@@ -409,7 +428,9 @@ private fun JobSheet(
         }
         LField(company, { company = it }, "Company")
         LField(title, { title = it }, "Role")
+        LField(site, { site = it }, "Application site")
         LField(url, { url = it }, "Link")
+        LField(location, { location = it }, "Location")
         if (url.isNotBlank()) {
             LGhostButton("Open link", onClick = {
                 val target = url.trim().let { if (it.startsWith("http")) it else "https://$it" }
@@ -417,6 +438,7 @@ private fun JobSheet(
             })
         }
         LField(contact, { contact = it }, "Contact")
+        LField(extraDates, { extraDates = it }, "Other dates", singleLine = false, minLines = 2)
         LField(notes, { notes = it }, "Notes", singleLine = false, minLines = 2)
         Text("Dates", style = MaterialTheme.typography.titleSmall, color = L.Ink, modifier = Modifier.semantics { heading() })
         ChipsRow {

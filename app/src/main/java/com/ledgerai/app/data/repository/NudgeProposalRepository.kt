@@ -1,6 +1,8 @@
 package com.ledgerai.app.data.repository
 
-import com.ledgerai.app.data.ai.NoteNudgeProposalDto
+import com.ledgerai.app.data.ai.NoteLexicon
+import com.ledgerai.app.data.ai.NoteNudgeSuggestion
+import com.ledgerai.app.data.ai.NoteRules
 import com.ledgerai.app.data.local.room.NudgeProposalDao
 import com.ledgerai.app.data.local.room.NudgeProposalEntity
 import com.ledgerai.app.domain.model.NudgeProposalState
@@ -12,33 +14,43 @@ import javax.inject.Singleton
 @Singleton
 class NudgeProposalRepository @Inject constructor(
     private val dao: NudgeProposalDao,
-    private val aiRepo: AiRepository
+    private val aiRepo: AiRepository,
+    private val lexicon: NoteLexicon,
 ) {
     fun observePending(): Flow<List<NudgeProposalEntity>> = dao.observePending()
 
+    /**
+     * Proposes nudges for an opted-in note. Rules run first ([NoteRules.nudges]); the cloud is asked only when
+     * the rules find nothing. A proposal whose message already exists for the note is skipped, whatever its state.
+     */
     suspend fun scanNote(noteId: Long, body: String): List<NudgeProposalEntity> {
-        if (!body.contains("[nudge]", ignoreCase = true) && !body.contains("#nudge", ignoreCase = true)) {
-            return emptyList()
+        if (!NoteRules.optedIn(body)) return emptyList()
+        val now = LocalDateTime.now()
+        var found: List<NoteNudgeSuggestion> = NoteRules.nudges(body, now, lexicon.triggers)
+        if (found.isEmpty()) {
+            found = aiRepo.scanNoteForNudges(body).getOrNull().orEmpty()
+                .filter { !it.message.isNullOrBlank() }
+                .map {
+                    NoteNudgeSuggestion(
+                        message = it.message.orEmpty().trim(),
+                        at = parseWhen(it.suggestedAt, now),
+                        reason = it.reason.orEmpty().ifBlank { "AI" }
+                    )
+                }
         }
-        val proposals = aiRepo.scanNoteForNudges(body).getOrElse { heuristicNudges(body) }
-        return proposals.take(3).map { p ->
-            val id = dao.insert(
-                NudgeProposalEntity(
-                    noteId = noteId,
-                    message = p.message.orEmpty(),
-                    suggestedAt = parseWhen(p.suggestedAt),
-                    reason = p.reason.orEmpty(),
-                    state = NudgeProposalState.PENDING
-                )
-            )
-            NudgeProposalEntity(
-                id = id,
+        val created = mutableListOf<NudgeProposalEntity>()
+        for (p in found.take(3)) {
+            if (dao.countFor(noteId, p.message) > 0) continue
+            val entity = NudgeProposalEntity(
                 noteId = noteId,
-                message = p.message.orEmpty(),
-                suggestedAt = parseWhen(p.suggestedAt),
-                reason = p.reason.orEmpty()
+                message = p.message,
+                suggestedAt = p.at,
+                reason = p.reason,
+                state = NudgeProposalState.PENDING
             )
+            created += entity.copy(id = dao.insert(entity))
         }
+        return created
     }
 
     suspend fun accept(id: Long) {
@@ -49,23 +61,12 @@ class NudgeProposalRepository @Inject constructor(
         dao.updateState(id, NudgeProposalState.DISMISSED.name)
     }
 
-    private fun heuristicNudges(body: String): List<NoteNudgeProposalDto> {
-        val line = body.lines().firstOrNull { it.contains("remind", ignoreCase = true) } ?: body.take(120)
-        return listOf(
-            NoteNudgeProposalDto(
-                message = line.trim(),
-                suggestedAt = LocalDateTime.now().plusHours(2).toString(),
-                reason = "From note"
-            )
-        )
-    }
-
-    private fun parseWhen(raw: String?): LocalDateTime {
-        if (raw.isNullOrBlank()) return LocalDateTime.now().plusHours(1)
+    private fun parseWhen(raw: String?, now: LocalDateTime): LocalDateTime {
+        if (raw.isNullOrBlank()) return now.plusHours(1)
         return try {
             LocalDateTime.parse(raw)
         } catch (_: Exception) {
-            LocalDateTime.now().plusHours(1)
+            now.plusHours(1)
         }
     }
 }

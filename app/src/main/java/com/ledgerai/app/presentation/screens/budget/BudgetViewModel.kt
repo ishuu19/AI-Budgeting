@@ -2,6 +2,8 @@ package com.ledgerai.app.presentation.screens.budget
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.insight.BudgetAdviceRules
+import com.ledgerai.app.data.insight.BudgetLine
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.BudgetRepository
 import com.ledgerai.app.data.repository.TransactionRepository
@@ -173,14 +175,14 @@ class BudgetViewModel @Inject constructor(
     }
 
     fun getAiAdvice(budget: Budget) {
-        viewModelScope.launch {
-            aiRepo.getBudgetAdvice(budget.category.displayName, budget.spent, budget.monthlyLimit, budget.usagePercent)
-                .onSuccess { advice ->
-                    _uiState.update { state ->
-                        state.copy(aiAdvice = state.aiAdvice + (budget.id to advice))
-                    }
-                }
-        }
+        // Rules decide the advice from this month's numbers. No cloud call is needed.
+        val lines = _uiState.value.budgets.map { BudgetLine(it.category, it.spent, it.monthlyLimit) }
+        val own = BudgetLine(budget.category, budget.spent, budget.monthlyLimit)
+        val advice = BudgetAdviceRules.advise(
+            own, lines.filter { it.category != budget.category }, LocalDate.now(),
+            fmt = { com.ledgerai.app.presentation.components.money(it) }
+        ) + " (Rules)"
+        _uiState.update { state -> state.copy(aiAdvice = state.aiAdvice + (budget.id to advice)) }
     }
 
     fun clearSnackbar() = _uiState.update { it.copy(snackbarMessage = null) }

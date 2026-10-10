@@ -1,6 +1,9 @@
 package com.ledgerai.app.data.repository
 
 import com.ledgerai.app.data.ai.ParsedIntent
+import com.ledgerai.app.data.ai.VoiceRuleLearner
+import com.ledgerai.app.data.ai.PlaceMatch
+import com.ledgerai.app.data.ai.QuickParse
 import com.ledgerai.app.data.ai.VoiceResultKind
 import com.ledgerai.app.data.ai.resultKind
 import com.ledgerai.app.data.local.room.BillDao
@@ -20,6 +23,7 @@ import com.ledgerai.app.domain.model.JobApplication
 import com.ledgerai.app.domain.model.NoteItem
 import com.ledgerai.app.domain.model.Transaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -67,7 +71,8 @@ class VoiceCaptureRepository @Inject constructor(
     private val goalDao: GoalDao,
     private val budgets: BudgetRepository,
     private val budgetDao: BudgetDao,
-    private val jobs: JobRepository
+    private val jobs: JobRepository,
+    private val ruleLearner: VoiceRuleLearner,
 ) {
 
     fun observeHistory(limit: Int = 100): Flow<List<VoiceHistoryItem>> =
@@ -81,9 +86,10 @@ class VoiceCaptureRepository @Inject constructor(
     suspend fun save(
         intent: ParsedIntent,
         transcript: String,
-        history: VoiceHistoryItem? = null,
+        priorHistory: VoiceHistoryItem? = null,
         remindersEdited: Boolean = false
     ): SavedVoiceItem? {
+        val history = priorHistory ?: historyDao.latestUnlinked(transcript.trim())?.toItem()
         val kind = intent.resultKind()
         var restoreBudget: (suspend () -> Unit)? = null
         val (itemId, summary) = when (intent) {
@@ -167,11 +173,16 @@ class VoiceCaptureRepository @Inject constructor(
                         status = intent.status,
                         appliedOn = intent.appliedOn,
                         followUpOn = intent.followUpOn,
-                        notes = intent.notes.trim()
+                        notes = intent.notes.trim(),
+                        source = intent.source.trim(),
+                        url = intent.url.trim(),
+                        location = intent.location.trim(),
+                        extraDates = intent.extraDates.trim()
                     )
                 )
                 id to company
             }
+            is ParsedIntent.Adjust -> return applyAdjust(intent, transcript, history)
             is ParsedIntent.Budget -> {
                 if (intent.limit <= 0.0) return null
                 val today = LocalDate.now()
@@ -228,7 +239,134 @@ class VoiceCaptureRepository @Inject constructor(
                 historyDao.softDelete(historyId, System.currentTimeMillis())
             }
         }
+        runCatching { ruleLearner.refresh() }
         return SavedVoiceItem(kind, itemId, historyId, summary, undo)
+    }
+
+    private suspend fun applyAdjust(
+        intent: ParsedIntent.Adjust,
+        transcript: String,
+        history: VoiceHistoryItem?
+    ): SavedVoiceItem? {
+        val job = if (intent.kindHint != "event" && intent.kindHint != "spend") {
+            jobs.observeAll().first()
+                .maxByOrNull { wordHits("${it.company} ${it.title} ${it.source} ${it.location}", intent.query) }
+                ?.takeIf { wordHits("${it.company} ${it.title}", intent.query) > 0 }
+        } else null
+        if (job != null) {
+            return if (intent.remove) {
+                jobs.delete(job.id)
+                rememberAdjust(transcript, history, "Removed ${job.company}", job.id) {
+                    jobs.save(job.copy(id = 0))
+                }
+            } else {
+                val spoken = intent.replacement.ifBlank { intent.rawTranscript }
+                val parsed = QuickParse.parseVoiceIntent(spoken)
+                val updated = if (parsed is ParsedIntent.Job) {
+                    job.copy(
+                        title = parsed.title.takeUnless { it.equals("Role", true) || it.equals("Interview", true) } ?: job.title,
+                        source = parsed.source.ifBlank { job.source },
+                        url = parsed.url.ifBlank { job.url },
+                        location = PlaceMatch.snap(
+                            parsed.location.ifBlank { job.location },
+                            jobs.observeAll().first().map { it.location }
+                        ),
+                        extraDates = parsed.extraDates.ifBlank { job.extraDates },
+                        appliedOn = if (parsed.appliedSpoken) parsed.appliedOn else job.appliedOn,
+                        followUpOn = parsed.followUpOn ?: job.followUpOn,
+                        status = parsed.status
+                    )
+                } else {
+                    job.copy(title = spoken.trim().ifBlank { job.title })
+                }
+                jobs.save(updated)
+                rememberAdjust(transcript, history, "Updated ${updated.company}", updated.id) {
+                    jobs.save(job)
+                }
+            }
+        }
+        if (intent.kindHint != "job" && intent.kindHint != "spend") {
+            val today = LocalDate.now()
+            val event = calendar.listRange(today.minusDays(60), today.plusDays(120))
+                .maxByOrNull { wordHits(it.title, intent.query) }
+                ?.takeIf { wordHits(it.title, intent.query) > 0 }
+            if (event != null && intent.remove) {
+                calendar.deleteById(event.id)
+                return rememberAdjust(transcript, history, "Removed ${event.title}", event.id) {
+                    calendar.upsert(event.copy(id = 0))
+                }
+            }
+        }
+        if (intent.kindHint != "job" && intent.kindHint != "event" && intent.remove) {
+            val tx = transactions.getAllTransactions().first()
+                .maxByOrNull { wordHits("${it.merchant} ${it.note}", intent.query) }
+                ?.takeIf { wordHits("${it.merchant} ${it.note}", intent.query) > 0 }
+            if (tx != null) {
+                transactions.delete(tx)
+                return rememberAdjust(transcript, history, "Removed ${tx.merchant.ifBlank { tx.note }}", tx.id) {
+                    transactions.insert(tx.copy(id = 0))
+                }
+            }
+        }
+        return null
+    }
+
+    private fun wordHits(hay: String, query: String): Int {
+        val skip = setOf("the", "job", "role", "and", "for", "at")
+        val words = query.lowercase().split(Regex("\\W+")).filter { it.length > 2 && it !in skip }
+        if (words.isEmpty()) return if (query.isNotBlank() && hay.contains(query.trim(), true)) 1 else 0
+        val text = hay.lowercase()
+        return words.count { text.contains(it) }
+    }
+
+    private suspend fun rememberAdjust(
+        transcript: String,
+        history: VoiceHistoryItem?,
+        summary: String,
+        itemId: Long,
+        undo: suspend () -> Unit
+    ): SavedVoiceItem {
+        val now = System.currentTimeMillis()
+        val historyId = if (history != null) {
+            historyDao.update(
+                history.toEntity().copy(
+                    transcript = transcript,
+                    resultKind = VoiceResultKind.Edit.name,
+                    linkedItemId = itemId,
+                    resultSummary = summary
+                )
+            )
+            history.id
+        } else {
+            historyDao.insert(
+                VoiceHistoryEntity(
+                    transcript = transcript,
+                    resultKind = VoiceResultKind.Edit.name,
+                    linkedItemId = itemId,
+                    resultSummary = summary,
+                    createdAt = now
+                )
+            )
+        }
+        return SavedVoiceItem(VoiceResultKind.Edit, itemId, historyId, summary) {
+            undo()
+            if (history == null) historyDao.softDelete(historyId, System.currentTimeMillis())
+        }
+    }
+
+    /** Keeps every spoken or typed line, even before the user confirms a card. */
+    suspend fun recordHeard(transcript: String) {
+        val text = transcript.trim()
+        if (text.isEmpty()) return
+        if (historyDao.latestUnlinked(text) != null) return
+        historyDao.insert(
+            VoiceHistoryEntity(
+                transcript = text,
+                resultKind = VoiceResultKind.Unsorted.name,
+                resultSummary = "heard",
+                createdAt = System.currentTimeMillis()
+            )
+        )
     }
 
     /** Records a capture that produced no item (nothing recognised, or the user kept only the words). */
@@ -283,7 +421,7 @@ class VoiceCaptureRepository @Inject constructor(
             VoiceResultKind.Goal -> goalDao.softDelete(itemId, now, now)
             VoiceResultKind.Note -> noteDao.softDelete(itemId, now, now)
             VoiceResultKind.Job -> jobs.delete(itemId)
-            VoiceResultKind.Unsorted -> Unit
+            VoiceResultKind.Edit, VoiceResultKind.Unsorted -> Unit
         }
     }
 

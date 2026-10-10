@@ -98,6 +98,15 @@ class ContextBuilder @Inject constructor(
         )
     }
 
+    /** Local data for the rule-based daily insight. */
+    suspend fun insightInputs(today: LocalDate = LocalDate.now()): com.ledgerai.app.data.insight.InsightInputs =
+        com.ledgerai.app.data.insight.InsightInputs(
+            today = today,
+            transactions = transactionRepo.getAllTransactions().first(),
+            budgets = budgetRepo.getBudgetsForMonth(today.monthValue, today.year).first(),
+            bills = billRepo.getActiveBills().first(),
+        )
+
     /** Calendar events (all kinds) and plan blocks for the next 14 days, one line each. */
     suspend fun build14DaySlice(now: LocalDate = LocalDate.now()): String {
         val events = calendarRepo.listNextDays(14).filter { it.isOpen() }

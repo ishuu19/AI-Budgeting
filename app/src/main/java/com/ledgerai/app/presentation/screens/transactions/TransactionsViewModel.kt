@@ -2,6 +2,8 @@ package com.ledgerai.app.presentation.screens.transactions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.ai.DefaultMerchantLookup
+import com.ledgerai.app.data.ai.MerchantSuggestion
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.ParsedTransaction
@@ -30,7 +32,8 @@ data class TransactionsUiState(
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     private val transactionRepo: TransactionRepository,
-    private val aiRepo: AiRepository
+    private val aiRepo: AiRepository,
+    private val merchantLookup: DefaultMerchantLookup
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionsUiState())
@@ -114,6 +117,16 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
+    /** Category and canonical name for what the user typed. A past correction wins over the lexicon. */
+    fun suggestFor(merchant: String, note: String): MerchantSuggestion? =
+        if (merchant.isBlank() && note.isBlank()) null else merchantLookup.lookup(merchant, note)
+
+    /** Remembers a category the user chose when it differs from what the rules would have said. */
+    private fun learn(merchant: String, note: String, category: TransactionCategory) {
+        if (merchant.isBlank() || category == TransactionCategory.OTHER) return
+        if (merchantLookup.lookup(merchant, note)?.category != category) merchantLookup.remember(merchant, category)
+    }
+
     fun addTransaction(
         amount: Double,
         type: TransactionType,
@@ -124,6 +137,7 @@ class TransactionsViewModel @Inject constructor(
         location: String = "",
         isRecurring: Boolean = false
     ) {
+        learn(merchant, note, category)
         viewModelScope.launch {
             val transaction = Transaction(
                 amount = amount,
@@ -154,6 +168,7 @@ class TransactionsViewModel @Inject constructor(
         location: String = "",
         isRecurring: Boolean = false
     ) {
+        learn(merchant, note, category)
         viewModelScope.launch {
             transactionRepo.update(
                 existing.copy(

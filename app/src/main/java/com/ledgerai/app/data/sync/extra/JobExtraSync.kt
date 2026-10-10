@@ -71,7 +71,12 @@ class JobExtraSync @Inject constructor(
         if (local == null) {
             dao.insert(remote.toEntity())
         } else if (SyncTime.remoteWins(remote.updatedAt, local.updatedAt)) {
-            dao.update(remote.toEntity(localId = local.id))
+            dao.update(
+                remote.toEntity(localId = local.id).copy(
+                    location = local.location,
+                    extraDates = local.extraDates
+                )
+            )
         }
     }
 

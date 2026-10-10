@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Widget</title>
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --card: #12382e;
+    --card-edge: rgba(255,255,255,.10);
+    --mic-bg: #1d5242;
+    --plus-bg: #7fa592;
+    --glass: rgba(150,190,170,.34);
+    --text: #f2f6f3;
+    --muted: #b9cfc4;
+    --mint: #3fe0a0;
+    --gold: #c9a45c;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background:
+      linear-gradient(118deg, transparent 0 46%, rgba(201,164,92,.55) 46.2%, rgba(201,164,92,.0) 47.5%, transparent 47.6%),
+      radial-gradient(900px 600px at 15% 10%, #5f8f7b 0%, transparent 60%),
+      radial-gradient(800px 600px at 90% 100%, #2c5c4c 0%, transparent 60%),
+      #3f6f5d;
+  }
+
+  .widget {
+    width: 100%;
+    max-width: 500px;
+    padding: 28px 28px 30px;
+    border-radius: 34px;
+    background:
+      linear-gradient(160deg, rgba(255,255,255,.06), transparent 40%),
+      linear-gradient(180deg, #164236 0%, #0f3228 100%);
+    border: 1px solid var(--card-edge);
+    box-shadow: 0 24px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .btn {
+    flex: none;
+    width: 88px; height: 88px;
+    border: 0;
+    border-radius: 24px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    color: #fff;
+    transition: transform .15s ease;
+  }
+  .btn:active { transform: scale(.95); }
+  .btn:focus-visible, .note:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
+  .btn svg { width: 46px; height: 46px; }
+
+  .mic {
+    background: linear-gradient(180deg, #226250, #184838);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.14) inset,
+      0 0 26px rgba(120,235,190,.38),
+      0 0 6px rgba(190,255,225,.45);
+  }
+  .plus {
+    background: linear-gradient(180deg, #8bb09d, #6f9983);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.22) inset, 0 6px 14px rgba(0,0,0,.18);
+  }
+
+  .note {
+    flex: 1;
+    min-width: 0;
+    height: 54px;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(160,205,185,.45);
+    background: rgba(255,255,255,.05);
+    color: var(--text);
+    font: inherit;
+    font-size: 19px;
+  }
+  .note::placeholder { color: #a8c4b7; opacity: 1; }
+
+  .mid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 30px;
+  }
+  .date-label {
+    font-size: 17px;
+    letter-spacing: .02em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .date {
+    font-size: clamp(19px, 5.4vw, 25px);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .spent {
+    flex: none;
+    padding: 16px 20px 14px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #1b5445, #144337);
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 6px 14px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  .spent small { display: block; font-size: 17px; color: var(--muted); margin-bottom: 2px; }
+  .spent strong { font-size: 33px; font-weight: 800; color: var(--mint); letter-spacing: .01em; }
+
+  .schedule {
+    list-style: none;
+    margin: 26px 0 0;
+    padding: 10px 22px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(190,225,205,.42), rgba(130,175,150,.38));
+    border: 1px solid rgba(255,255,255,.28);
+    box-shadow: 0 8px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.3);
+    backdrop-filter: blur(8px);
+  }
+  .schedule li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    font-size: 19px;
+  }
+  .schedule li + li { border-top: 1px solid rgba(20,50,40,.45); }
+  .time { flex: none; width: 92px; color: #e4efe8; font-size: 17px; }
+  .emoji { flex: none; font-size: 20px; width: 26px; text-align: center; }
+  .title { min-width: 0; font-weight: 500; }
+
+  @media (max-width: 430px) {
+    body { padding: 14px; }
+    .widget { padding: 20px 18px 22px; border-radius: 28px; }
+    .btn { width: 68px; height: 68px; border-radius: 20px; }
+    .btn svg { width: 36px; height: 36px; }
+    .top { gap: 12px; }
+    .note { height: 48px; font-size: 16px; padding: 0 16px; }
+    .spent strong { font-size: 27px; }
+    .spent small, .date-label { font-size: 15px; }
+    .schedule { padding: 6px 16px; }
+    .schedule li { font-size: 16px; gap: 10px; }
+    .time { width: 80px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <section class="widget" aria-label="Today">
+    <div class="top">
+      <button class="btn mic" aria-label="Record voice note">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="17" y="5" width="14" height="24" rx="7" fill="currentColor" stroke="none"/>
+          <path d="M10 23c0 8 6 14 14 14s14-6 14-14"/>
+          <path d="M24 37v7M17 44h14"/>
+        </svg>
+      </button>
+      <button class="btn plus" aria-label="Add item">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M24 8v32M8 24h32"/>
+        </svg>
+      </button>
+      <input class="note" type="text" placeholder="Quick note..." aria-label="Quick note">
+    </div>
+
+    <div class="mid">
+      <div>
+        <div class="date-label">TODAY</div>
+        <div class="date" id="date">Friday, October 9, 2026</div>
+      </div>
+      <div class="spent">
+        <small>Spent</small>
+        <strong>$42.00</strong>
+      </div>
+    </div>
+
+    <ul class="schedule">
+      <li><span class="time">09:30 AM</span><span class="emoji">💻</span><span class="title">Data Analytics Lecture</span></li>
+      <li><span class="time">02:00 PM</span><span class="emoji">🤝</span><span class="title">Group Project Meeting</span></li>
+      <li><span class="time">06:30 PM</span><span class="emoji">⚽</span><span class="title">Football Training</span></li>
+    </ul>
+  </section>
+</body>
+</html>

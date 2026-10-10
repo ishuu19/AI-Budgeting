@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.ledgerai.app.data.ai.MerchantSuggestion
 import com.ledgerai.app.domain.model.ParsedTransaction
 import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
@@ -43,6 +44,7 @@ fun AddTransactionSheet(
     prefilled: ParsedTransaction? = null,
     existing: Transaction? = null,
     copyDraft: Transaction? = null,
+    suggest: ((merchant: String, note: String) -> MerchantSuggestion?)? = null,
     onDismiss: () -> Unit,
     onConfirm: (Double, TransactionType, TransactionCategory, String, String, LocalDate, String, Boolean) -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -61,6 +63,16 @@ fun AddTransactionSheet(
         mutableStateOf(seed?.category ?: prefilled?.category ?: TransactionCategory.OTHER)
     }
     var date by rememberSaveable { mutableStateOf(seed?.date ?: prefilled?.date ?: LocalDate.now()) }
+    // Rules suggest a category while the user types a name, until they pick one themselves.
+    var categoryTouched by rememberSaveable {
+        mutableStateOf(seed != null || (prefilled != null && prefilled.category != TransactionCategory.OTHER))
+    }
+    var suggestion by remember { mutableStateOf<MerchantSuggestion?>(null) }
+    LaunchedEffect(merchant, note) {
+        val found = suggest?.invoke(merchant, note)
+        suggestion = found
+        if (!categoryTouched && found != null && type == TransactionType.EXPENSE) category = found.category
+    }
     var isRecurring by rememberSaveable { mutableStateOf(seed?.isRecurring ?: false) }
     val amount = amountText.toDoubleOrNull()?.takeIf { it > 0 }
     val today = LocalDate.now()
@@ -87,7 +99,25 @@ fun AddTransactionSheet(
             LChip("Repeat", isRecurring, onClick = { isRecurring = !isRecurring })
         }
 
-        CategoryChipsRow(selected = category, onSelect = { category = it })
+        CategoryChipsRow(selected = category, onSelect = { category = it; categoryTouched = true })
+        suggestion?.let { hint ->
+            val canonical = hint.merchant?.takeIf { !it.equals(merchant.trim(), ignoreCase = false) }
+            if (canonical != null || (categoryTouched && hint.category != category)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Suggested · ${hint.reason}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = L.InkMuted
+                    )
+                    if (categoryTouched && hint.category != category) {
+                        LChip(hint.category.displayName, false, onClick = { category = hint.category; categoryTouched = true })
+                    }
+                    if (canonical != null) LChip(canonical, false, onClick = { merchant = canonical })
+                }
+            } else if (!categoryTouched) {
+                Text("Suggested · ${hint.reason}", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
+            }
+        }
 
         LField(merchant, { merchant = it }, label = "Name")
         LPlaceField(

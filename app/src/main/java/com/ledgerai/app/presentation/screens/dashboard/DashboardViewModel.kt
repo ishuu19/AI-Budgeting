@@ -41,6 +41,8 @@ data class AiInsightCardState(
     val body: String,
     val severity: String = "info",
     val actions: List<String> = emptyList(),
+    /** "Rules" or "AI". */
+    val source: String = "Rules",
 ) {
     val chatContext: String
         get() = buildString {
@@ -264,6 +266,7 @@ class DashboardViewModel @Inject constructor(
             body = capWords(body, 30),
             severity = severity,
             actions = actions.orEmpty().take(5),
+            source = source ?: "AI",
         )
     }
 

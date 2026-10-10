@@ -44,8 +44,8 @@ class ScheduleImportService @Inject constructor(
 
     private suspend fun parseRows(text: String): List<ParsedScheduleRow> {
         if (text.isBlank()) return emptyList()
-        val ai = aiRepository.parseTimetable(text).getOrNull()
-        if (!ai.isNullOrEmpty()) return ai
-        return ScheduleCsvParser.parse(text)
+        // Rules first: a JSON timetable, then the CSV and free-text line parser. The cloud only runs when both find nothing.
+        TimetableRules.parse(text).takeIf { it.isNotEmpty() }?.let { return it }
+        return aiRepository.parseTimetable(text).getOrNull().orEmpty()
     }
 }

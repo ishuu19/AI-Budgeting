@@ -22,6 +22,7 @@ class InsightStore @Inject constructor(
             .putString(KEY_BODY, insight.body.orEmpty())
             .putString(KEY_SEVERITY, insight.severity ?: "info")
             .putString(KEY_ACTIONS, insight.actions.orEmpty().joinToString("\n"))
+            .putString(KEY_SOURCE, insight.source.orEmpty())
             .putString(KEY_DATE, date.toString())
             .putString(KEY_TYPE, AiResponseType.INSIGHT.wireName)
             .putLong(KEY_SAVED_AT, System.currentTimeMillis())
@@ -45,7 +46,8 @@ class InsightStore @Inject constructor(
             ?.map { it.trim() }
             ?.filter { it.isNotBlank() }
             .orEmpty()
-        return InsightDto(title = title, body = body, severity = severity, actions = actions)
+        val source = prefs.getString(KEY_SOURCE, null)?.takeIf { it.isNotBlank() }
+        return InsightDto(title = title, body = body, severity = severity, actions = actions, source = source)
     }
 
     fun clear() {
@@ -58,6 +60,7 @@ class InsightStore @Inject constructor(
         private const val KEY_BODY = "body"
         private const val KEY_SEVERITY = "severity"
         private const val KEY_ACTIONS = "actions"
+        private const val KEY_SOURCE = "source"
         private const val KEY_DATE = "date"
         private const val KEY_TYPE = "type"
         private const val KEY_SAVED_AT = "saved_at"

@@ -65,6 +65,8 @@ fun TransactionsScreen(
     onBack: () -> Unit = {},
     open: OpenItem? = null,
     onOpened: () -> Unit = {},
+    addSpend: Boolean = false,
+    onAddSpendConsumed: () -> Unit = {},
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -83,6 +85,13 @@ fun TransactionsScreen(
     val rangeEnd = if (fromDate.isAfter(toDate)) fromDate else toDate
 
     SnackEffect(state.snackbarMessage, snackbarHostState) { viewModel.clearSnackbar() }
+
+    LaunchedEffect(addSpend) {
+        if (addSpend) {
+            viewModel.showAddSheet()
+            onAddSpendConsumed()
+        }
+    }
 
     LaunchedEffect(open, state.transactions, state.isLoading) {
         val request = open
@@ -188,6 +197,7 @@ fun TransactionsScreen(
         AddTransactionSheet(
             prefilled = state.parsedTransaction,
             copyDraft = state.copyDraft,
+            suggest = viewModel::suggestFor,
             onDismiss = { viewModel.hideAddSheet() },
             onConfirm = { amount, type, category, merchant, note, date, location, isRecurring ->
                 viewModel.addTransaction(amount, type, category, merchant, note, date, location, isRecurring)
@@ -199,6 +209,7 @@ fun TransactionsScreen(
         androidx.compose.runtime.key(editing.id) {
             AddTransactionSheet(
                 existing = editing,
+                suggest = viewModel::suggestFor,
                 onDismiss = { viewModel.hideEditSheet() },
                 onConfirm = { amount, type, category, merchant, note, date, location, isRecurring ->
                     viewModel.updateTransaction(editing, amount, type, category, merchant, note, date, location, isRecurring)

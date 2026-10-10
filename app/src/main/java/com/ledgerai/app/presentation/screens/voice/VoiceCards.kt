@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ledgerai.app.data.ai.IntentSource
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.QuickParse
 import com.ledgerai.app.data.ai.VoiceResultKind
@@ -128,7 +129,17 @@ internal fun summarize(intent: ParsedIntent): Pair<String, String?> = when (inte
     )
     is ParsedIntent.Job -> Pair(
         intent.company,
-        listOfNotNull(intent.title, intent.followUpOn?.format(DateShort)).joinToString(" · ")
+        listOfNotNull(
+            intent.title,
+            intent.source.takeIf { it.isNotBlank() },
+            intent.location.takeIf { it.isNotBlank() },
+            "Applied ${intent.appliedOn.format(DateShort)}",
+            intent.extraDates.replace("\n", " · ").takeIf { it.isNotBlank() }
+        ).joinToString(" · ")
+    )
+    is ParsedIntent.Adjust -> Pair(
+        if (intent.remove) "Remove" else "Edit",
+        intent.query
     )
     is ParsedIntent.Unmatched -> Pair("\"${intent.rawTranscript}\"", null)
 }
@@ -142,6 +153,7 @@ internal fun canSave(intent: ParsedIntent): Boolean = when (intent) {
     is ParsedIntent.Goal -> intent.name.isNotBlank() && intent.targetAmount > 0.0
     is ParsedIntent.Budget -> intent.limit > 0.0
     is ParsedIntent.Job -> intent.company.isNotBlank()
+    is ParsedIntent.Adjust -> intent.query.isNotBlank()
     is ParsedIntent.Unmatched -> intent.rawTranscript.isNotBlank()
 }
 
@@ -157,6 +169,21 @@ internal fun KindPill(kind: VoiceResultKind, onDark: Boolean = true) {
             .clip(RoundedCornerShape(50))
             .background(if (onDark) L.Gold else L.Box)
             .padding(horizontal = 12.dp, vertical = 4.dp)
+    )
+}
+
+/** Which path read the words: the offline rules or the cloud AI. */
+@Composable
+internal fun SourcePill(source: IntentSource) {
+    Text(
+        source.label,
+        style = MaterialTheme.typography.labelMedium,
+        color = L.OnBoxMuted,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .border(1.dp, L.OnBoxMuted, RoundedCornerShape(50))
+            .padding(horizontal = 12.dp, vertical = 3.dp)
     )
 }
 
@@ -206,7 +233,10 @@ internal fun ConfirmCard(
             if (unmatched) {
                 Text("DIDN'T CATCH", style = MaterialTheme.typography.labelSmall, color = L.Gold)
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically) { KindPill(kind) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    KindPill(kind)
+                    card.source?.let { SourcePill(it) }
+                }
             }
             Text(
                 headline,
@@ -262,6 +292,7 @@ internal fun ConfirmCard(
             is ParsedIntent.Goal -> GoalDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
             is ParsedIntent.Budget -> BudgetDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
             is ParsedIntent.Job -> JobDraftSheet(intent, dismiss) { onChange(it, null); dismiss() }
+            is ParsedIntent.Adjust -> Unit
             is ParsedIntent.Unmatched -> RedoSheet(
                 initialTranscript = intent.rawTranscript,
                 initialKind = null,
@@ -662,6 +693,9 @@ private fun DebtDraftSheet(parsed: ParsedIntent.Debt, onDismiss: () -> Unit, onA
 private fun JobDraftSheet(parsed: ParsedIntent.Job, onDismiss: () -> Unit, onApply: (ParsedIntent.Job) -> Unit) {
     var company by rememberSaveable { mutableStateOf(parsed.company) }
     var title by rememberSaveable { mutableStateOf(parsed.title) }
+    var site by rememberSaveable { mutableStateOf(parsed.source) }
+    var location by rememberSaveable { mutableStateOf(parsed.location) }
+    var extraDates by rememberSaveable { mutableStateOf(parsed.extraDates) }
     var status by rememberSaveable { mutableStateOf(parsed.status.name) }
 
     LSheet(
@@ -673,6 +707,9 @@ private fun JobDraftSheet(parsed: ParsedIntent.Job, onDismiss: () -> Unit, onApp
                 parsed.copy(
                     company = company.trim(),
                     title = title.trim().ifBlank { "Role" },
+                    source = site.trim(),
+                    location = location.trim(),
+                    extraDates = extraDates.trim(),
                     status = JobApplicationStatus.valueOf(status)
                 )
             )
@@ -681,6 +718,9 @@ private fun JobDraftSheet(parsed: ParsedIntent.Job, onDismiss: () -> Unit, onApp
     ) {
         LField(value = company, onValueChange = { company = it }, label = "Company")
         LField(value = title, onValueChange = { title = it }, label = "Role")
+        LField(value = site, onValueChange = { site = it }, label = "Application site")
+        LField(value = location, onValueChange = { location = it }, label = "Location")
+        LField(value = extraDates, onValueChange = { extraDates = it }, label = "Other dates", singleLine = false)
         ChipsRow {
             JobApplicationStatus.entries.forEach { s ->
                 LChip(s.name.lowercase().replaceFirstChar { it.uppercase() }, selected = s.name == status, onClick = { status = s.name })

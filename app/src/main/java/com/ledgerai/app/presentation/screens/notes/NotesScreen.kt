@@ -21,7 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.ai.NoteLexicon
+import com.ledgerai.app.data.ai.NoteRules
 import com.ledgerai.app.data.ai.NoteSummaryDto
+import com.ledgerai.app.data.repository.CalendarRepository
+import com.ledgerai.app.domain.model.CalendarEvent
+import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.NoteRepository
 import com.ledgerai.app.data.repository.NudgeProposalRepository
@@ -39,6 +44,8 @@ class NotesViewModel @Inject constructor(
     private val noteRepo: NoteRepository,
     private val aiRepo: AiRepository,
     private val nudgeRepo: NudgeProposalRepository,
+    private val lexicon: NoteLexicon,
+    private val calendarRepo: CalendarRepository,
 ) : ViewModel() {
 
     val notes: StateFlow<List<NoteItem>> = noteRepo.observeNotes()
@@ -95,12 +102,26 @@ class NotesViewModel @Inject constructor(
             _aiMessage.value = "Add note text before summarizing."
             return
         }
+        // Rules first: extractive summary and keyword tags work offline. The cloud is only a fallback.
+        val ruled = NoteRules.summarize(title, body)
+        if (ruled.summary.isNotBlank()) {
+            onResult(
+                NoteSummaryDto(
+                    summary = ruled.bullets.joinToString("\n") { "• $it" },
+                    tags = NoteRules.suggestTags(title, body, lexicon.tags),
+                    highlights = ruled.bullets,
+                    source = "Rules"
+                )
+            )
+            _aiMessage.value = "Summary ready · Rules"
+            return
+        }
         viewModelScope.launch {
             _aiBusy.value = true
             aiRepo.summarizeNote(title, body)
                 .onSuccess {
-                    onResult(it)
-                    _aiMessage.value = "Summary ready."
+                    onResult(it.copy(source = "AI"))
+                    _aiMessage.value = "Summary ready · AI"
                 }
                 .onFailure { _aiMessage.value = it.message ?: "Summarize failed" }
             _aiBusy.value = false
@@ -116,15 +137,44 @@ class NotesViewModel @Inject constructor(
             _aiMessage.value = "Add note text before tagging."
             return
         }
+        val ruled = NoteRules.suggestTags(title, body, lexicon.tags)
+        if (ruled.isNotEmpty()) {
+            onTags(ruled)
+            _aiMessage.value = "Suggested ${ruled.size} tag(s) · Rules"
+            return
+        }
         viewModelScope.launch {
             _aiBusy.value = true
             aiRepo.tagNote(title, body)
                 .onSuccess {
                     onTags(it)
-                    _aiMessage.value = "Suggested ${it.size} tag(s)."
+                    _aiMessage.value = "Suggested ${it.size} tag(s) · AI"
                 }
                 .onFailure { _aiMessage.value = it.message ?: "Tag failed" }
             _aiBusy.value = false
+        }
+    }
+
+    /** Turns the to-do lines of a note into calendar tasks. Rules only; existing tasks with the same title are skipped. */
+    fun tasksFromNote(title: String, body: String) {
+        val items = NoteRules.actionItems(body).filter { it.kind == "TASK" }
+        if (items.isEmpty()) {
+            _aiMessage.value = "No tasks found · Rules"
+            return
+        }
+        viewModelScope.launch {
+            val existing = calendarRepo.observeTasks().first().map { it.title.trim().lowercase() }.toSet()
+            var added = 0
+            val now = java.time.LocalDateTime.now()
+            items.filter { it.title.trim().lowercase() !in existing }.forEach { item ->
+                val at = item.due ?: now
+                calendarRepo.upsert(
+                    CalendarEvent(title = item.title, startAt = at, endAt = at, kind = CalendarEventKind.TASK, hasDate = item.due != null),
+                    withDefaultReminders = item.due != null
+                )
+                added++
+            }
+            _aiMessage.value = if (added > 0) "Added $added task(s) · Rules" else "Tasks already added · Rules"
         }
     }
 
@@ -132,7 +182,7 @@ class NotesViewModel @Inject constructor(
         viewModelScope.launch {
             _aiBusy.value = true
             val count = nudgeRepo.scanNote(note.id, note.body).size
-            _aiMessage.value = if (count > 0) "$count nudge(s) proposed" else "No nudges found"
+            _aiMessage.value = if (count > 0) "$count nudge(s) proposed" else "No new nudges found"
             _aiBusy.value = false
         }
     }
@@ -308,6 +358,7 @@ fun NotesScreen(
                 viewModel.askAboutNote(title, body, question, onAnswer)
             },
             onNudge = { note -> viewModel.nudgeFromNote(note) },
+            onTasks = { title, body -> viewModel.tasksFromNote(title, body) },
         )
     }
 }
@@ -324,6 +375,7 @@ private fun NoteEditorSheet(
     onTag: (title: String, body: String, applyTags: (List<String>) -> Unit) -> Unit,
     onAsk: (title: String, body: String, question: String, onAnswer: (String) -> Unit) -> Unit,
     onNudge: (NoteItem) -> Unit,
+    onTasks: (title: String, body: String) -> Unit,
 ) {
     var title by rememberSaveable { mutableStateOf(existing?.title.orEmpty()) }
     var body by rememberSaveable { mutableStateOf(existing?.body.orEmpty()) }
@@ -332,6 +384,7 @@ private fun NoteEditorSheet(
     var askQuestion by rememberSaveable { mutableStateOf("") }
     var askAnswer by rememberSaveable { mutableStateOf<String?>(null) }
     var summaryPreview by rememberSaveable { mutableStateOf<String?>(null) }
+    var summarySource by rememberSaveable { mutableStateOf<String?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     val tags = tagText.splitTags()
     val hasText = title.isNotBlank() || body.isNotBlank()
@@ -360,18 +413,19 @@ private fun NoteEditorSheet(
         // One menu for the four AI actions. They need the cloud, so they say Offline instead of failing.
         Box {
             LGhostButton(
-                if (aiAvailable) "AI" else "AI · Offline",
+                if (aiAvailable) "Assist" else "Assist · Offline",
                 onClick = { menuOpen = true },
                 enabled = hasText && !aiBusy
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
                     text = { Text("Summarize") },
-                    enabled = aiAvailable,
+                    enabled = true,
                     onClick = {
                         menuOpen = false
                         onSummarize(title, body) { summary ->
                             summaryPreview = summary.summary
+                            summarySource = summary.source
                             val suggested = summary.tags.orEmpty()
                             if (suggested.isNotEmpty()) tagText = (tags + suggested).distinct().joinTags()
                             if (body.isBlank() && !summary.summary.isNullOrBlank()) body = summary.summary
@@ -380,7 +434,7 @@ private fun NoteEditorSheet(
                 )
                 DropdownMenuItem(
                     text = { Text("Tag") },
-                    enabled = aiAvailable,
+                    enabled = true,
                     onClick = {
                         menuOpen = false
                         onTag(title, body) { suggested -> tagText = (tags + suggested).distinct().joinTags() }
@@ -390,6 +444,10 @@ private fun NoteEditorSheet(
                     text = { Text("Ask") },
                     enabled = aiAvailable,
                     onClick = { menuOpen = false; askOpen = true }
+                )
+                DropdownMenuItem(
+                    text = { Text("Tasks") },
+                    onClick = { menuOpen = false; onTasks(title, body) }
                 )
                 DropdownMenuItem(
                     text = { Text("Nudge") },
@@ -413,7 +471,7 @@ private fun NoteEditorSheet(
 
         if (aiBusy) LLoading()
 
-        listOfNotNull(summaryPreview, askAnswer).forEach { text ->
+        listOfNotNull(summaryPreview?.let { it to summarySource }, askAnswer?.let { it to "AI" }).forEach { (text, source) ->
             LCard {
                 Text(
                     text,
@@ -422,6 +480,9 @@ private fun NoteEditorSheet(
                     maxLines = 6,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (source != null) {
+                    Text(source, style = MaterialTheme.typography.labelSmall, color = L.OnBoxMuted)
+                }
             }
         }
     }

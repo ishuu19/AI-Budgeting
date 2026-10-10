@@ -23,9 +23,6 @@ enum class OfflineVoiceEngine(
     val isLive: Boolean get() = this == ANDROID
 
     companion object {
-        fun fromId(id: String?): OfflineVoiceEngine = when (id) {
-            "rules" -> ANDROID
-            else -> entries.firstOrNull { it.id == id } ?: SHERPA
-        }
+        fun fromId(id: String?): OfflineVoiceEngine = ANDROID
     }
 }

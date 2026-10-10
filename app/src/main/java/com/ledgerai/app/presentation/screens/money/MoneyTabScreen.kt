@@ -17,7 +17,9 @@ fun MoneyTabScreen(
     onSeg: (MoneySeg) -> Unit,
     links: AppLinks,
     open: OpenItem? = null,
-    onOpened: () -> Unit = {}
+    onOpened: () -> Unit = {},
+    addSpend: Boolean = false,
+    onAddSpendConsumed: () -> Unit = {}
 ) {
     fun forSeg(vararg kinds: OpenKind): OpenItem? = open?.takeIf { it.kind in kinds }
 
@@ -30,7 +32,9 @@ fun MoneyTabScreen(
             MoneySeg.Spend -> TransactionsScreen(
                 onNavigateToVoice = { links.voice(VoiceSeg.Speak) },
                 open = forSeg(OpenKind.Transaction),
-                onOpened = onOpened
+                onOpened = onOpened,
+                addSpend = addSpend,
+                onAddSpendConsumed = onAddSpendConsumed
             )
             MoneySeg.Plan -> MoneyPlanScreen(links, forSeg(OpenKind.Budget, OpenKind.Goal), onOpened)
             MoneySeg.Owed -> MoneyOwedScreen(forSeg(OpenKind.Bill, OpenKind.Debt), onOpened)

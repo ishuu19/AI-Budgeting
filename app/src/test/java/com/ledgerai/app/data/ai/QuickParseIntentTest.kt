@@ -407,6 +407,23 @@ class QuickParseIntentTest {
         assertEquals("Software engineer", spoken.title)
         assertEquals(JobApplicationStatus.APPLIED, job.status)
         assertEquals(today, job.appliedOn)
+        val detailed = QuickParse.parseVoiceIntent(
+            "Applied to Stripe via LinkedIn for Android engineer, location Dhaka, interview on 15 Oct",
+            today = today
+        ) as ParsedIntent.Job
+        assertEquals("LinkedIn", detailed.source)
+        assertEquals("Dhaka", detailed.location)
+        val spokenPlace = QuickParse.parseVoiceIntent(
+            "Applied to Stripe for Android engineer in New York",
+            today = today
+        ) as ParsedIntent.Job
+        assertEquals("New York", spokenPlace.location)
+        assertEquals("Dhaka", PlaceMatch.snap("Dahka", listOf("Chittagong", "Dhaka")))
+        assertEquals("Banani", PlaceMatch.snap("Banai", listOf("Banani", "Gulshan")))
+        assertTrue(detailed.extraDates.contains("Interview"))
+        val remove = QuickParse.parseVoiceIntent("delete the job at Stripe", today = today)
+        assertTrue(remove is ParsedIntent.Adjust)
+        assertTrue((remove as ParsedIntent.Adjust).remove)
     }
 
     @Test
@@ -479,6 +496,45 @@ class QuickParseIntentTest {
         assertEquals(LocalDateTime.of(2026, 10, 15, 15, 0), thisMonth.startAt)
         val nextMonth = QuickParse.parseVoiceIntent("remind me on the 2nd at 3 pm", today = today, now = now) as ParsedIntent.Event
         assertEquals(LocalDateTime.of(2026, 11, 2, 15, 0), nextMonth.startAt)
+    }
+
+    @Test
+    fun aiaInterview_keepsVenueSiteAndBothDates() {
+        val text = "I have an interview at AIA on 25th August 2027. The venue is Kowloon Tong Hong Kong. I got the jobs from Jijis, I applied on 15th OCt 2026."
+        val job = QuickParse.parseVoiceIntent(text, today = today) as ParsedIntent.Job
+        assertEquals("AIA", job.company)
+        assertEquals("Jijis", job.source)
+        assertEquals("Kowloon Tong Hong Kong", job.location)
+        assertEquals(LocalDate.of(2026, 10, 15), job.appliedOn)
+        assertEquals(LocalDate.of(2027, 8, 25), job.followUpOn)
+        assertTrue(job.extraDates.contains("Interview"))
+        assertTrue(job.extraDates.contains("25"))
+    }
+
+    @Test
+    fun namedDate_staysOnThatDay() {
+        val event = QuickParse.parseVoiceIntent("meeting on 15 Oct 2025 at 3 pm", today = today) as ParsedIntent.Event
+        assertEquals(LocalDate.of(2025, 10, 15), event.startAt.toLocalDate())
+        val spend = QuickParse.parseVoiceIntent("spent 20 on coffee on 20 Oct", today = today) as ParsedIntent.Transaction
+        assertEquals(LocalDate.of(2026, 10, 20), spend.date)
+    }
+
+    @Test
+    fun learnedPhrase_fillsAnUnknownLine() {
+        LearnedRules.current = listOf(LearnedRule("night shift", VoiceResultKind.Alarm.name))
+        val parsed = RuleEngine.evaluate("night shift at 11", today = today).intents.first()
+        assertTrue(parsed is ParsedIntent.Event)
+        LearnedRules.current = emptyList()
+    }
+
+    @Test
+    fun phoneAgent_keepsARepeatedPhrase() {
+        val rows = listOf(
+            "night shift starts" to "Alarm",
+            "night shift again" to "Alarm"
+        )
+        val rules = PhoneRuleAgent.propose(rows)
+        assertTrue(rules.any { it.phrase == "night shift" && it.kind == "Alarm" })
     }
 
     @Test

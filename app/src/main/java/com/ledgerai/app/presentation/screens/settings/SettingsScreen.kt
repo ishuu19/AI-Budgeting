@@ -91,8 +91,11 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val prefs: UserPreferences,
-    private val offline: OfflineSttEngine
+    private val offline: OfflineSttEngine,
+    localModel: com.ledgerai.app.data.ai.LocalParseModel,
 ) : ViewModel() {
+
+    val localModelStatus = localModel.status
 
     val uiState: StateFlow<SettingsUiState> = combine(
         combine(
@@ -128,6 +131,8 @@ class SettingsViewModel @Inject constructor(
     fun setTrackMode(mode: String) = viewModelScope.launch { prefs.setTrackMode(mode) }
     fun setCashOnHand(amount: String) = viewModelScope.launch { prefs.setCashOnHand(amount) }
     fun setVoiceEngine(id: String) = viewModelScope.launch { prefs.setVoiceEngine(id) }
+    val cloudFallback = prefs.cloudFallback
+    fun setCloudFallback(enabled: Boolean) = viewModelScope.launch { prefs.setCloudFallback(enabled) }
     fun engineStatus(engine: OfflineVoiceEngine) = offline.status(engine)
 
     fun prepare(engine: OfflineVoiceEngine) {
@@ -309,24 +314,26 @@ private fun VoiceSheet(viewModel: SettingsViewModel, selected: String, onDismiss
     val downloads by viewModel.downloads.collectAsState()
     val failed by viewModel.failed.collectAsState()
     val statusTick by viewModel.statusTick.collectAsState()
+    val cloudFallback by viewModel.cloudFallback.collectAsState(initial = true)
 
     LSheet(title = "Voice and AI", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
         LGroup {
-            OfflineVoiceEngine.entries.forEachIndexed { index, engine ->
-                if (index > 0) LGroupDivider()
-                val status = remember(engine, statusTick, downloads.containsKey(engine.id)) {
-                    viewModel.engineStatus(engine)
-                }
-                EngineRow(
-                    engine = engine,
-                    selected = selected == engine.id,
-                    status = status,
-                    progress = downloads[engine.id],
-                    failed = engine.id in failed,
-                    onSelect = { viewModel.setVoiceEngine(engine.id) },
-                    onGet = { viewModel.prepare(engine) }
-                )
-            }
+            LGroupRow(
+                title = "Cloud fallback",
+                sub = "Ask AI only when the rules are unsure",
+                onClick = { viewModel.setCloudFallback(!cloudFallback) },
+                end = { LSwitch(cloudFallback, "Cloud fallback") { viewModel.setCloudFallback(it) } }
+            )
+        }
+        LGroup {
+            val modelStatus by viewModel.localModelStatus.collectAsState()
+            LGroupRow(
+                title = "Phone speech",
+                sub = "The phone's built-in listener. No extra voice model.",
+                onClick = { viewModel.setVoiceEngine(OfflineVoiceEngine.ANDROID.id) }
+            )
+            LGroupDivider()
+            LGroupRow(title = "On-phone parser", sub = modelStatus, onClick = {})
         }
     }
 }

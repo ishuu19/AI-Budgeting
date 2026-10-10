@@ -159,12 +159,7 @@ android {
 
     packaging {
         jniLibs {
-            // Vosk + JNA may ship overlapping native libs across ABIs.
-            pickFirsts += listOf(
-                "lib/**/libc++_shared.so",
-                "lib/**/libvosk.so",
-                "lib/**/libjnidispatch.so"
-            )
+            pickFirsts += listOf("lib/**/libc++_shared.so")
         }
     }
 }
@@ -225,14 +220,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.mlkit.text.recognition)
-
-    // Offline STT (Phase 4). Vosk primary + Sherpa-ONNX (sherpa-onnx) as stronger offline fallback.
-    // Keep Vosk as backup for very small devices / quick start.
-    implementation(libs.vosk.android)
-    implementation(libs.jna.aar) { artifact { type = "aar" } }
-
-    // Sherpa-ONNX (offline, CPU, no cloud). Use the Android AAR.
-    // implementation(libs.sherpa.onnx.android)
+    implementation(libs.mediapipe.genai)
 
     debugImplementation(libs.androidx.ui.tooling)
 

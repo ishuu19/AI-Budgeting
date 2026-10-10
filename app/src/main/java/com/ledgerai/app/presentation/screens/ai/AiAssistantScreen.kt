@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ledgerai.app.data.repository.AiRepository
+import com.ledgerai.app.data.ai.AskService
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.ChatMessage
 import com.ledgerai.app.presentation.components.ChipsRow
@@ -54,7 +54,7 @@ data class AiChatUiState(
 
 @HiltViewModel
 class AiAssistantViewModel @Inject constructor(
-    private val aiRepo: AiRepository,
+    private val askService: AskService,
     private val transactionRepo: TransactionRepository
 ) : ViewModel() {
 
@@ -119,9 +119,14 @@ class AiAssistantViewModel @Inject constructor(
                 .takeLast(10)
                 .map { (if (it.isFromUser) "user" else "assistant") to it.content }
 
-            aiRepo.chat(message, history, context).fold(
+            askService.ask(message, history, context).fold(
                 onSuccess = { response ->
-                    val aiMsg = ChatMessage(content = response, isFromUser = false)
+                    val aiMsg = ChatMessage(
+                        content = response.text,
+                        isFromUser = false,
+                        source = response.source,
+                        link = response.link
+                    )
                     _uiState.update { it.copy(messages = it.messages + aiMsg, isTyping = false) }
                 },
                 onFailure = {
@@ -253,10 +258,7 @@ private fun Bubble(message: ChatMessage) {
         Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        Text(
-            message.content,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isUser) L.BoxDeep else L.OnBox,
+        Column(
             modifier = Modifier
                 .widthIn(max = 320.dp)
                 .clip(
@@ -264,8 +266,23 @@ private fun Bubble(message: ChatMessage) {
                     else RoundedCornerShape(4.dp, L.Radius, L.Radius, L.Radius)
                 )
                 .background(if (isUser) L.Gold else L.Box)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                message.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isUser) L.BoxDeep else L.OnBox
+            )
+            message.source?.let { source ->
+                Text(
+                    source,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = L.OnBoxMuted,
+                    modifier = Modifier.semantics { contentDescription = "Answered by $source" }
+                )
+            }
+        }
     }
 }
 

@@ -31,6 +31,9 @@ class UserPreferences @Inject constructor(
         val VOICE_ONLY_WIDGET = booleanPreferencesKey("voice_only_widget")
         val VOICE_ENGINE = stringPreferencesKey("voice_engine")
         val VOICE_LANGUAGE = stringPreferencesKey("voice_language")
+        val CLOUD_FALLBACK = booleanPreferencesKey("cloud_fallback")
+        val LEARNED_RULES = stringPreferencesKey("learned_voice_rules")
+        val LEARNED_AT = stringPreferencesKey("learned_voice_at")
         val TRACK_MODE = stringPreferencesKey("track_mode")
         val CASH_ON_HAND = stringPreferencesKey("cash_on_hand")
         /** One-time local Room wipe (removed demo seed data). */
@@ -125,6 +128,32 @@ class UserPreferences @Inject constructor(
 
     suspend fun setVoiceLanguage(code: String) {
         context.dataStore.edit { it[Keys.VOICE_LANGUAGE] = if (code == "bn") "bn" else "en" }
+    }
+
+    /** When true, an entry the rules are unsure about may be sent to the cloud. Default on. */
+    val cloudFallback: Flow<Boolean> = context.dataStore.data.map {
+        it[Keys.CLOUD_FALLBACK] ?: true
+    }
+
+    suspend fun setCloudFallback(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.CLOUD_FALLBACK] = enabled }
+    }
+
+    val learnedRules: Flow<String> = context.dataStore.data.map {
+        it[Keys.LEARNED_RULES] ?: ""
+    }
+
+    suspend fun learnedRulesNow(): String = context.dataStore.data.first()[Keys.LEARNED_RULES] ?: ""
+
+    suspend fun setLearnedRules(raw: String) {
+        context.dataStore.edit { it[Keys.LEARNED_RULES] = raw }
+    }
+
+    suspend fun learnedCursor(): Long =
+        context.dataStore.data.first()[Keys.LEARNED_AT]?.toLongOrNull() ?: 0L
+
+    suspend fun setLearnedCursor(createdAt: Long) {
+        context.dataStore.edit { it[Keys.LEARNED_AT] = createdAt.toString() }
     }
 
     /** Clears all Room tables once per device (see [DatabaseSeeder]). */

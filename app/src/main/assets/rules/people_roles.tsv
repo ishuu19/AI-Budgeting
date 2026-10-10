@@ -1,0 +1,1194 @@
+# phrase<TAB>ROLE (FRIEND,FAMILY,COLLEAGUE,LANDLORD,SHOP,OTHER)
+mom	FAMILY
+mum	FAMILY
+mommy	FAMILY
+mama	FAMILY
+mother	FAMILY
+mom's	FAMILY
+my mom	FAMILY
+my mother	FAMILY
+ammu	FAMILY
+amma	FAMILY
+ammu jan	FAMILY
+ammajan	FAMILY
+ammu moni	FAMILY
+mayer	FAMILY
+আম্মু	FAMILY
+আম্মা	FAMILY
+মা	FAMILY
+মায়ের	FAMILY
+মাকে	FAMILY
+dad	FAMILY
+daddy	FAMILY
+papa	FAMILY
+pops	FAMILY
+my dad	FAMILY
+my father	FAMILY
+abbu	FAMILY
+abba	FAMILY
+abbu jan	FAMILY
+abbajan	FAMILY
+baba	FAMILY
+babai	FAMILY
+bapi	FAMILY
+বাবা	FAMILY
+আব্বু	FAMILY
+আব্বা	FAMILY
+বাবার	FAMILY
+বাবাকে	FAMILY
+brother	FAMILY
+bro	FAMILY
+my brother	FAMILY
+big brother	FAMILY
+elder brother	FAMILY
+younger brother	FAMILY
+little brother	FAMILY
+bhai	FAMILY
+bhaiya	FAMILY
+bhaia	FAMILY
+vaiya	FAMILY
+vaia	FAMILY
+bhai jan	FAMILY
+boro bhai	FAMILY
+borobhai	FAMILY
+choto bhai	FAMILY
+chotobhai	FAMILY
+mejo bhai	FAMILY
+sejo bhai	FAMILY
+bhaiyu	FAMILY
+ভাই	FAMILY
+ভাইয়া	FAMILY
+বড় ভাই	FAMILY
+ছোট ভাই	FAMILY
+মেজো ভাই	FAMILY
+সেজো ভাই	FAMILY
+ভাইকে	FAMILY
+sister	FAMILY
+sis	FAMILY
+my sister	FAMILY
+big sister	FAMILY
+elder sister	FAMILY
+younger sister	FAMILY
+little sister	FAMILY
+apu	FAMILY
+apa	FAMILY
+aapu	FAMILY
+aapa	FAMILY
+boro apu	FAMILY
+boro apa	FAMILY
+choto bon	FAMILY
+choto bone	FAMILY
+bon	FAMILY
+bone	FAMILY
+didi	FAMILY
+dida	FAMILY
+আপু	FAMILY
+আপা	FAMILY
+দিদি	FAMILY
+বোন	FAMILY
+ছোট বোন	FAMILY
+বড় আপু	FAMILY
+বড় আপা	FAMILY
+আপুকে	FAMILY
+son	FAMILY
+my son	FAMILY
+chele	FAMILY
+ছেলে	FAMILY
+ছেলেকে	FAMILY
+daughter	FAMILY
+my daughter	FAMILY
+meye	FAMILY
+মেয়ে	FAMILY
+মেয়েকে	FAMILY
+baby	FAMILY
+kid	FAMILY
+kids	FAMILY
+child	FAMILY
+children	FAMILY
+bachcha	FAMILY
+baccha	FAMILY
+bachchara	FAMILY
+বাচ্চা	FAMILY
+বাচ্চারা	FAMILY
+সন্তান	FAMILY
+husband	FAMILY
+hubby	FAMILY
+my husband	FAMILY
+shami	FAMILY
+swami	FAMILY
+husbond	FAMILY
+বর	FAMILY
+স্বামী	FAMILY
+wife	FAMILY
+wifey	FAMILY
+my wife	FAMILY
+missus	FAMILY
+stri	FAMILY
+bou	FAMILY
+bau	FAMILY
+bouma	FAMILY
+বউ	FAMILY
+বৌ	FAMILY
+স্ত্রী	FAMILY
+বৌমা	FAMILY
+grandma	FAMILY
+grandmother	FAMILY
+granny	FAMILY
+nani	FAMILY
+nanu	FAMILY
+nanima	FAMILY
+dadi	FAMILY
+dadima	FAMILY
+thakuma	FAMILY
+thakurma	FAMILY
+ঠাকুমা	FAMILY
+দাদি	FAMILY
+নানি	FAMILY
+নানু	FAMILY
+grandpa	FAMILY
+grandfather	FAMILY
+grandad	FAMILY
+nana	FAMILY
+dada	FAMILY
+dadu	FAMILY
+thakurda	FAMILY
+thakurdada	FAMILY
+ঠাকুরদা	FAMILY
+দাদা	FAMILY
+দাদু	FAMILY
+নানা	FAMILY
+uncle	FAMILY
+my uncle	FAMILY
+chacha	FAMILY
+chachu	FAMILY
+kaka	FAMILY
+kakababu	FAMILY
+mamu	FAMILY
+mamabhai	FAMILY
+khalu	FAMILY
+fupa	FAMILY
+fufa	FAMILY
+pishe	FAMILY
+pishemoshai	FAMILY
+meshomoshai	FAMILY
+jethu	FAMILY
+jethamoshai	FAMILY
+কাকা	FAMILY
+চাচা	FAMILY
+চাচু	FAMILY
+মামা	FAMILY
+মামু	FAMILY
+খালু	FAMILY
+ফুপা	FAMILY
+পিসে	FAMILY
+মেসো	FAMILY
+জেঠু	FAMILY
+aunt	FAMILY
+auntie	FAMILY
+aunty	FAMILY
+my aunt	FAMILY
+chachi	FAMILY
+kakima	FAMILY
+mami	FAMILY
+mamima	FAMILY
+khala	FAMILY
+khalamoni	FAMILY
+khalamma	FAMILY
+fupu	FAMILY
+fupi	FAMILY
+fufu	FAMILY
+pishi	FAMILY
+pishima	FAMILY
+mashi	FAMILY
+mashima	FAMILY
+jethima	FAMILY
+কাকিমা	FAMILY
+চাচি	FAMILY
+মামি	FAMILY
+খালা	FAMILY
+খালামনি	FAMILY
+ফুপু	FAMILY
+পিসি	FAMILY
+মাসি	FAMILY
+জেঠিমা	FAMILY
+cousin	FAMILY
+my cousin	FAMILY
+cousin brother	FAMILY
+cousin sister	FAMILY
+tuto bhai	FAMILY
+tuto bon	FAMILY
+tuto	FAMILY
+khalato bhai	FAMILY
+mamato bhai	FAMILY
+chachato bhai	FAMILY
+fupato bhai	FAMILY
+কাজিন	FAMILY
+তুতো ভাই	FAMILY
+তুতো বোন	FAMILY
+nephew	FAMILY
+niece	FAMILY
+bhagne	FAMILY
+bhagni	FAMILY
+bhatija	FAMILY
+bhatiji	FAMILY
+bhagina	FAMILY
+ভাগ্নে	FAMILY
+ভাগ্নি	FAMILY
+ভাতিজা	FAMILY
+ভাতিজি	FAMILY
+in-laws	FAMILY
+in laws	FAMILY
+mother in law	FAMILY
+shoshur	FAMILY
+shashur	FAMILY
+shwoshur	FAMILY
+shashuri	FAMILY
+shaashuri	FAMILY
+শ্বশুর	FAMILY
+শাশুড়ি	FAMILY
+শাশুড়ী	FAMILY
+brother in law	FAMILY
+sister in law	FAMILY
+bhabi	FAMILY
+bhabhi	FAMILY
+vabi	FAMILY
+bhaabi	FAMILY
+dulabhai	FAMILY
+dulavai	FAMILY
+sala	FAMILY
+shala	FAMILY
+shali	FAMILY
+sali	FAMILY
+ভাবি	FAMILY
+ভাবী	FAMILY
+দুলাভাই	FAMILY
+শালা	FAMILY
+শালী	FAMILY
+বেয়াই	FAMILY
+বেয়ান	FAMILY
+beyai	FAMILY
+beyan	FAMILY
+family	FAMILY
+my family	FAMILY
+relatives	FAMILY
+relative	FAMILY
+atiyo	FAMILY
+atiya	FAMILY
+attiyo	FAMILY
+attiyo shojon	FAMILY
+attio	FAMILY
+আত্মীয়	FAMILY
+আত্মীয়স্বজন	FAMILY
+স্বজন	FAMILY
+parents	FAMILY
+my parents	FAMILY
+ammu abbu	FAMILY
+abbu ammu	FAMILY
+ma baba	FAMILY
+baba ma	FAMILY
+বাবা মা	FAMILY
+মা বাবা	FAMILY
+বাবা-মা	FAMILY
+মা-বাবা	FAMILY
+siblings	FAMILY
+sibling	FAMILY
+bhai bon	FAMILY
+bhai-bon	FAMILY
+ভাই-বোন	FAMILY
+ভাইবোন	FAMILY
+bhai apu	FAMILY
+step mom	FAMILY
+stepmom	FAMILY
+step dad	FAMILY
+stepdad	FAMILY
+stepfather	FAMILY
+stepmother	FAMILY
+godfather	FAMILY
+godmother	FAMILY
+guardian	FAMILY
+bhabhi ji	FAMILY
+jiju	FAMILY
+jijaji	FAMILY
+jeth	FAMILY
+devar	FAMILY
+nanad	FAMILY
+nonod	FAMILY
+dewar	FAMILY
+ননদ	FAMILY
+দেবর	FAMILY
+জা	FAMILY
+sambandhi	FAMILY
+friend	FRIEND
+friends	FRIEND
+my friend	FRIEND
+best friend	FRIEND
+bestie	FRIEND
+bff	FRIEND
+buddy	FRIEND
+bud	FRIEND
+pal	FRIEND
+mate	FRIEND
+mates	FRIEND
+bro friend	FRIEND
+dude	FRIEND
+bondhu	FRIEND
+bondhura	FRIEND
+bondhuder	FRIEND
+bandhobi	FRIEND
+bondhu mohol	FRIEND
+dost	FRIEND
+dosto	FRIEND
+doshto	FRIEND
+yaar	FRIEND
+yar	FRIEND
+yaara	FRIEND
+dostana	FRIEND
+দোস্ত	FRIEND
+দোস্তরা	FRIEND
+বন্ধু	FRIEND
+বন্ধুরা	FRIEND
+বন্ধুদের	FRIEND
+বান্ধবী	FRIEND
+বান্ধবীরা	FRIEND
+classmate	FRIEND
+class mate	FRIEND
+classmates	FRIEND
+batchmate	FRIEND
+batch mate	FRIEND
+batchmates	FRIEND
+schoolmate	FRIEND
+school friend	FRIEND
+college friend	FRIEND
+uni friend	FRIEND
+university friend	FRIEND
+varsity friend	FRIEND
+hostelmate	FRIEND
+hostel mate	FRIEND
+roommate	FRIEND
+room mate	FRIEND
+roomie	FRIEND
+flatmate	FRIEND
+flat mate	FRIEND
+messmate	FRIEND
+mess mate	FRIEND
+seatmate	FRIEND
+benchmate	FRIEND
+bench mate	FRIEND
+deskmate	FRIEND
+desk mate	FRIEND
+sohopathi	FRIEND
+sahapathi	FRIEND
+shohopathi	FRIEND
+সহপাঠী	FRIEND
+সহপাঠীরা	FRIEND
+গ্রুপমেট	FRIEND
+groupmate	FRIEND
+group mate	FRIEND
+teammate	FRIEND
+team mate	FRIEND
+partner in crime	FRIEND
+childhood friend	FRIEND
+old friend	FRIEND
+close friend	FRIEND
+close friends	FRIEND
+neighbour friend	FRIEND
+bf	FRIEND
+boyfriend	FRIEND
+gf	FRIEND
+girlfriend	FRIEND
+bae	FRIEND
+babe	FRIEND
+my partner	FRIEND
+significant other	FRIEND
+fiance	FRIEND
+fiancee	FRIEND
+fiancé	FRIEND
+fiancée	FRIEND
+crush	FRIEND
+my date	FRIEND
+my ex	FRIEND
+sweetheart	FRIEND
+my love	FRIEND
+jaan	FRIEND
+shona	FRIEND
+shonamoni	FRIEND
+priyo	FRIEND
+priyo bondhu	FRIEND
+priyojon	FRIEND
+প্রিয়জন	FRIEND
+প্রেমিক	FRIEND
+প্রেমিকা	FRIEND
+neighbour	FRIEND
+neighbor	FRIEND
+neighbours	FRIEND
+neighbors	FRIEND
+protibeshi	FRIEND
+protibeshir	FRIEND
+প্রতিবেশী	FRIEND
+প্রতিবেশীর	FRIEND
+pariba	FRIEND
+para	FRIEND
+parar	FRIEND
+parar lok	FRIEND
+parar chele	FRIEND
+parar meye	FRIEND
+পাড়ার	FRIEND
+পাড়ার ছেলে	FRIEND
+পাড়ার ভাই	FRIEND
+para er bhai	FRIEND
+parar bhai	FRIEND
+paray	FRIEND
+club member	FRIEND
+society member	FRIEND
+group member	FRIEND
+gang	FRIEND
+gang member	FRIEND
+squad	FRIEND
+crew	FRIEND
+my crew	FRIEND
+boys	FRIEND
+the boys	FRIEND
+girls	FRIEND
+the girls	FRIEND
+guys	FRIEND
+the guys	FRIEND
+ladies	FRIEND
+the ladies	FRIEND
+amader	FRIEND
+amader group	FRIEND
+amader gang	FRIEND
+friend circle	FRIEND
+circle	FRIEND
+friends circle	FRIEND
+adda	FRIEND
+adda gang	FRIEND
+addar bondhura	FRIEND
+tong er bondhura	FRIEND
+tong	FRIEND
+colleague	COLLEAGUE
+colleagues	COLLEAGUE
+coworker	COLLEAGUE
+co-worker	COLLEAGUE
+co worker	COLLEAGUE
+coworkers	COLLEAGUE
+workmate	COLLEAGUE
+work mate	COLLEAGUE
+officemate	COLLEAGUE
+office mate	COLLEAGUE
+office colleague	COLLEAGUE
+office friend	COLLEAGUE
+office er bondhu	COLLEAGUE
+team member	COLLEAGUE
+teammates	COLLEAGUE
+team lead	COLLEAGUE
+tl	COLLEAGUE
+manager	COLLEAGUE
+my manager	COLLEAGUE
+boss	COLLEAGUE
+my boss	COLLEAGUE
+bossman	COLLEAGUE
+big boss	COLLEAGUE
+sir	COLLEAGUE
+madam	COLLEAGUE
+maam	COLLEAGUE
+ma'am	COLLEAGUE
+mam	COLLEAGUE
+supervisor	COLLEAGUE
+my supervisor	COLLEAGUE
+my senior	COLLEAGUE
+seniors	COLLEAGUE
+my junior	COLLEAGUE
+juniors	COLLEAGUE
+subordinate	COLLEAGUE
+intern	COLLEAGUE
+interns	COLLEAGUE
+trainee	COLLEAGUE
+mentor	COLLEAGUE
+my mentor	COLLEAGUE
+mentee	COLLEAGUE
+hr manager	COLLEAGUE
+hr person	COLLEAGUE
+recruiter	COLLEAGUE
+hiring manager	COLLEAGUE
+ceo	COLLEAGUE
+cto	COLLEAGUE
+cfo	COLLEAGUE
+coo	COLLEAGUE
+md	COLLEAGUE
+managing director	COLLEAGUE
+chairman	COLLEAGUE
+director	COLLEAGUE
+vp	COLLEAGUE
+vice president	COLLEAGUE
+department head	COLLEAGUE
+hod	COLLEAGUE
+dept head	COLLEAGUE
+team head	COLLEAGUE
+project manager	COLLEAGUE
+product manager	COLLEAGUE
+scrum master	COLLEAGUE
+tech lead	COLLEAGUE
+senior engineer	COLLEAGUE
+accountant	COLLEAGUE
+cashier	COLLEAGUE
+receptionist	COLLEAGUE
+peon	COLLEAGUE
+office peon	COLLEAGUE
+office boy	COLLEAGUE
+office assistant	COLLEAGUE
+assistant	COLLEAGUE
+personal assistant	COLLEAGUE
+secretary	COLLEAGUE
+admin	COLLEAGUE
+admin officer	COLLEAGUE
+my client	COLLEAGUE
+clients	COLLEAGUE
+customers	COLLEAGUE
+partner company	COLLEAGUE
+business partner	COLLEAGUE
+business associate	COLLEAGUE
+stakeholder	COLLEAGUE
+stakeholders	COLLEAGUE
+sahokormi	COLLEAGUE
+shohokormi	COLLEAGUE
+sohokormi	COLLEAGUE
+সহকর্মী	COLLEAGUE
+সহকর্মীরা	COLLEAGUE
+অফিসের লোক	COLLEAGUE
+অফিসের বন্ধু	COLLEAGUE
+বস	COLLEAGUE
+স্যার	COLLEAGUE
+ম্যাডাম	COLLEAGUE
+ম্যানেজার	COLLEAGUE
+বড় স্যার	COLLEAGUE
+boro sir	COLLEAGUE
+boro shaheb	COLLEAGUE
+boro saheb	COLLEAGUE
+bara sahab	COLLEAGUE
+manager shaheb	COLLEAGUE
+manager sir	COLLEAGUE
+officer	COLLEAGUE
+officers	COLLEAGUE
+my officer	COLLEAGUE
+ofiser	COLLEAGUE
+অফিসার	COLLEAGUE
+বড় সাহেব	COLLEAGUE
+সাহেব	COLLEAGUE
+shaheb	COLLEAGUE
+saheb	COLLEAGUE
+sahab	COLLEAGUE
+sahib	COLLEAGUE
+chairman shaheb	COLLEAGUE
+md shaheb	COLLEAGUE
+professor	COLLEAGUE
+prof	COLLEAGUE
+my professor	COLLEAGUE
+teacher	COLLEAGUE
+my teacher	COLLEAGUE
+sir teacher	COLLEAGUE
+teacher shaheb	COLLEAGUE
+lecturer	COLLEAGUE
+instructor	COLLEAGUE
+tutor	COLLEAGUE
+guide	COLLEAGUE
+supervisor teacher	COLLEAGUE
+thesis supervisor	COLLEAGUE
+advisor	COLLEAGUE
+adviser	COLLEAGUE
+academic advisor	COLLEAGUE
+head sir	COLLEAGUE
+headmaster	COLLEAGUE
+head mistress	COLLEAGUE
+principal	COLLEAGUE
+dean	COLLEAGUE
+shikkhok	COLLEAGUE
+shikkhok shaheb	COLLEAGUE
+shikkhok moshai	COLLEAGUE
+oshikkhok	COLLEAGUE
+শিক্ষক	COLLEAGUE
+শিক্ষিকা	COLLEAGUE
+ম্যাম	COLLEAGUE
+apa teacher	COLLEAGUE
+apu teacher	COLLEAGUE
+miss	COLLEAGUE
+my miss	COLLEAGUE
+class teacher	COLLEAGUE
+tuition teacher	COLLEAGUE
+private teacher	COLLEAGUE
+coach	COLLEAGUE
+my coach	COLLEAGUE
+trainer	COLLEAGUE
+my trainer	COLLEAGUE
+landlord	LANDLORD
+landlady	LANDLORD
+house owner	LANDLORD
+home owner	LANDLORD
+flat owner	LANDLORD
+property owner	LANDLORD
+building owner	LANDLORD
+property manager	LANDLORD
+building manager	LANDLORD
+caretaker	LANDLORD
+house caretaker	LANDLORD
+bari wala	LANDLORD
+bariwala	LANDLORD
+bari ala	LANDLORD
+bari-wala	LANDLORD
+baariwala	LANDLORD
+bari owner	LANDLORD
+bari malik	LANDLORD
+bari r malik	LANDLORD
+barir malik	LANDLORD
+basar malik	LANDLORD
+basha malik	LANDLORD
+basa malik	LANDLORD
+basar owner	LANDLORD
+house malik	LANDLORD
+flat malik	LANDLORD
+malik	LANDLORD
+malik shaheb	LANDLORD
+malik saheb	LANDLORD
+malik sir	LANDLORD
+malik bhai	LANDLORD
+malik apa	LANDLORD
+malik apu	LANDLORD
+বাড়িওয়ালা	LANDLORD
+বাড়িওয়ালি	LANDLORD
+বাড়ির মালিক	LANDLORD
+বাসার মালিক	LANDLORD
+মালিক	LANDLORD
+মালিক সাহেব	LANDLORD
+মালিকের	LANDLORD
+বাড়িওয়ালাকে	LANDLORD
+owner	LANDLORD
+owner shaheb	LANDLORD
+owner sir	LANDLORD
+owner bhai	LANDLORD
+owner apa	LANDLORD
+rental agent	LANDLORD
+letting agent	LANDLORD
+estate agent	LANDLORD
+real estate agent	LANDLORD
+broker	LANDLORD
+dalal	LANDLORD
+dalali	LANDLORD
+দালাল	LANDLORD
+ব্রোকার	LANDLORD
+hostel owner	LANDLORD
+hostel malik	LANDLORD
+mess owner	LANDLORD
+mess malik	LANDLORD
+mess manager	LANDLORD
+mess er manager	LANDLORD
+hostel superintendent	LANDLORD
+hall provost	LANDLORD
+provost	LANDLORD
+hostel warden	LANDLORD
+warden	LANDLORD
+house master	LANDLORD
+housemaster	LANDLORD
+sublet owner	LANDLORD
+subletter	LANDLORD
+tenant landlord	LANDLORD
+shop	SHOP
+shopkeeper	SHOP
+shop keeper	SHOP
+shop owner	SHOP
+shop wala	SHOP
+shopwala	SHOP
+dokan	SHOP
+dokandar	SHOP
+dokaandar	SHOP
+dokan wala	SHOP
+dokanwala	SHOP
+dokaner malik	SHOP
+dokan er malik	SHOP
+dokaner lok	SHOP
+দোকান	SHOP
+দোকানদার	SHOP
+দোকানের মালিক	SHOP
+দোকানি	SHOP
+দোকানওয়ালা	SHOP
+store	SHOP
+store owner	SHOP
+store manager	SHOP
+storekeeper	SHOP
+grocer	SHOP
+grocery shop	SHOP
+grocery store owner	SHOP
+mudi	SHOP
+mudi dokan	SHOP
+mudir dokan	SHOP
+mudidokandar	SHOP
+মুদি	SHOP
+মুদি দোকানদার	SHOP
+bazar	SHOP
+bazar wala	SHOP
+bazarwala	SHOP
+bazar er lok	SHOP
+বাজারের লোক	SHOP
+sabji wala	SHOP
+sobji wala	SHOP
+shobji wala	SHOP
+sabjiwala	SHOP
+sobjiwala	SHOP
+torkari wala	SHOP
+tarkari wala	SHOP
+তরকারি বিক্রেতা	SHOP
+সবজিওয়ালা	SHOP
+মাছওয়ালা	SHOP
+machh wala	SHOP
+mach wala	SHOP
+maach wala	SHOP
+machwala	SHOP
+macher dokan	SHOP
+fish seller	SHOP
+fishmonger	SHOP
+fish vendor	SHOP
+mangsho wala	SHOP
+gosht wala	SHOP
+mangshowala	SHOP
+butcher	SHOP
+kosai	SHOP
+kasai	SHOP
+কসাই	SHOP
+মাংসওয়ালা	SHOP
+doodh wala	SHOP
+dudh wala	SHOP
+doodhwala	SHOP
+dudhwala	SHOP
+milkman	SHOP
+milk man	SHOP
+milk seller	SHOP
+দুধওয়ালা	SHOP
+ফলওয়ালা	SHOP
+fol wala	SHOP
+phol wala	SHOP
+folwala	SHOP
+fruit seller	SHOP
+fruit vendor	SHOP
+fruit wala	SHOP
+fuchka wala	SHOP
+phuchka wala	SHOP
+fuska wala	SHOP
+ফুচকাওয়ালা	SHOP
+chotpoti wala	SHOP
+চটপটিওয়ালা	SHOP
+cha wala	SHOP
+chaa wala	SHOP
+chai wala	SHOP
+chaiwala	SHOP
+chawala	SHOP
+cha wala bhai	SHOP
+চা ওয়ালা	SHOP
+চাওয়ালা	SHOP
+চা বিক্রেতা	SHOP
+tong wala	SHOP
+tong er lok	SHOP
+tong dokan wala	SHOP
+paan wala	SHOP
+pan wala	SHOP
+paan shop	SHOP
+pan dokan	SHOP
+পানওয়ালা	SHOP
+পান বিক্রেতা	SHOP
+hawker	SHOP
+ferry wala	SHOP
+feriwala	SHOP
+feri wala	SHOP
+ফেরিওয়ালা	SHOP
+rickshaw wala	SHOP
+rickshawala	SHOP
+rickshaw chalok	SHOP
+riksha wala	SHOP
+rikshawala	SHOP
+রিকশাওয়ালা	SHOP
+রিকশা চালক	SHOP
+রিকশাচালক	SHOP
+van wala	SHOP
+vanwala	SHOP
+van chalok	SHOP
+ভ্যানওয়ালা	SHOP
+cng wala	SHOP
+cng driver	SHOP
+cng chalok	SHOP
+সিএনজি চালক	SHOP
+auto wala	SHOP
+auto driver	SHOP
+tempo driver	SHOP
+bus driver	SHOP
+bus conductor	SHOP
+bus helper	SHOP
+conductor	SHOP
+helper	SHOP
+drivar	SHOP
+chalok	SHOP
+my driver	SHOP
+car driver	SHOP
+uber driver	SHOP
+pathao rider	SHOP
+pathao driver	SHOP
+foodpanda rider	SHOP
+delivery boy	SHOP
+delivery man	SHOP
+delivery guy	SHOP
+delivery rider	SHOP
+courier boy	SHOP
+courier man	SHOP
+courier guy	SHOP
+postman	SHOP
+post man	SHOP
+dakpeon	SHOP
+dak peon	SHOP
+ডাকপিয়ন	SHOP
+পিয়ন	SHOP
+দারোয়ান	SHOP
+darwan	SHOP
+darwaan	SHOP
+security guard	SHOP
+gaurd	SHOP
+গার্ড	SHOP
+নিরাপত্তা প্রহরী	SHOP
+bua	SHOP
+buar	SHOP
+kajer meye	SHOP
+kajer bua	SHOP
+kajer lok	SHOP
+kajer mohila	SHOP
+kajer apa	SHOP
+kajer khala	SHOP
+kajer mashi	SHOP
+bawarchi	SHOP
+baburchi	SHOP
+babuchi	SHOP
+ranna r bua	SHOP
+ranna r lok	SHOP
+ranna r khala	SHOP
+রাঁধুনি	SHOP
+বাবুর্চি	SHOP
+mali	SHOP
+gardener	SHOP
+mali dada	SHOP
+মালি	SHOP
+plumber	SHOP
+plamber	SHOP
+kol mistri	SHOP
+কলমিস্ত্রি	SHOP
+প্লাম্বার	SHOP
+electrician	SHOP
+electric mistri	SHOP
+current mistri	SHOP
+bidyut mistri	SHOP
+ইলেকট্রিশিয়ান	SHOP
+বিদ্যুৎ মিস্ত্রি	SHOP
+ইলেকট্রিক মিস্ত্রি	SHOP
+mistri	SHOP
+mistry	SHOP
+raj mistri	SHOP
+rajmistri	SHOP
+carpenter	SHOP
+kather mistri	SHOP
+kath mistri	SHOP
+কাঠমিস্ত্রি	SHOP
+ছুতার	SHOP
+painter	SHOP
+rong mistri	SHOP
+rong er mistri	SHOP
+রঙ মিস্ত্রি	SHOP
+darji	SHOP
+darzi	SHOP
+derji	SHOP
+দর্জি	SHOP
+laundry wala	SHOP
+dhopa	SHOP
+dhobi	SHOP
+dhopar dokan	SHOP
+ধোপা	SHOP
+ধোপার দোকান	SHOP
+nai	SHOP
+napit	SHOP
+naai	SHOP
+hair cutter	SHOP
+salon wala	SHOP
+saloon wala	SHOP
+নাপিত	SHOP
+নাই	SHOP
+মুচি	SHOP
+muchi	SHOP
+cobbler	SHOP
+shoe repairer	SHOP
+jutar mistri	SHOP
+juta mistri	SHOP
+mobile mistri	SHOP
+mobile repair wala	SHOP
+mobile dokandar	SHOP
+mobile shop wala	SHOP
+pharmacy wala	SHOP
+ousudh wala	SHOP
+oshudh wala	SHOP
+osudh wala	SHOP
+medicine wala	SHOP
+dokandar bhai	SHOP
+pharmacist	SHOP
+chemist	SHOP
+medicine seller	SHOP
+ওষুধওয়ালা	SHOP
+ফার্মাসিস্ট	SHOP
+daktar	SHOP
+dr	SHOP
+my doctor	SHOP
+family doctor	SHOP
+dentist	SHOP
+dater daktar	SHOP
+dant er daktar	SHOP
+eye doctor	SHOP
+chokher daktar	SHOP
+nurse	SHOP
+apa nurse	SHOP
+sister nurse	SHOP
+nurse apa	SHOP
+compounder	SHOP
+lab technician	SHOP
+lab assistant	SHOP
+ward boy	SHOP
+ayah	SHOP
+aya	SHOP
+আয়া	SHOP
+bank teller	SHOP
+bank officer	SHOP
+bank manager	SHOP
+bank manager shaheb	SHOP
+banker	SHOP
+atm booth guard	SHOP
+atm guard	SHOP
+bkash agent	SHOP
+bkash dokan	SHOP
+bkash wala	SHOP
+nagad agent	SHOP
+nagad dokan	SHOP
+rocket agent	SHOP
+mobile banking agent	SHOP
+flexiload dokan	SHOP
+flexiload wala	SHOP
+flexi wala	SHOP
+flexiload dokandar	SHOP
+recharge dokan	SHOP
+recharge wala	SHOP
+বিকাশ এজেন্ট	SHOP
+বিকাশ দোকান	SHOP
+ফ্লেক্সিলোড দোকান	SHOP
+stranger	OTHER
+someone	OTHER
+somebody	OTHER
+anyone	OTHER
+anybody	OTHER
+person	OTHER
+a person	OTHER
+guy	OTHER
+a guy	OTHER
+a girl	OTHER
+a man	OTHER
+woman	OTHER
+a woman	OTHER
+lady	OTHER
+a lady	OTHER
+gentleman	OTHER
+old man	OTHER
+old woman	OTHER
+old lady	OTHER
+a boy	OTHER
+unknown	OTHER
+unknown person	OTHER
+unknown number	OTHER
+random person	OTHER
+random guy	OTHER
+random girl	OTHER
+shei lok	OTHER
+oi lok	OTHER
+ekjon	OTHER
+ekjon lok	OTHER
+ekta lok	OTHER
+kono ekjon	OTHER
+kew	OTHER
+keu	OTHER
+keo	OTHER
+কেউ	OTHER
+কেউ একজন	OTHER
+একজন	OTHER
+একজন লোক	OTHER
+একটা লোক	OTHER
+অচেনা	OTHER
+অচেনা লোক	OTHER
+অপরিচিত	OTHER
+অপরিচিত লোক	OTHER
+লোক	OTHER
+লোকটা	OTHER
+লোকটি	OTHER
+মানুষ	OTHER
+মানুষটা	OTHER
+ছেলেটা	OTHER
+মেয়েটা	OTHER
+ভদ্রলোক	OTHER
+ভদ্রমহিলা	OTHER
+বুড়ো	OTHER
+বুড়ি	OTHER
+বৃদ্ধ	OTHER
+বৃদ্ধা	OTHER
+beggar	OTHER
+bhikkhuk	OTHER
+bhikari	OTHER
+bhikhari	OTHER
+ভিক্ষুক	OTHER
+ভিখারি	OTHER
+ভিখারী	OTHER
+fakir	OTHER
+fokir	OTHER
+ফকির	OTHER
+madrasa	OTHER
+madrasha	OTHER
+hujur	OTHER
+hujoor	OTHER
+imam	OTHER
+imam shaheb	OTHER
+imam saheb	OTHER
+moulana	OTHER
+moulvi	OTHER
+maulana	OTHER
+maulvi	OTHER
+mawlana	OTHER
+মাওলানা	OTHER
+মৌলভী	OTHER
+মৌলভি	OTHER
+হুজুর	OTHER
+ইমাম	OTHER
+ইমাম সাহেব	OTHER
+মুয়াজ্জিন	OTHER
+muazzin	OTHER
+moazzin	OTHER
+muezzin	OTHER
+pandit	OTHER
+purohit	OTHER
+priest	OTHER
+pastor	OTHER
+monk	OTHER
+bhikkhu	OTHER
+sadhu	OTHER
+baul	OTHER
+বাউল	OTHER
+সাধু	OTHER
+পুরোহিত	OTHER
+পণ্ডিত	OTHER
+politician	OTHER
+neta	OTHER
+netar	OTHER
+ward commissioner	OTHER
+commissioner	OTHER
+councillor	OTHER
+councilor	OTHER
+chairman member	OTHER
+member shaheb	OTHER
+minister	OTHER
+মন্ত্রী	OTHER
+নেতা	OTHER
+চেয়ারম্যান	OTHER
+মেম্বার	OTHER
+কমিশনার	OTHER
+police	OTHER
+cop	OTHER
+officer police	OTHER
+thana	OTHER
+thanar	OTHER
+thana police	OTHER
+thanay	OTHER
+পুলিশ	OTHER
+থানা	OTHER
+থানার	OTHER
+sepoy	OTHER
+constable	OTHER
+sub inspector	OTHER
+inspector	OTHER
+magistrate	OTHER
+judge	OTHER
+lawyer	OTHER
+advocate	OTHER
+vokil	OTHER
+uokil	OTHER
+উকিল	OTHER
+আইনজীবী	OTHER
+বিচারক	OTHER
+জজ	OTHER
+মাজিস্ট্রেট	OTHER
+clerk	OTHER
+peshkar	OTHER
+bailiff	OTHER
+notary	OTHER
+mohorer	OTHER
+tout	OTHER
+dalal tout	OTHER
+mohajon	OTHER
+mahajan	OTHER
+moneylender	OTHER
+money lender	OTHER
+loan shark	OTHER
+sudkhor	OTHER
+সুদখোর	OTHER
+মহাজন	OTHER
+ngo worker	OTHER
+ngo officer	OTHER
+field officer	OTHER
+field worker	OTHER
+loan officer	OTHER
+branch manager	OTHER
+samity manager	OTHER
+samity r lok	OTHER
+somiti r lok	OTHER
+somitir lok	OTHER
+সমিতির লোক	OTHER
+সমিতি	OTHER
+samity	OTHER
+somiti	OTHER
+committee	OTHER
+committee member	OTHER
+committee r lok	OTHER
+committee er lok	OTHER
+কমিটি	OTHER
+ঠিকাদার	OTHER
+thikadar	OTHER
+contractor	OTHER
+thikader	OTHER
+mistri contractor	OTHER
+sardar	OTHER
+shardar	OTHER
+সর্দার	OTHER
+labour sardar	OTHER
+coolie	OTHER
+kuli	OTHER
+কুলি	OTHER
+mutey	OTHER
+muted	OTHER
+muti	OTHER
+মুটে	OTHER
+porter	OTHER
+stranger danger	OTHER
+father in law	FAMILY
+client	COLLEAGUE
+driver	SHOP
+doctor	OTHER
+tailor	SHOP
+barber	SHOP
+cook	SHOP
+maid	SHOP
+guard	SHOP
+rider	SHOP
+agent	SHOP
+bank	SHOP
+partner	FRIEND
+junior	COLLEAGUE
+senior	COLLEAGUE
+customer	SHOP
+vendor	SHOP
+supplier	SHOP
+developer	COLLEAGUE
+designer	COLLEAGUE
+analyst	COLLEAGUE
+engineer	COLLEAGUE

@@ -1,0 +1,2295 @@
+# phrase<TAB>english normal form (Banglish and Bangla script)
+০	0
+১	1
+২	2
+৩	3
+৪	4
+৫	5
+৬	6
+৭	7
+৮	8
+৯	9
+ek	1
+এক	1
+dui	2
+দুই	2
+tin	3
+তিন	3
+char	4
+চার	4
+panch	5
+পাঁচ	5
+choy	6
+ছয়	6
+saat	7
+সাত	7
+aat	8
+আট	8
+noy	9
+নয়	9
+dosh	10
+দশ	10
+egaro	11
+এগারো	11
+baro	12
+বারো	12
+tero	13
+তেরো	13
+chouddo	14
+চৌদ্দ	14
+ponero	15
+পনেরো	15
+sholo	16
+ষোল	16
+shotero	17
+সতেরো	17
+atharo	18
+আঠারো	18
+unish	19
+উনিশ	19
+bish	20
+বিশ	20
+ekush	21
+একুশ	21
+baish	22
+বাইশ	22
+teish	23
+তেইশ	23
+chobbish	24
+চব্বিশ	24
+pochish	25
+পঁচিশ	25
+chhabbish	26
+ছাব্বিশ	26
+shatash	27
+সাতাশ	27
+atash	28
+আটাশ	28
+untrish	29
+ঊনত্রিশ	29
+trish	30
+ত্রিশ	30
+ektrish	31
+একত্রিশ	31
+battrish	32
+বত্রিশ	32
+tettrish	33
+তেত্রিশ	33
+chouttrish	34
+চৌত্রিশ	34
+poytrish	35
+পঁয়ত্রিশ	35
+chhottrish	36
+ছত্রিশ	36
+shaitrish	37
+সাঁইত্রিশ	37
+atatrish	38
+আটত্রিশ	38
+untallish	39
+ঊনচল্লিশ	39
+challish	40
+চল্লিশ	40
+ekchallish	41
+একচল্লিশ	41
+bayallish	42
+বিয়াল্লিশ	42
+tetallish	43
+তেতাল্লিশ	43
+chouchallish	44
+চুয়াল্লিশ	44
+poytallish	45
+পঁয়তাল্লিশ	45
+chheyallish	46
+ছেচল্লিশ	46
+satchallish	47
+সাতচল্লিশ	47
+atchallish	48
+আটচল্লিশ	48
+unponchash	49
+ঊনপঞ্চাশ	49
+ponchash	50
+পঞ্চাশ	50
+ekanno	51
+একান্ন	51
+bawanno	52
+বাহান্ন	52
+tippanno	53
+তিপ্পান্ন	53
+chouanno	54
+চুয়ান্ন	54
+ponchanno	55
+পঞ্চান্ন	55
+chhappanno	56
+ছাপ্পান্ন	56
+shattanno	57
+সাতান্ন	57
+atanno	58
+আটান্ন	58
+unoshatt	59
+ঊনষাট	59
+shatt	60
+ষাট	60
+ekshotti	61
+একষট্টি	61
+boshotti	62
+বাষট্টি	62
+teshotti	63
+তেষট্টি	63
+choushotti	64
+চৌষট্টি	64
+poyshotti	65
+পঁয়ষট্টি	65
+cheshotti	66
+ছেষট্টি	66
+shatshotti	67
+সাতষট্টি	67
+atshotti	68
+আটষট্টি	68
+unoshottor	69
+ঊনসত্তর	69
+shottor	70
+সত্তর	70
+ekattor	71
+একাত্তর	71
+bahattor	72
+বাহাত্তর	72
+tehattor	73
+তিয়াত্তর	73
+chouhattor	74
+চুয়াত্তর	74
+pachattor	75
+পঁচাত্তর	75
+chhihattor	76
+ছিয়াত্তর	76
+shattattor	77
+সাতাত্তর	77
+atattor	78
+আটাত্তর	78
+unoashi	79
+ঊনআশি	79
+ashi	80
+আশি	80
+ekashi	81
+একাশি	81
+beyashi	82
+বিরাশি	82
+tiroshi	83
+তিরাশি	83
+chourashi	84
+চুরাশি	84
+pachashi	85
+পঁচাশি	85
+chhiyashi	86
+ছিয়াশি	86
+shatashi	87
+সাতাশি	87
+atashi	88
+আটাশি	88
+unonabboi	89
+ঊননব্বই	89
+nabboi	90
+নব্বই	90
+ekanabboi	91
+একানব্বই	91
+beyanabboi	92
+বিরানব্বই	92
+tiranabboi	93
+তিরানব্বই	93
+chouranabboi	94
+চুরানব্বই	94
+pachanabboi	95
+পঁচানব্বই	95
+chhiyanabboi	96
+ছিয়ানব্বই	96
+shataanabboi	97
+সাতানব্বই	97
+ataanabboi	98
+আটানব্বই	98
+ninanabboi	99
+নিরানব্বই	99
+shoto	100
+একশ	100
+doi	2
+dugun	2
+teen	3
+chaar	4
+pach	5
+paanch	5
+chhoy	6
+chhoi	6
+choi	6
+dos	10
+egarah	11
+ekadosh	11
+barah	12
+terah	13
+choddo	14
+chowddo	14
+pondro	15
+ponedo	15
+sorho	16
+shorho	16
+sotero	17
+satero	17
+aatharo	18
+unishi	19
+bis	20
+tirish	30
+tirisho	30
+trisho	30
+chollish	40
+chalish	40
+pochash	50
+ponchas	50
+shat	60
+sottor	70
+sattor	70
+assi	80
+nobboi	90
+nobbui	90
+ek shoto	100
+ek sho	100
+ek shotok	100
+eksho	100
+ekshoto	100
+dui shoto	200
+dui sho	200
+duisho	200
+duishoto	200
+dui shotok	200
+tin shoto	300
+tin sho	300
+tinsho	300
+tinshoto	300
+char shoto	400
+char sho	400
+charsho	400
+charshoto	400
+panch shoto	500
+panch sho	500
+panchsho	500
+panchshoto	500
+choy shoto	600
+choy sho	600
+choysho	600
+choyshoto	600
+saat shoto	700
+saat sho	700
+saatsho	700
+sat shoto	700
+sat sho	700
+satsho	700
+aat shoto	800
+aat sho	800
+aatsho	800
+at shoto	800
+at sho	800
+atsho	800
+noy shoto	900
+noy sho	900
+noysho	900
+noyshoto	900
+sho	hundred
+shotok	hundred
+sotok	hundred
+শত	hundred
+শো	hundred
+hajar	thousand
+hazar	thousand
+hajaar	thousand
+হাজার	thousand
+lakh	lakh
+lokkho	lakh
+lokho	lakh
+laksh	lakh
+lakho	lakh
+লক্ষ	lakh
+লাখ	lakh
+লক্ষ্য	lakh
+koti	crore
+kuti	crore
+crore	crore
+কোটি	crore
+ek hajar	1000
+ekhajar	1000
+ek hazar	1000
+dui hajar	2000
+duihajar	2000
+dui hazar	2000
+tin hajar	3000
+tinhajar	3000
+tin hazar	3000
+char hajar	4000
+charhajar	4000
+char hazar	4000
+panch hajar	5000
+panchhajar	5000
+panch hazar	5000
+choy hajar	6000
+choyhajar	6000
+saat hajar	7000
+sat hajar	7000
+saathajar	7000
+aat hajar	8000
+at hajar	8000
+aathajar	8000
+noy hajar	9000
+noyhajar	9000
+dosh hajar	10000
+doshhajar	10000
+dos hajar	10000
+panchish hajar	25000
+pochish hajar	25000
+ponchash hajar	50000
+pochash hajar	50000
+ek lakh	100000
+eklakh	100000
+ek lokkho	100000
+eklokkho	100000
+dui lakh	200000
+duilakh	200000
+dui lokkho	200000
+tin lakh	300000
+tinlakh	300000
+panch lakh	500000
+panchlakh	500000
+dosh lakh	1000000
+doshlakh	1000000
+ek koti	10000000
+ekkoti	10000000
+ek crore	10000000
+এক হাজার	1000
+দুই হাজার	2000
+তিন হাজার	3000
+চার হাজার	4000
+পাঁচ হাজার	5000
+ছয় হাজার	6000
+সাত হাজার	7000
+আট হাজার	8000
+নয় হাজার	9000
+দশ হাজার	10000
+পনেরো হাজার	15000
+বিশ হাজার	20000
+পঁচিশ হাজার	25000
+ত্রিশ হাজার	30000
+পঞ্চাশ হাজার	50000
+এক লাখ	100000
+এক লক্ষ	100000
+দুই লাখ	200000
+দুই লক্ষ	200000
+তিন লাখ	300000
+তিন লক্ষ	300000
+পাঁচ লাখ	500000
+পাঁচ লক্ষ	500000
+দশ লাখ	1000000
+দশ লক্ষ	1000000
+এক কোটি	10000000
+দুই কোটি	20000000
+দুইশ	200
+দুইশো	200
+দুশো	200
+দুই শত	200
+দুইশত	200
+তিনশ	300
+তিনশো	300
+তিন শত	300
+তিনশত	300
+চারশ	400
+চারশো	400
+চার শত	400
+চারশত	400
+পাঁচশ	500
+পাঁচশো	500
+পাঁচ শত	500
+পাঁচশত	500
+ছয়শ	600
+ছয়শো	600
+ছয় শত	600
+ছয়শত	600
+সাতশ	700
+সাতশো	700
+সাত শত	700
+সাতশত	700
+আটশ	800
+আটশো	800
+আট শত	800
+আটশত	800
+নয়শ	900
+নয়শো	900
+নয় শত	900
+নয়শত	900
+একশো	100
+এক শত	100
+একশত	100
+দেড়	1.5
+der	1.5
+dhere	1.5
+derh	1.5
+dherh	1.5
+আড়াই	2.5
+aray	2.5
+arai	2.5
+araai	2.5
+aaray	2.5
+সাড়ে তিন	3.5
+sarhe tin	3.5
+sharhe tin	3.5
+sare tin	3.5
+সাড়ে চার	4.5
+sarhe char	4.5
+sharhe char	4.5
+sare char	4.5
+সাড়ে পাঁচ	5.5
+sarhe panch	5.5
+sharhe panch	5.5
+sare panch	5.5
+সাড়ে ছয়	6.5
+sarhe choy	6.5
+sharhe choy	6.5
+sare choy	6.5
+সাড়ে সাত	7.5
+sarhe saat	7.5
+sharhe saat	7.5
+sare saat	7.5
+সাড়ে আট	8.5
+sarhe aat	8.5
+sharhe aat	8.5
+sare aat	8.5
+সাড়ে নয়	9.5
+sarhe noy	9.5
+sharhe noy	9.5
+sare noy	9.5
+সাড়ে দশ	10.5
+sarhe dosh	10.5
+sharhe dosh	10.5
+sare dosh	10.5
+সাড়ে এগারো	11.5
+sarhe egaro	11.5
+sharhe egaro	11.5
+সাড়ে বারো	12.5
+sarhe baro	12.5
+sharhe baro	12.5
+আধা	half
+adha	half
+aadha	half
+adh	half
+aadh	half
+ardhek	half
+ordhek	half
+অর্ধেক	half
+আধ	half
+আধেক	half
+সোয়া	1.25
+sawa	1.25
+soya	1.25
+shoya	1.25
+পৌনে	0.75
+paune	0.75
+pawne	0.75
+poune	0.75
+সওয়া	1.25
+আধা ঘণ্টা	30 minutes
+adha ghonta	30 minutes
+aadha ghonta	30 minutes
+adh ghonta	30 minutes
+এক ঘণ্টা	1 hour
+ek ghonta	1 hour
+ek ghanta	1 hour
+দেড় ঘণ্টা	90 minutes
+der ghonta	90 minutes
+dherh ghonta	90 minutes
+taka	taka
+tk	taka
+tk.	taka
+টাকা	taka
+টাকায়	taka
+টাকার	taka
+টাকাটা	taka
+টাকাতে	taka
+টাকাই	taka
+taka ta	taka
+takay	taka
+takar	taka
+takate	taka
+টাকা টা	taka
+poisha	paisa
+poysa	paisa
+poisa	paisa
+paisa	paisa
+poyesha	paisa
+পয়সা	paisa
+পয়সার	paisa
+khoroch	spent
+khorcho	spent
+khorch	spent
+khoros	spent
+kharcha	spent
+kharch	spent
+khorcha	spent
+খরচ	spent
+খরচা	spent
+খরচ করলাম	spent
+খরচ হলো	spent
+খরচ হয়েছে	spent
+খরচ হইছে	spent
+খরচের	spent
+খরচে	spent
+খরচটা	spent
+khoroch korlam	spent
+khoroch korechi	spent
+khoroch korsi	spent
+khoroch kore felsi	spent
+khoroch kore fellam	spent
+khoroch hoyeche	spent
+khoroch hoise	spent
+khoroch holo	spent
+khoroch hoilo	spent
+kharcha hoyeche	spent
+kharcha hoise	spent
+dilam	paid
+dilam ami	paid
+diyechi	paid
+disi	paid
+dichi	paid
+দিলাম	paid
+দিয়েছি	paid
+দিছি	paid
+দিসি	paid
+দিয়ে দিলাম	paid
+diye dilam	paid
+diye diyechi	paid
+diye disi	paid
+diye fellam	paid
+diye felsi	paid
+দিয়ে ফেলেছি	paid
+দিয়ে ফেললাম	paid
+kinlam	bought
+kinechi	bought
+kinsi	bought
+kinsilam	bought
+kine felsi	bought
+kine fellam	bought
+kine ansi	bought
+kine anlam	bought
+kine anechi	bought
+কিনলাম	bought
+কিনেছি	bought
+কিনসি	bought
+কিনে ফেলেছি	bought
+কিনে ফেললাম	bought
+কিনে আনলাম	bought
+কিনে এনেছি	bought
+কিনে আনছি	bought
+nilam	took
+niyechi	took
+nisi	took
+nichi	took
+নিলাম	took
+নিয়েছি	took
+নিছি	took
+নিসি	took
+pelam	received
+peyechi	received
+paichi	received
+paisi	received
+পেলাম	received
+পেয়েছি	received
+পাইছি	received
+পাইসি	received
+পাইলাম	received
+পাইচি	received
+ashche	credited
+ashlo	credited
+eshechhe	credited
+esheche	credited
+এসেছে	credited
+এসেছে টাকা	credited
+আসছে	credited
+আসলো	credited
+ঢুকেছে	credited
+ঢুকছে	credited
+ঢুকলো	credited
+dhukse	credited
+dhukeche	credited
+dhukche	credited
+dhukelo	credited
+tulsi	withdrew
+tulechi	withdrew
+tullam	withdrew
+tulesi	withdrew
+tulte hobe	withdrew
+তুললাম	withdrew
+তুলেছি	withdrew
+তুলসি	withdrew
+তুলেছি টাকা	withdrew
+pathalam	sent
+pathailam	sent
+pathaisi	sent
+pathiyechi	sent
+pathaichi	sent
+পাঠালাম	sent
+পাঠিয়েছি	sent
+পাঠাইছি	sent
+পাঠাইলাম	sent
+পাঠিয়ে দিলাম	sent
+pathiye dilam	sent
+pathiye diyechi	sent
+pathaye dilam	sent
+joma dilam	deposited
+joma diyechi	deposited
+joma disi	deposited
+joma korlam	deposited
+joma korechi	deposited
+জমা দিলাম	deposited
+জমা দিয়েছি	deposited
+জমা করলাম	deposited
+জমা করেছি	deposited
+জমা রাখলাম	deposited
+জমা রেখেছি	deposited
+joma	savings
+জমা	savings
+sonchoy	savings
+sanchay	savings
+সঞ্চয়	savings
+sonchoy korlam	savings
+sanchay korlam	savings
+সঞ্চয় করলাম	savings
+bikri	sold
+becha	sold
+bechlam	sold
+beche dilam	sold
+bikri korlam	sold
+বিক্রি	sold
+বিক্রি করলাম	sold
+বিক্রি হলো	sold
+বিক্রি হয়েছে	sold
+বেচলাম	sold
+বেচে দিলাম	sold
+বেচা	sold
+labh	profit
+lav	profit
+munafa	profit
+লাভ	profit
+মুনাফা	profit
+labh holo	profit
+lav holo	profit
+munafa holo	profit
+লাভ হলো	profit
+লাভ হয়েছে	profit
+মুনাফা হলো	profit
+loksan	loss
+lokshan	loss
+loksaan	loss
+ক্ষতি	loss
+লোকসান	loss
+loksan holo	loss
+lokshan holo	loss
+লোকসান হলো	loss
+লোকসান হয়েছে	loss
+dhar	borrowed
+dhar nilam	borrowed
+dhar niyechi	borrowed
+dhar nisi	borrowed
+dhar korlam	borrowed
+dhar korechi	borrowed
+ধার	borrowed
+ধার নিলাম	borrowed
+ধার নিয়েছি	borrowed
+ধার করলাম	borrowed
+ধার করেছি	borrowed
+udhar nilam	borrowed
+udhar niyechi	borrowed
+udhar korlam	borrowed
+udhar korechi	borrowed
+উধার নিলাম	borrowed
+উধার নিয়েছি	borrowed
+উধার করলাম	borrowed
+dhar dilam	lent
+dhar diyechi	lent
+dhar disi	lent
+dhar dichi	lent
+ধার দিলাম	lent
+ধার দিয়েছি	lent
+ধার দিছি	lent
+udhar dilam	lent
+udhar diyechi	lent
+udhar disi	lent
+উধার দিলাম	lent
+উধার দিয়েছি	lent
+ধার দিসি	lent
+dhar shodh	repaid loan
+dhar shod	repaid loan
+dhar shodh korlam	repaid loan
+dhar shod korlam	repaid loan
+dhar firiye dilam	repaid loan
+dhar ferot dilam	repaid loan
+dhar mitaisi	repaid loan
+dhar mitailam	repaid loan
+ধার শোধ	repaid loan
+ধার শোধ করলাম	repaid loan
+ধার ফেরত দিলাম	repaid loan
+ধার মিটিয়েছি	repaid loan
+ধার পরিশোধ করলাম	repaid loan
+udhar shodh	repaid loan
+udhar shod	repaid loan
+udhar ferot dilam	repaid loan
+udhar mitailam	repaid loan
+উধার শোধ	repaid loan
+dhar ferot pelam	loan repaid to me
+dhar ferot peyechi	loan repaid to me
+dhar ferot paichi	loan repaid to me
+dhar ferot nilam	loan repaid to me
+ধার ফেরত পেলাম	loan repaid to me
+ধার ফেরত পেয়েছি	loan repaid to me
+ধার ফেরত নিলাম	loan repaid to me
+ধার ফেরত পাইছি	loan repaid to me
+dhar ferot ashche	loan repaid to me
+ধার ফেরত এসেছে	loan repaid to me
+dena	debt
+দেনা	debt
+dena ache	debt
+দেনা আছে	debt
+denadar	debt
+দেনাদার	debt
+dena paona	debt
+dena-paona	debt
+denapaona	debt
+দেনা পাওনা	debt
+দেনা-পাওনা	debt
+দেনাপাওনা	debt
+paona	owed to me
+pawna	owed to me
+পাওনা	owed to me
+paona ache	owed to me
+পাওনা আছে	owed to me
+pawna ache	owed to me
+paona taka	owed to me
+pawna taka	owed to me
+পাওনা টাকা	owed to me
+baki	on credit
+bakir	on credit
+baki ache	on credit
+baki taka	on credit
+বাকি	on credit
+বাকির	on credit
+বাকি আছে	on credit
+বাকি টাকা	on credit
+bakite	on credit
+baki te	on credit
+বাকিতে	on credit
+bakite kinlam	on credit
+বাকিতে কিনলাম	on credit
+baki dilam	paid balance
+baki diyechi	paid balance
+baki disi	paid balance
+baki shodh	paid balance
+baki mitailam	paid balance
+বাকি দিলাম	paid balance
+বাকি শোধ	paid balance
+বাকি মিটিয়েছি	paid balance
+বাকি পরিশোধ	paid balance
+baki nilam	took on credit
+baki niyechi	took on credit
+baki nisi	took on credit
+বাকি নিলাম	took on credit
+বাকি নিয়েছি	took on credit
+kisti	installment
+kistir	installment
+kistir taka	installment
+কিস্তি	installment
+কিস্তির	installment
+কিস্তির টাকা	installment
+kisti dilam	installment
+kisti diyechi	installment
+kisti disi	installment
+কিস্তি দিলাম	installment
+কিস্তি দিয়েছি	installment
+কিস্তি মিটিয়েছি	installment
+shud	interest
+sud	interest
+সুদ	interest
+সুদের	interest
+shud dilam	interest
+shud diyechi	interest
+shud pelam	interest
+shud peyechi	interest
+সুদ দিলাম	interest
+সুদ দিয়েছি	interest
+সুদ পেলাম	interest
+সুদ পেয়েছি	interest
+beton	salary
+betan	salary
+বেতন	salary
+বেতনের	salary
+beton pelam	salary
+beton peyechi	salary
+beton paichi	salary
+beton paisi	salary
+beton ashche	salary
+beton esheche	salary
+beton dhukse	salary
+beton dhukeche	salary
+বেতন পেলাম	salary
+বেতন পেয়েছি	salary
+বেতন পাইছি	salary
+বেতন এসেছে	salary
+বেতন ঢুকেছে	salary
+maser beton	salary
+mashik beton	salary
+মাসের বেতন	salary
+মাসিক বেতন	salary
+bonus	bonus
+বোনাস	bonus
+bonus pelam	bonus
+bonus peyechi	bonus
+বোনাস পেলাম	bonus
+বোনাস পেয়েছি	bonus
+eid bonus	bonus
+ঈদ বোনাস	bonus
+boishakhi bonus	bonus
+বৈশাখী বোনাস	bonus
+festival bonus	bonus
+উৎসব ভাতা	bonus
+utshob bhata	bonus
+utsab bhata	bonus
+bhata	allowance
+ভাতা	allowance
+bhatta	allowance
+allowance	allowance
+যাতায়াত ভাতা	allowance
+jatayat bhata	allowance
+chikitsa bhata	allowance
+চিকিৎসা ভাতা	allowance
+bari bhara bhata	allowance
+বাড়ি ভাড়া ভাতা	allowance
+aay	income
+ay	income
+income	income
+আয়	income
+আয় হলো	income
+আয় হয়েছে	income
+rojgar	income
+রোজগার	income
+rojgar korlam	income
+রোজগার করলাম	income
+uparjon	income
+উপার্জন	income
+uparjon korlam	income
+উপার্জন করলাম	income
+bhara	rent
+bhada	rent
+vara	rent
+vada	rent
+ভাড়া	rent
+ভাড়ার	rent
+ভাড়াটা	rent
+bhara dilam	rent
+bhara diyechi	rent
+bhara disi	rent
+ভাড়া দিলাম	rent
+ভাড়া দিয়েছি	rent
+ভাড়া মিটিয়েছি	rent
+bari bhara	house rent
+basa bhara	house rent
+basha bhara	house rent
+bari bhada	house rent
+basa bhada	house rent
+basha bhada	house rent
+bari vara	house rent
+basa vara	house rent
+বাড়ি ভাড়া	house rent
+বাসা ভাড়া	house rent
+বাসাভাড়া	house rent
+বাড়িভাড়া	house rent
+bari r bhara	house rent
+basa r bhara	house rent
+bashar bhara	house rent
+rickshaw bhara	rickshaw fare
+riksha bhara	rickshaw fare
+rickshaw vara	rickshaw fare
+rickshaw bhada	rickshaw fare
+রিকশা ভাড়া	rickshaw fare
+রিক্সা ভাড়া	rickshaw fare
+রিকশাভাড়া	rickshaw fare
+bus bhara	bus fare
+bus vara	bus fare
+bus bhada	bus fare
+বাস ভাড়া	bus fare
+বাসভাড়া	bus fare
+cng bhara	cng fare
+cng vara	cng fare
+cng bhada	cng fare
+সিএনজি ভাড়া	cng fare
+gari bhara	vehicle fare
+gari vara	vehicle fare
+gari bhada	vehicle fare
+গাড়ি ভাড়া	vehicle fare
+গাড়িভাড়া	vehicle fare
+launch bhara	launch fare
+লঞ্চ ভাড়া	launch fare
+train bhara	train fare
+ট্রেন ভাড়া	train fare
+bill	bill
+বিল	bill
+bill dilam	bill
+bill diyechi	bill
+bill disi	bill
+বিল দিলাম	bill
+বিল দিয়েছি	bill
+bill mitailam	bill
+বিল মিটিয়েছি	bill
+bill shodh	bill
+bill pay korlam	bill
+বিল পরিশোধ	bill
+bidyut bill	electricity bill
+biddut bill	electricity bill
+current bill	electricity bill
+current er bill	electricity bill
+বিদ্যুৎ বিল	electricity bill
+কারেন্ট বিল	electricity bill
+কারেন্টের বিল	electricity bill
+light bill	electricity bill
+bijli bill	electricity bill
+gas bill	gas bill
+gas er bill	gas bill
+গ্যাস বিল	gas bill
+গ্যাসের বিল	gas bill
+pani bill	water bill
+pani r bill	water bill
+পানির বিল	water bill
+পানি বিল	water bill
+wasa bill	water bill
+ওয়াসা বিল	water bill
+net bill	internet bill
+internet bill	internet bill
+wifi bill	internet bill
+ইন্টারনেট বিল	internet bill
+নেট বিল	internet bill
+ওয়াইফাই বিল	internet bill
+line er bill	internet bill
+mobile bill	phone bill
+phone bill	phone bill
+মোবাইল বিল	phone bill
+ফোন বিল	phone bill
+recharge	mobile recharge
+রিচার্জ	mobile recharge
+recharge korlam	mobile recharge
+recharge dilam	mobile recharge
+রিচার্জ করলাম	mobile recharge
+রিচার্জ দিলাম	mobile recharge
+flexi	mobile recharge
+flexiload	mobile recharge
+ফ্লেক্সি	mobile recharge
+ফ্লেক্সিলোড	mobile recharge
+flexi korlam	mobile recharge
+flexiload korlam	mobile recharge
+mobile recharge	mobile recharge
+মোবাইল রিচার্জ	mobile recharge
+top up	mobile recharge
+topup	mobile recharge
+টপ আপ	mobile recharge
+bazar	groceries
+bajar	groceries
+baazar	groceries
+bazaar	groceries
+বাজার	groceries
+বাজার করলাম	groceries
+bazar korlam	groceries
+bajar korlam	groceries
+bazar kinlam	groceries
+বাজার সদাই	groceries
+bazar sodai	groceries
+bajar sodai	groceries
+sodai	groceries
+সদাই	groceries
+sodai kinlam	groceries
+সদাই কিনলাম	groceries
+kacha bazar	groceries
+kacha bajar	groceries
+কাঁচাবাজার	groceries
+কাচাবাজার	groceries
+chal	rice
+chaal	rice
+চাল	rice
+dal	lentils
+daal	lentils
+ডাল	lentils
+tel	oil
+তেল	oil
+lobon	salt
+noon	salt
+লবণ	salt
+নুন	salt
+chini	sugar
+চিনি	sugar
+doodh	milk
+dudh	milk
+dud	milk
+দুধ	milk
+dim	eggs
+ডিম	eggs
+mach	fish
+machh	fish
+maach	fish
+মাছ	fish
+mangsho	meat
+gosht	meat
+মাংস	meat
+গোশত	meat
+murgi	chicken
+morog	chicken
+মুরগি	chicken
+মুরগী	chicken
+gorur mangsho	beef
+গরুর মাংস	beef
+beef	beef
+khashir mangsho	mutton
+khasir mangsho	mutton
+খাসির মাংস	mutton
+mutton	mutton
+shobji	vegetables
+sobji	vegetables
+sabji	vegetables
+shobzi	vegetables
+সবজি	vegetables
+সব্জি	vegetables
+torkari	vegetables
+tarkari	vegetables
+তরকারি	vegetables
+fol	fruits
+phol	fruits
+ফল	fruits
+ফলমূল	fruits
+alu	potato
+aloo	potato
+আলু	potato
+piyaj	onion
+peyaj	onion
+পেঁয়াজ	onion
+পিয়াজ	onion
+roshun	garlic
+rosun	garlic
+রসুন	garlic
+ada	ginger
+আদা	ginger
+morich	chili
+মরিচ	chili
+nasta	breakfast
+nashta	breakfast
+নাস্তা	breakfast
+নাশতা	breakfast
+nasta korlam	breakfast
+nashta korlam	breakfast
+নাস্তা করলাম	breakfast
+dupurer khabar	lunch
+dupurer khana	lunch
+dupurer bhat	lunch
+দুপুরের খাবার	lunch
+দুপুরের খাওয়া	lunch
+দুপুরের ভাত	lunch
+lunch korlam	lunch
+rater khabar	dinner
+rater khana	dinner
+rater bhat	dinner
+raater khabar	dinner
+রাতের খাবার	dinner
+রাতের খাওয়া	dinner
+রাতের ভাত	dinner
+ratrir khabar	dinner
+cha	tea
+chaa	tea
+চা	tea
+cha khelam	tea
+cha khailam	tea
+চা খেলাম	tea
+চা খাইলাম	tea
+cha biscuit	tea
+চা বিস্কুট	tea
+cha-biscuit	tea
+cha shingara	tea
+চা সিঙ্গারা	tea
+coffee	coffee
+কফি	coffee
+কফি খেলাম	coffee
+khabar	food
+খাবার	food
+khawa	food
+khaoya	food
+খাওয়া	food
+খাওয়া দাওয়া	food
+khawa dawa	food
+khawa-dawa	food
+khaoya-daoya	food
+খাওয়া-দাওয়া	food
+khelam	ate
+khailam	ate
+kheyechi	ate
+খেলাম	ate
+খেয়েছি	ate
+খাইলাম	ate
+খাইছি	ate
+biryani	biryani
+biriyani	biryani
+biriani	biryani
+briyani	biryani
+বিরিয়ানি	biryani
+বিরিয়ানী	biryani
+কাচ্চি	biryani
+kacchi	biryani
+tehari	biryani
+তেহারি	biryani
+খিচুড়ি	biryani
+khichuri	biryani
+khichdi	biryani
+polao	biryani
+পোলাও	biryani
+pulao	biryani
+fuchka	street food
+fuska	street food
+phuchka	street food
+ফুচকা	street food
+chotpoti	street food
+চটপটি	street food
+jhalmuri	street food
+ঝালমুড়ি	street food
+singara	street food
+shingara	street food
+সিঙ্গারা	street food
+সিংগারা	street food
+samosa	street food
+সমুচা	street food
+hotel	restaurant
+হোটেল	restaurant
+restaurant	restaurant
+রেস্টুরেন্ট	restaurant
+রেস্তোরাঁ	restaurant
+restro	restaurant
+resturant	restaurant
+restaurent	restaurant
+hotel e khelam	ate out
+restaurant e khelam	ate out
+bahire khelam	ate out
+বাইরে খেলাম	ate out
+হোটেলে খেলাম	ate out
+রেস্টুরেন্টে খেলাম	ate out
+bahire khailam	ate out
+bahire kheyechi	ate out
+dokan	shop
+dokaan	shop
+দোকান	shop
+দোকানে	shop
+dokane	shop
+দোকানের	shop
+dokaner	shop
+oshudh	medicine
+ousudh	medicine
+osud	medicine
+ousud	medicine
+oshud	medicine
+ওষুধ	medicine
+ঔষধ	medicine
+ওষুধের	medicine
+oshudher dokan	medicine
+ousudher dokan	medicine
+ওষুধের দোকান	medicine
+ফার্মেসি	medicine
+daktar	doctor visit
+doctor	doctor visit
+ডাক্তার	doctor visit
+ডাক্তারের	doctor visit
+daktarer fee	doctor visit
+ডাক্তারের ফি	doctor visit
+daktarer visit	doctor visit
+ডাক্তারের ভিজিট	doctor visit
+doctor er fee	doctor visit
+doctor er visit	doctor visit
+daktar dekhalam	doctor visit
+ডাক্তার দেখালাম	doctor visit
+ডাক্তার দেখিয়েছি	doctor visit
+haspatal	hospital
+hospital	hospital
+হাসপাতাল	hospital
+হাসপাতালে	hospital
+haspatale	hospital
+হাসপাতালের	hospital
+টেস্ট	medical test
+test korlam	medical test
+টেস্ট করলাম	medical test
+test korano	medical test
+পরীক্ষা করালাম	medical test
+poriksha	exam
+pariksha	exam
+porikkha	exam
+পরীক্ষা	exam
+পরীক্ষার	exam
+porikshar	exam
+porikshar fee	exam
+পরীক্ষার ফি	exam
+poriksha ache	exam
+পরীক্ষা আছে	exam
+poriksha hobe	exam
+পরীক্ষা হবে	exam
+poriksha dite hobe	exam
+পরীক্ষা দিতে হবে	exam
+mid poriksha	midterm exam
+মিড পরীক্ষা	midterm exam
+midterm poriksha	midterm exam
+মিডটার্ম	midterm exam
+মিড টার্ম	midterm exam
+final poriksha	final exam
+ফাইনাল পরীক্ষা	final exam
+ফাইনাল	final exam
+class test	class test
+ক্লাস টেস্ট	class test
+ct	class test
+সিটি	class test
+viva	viva
+ভাইভা	viva
+mukhik poriksha	viva
+মৌখিক পরীক্ষা	viva
+lekhapora	study
+porashona	study
+porashuna	study
+poralekha	study
+লেখাপড়া	study
+পড়াশোনা	study
+পড়ালেখা	study
+পড়াশুনা	study
+porbo	will study
+porte hobe	will study
+পড়ব	will study
+পড়তে হবে	will study
+পড়বো	will study
+school	school
+skul	school
+স্কুল	school
+স্কুলের	school
+school er fee	school
+স্কুলের ফি	school
+schooler beton	school
+স্কুলের বেতন	school
+college	college
+কলেজ	college
+কলেজের	college
+vorti	admission
+bhorti	admission
+ভর্তি	admission
+ভর্তির	admission
+bhorti fee	admission
+ভর্তি ফি	admission
+bhorti poriksha	admission
+ভর্তি পরীক্ষা	admission
+tuition	tuition
+tuishon	tuition
+টিউশন	tuition
+টিউশনি	tuition
+টিউশনের	tuition
+tuition fee	tuition
+টিউশন ফি	tuition
+tuitioner taka	tuition
+টিউশনের টাকা	tuition
+coaching	coaching
+কোচিং	coaching
+কোচিংয়ের	coaching
+coaching fee	coaching
+কোচিং ফি	coaching
+boi	books
+বই	books
+boi kinlam	books
+বই কিনলাম	books
+boi er dokan	books
+বইয়ের দোকান	books
+khata	stationery
+খাতা	stationery
+kolom	stationery
+কলম	stationery
+pencil	stationery
+পেন্সিল	stationery
+kaj	task
+কাজ	task
+kajer	task
+কাজের	task
+kaj ache	task
+কাজ আছে	task
+kaj korte hobe	task
+কাজ করতে হবে	task
+kaj kora	task
+কাজ করা	task
+kaj baki	task
+কাজ বাকি	task
+kaj shesh	task
+কাজ শেষ	task
+kaj sesh	task
+kajer list	task list
+kajer talika	task list
+কাজের তালিকা	task list
+কাজের লিস্ট	task list
+todo list	task list
+to do list	task list
+shesh	finish
+sesh	finish
+শেষ	finish
+shesh korte hobe	finish
+শেষ করতে হবে	finish
+shesh korbo	finish
+শেষ করব	finish
+শেষ করবো	finish
+shesh kora	finish
+jama dite hobe	submit
+jama dibo	submit
+jama dewa	submit
+jama deya	submit
+জমা দিতে হবে	submit
+জমা দিব	submit
+জমা দেব	submit
+জমা দেওয়া	submit
+submit korte hobe	submit
+submit korbo	submit
+সাবমিট করতে হবে	submit
+সাবমিট করব	submit
+সাবমিট করবো	submit
+call korbo	call
+call dibo	call
+call korte hobe	call
+call dite hobe	call
+কল করব	call
+কল করবো	call
+কল করতে হবে	call
+কল দিব	call
+কল দেব	call
+phone korbo	call
+phone dibo	call
+phone korte hobe	call
+ফোন করব	call
+ফোন করবো	call
+ফোন করতে হবে	call
+fon korbo	call
+fon dibo	call
+message dibo	send message
+message korbo	send message
+message dite hobe	send message
+মেসেজ দিব	send message
+মেসেজ করব	send message
+মেসেজ দিতে হবে	send message
+msg dibo	send message
+msg korbo	send message
+mail korbo	send email
+mail dibo	send email
+mail korte hobe	send email
+mail dite hobe	send email
+মেইল করব	send email
+মেইল দিব	send email
+মেইল করতে হবে	send email
+email korbo	send email
+email dibo	send email
+email korte hobe	send email
+kinbo	buy
+kinte hobe	buy
+kinte chai	buy
+কিনব	buy
+কিনবো	buy
+কিনতে হবে	buy
+কিনতে চাই	buy
+kina lagbe	buy
+কিনা লাগবে	buy
+order dibo	place order
+order korbo	place order
+order dite hobe	place order
+অর্ডার দিব	place order
+অর্ডার করব	place order
+অর্ডার দিতে হবে	place order
+monay rakhis	remind me
+monay rakhish	remind me
+monay rekho	remind me
+mone rekho	remind me
+mone rakhis	remind me
+mone rakhish	remind me
+mone rakhio	remind me
+mone rakhbi	remind me
+mone korio	remind me
+mone koriye dio	remind me
+mone koriye dis	remind me
+mone koriye dibi	remind me
+mone koriye diyo	remind me
+mone koriye din	remind me
+mone koray dio	remind me
+mone koray dis	remind me
+mone koraiya dio	remind me
+mone koraiya dis	remind me
+মনে রাখিস	remind me
+মনে রেখো	remind me
+মনে রাখো	remind me
+মনে রাখবি	remind me
+মনে রাখুন	remind me
+মনে করিও	remind me
+মনে করিয়ে দিও	remind me
+মনে করিয়ে দিস	remind me
+মনে করিয়ে দিন	remind me
+মনে করিয়ে দাও	remind me
+মনে করায়ে দিস	remind me
+মনে করায়ে দিও	remind me
+মনে করাইয়া দিয়ো	remind me
+মনে করাইয়া দিস	remind me
+bhule jabo na	do not forget
+bhule jeo na	do not forget
+bhule jas na	do not forget
+bhule jaish na	do not forget
+bhule jabi na	do not forget
+bhule jaio na	do not forget
+bhulona	do not forget
+bhulo na	do not forget
+bhulis na	do not forget
+ভুলো না	do not forget
+ভুলিস না	do not forget
+ভুলবি না	do not forget
+ভুলে যাস না	do not forget
+ভুলে যেও না	do not forget
+ভুলে যাবি না	do not forget
+ভুলে যাবো না	do not forget
+ভুলে যাব না	do not forget
+ভুলিও না	do not forget
+bhule gelam	do not forget
+ভুলে গেলাম	do not forget
+bhule gesi	do not forget
+ভুলে গেছি	do not forget
+mone pore	remembered
+mone pore gese	remembered
+mone pore gelo	remembered
+মনে পড়ে	remembered
+মনে পড়ে গেছে	remembered
+মনে পড়ল	remembered
+মনে পড়লো	remembered
+mone nai	cannot remember
+mone nei	cannot remember
+mone porche na	cannot remember
+mone pore na	cannot remember
+মনে নেই	cannot remember
+মনে নাই	cannot remember
+মনে পড়ছে না	cannot remember
+মনে পড়ে না	cannot remember
+reminder	set reminder
+রিমাইন্ডার	set reminder
+reminder dio	set reminder
+reminder dao	set reminder
+reminder de	set reminder
+reminder lagao	set reminder
+reminder set koro	set reminder
+reminder set kor	set reminder
+রিমাইন্ডার দাও	set reminder
+রিমাইন্ডার দিও	set reminder
+রিমাইন্ডার দে	set reminder
+রিমাইন্ডার সেট করো	set reminder
+রিমাইন্ডার লাগাও	set reminder
+alarm dao	set alarm
+alarm dio	set alarm
+alarm de	set alarm
+alarm lagao	set alarm
+alarm set koro	set alarm
+alarm set kor	set alarm
+alarm rakho	set alarm
+অ্যালার্ম দাও	set alarm
+অ্যালার্ম দিও	set alarm
+অ্যালার্ম দে	set alarm
+অ্যালার্ম লাগাও	set alarm
+অ্যালার্ম সেট করো	set alarm
+এলার্ম দাও	set alarm
+এলার্ম দে	set alarm
+ghum theke tule dio	wake me up
+ghum theke tule dao	wake me up
+ghum theke tulis	wake me up
+ghum theke uthiye dio	wake me up
+ghum theke uthiye dao	wake me up
+ghum theke uthabi	wake me up
+ghum theke jagiye dio	wake me up
+ghum theke jagiye dao	wake me up
+jagiye dio	wake me up
+jagiye dao	wake me up
+jagiye de	wake me up
+jagis	wake me up
+jagabi	wake me up
+uthiye dio	wake me up
+uthiye dao	wake me up
+uthiye de	wake me up
+tule dio	wake me up
+tule dao	wake me up
+tule de	wake me up
+ঘুম থেকে তুলে দিও	wake me up
+ঘুম থেকে তুলে দাও	wake me up
+ঘুম থেকে তুলিস	wake me up
+ঘুম থেকে ডেকে দিও	wake me up
+ঘুম থেকে জাগিয়ে দিও	wake me up
+ঘুম থেকে জাগিয়ে দাও	wake me up
+জাগিয়ে দিও	wake me up
+জাগিয়ে দাও	wake me up
+জাগিয়ে দে	wake me up
+ডেকে দিও	wake me up
+ডেকে দাও	wake me up
+তুলে দিও	wake me up
+তুলে দাও	wake me up
+উঠিয়ে দিও	wake me up
+উঠিয়ে দাও	wake me up
+shokale	morning
+sokale	morning
+সকালে	morning
+bikele	morning
+bikale	morning
+বিকেলে	morning
+বিকালে	morning
+sondhay	morning
+shondhay	morning
+sandhay	morning
+সন্ধ্যায়	morning
+সন্ধ্যাবেলা	morning
+raate	morning
+rate	morning
+রাতে	morning
+dupure	morning
+dupur e	morning
+দুপুরে	morning
+bhore	morning
+bhor e	morning
+ভোরে	morning
+ajke	today
+aaj	today
+aj	today
+আজ	today
+আজকে	today
+ajker	today
+আজকের	today
+ajkei	today
+আজকেই	today
+kal	tomorrow
+kaal	tomorrow
+কাল	tomorrow
+কালকে	tomorrow
+kal ke	tomorrow
+কালকের	tomorrow
+gotokal	yesterday
+gotkal	yesterday
+গতকাল	yesterday
+গতকালকে	yesterday
+parshu	day after tomorrow
+porshu	day after tomorrow
+parsu	day after tomorrow
+পরশু	day after tomorrow
+পরশুদিন	day after tomorrow
+ekhon	now
+ekhoni	now
+ekhuni	now
+এখন	now
+এখনই	now
+এখুনি	now
+এখনি	now
+এক্ষুনি	now
+pore	later
+পরে	later
+ektu pore	later
+একটু পরে	later
+kichukkhon pore	later
+কিছুক্ষণ পরে	later
+agami	upcoming
+আগামী	upcoming
+agami kal	upcoming
+আগামীকাল	upcoming
+ager	previous
+আগের	previous
+gato	previous
+গত	previous
+dokan theke	from
+দোকান থেকে	from
+bazar theke	from
+বাজার থেকে	from
+bank theke	from
+ব্যাংক থেকে	from
+atm theke	from
+এটিএম থেকে	from
+office theke	from
+অফিস থেকে	from
+bondhu	friend
+bondhura	friend
+bandhobi	friend
+bondhuder	friend
+bondhur	friend
+বন্ধু	friend
+বন্ধুরা	friend
+বন্ধুদের	friend
+বন্ধুর	friend
+বান্ধবী	friend
+ammu	mom
+amma	mom
+mom	mom
+mum	mom
+আম্মু	mom
+আম্মা	mom
+মা	mom
+মায়ের	mom
+মাকে	mom
+abbu	dad
+abba	dad
+baba	dad
+bapi	dad
+বাবা	dad
+আব্বু	dad
+আব্বা	dad
+বাবার	dad
+বাবাকে	dad
+bhai	brother
+bhaiya	brother
+vaiya	brother
+bhaia	brother
+ভাই	brother
+ভাইয়া	brother
+ভাইকে	brother
+ভাইয়ের	brother
+apu	sister
+apa	sister
+aapu	sister
+aapa	sister
+আপু	sister
+আপা	sister
+আপুকে	sister
+আপার	sister
+বোন	sister
+bon	sister
+বোনকে	sister
+khala	relative
+khalamoni	relative
+khalu	relative
+mama	relative
+mami	relative
+chacha	relative
+chachi	relative
+fupu	relative
+fufu	relative
+fupa	relative
+dada	relative
+dadu	relative
+nana	relative
+nani	relative
+dadi	relative
+thakurda	relative
+thakuma	relative
+ঠাকুরদা	relative
+ঠাকুমা	relative
+খালা	relative
+খালু	relative
+মামা	relative
+মামি	relative
+চাচা	relative
+চাচি	relative
+ফুপু	relative
+ফুপা	relative
+দাদা	relative
+দাদু	relative
+নানা	relative
+নানি	relative
+দাদি	relative
+shoshur	in-law or spouse
+shashuri	in-law or spouse
+shwoshur	in-law or spouse
+শ্বশুর	in-law or spouse
+শাশুড়ি	in-law or spouse
+শাশুড়ী	in-law or spouse
+bou	in-law or spouse
+bau	in-law or spouse
+বউ	in-law or spouse
+বৌ	in-law or spouse
+স্বামী	in-law or spouse
+shami	in-law or spouse
+swami	in-law or spouse
+স্ত্রী	in-law or spouse
+boss	boss
+স্যার	boss
+madam	boss
+ম্যাডাম	boss
+maam	boss
+ম্যাম	boss
+bari wala	landlord
+bariwala	landlord
+bari ala	landlord
+baariwala	landlord
+বাড়িওয়ালা	landlord
+বাড়িওয়ালার	landlord
+বাড়িওয়ালাকে	landlord
+dokandar	shopkeeper
+dokaandar	shopkeeper
+দোকানদার	shopkeeper
+দোকানদারকে	shopkeeper
+rickshawwala	rickshaw driver
+rickshaw wala	rickshaw driver
+rickshawala	rickshaw driver
+রিকশাওয়ালা	rickshaw driver
+রিকশাওয়ালাকে	rickshaw driver
+রিকশা চালক	rickshaw driver
+driver	driver
+ড্রাইভার	driver
+ড্রাইভারকে	driver
+chalok	driver
+চালক	driver
+bua	maid
+বুয়া	maid
+buar	maid
+বুয়ার	maid
+buake	maid
+বুয়াকে	maid
+kajer bua	maid
+কাজের বুয়া	maid
+kajer meye	maid
+কাজের মেয়ে	maid
+hotat	urgent
+হঠাৎ	urgent
+jorury	urgent
+joruri	urgent
+jaruri	urgent
+জরুরি	urgent
+জরুরী	urgent
+emergency	urgent
+ইমার্জেন্সি	urgent
+onek	a lot
+অনেক	a lot
+besi	a lot
+beshi	a lot
+বেশি	a lot
+বেশী	a lot
+kom	a little
+কম	a little
+ektu	a little
+একটু	a little
+kichu	a little
+কিছু	a little
+kichhu	a little
+shob	all
+sob	all
+সব	all
+shobgulo	all
+সবগুলো	all
+lagbe	need
+laglo	need
+lagse	need
+lagche	need
+লাগবে	need
+লাগলো	need
+লাগছে	need
+লাগে	need
+dorkar	need
+darkar	need
+দরকার	need
+dorkar ache	need
+দরকার আছে	need
+prayojon	need
+প্রয়োজন	need
+chai	want
+cai	want
+চাই	want
+chaitesi	want
+চাইছি	want
+chaichi	want
+ache	is
+আছে	is
+nai	is
+nei	is
+নাই	is
+নেই	is
+hobe	is
+হবে	is
+holo	is
+hoilo	is
+হলো	is
+হইলো	is
+hoyeche	is
+hoise	is
+হয়েছে	is
+হইছে	is
+korbo	is
+করব	is
+করবো	is
+korlam	is
+করলাম	is
+korechi	is
+korsi	is
+করেছি	is
+করসি	is
+ki	question
+কি	question
+কী	question
+koto	question
+কত	question
+kotota	question
+কতটা	question
+koto taka	question
+কত টাকা	question
+kotodin	question
+কতদিন	question
+kokhon	question
+কখন	question
+kothay	question
+কোথায়	question
+kothaye	question
+কোথায়ে	question
+keno	question
+কেন	question
+kivabe	question
+kibhabe	question
+কিভাবে	question
+কীভাবে	question
+kemon	question
+কেমন	question
+ke	question
+কে	question
+kar	question
+কার	question
+kake	question
+কাকে	question
+kon	question
+কোন	question
+konta	question
+কোনটা	question
+hae	ok
+haan	ok
+ha	ok
+হ্যাঁ	ok
+হা	ok
+হাঁ	ok
+na	no
+না	no
+nah	no
+নাহ	no
+thik ache	ok
+ঠিক আছে	ok
+thik achhe	ok
+accha	ok
+achha	ok
+আচ্ছা	ok
+bujhlam	ok
+বুঝলাম	ok
+bujhechi	ok
+বুঝেছি	ok
+bujhsi	ok
+dhonnobad	thank you
+dhanyabad	thank you
+dhonyobad	thank you
+ধন্যবাদ	thank you
+thanks	thank you
+shukria	thank you
+শুকরিয়া	thank you
+apnake dhonnobad	thank you
+আপনাকে ধন্যবাদ	thank you
+thank you	thank you
+chakri	job
+chakrir	job
+চাকরি	job
+চাকরির	job
+chakri korchi	job
+চাকরি করছি	job
+job er jonno	job
+চাকরির জন্য	job
+chakrir abedon	job
+চাকরির আবেদন	job
+chakrir interview	job
+চাকরির ইন্টারভিউ	job
+chakrir khoj	job
+চাকরির খোঁজ	job
+chakri khuji	job
+চাকরি খুঁজি	job
+চাকরি খুঁজছি	job
+abedon	applied
+abedon korlam	applied
+abedon korechi	applied
+আবেদন	applied
+আবেদন করলাম	applied
+আবেদন করেছি	applied
+apply korlam	applied
+apply korechi	applied
+apply kora	applied
+apply korsi	applied
+এপ্লাই করলাম	applied
+এপ্লাই করেছি	applied
+এপ্লাই	applied
+interview	interview
+ইন্টারভিউ	interview
+interview dilam	interview
+interview diyechi	interview
+interview diye ashlam	interview
+ইন্টারভিউ দিলাম	interview
+ইন্টারভিউ দিয়েছি	interview
+ইন্টারভিউ দিতে যাব	interview
+interview ache	interview
+ইন্টারভিউ আছে	interview
+interview hobe	interview
+ইন্টারভিউ হবে	interview
+interview er call	interview
+ইন্টারভিউর কল	interview
+call ashche	interview
+কল এসেছে	interview
+call eshechhe	interview
+কল আসছে	interview
+offer pelam	received offer
+offer peyechi	received offer
+offer paichi	received offer
+offer ashche	received offer
+offer eshechhe	received offer
+offer letter pelam	received offer
+অফার পেলাম	received offer
+অফার পেয়েছি	received offer
+অফার লেটার পেলাম	received offer
+অফার এসেছে	received offer
+reject hoyechi	rejected
+reject hoyeche	rejected
+reject korse	rejected
+reject korlo	rejected
+reject kore dise	rejected
+rejected hoyechi	rejected
+রিজেক্ট হয়েছি	rejected
+রিজেক্ট করেছে	rejected
+রিজেক্ট করলো	rejected
+প্রত্যাখ্যাত	rejected
+selected	selected
+select hoyechi	selected
+select hoyeche	selected
+select korse	selected
+select korlo	selected
+সিলেক্টেড	selected
+সিলেক্ট হয়েছি	selected
+সিলেক্ট হয়েছে	selected
+নির্বাচিত	selected
+shortlisted	shortlisted
+shortlist hoyechi	shortlisted
+শর্টলিস্টেড	shortlisted
+শর্টলিস্ট হয়েছি	shortlisted
+joining	joining
+join korbo	joining
+join korlam	joining
+join korechi	joining
+জয়েনিং	joining
+জয়েন করব	joining
+জয়েন করলাম	joining
+জয়েন করেছি	joining
+joining date	joining
+জয়েনিং ডেট	joining
+resign	resigned
+resign korlam	resigned
+resign korechi	resigned
+resignation	resigned
+রিজাইন	resigned
+রিজাইন করলাম	resigned
+রিজাইন করেছি	resigned
+ইস্তফা	resigned
+পদত্যাগ	resigned
+notice period	notice period
+নোটিশ পিরিয়ড	notice period
+notice period shesh	notice period
+নোটিশ পিরিয়ড শেষ	notice period
+probation	probation
+প্রবেশন	probation
+probation period	probation
+প্রবেশন পিরিয়ড	probation
+intern	internship
+internship	internship
+ইন্টার্ন	internship
+ইন্টার্নশিপ	internship
+intern korchi	internship
+ইন্টার্ন করছি	internship
+part time	part time
+parttime	part time
+পার্ট টাইম	part time
+পার্টটাইম	part time
+khondokalin	part time
+খণ্ডকালীন	part time
+full time	full time
+fulltime	full time
+ফুল টাইম	full time
+ফুলটাইম	full time
+purnokalin	full time
+পূর্ণকালীন	full time
+remote	remote
+রিমোট	remote
+ghore boshe	remote
+ঘরে বসে	remote
+ghore bose kaj	remote
+ঘরে বসে কাজ	remote
+work from home	remote
+wfh	remote
+ডব্লিউএফএইচ	remote
+company	company
+কোম্পানি	company
+কোম্পানী	company
+company r	company
+company er	company
+কোম্পানির	company
+office	company
+অফিস	company
+অফিসে	company
+অফিসের	company
+officer	company
+অফিসার	company
+sotti	true
+সত্যি	true
+mithya	true
+মিথ্যা	true
+note	note
+নোট	note
+note korlam	note
+note kore rakhlam	note
+note kore rekhechi	note
+নোট করলাম	note
+নোট করে রাখলাম	note
+নোট করে রেখেছি	note
+note rakho	note
+note kore rakho	note
+নোট রাখো	note
+নোট করে রাখো	note
+likhe rakho	note
+likhe rakhlam	note
+likhe rekhechi	note
+লিখে রাখো	note
+লিখে রাখলাম	note
+লিখে রেখেছি	note
+likhe nao	note
+লিখে নাও	note
+likhe nilam	note
+লিখে নিলাম	note
+idea	idea
+আইডিয়া	idea
+ধারণা	idea
+chinta	idea
+চিন্তা	idea
+vabna	idea
+bhabna	idea
+ভাবনা	idea
+ভাবছি	idea
+vabchi	idea
+bhabchi	idea
+list	shopping list
+লিস্ট	shopping list
+talika	shopping list
+তালিকা	shopping list
+bazar er list	shopping list
+bazarer list	shopping list
+বাজারের লিস্ট	shopping list
+বাজারের তালিকা	shopping list
+shopping list	shopping list
+শপিং লিস্ট	shopping list
+kenakatar list	shopping list
+কেনাকাটার তালিকা	shopping list
+কেনাকাটার লিস্ট	shopping list
+recipe	cooking
+রেসিপি	cooking
+ranna	cooking
+রান্না	cooking
+rannar recipe	cooking
+রান্নার রেসিপি	cooking
+ranna korbo	cooking
+রান্না করব	cooking
+ranna korlam	cooking
+রান্না করলাম	cooking
+randhlam	cooking
+রাঁধলাম	cooking
+randhbo	cooking
+রাঁধব	cooking
+diary	diary
+ডায়েরি	diary
+ডায়রি	diary
+dinlipi	diary
+দিনলিপি	diary
+journal	diary
+জার্নাল	diary
+aj ki holo	diary
+আজ কি হলো	diary
+ajker dinlipi	diary
+আজকের দিনলিপি	diary
+password	credential
+পাসওয়ার্ড	credential
+pin	credential
+পিন	credential
+otp	credential
+ওটিপি	credential
+code	credential
+কোড	credential
+address	address
+ঠিকানা	address
+thikana	address
+location	address
+লোকেশন	address
+map	address
+ম্যাপ	address
+number	number
+নম্বর	number
+nombor	number
+নাম্বার	number
+phone number	number
+ফোন নম্বর	number
+mobile number	number
+মোবাইল নম্বর	number
+fon number	number
+birthday	birthday
+জন্মদিন	birthday
+jonmodin	birthday
+bday	birthday
+বার্থডে	birthday
+জন্মদিনের	birthday
+jonmodiner	birthday
+janmodin	birthday
+janmadin	birthday
+anniversary	anniversary
+বিবাহবার্ষিকী	anniversary
+biye barshiki	anniversary
+biyer barshiki	anniversary
+বিয়ের বার্ষিকী	anniversary
+eid	eid
+ঈদ	eid
+eider	eid
+ঈদের	eid
+eid mubarak	eid
+ঈদ মুবারক	eid
+eid salami	eid
+ঈদ সালামি	eid
+eidi	eid
+ঈদি	eid
+salami	eid gift money
+সালামি	eid gift money
+salami dilam	eid gift money
+সালামি দিলাম	eid gift money
+salami pelam	eid gift money
+সালামি পেলাম	eid gift money
+ramzan	ramadan
+ramadan	ramadan
+ramjan	ramadan
+রমজান	ramadan
+রমযান	ramadan
+রমাদান	ramadan
+ramzan mash	ramadan
+রমজান মাস	ramadan
+iftar	iftar or sehri
+ইফতার	iftar or sehri
+iftari	iftar or sehri
+ইফতারি	iftar or sehri
+iftar party	iftar or sehri
+ইফতার পার্টি	iftar or sehri
+sehri	iftar or sehri
+সেহরি	iftar or sehri
+সেহরী	iftar or sehri
+seheri	iftar or sehri
+namaz	prayer
+namaj	prayer
+namaaz	prayer
+নামাজ	prayer
+নামায	prayer
+নামাজ পড়লাম	prayer
+namaz porlam	prayer
+namaz porbo	prayer
+নামাজ পড়ব	prayer
+salat	prayer
+সালাত	prayer
+salah	prayer
+সালাহ	prayer
+fojor	prayer name
+fajr	prayer name
+ফজর	prayer name
+জোহর	prayer name
+zohr	prayer name
+zuhr	prayer name
+johor	prayer name
+যোহর	prayer name
+asor	prayer name
+asr	prayer name
+আসর	prayer name
+magrib	prayer name
+maghrib	prayer name
+মাগরিব	prayer name
+esha	prayer name
+isha	prayer name
+এশা	prayer name
+ইশা	prayer name
+jumma	jumma prayer
+juma	jumma prayer
+jummah	jumma prayer
+জুমা	jumma prayer
+জুম্মা	jumma prayer
+jumar namaz	jumma prayer
+জুমার নামাজ	jumma prayer
+mosjid	mosque
+masjid	mosque
+mosque	mosque
+মসজিদ	mosque
+মসজিদে	mosque
+masjide	mosque
+মসজিদের	mosque
+pohela boishakh	bengali new year
+পহেলা বৈশাখ	bengali new year
+boishakh	bengali new year
+বৈশাখ	bengali new year
+boishakhi	bengali new year
+বৈশাখী	bengali new year
+puja	puja
+পূজা	puja
+pujo	puja
+পুজো	puja
+durga puja	puja
+দুর্গাপূজা	puja
+shorot	puja
+শরৎ	puja
+holud	wedding
+হলুদ	wedding
+gaye holud	wedding
+গায়ে হলুদ	wedding
+biye	wedding
+বিয়ে	wedding
+biyer	wedding
+বিয়ের	wedding
+biyer dawat	wedding
+বিয়ের দাওয়াত	wedding
+biyer gift	wedding
+বিয়ের গিফট	wedding
+reception	wedding
+রিসেপশন	wedding
+walima	wedding
+ওয়ালিমা	wedding
+bou bhat	wedding
+বউ ভাত	wedding
+dawat	invitation
+dawaat	invitation
+দাওয়াত	invitation
+dawat khete jabo	invitation
+দাওয়াত খেতে যাব	invitation
+nimontron	invitation
+nimantran	invitation
+নিমন্ত্রণ	invitation
+ভোজ	invitation
+bhoj	invitation
+adda	hangout
+আড্ডা	hangout
+adda dilam	hangout
+আড্ডা দিলাম	hangout
+adda marlam	hangout
+আড্ডা মারলাম	hangout
+adda dibo	hangout
+আড্ডা দিব	hangout
+adda marbo	hangout
+ghurte gelam	trip
+ghurte jabo	trip
+ঘুরতে গেলাম	trip
+ঘুরতে যাব	trip
+ghura	trip
+ঘুরা	trip
+ghorafera	trip
+ঘোরাফেরা	trip
+ghurafera	trip
+bhromon	trip
+ভ্রমণ	trip
+bhraman	trip
+বেড়াতে গেলাম	trip
+বেড়াতে যাব	trip
+bera	trip
+বেড়ানো	trip
+shopping korlam	went shopping
+shopping korechi	went shopping
+shopping kore ashlam	went shopping
+শপিং করলাম	went shopping
+শপিং করেছি	went shopping
+kenakata korlam	went shopping
+kenakata korechi	went shopping
+কেনাকাটা করলাম	went shopping
+কেনাকাটা করেছি	went shopping
+market korlam	went shopping
+market kore ashlam	went shopping
+মার্কেট করলাম	went shopping

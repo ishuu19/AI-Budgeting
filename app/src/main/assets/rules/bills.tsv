@@ -1,0 +1,1055 @@
+# phrase<TAB>FREQUENCY (BillFrequency)<TAB>Canonical
+rent	MONTHLY	Rent
+house rent	MONTHLY	Rent
+flat rent	MONTHLY	Rent
+apartment rent	MONTHLY	Rent
+room rent	MONTHLY	Rent
+monthly rent	MONTHLY	Rent
+bari bhara	MONTHLY	Rent
+basa bhara	MONTHLY	Rent
+basha bhara	MONTHLY	Rent
+bari bhada	MONTHLY	Rent
+basa bhada	MONTHLY	Rent
+flat bhara	MONTHLY	Rent
+mess bhara	MONTHLY	Rent
+hostel rent	MONTHLY	Rent
+বাসা ভাড়া	MONTHLY	Rent
+বাড়ি ভাড়া	MONTHLY	Rent
+ফ্ল্যাট ভাড়া	MONTHLY	Rent
+মেস ভাড়া	MONTHLY	Rent
+shop rent	MONTHLY	Rent
+office rent	MONTHLY	Rent
+parking rent	MONTHLY	Rent
+garage rent	MONTHLY	Rent
+landlord	MONTHLY	Rent
+bari wala	MONTHLY	Rent
+electricity	MONTHLY	Electricity Bill
+electricity bill	MONTHLY	Electricity Bill
+electric bill	MONTHLY	Electricity Bill
+current bill	MONTHLY	Electricity Bill
+light bill	MONTHLY	Electricity Bill
+power bill	MONTHLY	Electricity Bill
+bidyut bill	MONTHLY	Electricity Bill
+biddut bill	MONTHLY	Electricity Bill
+বিদ্যুৎ বিল	MONTHLY	Electricity Bill
+কারেন্ট বিল	MONTHLY	Electricity Bill
+desco	MONTHLY	Electricity Bill
+desco bill	MONTHLY	Electricity Bill
+dpdc	MONTHLY	Electricity Bill
+dpdc bill	MONTHLY	Electricity Bill
+nesco	MONTHLY	Electricity Bill
+nesco bill	MONTHLY	Electricity Bill
+wzpdcl	MONTHLY	Electricity Bill
+breb	MONTHLY	Electricity Bill
+palli bidyut	MONTHLY	Electricity Bill
+pbs bill	MONTHLY	Electricity Bill
+prepaid meter	MONTHLY	Electricity Bill
+meter recharge	MONTHLY	Electricity Bill
+pg&e	MONTHLY	Electricity Bill
+con edison	MONTHLY	Electricity Bill
+duke energy	MONTHLY	Electricity Bill
+national grid	MONTHLY	Electricity Bill
+british gas	MONTHLY	Electricity Bill
+edf	MONTHLY	Electricity Bill
+octopus energy	MONTHLY	Electricity Bill
+tata power	MONTHLY	Electricity Bill
+bescom	MONTHLY	Electricity Bill
+gas bill	MONTHLY	Gas Bill
+gas	MONTHLY	Gas Bill
+cooking gas	MONTHLY	Gas Bill
+titas	MONTHLY	Gas Bill
+titas gas	MONTHLY	Gas Bill
+titas bill	MONTHLY	Gas Bill
+bakhrabad	MONTHLY	Gas Bill
+bakhrabad gas	MONTHLY	Gas Bill
+jalalabad gas	MONTHLY	Gas Bill
+karnaphuli gas	MONTHLY	Gas Bill
+গ্যাস বিল	MONTHLY	Gas Bill
+piped gas	MONTHLY	Gas Bill
+png bill	MONTHLY	Gas Bill
+mahanagar gas	MONTHLY	Gas Bill
+indraprastha gas	MONTHLY	Gas Bill
+natural gas bill	MONTHLY	Gas Bill
+water bill	MONTHLY	Water Bill
+water	MONTHLY	Water Bill
+wasa	MONTHLY	Water Bill
+wasa bill	MONTHLY	Water Bill
+dhaka wasa	MONTHLY	Water Bill
+ctg wasa	MONTHLY	Water Bill
+pani bill	MONTHLY	Water Bill
+পানির বিল	MONTHLY	Water Bill
+ওয়াসা বিল	MONTHLY	Water Bill
+thames water	MONTHLY	Water Bill
+water rates	MONTHLY	Water Bill
+water tax	MONTHLY	Water Bill
+internet	MONTHLY	Internet
+internet bill	MONTHLY	Internet
+wifi	MONTHLY	Internet
+wifi bill	MONTHLY	Internet
+broadband	MONTHLY	Internet
+broadband bill	MONTHLY	Internet
+net bill	MONTHLY	Internet
+isp	MONTHLY	Internet
+brac net	MONTHLY	Internet
+bracnet	MONTHLY	Internet
+link3	MONTHLY	Internet
+carnival internet	MONTHLY	Internet
+amber it	MONTHLY	Internet
+ranks itt	MONTHLY	Internet
+summit communications	MONTHLY	Internet
+sam online	MONTHLY	Internet
+fiber at home	MONTHLY	Internet
+grameenphone broadband	MONTHLY	Internet
+comcast	MONTHLY	Internet
+xfinity	MONTHLY	Internet
+spectrum	MONTHLY	Internet
+bt broadband	MONTHLY	Internet
+virgin media	MONTHLY	Internet
+act fibernet	MONTHLY	Internet
+jiofiber	MONTHLY	Internet
+airtel xstream	MONTHLY	Internet
+ইন্টারনেট বিল	MONTHLY	Internet
+ওয়াইফাই বিল	MONTHLY	Internet
+mobile bill	MONTHLY	Mobile Plan
+phone bill	MONTHLY	Mobile Plan
+mobile plan	MONTHLY	Mobile Plan
+phone plan	MONTHLY	Mobile Plan
+postpaid	MONTHLY	Mobile Plan
+postpaid bill	MONTHLY	Mobile Plan
+gp postpaid	MONTHLY	Mobile Plan
+robi postpaid	MONTHLY	Mobile Plan
+banglalink postpaid	MONTHLY	Mobile Plan
+grameenphone	MONTHLY	Mobile Plan
+robi	MONTHLY	Mobile Plan
+banglalink	MONTHLY	Mobile Plan
+teletalk	MONTHLY	Mobile Plan
+airtel	MONTHLY	Mobile Plan
+skitto	MONTHLY	Mobile Plan
+verizon	MONTHLY	Mobile Plan
+at&t	MONTHLY	Mobile Plan
+t-mobile	MONTHLY	Mobile Plan
+vodafone	MONTHLY	Mobile Plan
+jio	MONTHLY	Mobile Plan
+mint mobile	MONTHLY	Mobile Plan
+মোবাইল বিল	MONTHLY	Mobile Plan
+ফোন বিল	MONTHLY	Mobile Plan
+data plan	MONTHLY	Mobile Plan
+unlimited plan	MONTHLY	Mobile Plan
+sim plan	MONTHLY	Mobile Plan
+cable tv	MONTHLY	Cable TV
+cable bill	MONTHLY	Cable TV
+dish bill	MONTHLY	Cable TV
+dth	MONTHLY	Cable TV
+dth recharge	MONTHLY	Cable TV
+set top box	MONTHLY	Cable TV
+akash dth	MONTHLY	Cable TV
+tata play	MONTHLY	Cable TV
+dish tv	MONTHLY	Cable TV
+sky tv	MONTHLY	Cable TV
+ক্যাবল বিল	MONTHLY	Cable TV
+ডিশ বিল	MONTHLY	Cable TV
+service charge	MONTHLY	Service Charge
+building service charge	MONTHLY	Service Charge
+maintenance charge	MONTHLY	Service Charge
+maintenance fee	MONTHLY	Service Charge
+flat maintenance	MONTHLY	Service Charge
+apartment maintenance	MONTHLY	Service Charge
+hoa	MONTHLY	Service Charge
+hoa fee	MONTHLY	Service Charge
+condo fee	MONTHLY	Service Charge
+strata fee	MONTHLY	Service Charge
+society maintenance	MONTHLY	Service Charge
+society charge	MONTHLY	Service Charge
+সার্ভিস চার্জ	MONTHLY	Service Charge
+মেইনটেন্যান্স	MONTHLY	Service Charge
+generator bill	MONTHLY	Generator Charge
+generator charge	MONTHLY	Generator Charge
+ips bill	MONTHLY	Generator Charge
+ips charge	MONTHLY	Generator Charge
+lift bill	MONTHLY	Generator Charge
+lift charge	MONTHLY	Generator Charge
+guard salary	MONTHLY	Generator Charge
+security guard bill	MONTHLY	Generator Charge
+darwan beton	MONTHLY	Generator Charge
+darwan er beton	MONTHLY	Generator Charge
+maid salary	MONTHLY	Maid Salary
+bua salary	MONTHLY	Maid Salary
+bua beton	MONTHLY	Maid Salary
+bua er beton	MONTHLY	Maid Salary
+cook salary	MONTHLY	Maid Salary
+driver salary	MONTHLY	Maid Salary
+driver beton	MONTHLY	Maid Salary
+cleaner salary	MONTHLY	Maid Salary
+helper salary	MONTHLY	Maid Salary
+nanny salary	MONTHLY	Maid Salary
+caretaker salary	MONTHLY	Maid Salary
+কাজের বুয়া	MONTHLY	Maid Salary
+বুয়ার বেতন	MONTHLY	Maid Salary
+garbage bill	MONTHLY	Garbage Bill
+waste bill	MONTHLY	Garbage Bill
+moilar bill	MONTHLY	Garbage Bill
+moila bill	MONTHLY	Garbage Bill
+trash collection	MONTHLY	Garbage Bill
+waste collection	MONTHLY	Garbage Bill
+emi	MONTHLY	Loan EMI
+loan emi	MONTHLY	Loan EMI
+loan installment	MONTHLY	Loan EMI
+loan kisti	MONTHLY	Loan EMI
+loan er kisti	MONTHLY	Loan EMI
+personal loan emi	MONTHLY	Loan EMI
+home loan emi	MONTHLY	Loan EMI
+housing loan emi	MONTHLY	Loan EMI
+car loan emi	MONTHLY	Loan EMI
+bike loan emi	MONTHLY	Loan EMI
+education loan emi	MONTHLY	Loan EMI
+student loan payment	MONTHLY	Loan EMI
+student loan	MONTHLY	Loan EMI
+mortgage payment	MONTHLY	Loan EMI
+mortgage	MONTHLY	Loan EMI
+car payment	MONTHLY	Loan EMI
+car loan	MONTHLY	Loan EMI
+auto loan	MONTHLY	Loan EMI
+vehicle loan	MONTHLY	Loan EMI
+bike loan	MONTHLY	Loan EMI
+gold loan emi	MONTHLY	Loan EMI
+business loan emi	MONTHLY	Loan EMI
+sme loan	MONTHLY	Loan EMI
+microfinance kisti	MONTHLY	Loan EMI
+ngo kisti	MONTHLY	Loan EMI
+somiti kisti	MONTHLY	Loan EMI
+samity kisti	MONTHLY	Loan EMI
+কিস্তি	MONTHLY	Loan EMI
+লোনের কিস্তি	MONTHLY	Loan EMI
+ঋণের কিস্তি	MONTHLY	Loan EMI
+credit card bill	MONTHLY	Credit Card Payment
+credit card payment	MONTHLY	Credit Card Payment
+cc bill	MONTHLY	Credit Card Payment
+card bill	MONTHLY	Credit Card Payment
+card payment	MONTHLY	Credit Card Payment
+credit card due	MONTHLY	Credit Card Payment
+card due	MONTHLY	Credit Card Payment
+ক্রেডিট কার্ড বিল	MONTHLY	Credit Card Payment
+dps	MONTHLY	DPS Installment
+dps installment	MONTHLY	DPS Installment
+dps kisti	MONTHLY	DPS Installment
+dps er kisti	MONTHLY	DPS Installment
+ডিপিএস	MONTHLY	DPS Installment
+ডিপিএস কিস্তি	MONTHLY	DPS Installment
+recurring deposit	MONTHLY	DPS Installment
+rd installment	MONTHLY	DPS Installment
+monthly savings	MONTHLY	DPS Installment
+monthly saving	MONTHLY	DPS Installment
+sip	MONTHLY	DPS Installment
+mutual fund sip	MONTHLY	DPS Installment
+monthly sip	MONTHLY	DPS Installment
+sanchay	MONTHLY	DPS Installment
+সঞ্চয়	MONTHLY	DPS Installment
+pension scheme installment	MONTHLY	DPS Installment
+pension contribution	MONTHLY	DPS Installment
+provident fund contribution	MONTHLY	DPS Installment
+insurance premium monthly	MONTHLY	Insurance Premium
+monthly premium	MONTHLY	Insurance Premium
+bima kisti	MONTHLY	Insurance Premium
+health insurance monthly	MONTHLY	Insurance Premium
+car insurance monthly	MONTHLY	Insurance Premium
+life insurance monthly	MONTHLY	Insurance Premium
+metlife	MONTHLY	Insurance Premium
+delta life	MONTHLY	Insurance Premium
+popular life	MONTHLY	Insurance Premium
+pragati life	MONTHLY	Insurance Premium
+gym	MONTHLY	Gym Membership
+gym fee	MONTHLY	Gym Membership
+gym membership	MONTHLY	Gym Membership
+gym subscription	MONTHLY	Gym Membership
+gym monthly	MONTHLY	Gym Membership
+gym er fee	MONTHLY	Gym Membership
+jim fee	MONTHLY	Gym Membership
+planet fitness	MONTHLY	Gym Membership
+anytime fitness	MONTHLY	Gym Membership
+cult fit	MONTHLY	Gym Membership
+cult.fit	MONTHLY	Gym Membership
+crunch fitness	MONTHLY	Gym Membership
+la fitness	MONTHLY	Gym Membership
+equinox	MONTHLY	Gym Membership
+orangetheory	MONTHLY	Gym Membership
+puregym	MONTHLY	Gym Membership
+the gym group	MONTHLY	Gym Membership
+yoga class fee	MONTHLY	Gym Membership
+yoga membership	MONTHLY	Gym Membership
+swimming pool membership	MONTHLY	Gym Membership
+sports club fee	MONTHLY	Gym Membership
+club membership	MONTHLY	Gym Membership
+জিম ফি	MONTHLY	Gym Membership
+netflix	MONTHLY	Netflix
+netflix subscription	MONTHLY	Netflix
+netflix bill	MONTHLY	Netflix
+spotify	MONTHLY	Spotify
+spotify premium	MONTHLY	Spotify
+spotify subscription	MONTHLY	Spotify
+spotify family	MONTHLY	Spotify
+spotify duo	MONTHLY	Spotify
+spotify student	MONTHLY	Spotify
+youtube premium	MONTHLY	YouTube Premium
+yt premium	MONTHLY	YouTube Premium
+youtube music	MONTHLY	YouTube Premium
+youtube music premium	MONTHLY	YouTube Premium
+amazon prime monthly	MONTHLY	Amazon Prime
+prime video	MONTHLY	Amazon Prime
+prime video monthly	MONTHLY	Amazon Prime
+disney plus	MONTHLY	Disney+
+disney+	MONTHLY	Disney+
+disney+ hotstar	MONTHLY	Disney+
+hotstar	MONTHLY	Disney+
+jiohotstar	MONTHLY	Disney+
+hbo max	MONTHLY	HBO Max
+max	MONTHLY	HBO Max
+hbo	MONTHLY	HBO Max
+hulu	MONTHLY	Hulu
+hulu no ads	MONTHLY	Hulu
+apple one	MONTHLY	Apple Services
+apple music	MONTHLY	Apple Services
+apple tv+	MONTHLY	Apple Services
+apple tv plus	MONTHLY	Apple Services
+apple arcade	MONTHLY	Apple Services
+apple fitness+	MONTHLY	Apple Services
+icloud	MONTHLY	Apple Services
+icloud+	MONTHLY	Apple Services
+icloud storage	MONTHLY	Apple Services
+apple icloud	MONTHLY	Apple Services
+google one	MONTHLY	Google One
+google storage	MONTHLY	Google One
+google drive storage	MONTHLY	Google One
+google one storage	MONTHLY	Google One
+youtube tv	MONTHLY	Google One
+microsoft 365 monthly	MONTHLY	Microsoft 365
+office 365 monthly	MONTHLY	Microsoft 365
+m365	MONTHLY	Microsoft 365
+onedrive storage	MONTHLY	Microsoft 365
+hoichoi	MONTHLY	Hoichoi
+hoichoi subscription	MONTHLY	Hoichoi
+chorki	MONTHLY	Chorki
+chorki subscription	MONTHLY	Chorki
+binge	MONTHLY	Binge
+binge subscription	MONTHLY	Binge
+binge by robi	MONTHLY	Binge
+bongo	MONTHLY	Bongo
+bongo subscription	MONTHLY	Bongo
+bongo app	MONTHLY	Bongo
+toffee	MONTHLY	Toffee
+toffee subscription	MONTHLY	Toffee
+bioscope	MONTHLY	Bioscope
+bioscope subscription	MONTHLY	Bioscope
+paramount plus	MONTHLY	Paramount+
+paramount+	MONTHLY	Paramount+
+peacock	MONTHLY	Peacock
+peacock premium	MONTHLY	Peacock
+crunchyroll	MONTHLY	Crunchyroll
+crunchyroll premium	MONTHLY	Crunchyroll
+audible	MONTHLY	Audible
+audible subscription	MONTHLY	Audible
+kindle unlimited	MONTHLY	Kindle Unlimited
+xbox game pass	MONTHLY	Xbox Game Pass
+game pass	MONTHLY	Xbox Game Pass
+gamepass	MONTHLY	Xbox Game Pass
+xbox live	MONTHLY	Xbox Game Pass
+ps plus	MONTHLY	PlayStation Plus
+playstation plus	MONTHLY	PlayStation Plus
+psn plus	MONTHLY	PlayStation Plus
+nintendo switch online	MONTHLY	Nintendo Switch Online
+nso	MONTHLY	Nintendo Switch Online
+discord nitro	MONTHLY	Discord Nitro
+nitro	MONTHLY	Discord Nitro
+twitch sub	MONTHLY	Twitch Subscription
+twitch subscription	MONTHLY	Twitch Subscription
+patreon	MONTHLY	Patreon
+patreon pledge	MONTHLY	Patreon
+patreon subscription	MONTHLY	Patreon
+chatgpt plus	MONTHLY	ChatGPT Plus
+chatgpt subscription	MONTHLY	ChatGPT Plus
+chatgpt pro	MONTHLY	ChatGPT Plus
+openai plus	MONTHLY	ChatGPT Plus
+claude pro	MONTHLY	Claude Pro
+claude subscription	MONTHLY	Claude Pro
+claude max	MONTHLY	Claude Pro
+gemini advanced	MONTHLY	Gemini Advanced
+google ai pro	MONTHLY	Gemini Advanced
+gemini subscription	MONTHLY	Gemini Advanced
+github copilot	MONTHLY	GitHub Copilot
+copilot subscription	MONTHLY	GitHub Copilot
+cursor pro	MONTHLY	Cursor
+cursor subscription	MONTHLY	Cursor
+perplexity pro	MONTHLY	Perplexity Pro
+midjourney	MONTHLY	Midjourney
+notion plus	MONTHLY	Notion
+notion subscription	MONTHLY	Notion
+dropbox	MONTHLY	Dropbox
+dropbox plus	MONTHLY	Dropbox
+dropbox subscription	MONTHLY	Dropbox
+slack pro	MONTHLY	Slack
+slack subscription	MONTHLY	Slack
+zoom pro	MONTHLY	Zoom
+zoom subscription	MONTHLY	Zoom
+canva pro	MONTHLY	Canva
+canva subscription	MONTHLY	Canva
+figma pro	MONTHLY	Figma
+figma subscription	MONTHLY	Figma
+duolingo plus	MONTHLY	Duolingo
+duolingo super	MONTHLY	Duolingo
+duolingo subscription	MONTHLY	Duolingo
+headspace	MONTHLY	Headspace
+headspace subscription	MONTHLY	Headspace
+calm premium	MONTHLY	Calm
+calm subscription	MONTHLY	Calm
+strava	MONTHLY	Strava
+strava subscription	MONTHLY	Strava
+myfitnesspal premium	MONTHLY	MyFitnessPal
+vpn	MONTHLY	VPN
+vpn subscription	MONTHLY	VPN
+nordvpn	MONTHLY	VPN
+expressvpn	MONTHLY	VPN
+surfshark	MONTHLY	VPN
+proton vpn	MONTHLY	VPN
+antivirus	MONTHLY	Antivirus
+antivirus subscription	MONTHLY	Antivirus
+norton	MONTHLY	Antivirus
+mcafee	MONTHLY	Antivirus
+kaspersky	MONTHLY	Antivirus
+bitdefender	MONTHLY	Antivirus
+1password	MONTHLY	Password Manager
+lastpass	MONTHLY	Password Manager
+dashlane	MONTHLY	Password Manager
+bitwarden	MONTHLY	Password Manager
+hosting	MONTHLY	Hosting
+hosting bill	MONTHLY	Hosting
+server bill	MONTHLY	Hosting
+vps	MONTHLY	Hosting
+vps bill	MONTHLY	Hosting
+digitalocean	MONTHLY	Hosting
+linode	MONTHLY	Hosting
+vultr	MONTHLY	Hosting
+hetzner	MONTHLY	Hosting
+aws bill	MONTHLY	Hosting
+cloud bill	MONTHLY	Hosting
+heroku	MONTHLY	Hosting
+vercel pro	MONTHLY	Hosting
+netlify pro	MONTHLY	Hosting
+newspaper	MONTHLY	Newspaper
+newspaper bill	MONTHLY	Newspaper
+hawker bill	MONTHLY	Newspaper
+potrika bill	MONTHLY	Newspaper
+potrikar bill	MONTHLY	Newspaper
+magazine subscription	MONTHLY	Newspaper
+পত্রিকার বিল	MONTHLY	Newspaper
+school fee	MONTHLY	School Fee
+school fees	MONTHLY	School Fee
+school monthly fee	MONTHLY	School Fee
+school tuition	MONTHLY	School Fee
+schooler fee	MONTHLY	School Fee
+স্কুলের ফি	MONTHLY	School Fee
+স্কুলের বেতন	MONTHLY	School Fee
+madrasa fee	MONTHLY	School Fee
+kindergarten fee	MONTHLY	School Fee
+daycare	MONTHLY	School Fee
+daycare fee	MONTHLY	School Fee
+playgroup fee	MONTHLY	School Fee
+nursery fee	MONTHLY	School Fee
+baby sitter	MONTHLY	School Fee
+babysitter	MONTHLY	School Fee
+school van	MONTHLY	School Transport
+school bus	MONTHLY	School Transport
+school bus fee	MONTHLY	School Transport
+school van fee	MONTHLY	School Transport
+school transport	MONTHLY	School Transport
+school rickshaw	MONTHLY	School Transport
+school gari	MONTHLY	School Transport
+tuition fee	MONTHLY	Tuition Fee
+tuition	MONTHLY	Tuition Fee
+home tutor	MONTHLY	Tuition Fee
+private tutor	MONTHLY	Tuition Fee
+tutor fee	MONTHLY	Tuition Fee
+coaching fee	MONTHLY	Tuition Fee
+coaching	MONTHLY	Tuition Fee
+tuitioner taka	MONTHLY	Tuition Fee
+টিউশন ফি	MONTHLY	Tuition Fee
+কোচিং ফি	MONTHLY	Tuition Fee
+music class fee	MONTHLY	Tuition Fee
+dance class fee	MONTHLY	Tuition Fee
+art class fee	MONTHLY	Tuition Fee
+swimming class fee	MONTHLY	Tuition Fee
+university fee	MONTHLY	University Fee
+semester installment	MONTHLY	University Fee
+installment tuition	MONTHLY	University Fee
+per credit fee	MONTHLY	University Fee
+hostel fee	MONTHLY	University Fee
+hostel rent monthly	MONTHLY	University Fee
+hall fee	MONTHLY	University Fee
+mess bill	MONTHLY	University Fee
+mess khoroch	MONTHLY	University Fee
+mess fee	MONTHLY	University Fee
+regular medicine	MONTHLY	Medicine
+monthly medicine	MONTHLY	Medicine
+diabetes medicine	MONTHLY	Medicine
+bp medicine	MONTHLY	Medicine
+insulin	MONTHLY	Medicine
+thyroid medicine	MONTHLY	Medicine
+maintenance medicine	MONTHLY	Medicine
+parents allowance	MONTHLY	Parents Allowance
+ammu abbu taka	MONTHLY	Parents Allowance
+ammur taka	MONTHLY	Parents Allowance
+abbur taka	MONTHLY	Parents Allowance
+home money	MONTHLY	Parents Allowance
+family support	MONTHLY	Parents Allowance
+remittance home	MONTHLY	Parents Allowance
+monthly support	MONTHLY	Parents Allowance
+money to parents	MONTHLY	Parents Allowance
+gharer taka	MONTHLY	Parents Allowance
+bari te taka	MONTHLY	Parents Allowance
+বাড়িতে টাকা	MONTHLY	Parents Allowance
+child support	MONTHLY	Child Support
+alimony	MONTHLY	Child Support
+pocket money kids	MONTHLY	Child Support
+kids pocket money	MONTHLY	Child Support
+monthly donation	MONTHLY	Charity
+monthly charity	MONTHLY	Charity
+sadaqah jariyah	MONTHLY	Charity
+regular donation	MONTHLY	Charity
+mosque chanda	MONTHLY	Charity
+masjid chanda	MONTHLY	Charity
+orphan sponsorship	MONTHLY	Charity
+child sponsorship	MONTHLY	Charity
+samity	MONTHLY	Samity
+somiti	MONTHLY	Samity
+committee	MONTHLY	Samity
+committee taka	MONTHLY	Samity
+savings group	MONTHLY	Samity
+chit fund	MONTHLY	Samity
+ঋণের কিস্তি সমিতি	MONTHLY	Samity
+cleaning service	MONTHLY	Cleaning Service
+home cleaning	MONTHLY	Cleaning Service
+house cleaning	MONTHLY	Cleaning Service
+pest control monthly	MONTHLY	Cleaning Service
+laundry service monthly	MONTHLY	Cleaning Service
+tiffin service	MONTHLY	Cleaning Service
+tiffin monthly	MONTHLY	Cleaning Service
+meal plan	MONTHLY	Cleaning Service
+meal subscription	MONTHLY	Cleaning Service
+mess subscription	MONTHLY	Cleaning Service
+lunch box subscription	MONTHLY	Cleaning Service
+milk subscription	MONTHLY	Milk Subscription
+milk delivery	MONTHLY	Milk Subscription
+dudh wala	MONTHLY	Milk Subscription
+doodh wala	MONTHLY	Milk Subscription
+doodhwala	MONTHLY	Milk Subscription
+milkman	MONTHLY	Milk Subscription
+milk man	MONTHLY	Milk Subscription
+doodh bill	MONTHLY	Milk Subscription
+dudh er bill	MONTHLY	Milk Subscription
+দুধওয়ালা	MONTHLY	Milk Subscription
+দুধের বিল	MONTHLY	Milk Subscription
+water jar subscription	MONTHLY	Milk Subscription
+water jar bill	MONTHLY	Milk Subscription
+pani jar bill	MONTHLY	Milk Subscription
+jar water bill	MONTHLY	Milk Subscription
+bottled water subscription	MONTHLY	Milk Subscription
+car parking monthly	MONTHLY	Car Parking
+monthly parking	MONTHLY	Car Parking
+parking pass	MONTHLY	Car Parking
+parking permit	MONTHLY	Car Parking
+phone installment	MONTHLY	Phone Installment
+phone emi	MONTHLY	Phone Installment
+mobile emi	MONTHLY	Phone Installment
+mobile installment	MONTHLY	Phone Installment
+phone kisti	MONTHLY	Phone Installment
+mobile kisti	MONTHLY	Phone Installment
+iphone installment	MONTHLY	Phone Installment
+laptop emi	MONTHLY	Phone Installment
+laptop installment	MONTHLY	Phone Installment
+laptop kisti	MONTHLY	Phone Installment
+appliance emi	MONTHLY	Phone Installment
+fridge emi	MONTHLY	Phone Installment
+tv emi	MONTHLY	Phone Installment
+furniture emi	MONTHLY	Phone Installment
+bnpl	MONTHLY	Phone Installment
+buy now pay later	MONTHLY	Phone Installment
+klarna	MONTHLY	Phone Installment
+afterpay	MONTHLY	Phone Installment
+affirm	MONTHLY	Phone Installment
+sezzle	MONTHLY	Phone Installment
+paypal pay in 4	MONTHLY	Phone Installment
+simpl	MONTHLY	Phone Installment
+lazypay	MONTHLY	Phone Installment
+zestmoney	MONTHLY	Phone Installment
+account maintenance fee	MONTHLY	Bank Fee
+monthly bank fee	MONTHLY	Bank Fee
+bank service charge	MONTHLY	Bank Fee
+sms banking fee	MONTHLY	Bank Fee
+sms charge	MONTHLY	Bank Fee
+card maintenance fee	MONTHLY	Bank Fee
+locker rent monthly	MONTHLY	Bank Fee
+bank locker rent	MONTHLY	Bank Fee
+quarterly tax	QUARTERLY	Quarterly Tax
+advance tax	QUARTERLY	Quarterly Tax
+estimated tax	QUARTERLY	Quarterly Tax
+estimated taxes	QUARTERLY	Quarterly Tax
+quarterly estimated tax	QUARTERLY	Quarterly Tax
+vat quarterly	QUARTERLY	Quarterly Tax
+vat return	QUARTERLY	Quarterly Tax
+quarterly school fee	QUARTERLY	Quarterly School Fee
+term fee	QUARTERLY	Quarterly School Fee
+term fees	QUARTERLY	Quarterly School Fee
+trimester fee	QUARTERLY	Quarterly School Fee
+exam fee quarterly	QUARTERLY	Quarterly School Fee
+term tuition	QUARTERLY	Quarterly School Fee
+quarterly tuition	QUARTERLY	Quarterly School Fee
+quarterly insurance	QUARTERLY	Quarterly Insurance
+quarterly premium	QUARTERLY	Quarterly Insurance
+insurance quarterly	QUARTERLY	Quarterly Insurance
+three monthly premium	QUARTERLY	Quarterly Insurance
+quarterly water bill	QUARTERLY	Water Quarterly
+water bill quarterly	QUARTERLY	Water Quarterly
+pest control	QUARTERLY	Pest Control
+pest control quarterly	QUARTERLY	Pest Control
+termite treatment	QUARTERLY	Pest Control
+termite control	QUARTERLY	Pest Control
+quarterly subscription	QUARTERLY	Quarterly Subscription
+quarterly plan	QUARTERLY	Quarterly Subscription
+three month plan	QUARTERLY	Quarterly Subscription
+3 month plan	QUARTERLY	Quarterly Subscription
+quarterly membership	QUARTERLY	Quarterly Subscription
+gym quarterly	QUARTERLY	Gym Quarterly
+gym 3 months	QUARTERLY	Gym Quarterly
+gym quarter	QUARTERLY	Gym Quarterly
+quarterly sip	QUARTERLY	Dividend Reinvest
+quarterly investment	QUARTERLY	Dividend Reinvest
+quarterly deposit	QUARTERLY	Dividend Reinvest
+quarterly dps	QUARTERLY	Dividend Reinvest
+property tax installment	QUARTERLY	Property Tax Installment
+holding tax installment	QUARTERLY	Property Tax Installment
+municipal tax installment	QUARTERLY	Property Tax Installment
+annual tax	YEARLY	Annual Tax
+income tax	YEARLY	Annual Tax
+income tax return	YEARLY	Annual Tax
+tax return	YEARLY	Annual Tax
+tax return fee	YEARLY	Annual Tax
+tin renewal	YEARLY	Annual Tax
+holding tax	YEARLY	Annual Tax
+house tax	YEARLY	Annual Tax
+property tax	YEARLY	Annual Tax
+land tax	YEARLY	Annual Tax
+khajna	YEARLY	Annual Tax
+land development tax	YEARLY	Annual Tax
+municipal tax	YEARLY	Annual Tax
+city corporation tax	YEARLY	Annual Tax
+road tax	YEARLY	Annual Tax
+vehicle tax	YEARLY	Annual Tax
+tax token	YEARLY	Annual Tax
+tax token fee	YEARLY	Annual Tax
+ayokor	YEARLY	Annual Tax
+আয়কর	YEARLY	Annual Tax
+হোল্ডিং ট্যাক্স	YEARLY	Annual Tax
+ভূমি উন্নয়ন কর	YEARLY	Annual Tax
+trade license	YEARLY	Trade License
+trade licence	YEARLY	Trade License
+trade license renewal	YEARLY	Trade License
+trade licence renewal	YEARLY	Trade License
+ট্রেড লাইসেন্স	YEARLY	Trade License
+shop license	YEARLY	Trade License
+business license	YEARLY	Trade License
+business registration renewal	YEARLY	Trade License
+car insurance	YEARLY	Car Insurance
+auto insurance	YEARLY	Car Insurance
+vehicle insurance	YEARLY	Car Insurance
+motor insurance	YEARLY	Car Insurance
+bike insurance	YEARLY	Car Insurance
+two wheeler insurance	YEARLY	Car Insurance
+gari bima	YEARLY	Car Insurance
+গাড়ি বীমা	YEARLY	Car Insurance
+comprehensive insurance	YEARLY	Car Insurance
+third party insurance	YEARLY	Car Insurance
+health insurance	YEARLY	Health Insurance
+medical insurance	YEARLY	Health Insurance
+health insurance premium	YEARLY	Health Insurance
+health insurance renewal	YEARLY	Health Insurance
+swasthya bima	YEARLY	Health Insurance
+mediclaim	YEARLY	Health Insurance
+mediclaim premium	YEARLY	Health Insurance
+family floater	YEARLY	Health Insurance
+hospitalization insurance	YEARLY	Health Insurance
+life insurance	YEARLY	Life Insurance
+life insurance premium	YEARLY	Life Insurance
+jibon bima	YEARLY	Life Insurance
+জীবন বীমা	YEARLY	Life Insurance
+term insurance	YEARLY	Life Insurance
+term plan	YEARLY	Life Insurance
+term plan premium	YEARLY	Life Insurance
+lic premium	YEARLY	Life Insurance
+endowment	YEARLY	Life Insurance
+endowment premium	YEARLY	Life Insurance
+whole life	YEARLY	Life Insurance
+ulip premium	YEARLY	Life Insurance
+home insurance	YEARLY	Home Insurance
+house insurance	YEARLY	Home Insurance
+renters insurance	YEARLY	Home Insurance
+property insurance	YEARLY	Home Insurance
+fire insurance	YEARLY	Home Insurance
+contents insurance	YEARLY	Home Insurance
+landlord insurance	YEARLY	Home Insurance
+annual travel insurance	YEARLY	Travel Insurance
+travel insurance yearly	YEARLY	Travel Insurance
+vehicle registration renewal	YEARLY	Vehicle Registration
+registration renewal	YEARLY	Vehicle Registration
+fitness renewal	YEARLY	Vehicle Registration
+fitness certificate	YEARLY	Vehicle Registration
+fitness fee	YEARLY	Vehicle Registration
+brta renewal	YEARLY	Vehicle Registration
+brta fee	YEARLY	Vehicle Registration
+route permit	YEARLY	Vehicle Registration
+road permit	YEARLY	Vehicle Registration
+bluebook renewal	YEARLY	Vehicle Registration
+number plate renewal	YEARLY	Vehicle Registration
+pollution certificate	YEARLY	Vehicle Registration
+puc	YEARLY	Vehicle Registration
+driving license renewal	YEARLY	Driving License
+driving licence renewal	YEARLY	Driving License
+license renewal	YEARLY	Driving License
+licence renewal	YEARLY	Driving License
+dl renewal	YEARLY	Driving License
+driving license fee	YEARLY	Driving License
+passport renewal	YEARLY	Passport
+passport fee	YEARLY	Passport
+passport renew	YEARLY	Passport
+e-passport renewal	YEARLY	Passport
+epassport renewal	YEARLY	Passport
+visa renewal	YEARLY	Visa
+visa extension	YEARLY	Visa
+residence permit	YEARLY	Visa
+residence permit renewal	YEARLY	Visa
+iqama renewal	YEARLY	Visa
+iqama	YEARLY	Visa
+work permit renewal	YEARLY	Visa
+work permit	YEARLY	Visa
+ead renewal	YEARLY	Visa
+green card renewal	YEARLY	Visa
+ukvi	YEARLY	Visa
+immigration health surcharge	YEARLY	Visa
+ihs	YEARLY	Visa
+domain renewal	YEARLY	Domain Renewal
+domain renew	YEARLY	Domain Renewal
+domain fee	YEARLY	Domain Renewal
+domain bill	YEARLY	Domain Renewal
+domain name renewal	YEARLY	Domain Renewal
+ssl renewal	YEARLY	Domain Renewal
+ssl certificate renewal	YEARLY	Domain Renewal
+hosting yearly	YEARLY	Domain Renewal
+hosting renewal	YEARLY	Domain Renewal
+annual hosting	YEARLY	Domain Renewal
+email hosting renewal	YEARLY	Domain Renewal
+amazon prime annual	YEARLY	Amazon Prime Annual
+prime annual	YEARLY	Amazon Prime Annual
+prime membership annual	YEARLY	Amazon Prime Annual
+prime yearly	YEARLY	Amazon Prime Annual
+annual subscription	YEARLY	Annual Subscription
+annual plan	YEARLY	Annual Subscription
+yearly subscription	YEARLY	Annual Subscription
+yearly plan	YEARLY	Annual Subscription
+annual membership	YEARLY	Annual Subscription
+yearly membership	YEARLY	Annual Subscription
+annual renewal	YEARLY	Annual Subscription
+annual fee	YEARLY	Annual Subscription
+yearly fee	YEARLY	Annual Subscription
+yearly renewal	YEARLY	Annual Subscription
+annual pass	YEARLY	Annual Subscription
+annual premium	YEARLY	Annual Subscription
+microsoft 365 annual	YEARLY	Microsoft 365 Annual
+office 365 annual	YEARLY	Microsoft 365 Annual
+m365 annual	YEARLY	Microsoft 365 Annual
+microsoft office yearly	YEARLY	Microsoft 365 Annual
+adobe annual	YEARLY	Adobe Annual
+adobe creative cloud annual	YEARLY	Adobe Annual
+creative cloud annual	YEARLY	Adobe Annual
+photoshop yearly	YEARLY	Adobe Annual
+jetbrains	YEARLY	JetBrains Annual
+jetbrains annual	YEARLY	JetBrains Annual
+intellij license	YEARLY	JetBrains Annual
+webstorm license	YEARLY	JetBrains Annual
+pycharm license	YEARLY	JetBrains Annual
+apple developer program	YEARLY	Apple Developer
+apple developer account	YEARLY	Apple Developer
+apple developer fee	YEARLY	Apple Developer
+app store developer fee	YEARLY	Apple Developer
+google play developer	YEARLY	Google Play Developer
+google play console fee	YEARLY	Google Play Developer
+credit card annual fee	YEARLY	Credit Card Annual Fee
+card annual fee	YEARLY	Credit Card Annual Fee
+annual card fee	YEARLY	Credit Card Annual Fee
+card renewal fee	YEARLY	Credit Card Annual Fee
+credit card renewal	YEARLY	Credit Card Annual Fee
+debit card annual fee	YEARLY	Credit Card Annual Fee
+card fee yearly	YEARLY	Credit Card Annual Fee
+card yearly fee	YEARLY	Credit Card Annual Fee
+locker rent	YEARLY	Bank Locker
+bank locker	YEARLY	Bank Locker
+locker fee	YEARLY	Bank Locker
+locker charge	YEARLY	Bank Locker
+school admission	YEARLY	School Admission
+admission fee	YEARLY	School Admission
+session charge	YEARLY	School Admission
+development fee	YEARLY	School Admission
+annual fee school	YEARLY	School Admission
+annual charge school	YEARLY	School Admission
+re-admission	YEARLY	School Admission
+readmission	YEARLY	School Admission
+re admission	YEARLY	School Admission
+session fee	YEARLY	School Admission
+yearly session fee	YEARLY	School Admission
+exam fee yearly	YEARLY	Exam Fee
+board exam fee	YEARLY	Exam Fee
+form fillup	YEARLY	Exam Fee
+form fill up	YEARLY	Exam Fee
+registration fee yearly	YEARLY	Exam Fee
+annual exam fee	YEARLY	Exam Fee
+annual exam	YEARLY	Exam Fee
+annual tuition	YEARLY	University Tuition
+yearly tuition	YEARLY	University Tuition
+tuition per year	YEARLY	University Tuition
+college fee yearly	YEARLY	University Tuition
+year fee	YEARLY	University Tuition
+club membership yearly	YEARLY	Club Membership
+annual club fee	YEARLY	Club Membership
+annual membership fee	YEARLY	Club Membership
+rotary club fee	YEARLY	Club Membership
+lions club fee	YEARLY	Club Membership
+society membership	YEARLY	Club Membership
+professional membership	YEARLY	Club Membership
+ieb membership	YEARLY	Club Membership
+icab membership	YEARLY	Club Membership
+ieee membership	YEARLY	Club Membership
+acm membership	YEARLY	Club Membership
+bar council fee	YEARLY	Club Membership
+medical registration renewal	YEARLY	Club Membership
+bmdc renewal	YEARLY	Club Membership
+pmc renewal	YEARLY	Club Membership
+vet annual	YEARLY	Pet Annual
+pet vaccination	YEARLY	Pet Annual
+pet vaccine	YEARLY	Pet Annual
+pet insurance	YEARLY	Pet Annual
+pet license	YEARLY	Pet Annual
+dog license	YEARLY	Pet Annual
+annual vaccination	YEARLY	Vaccination
+flu shot	YEARLY	Vaccination
+annual flu shot	YEARLY	Vaccination
+flu vaccine	YEARLY	Vaccination
+annual checkup	YEARLY	Vaccination
+annual health check	YEARLY	Vaccination
+annual physical	YEARLY	Vaccination
+annual dental	YEARLY	Vaccination
+eid shopping	YEARLY	Eid Expenses
+eid khoroch	YEARLY	Eid Expenses
+eid bonus staff	YEARLY	Eid Expenses
+eid bonus bua	YEARLY	Eid Expenses
+eid bonus driver	YEARLY	Eid Expenses
+eid salami	YEARLY	Eid Expenses
+qurbani	YEARLY	Eid Expenses
+qurbani khoroch	YEARLY	Eid Expenses
+qurbani cow	YEARLY	Eid Expenses
+zakat	YEARLY	Eid Expenses
+zakat al mal	YEARLY	Eid Expenses
+fitrah	YEARLY	Eid Expenses
+fitra	YEARLY	Eid Expenses
+hajj	YEARLY	Eid Expenses
+hajj installment	YEARLY	Eid Expenses
+umrah	YEARLY	Eid Expenses
+puja khoroch	YEARLY	Puja Expenses
+puja shopping	YEARLY	Puja Expenses
+durga puja	YEARLY	Puja Expenses
+puja bonus	YEARLY	Puja Expenses
+festival expense	YEARLY	Festival Expenses
+pohela boishakh	YEARLY	Festival Expenses
+boishakh	YEARLY	Festival Expenses
+christmas gifts	YEARLY	Festival Expenses
+diwali expenses	YEARLY	Festival Expenses
+diwali shopping	YEARLY	Festival Expenses
+holiday shopping	YEARLY	Festival Expenses
+birthday gift	YEARLY	Birthday Gift
+anniversary gift	YEARLY	Birthday Gift
+wedding anniversary	YEARLY	Birthday Gift
+annual gift	YEARLY	Birthday Gift
+gift budget	YEARLY	Birthday Gift
+fdr renewal	YEARLY	Fixed Deposit
+fdr	YEARLY	Fixed Deposit
+fixed deposit renewal	YEARLY	Fixed Deposit
+fd renewal	YEARLY	Fixed Deposit
+sanchayapatra renewal	YEARLY	Fixed Deposit
+sanchaypatra renewal	YEARLY	Fixed Deposit
+savings certificate renewal	YEARLY	Fixed Deposit
+yearly premium	YEARLY	Annual Insurance Premium
+bima yearly premium	YEARLY	Annual Insurance Premium
+premium annual	YEARLY	Annual Insurance Premium
+annual maintenance contract	YEARLY	Property Maintenance
+amc	YEARLY	Property Maintenance
+ac amc	YEARLY	Property Maintenance
+ac servicing	YEARLY	Property Maintenance
+ac service	YEARLY	Property Maintenance
+lift amc	YEARLY	Property Maintenance
+generator amc	YEARLY	Property Maintenance
+water tank cleaning	YEARLY	Property Maintenance
+roof maintenance	YEARLY	Property Maintenance
+house painting	YEARLY	Property Maintenance
+annual painting	YEARLY	Property Maintenance
+annual repair	YEARLY	Property Maintenance
+mot	YEARLY	Roadworthiness
+mot test	YEARLY	Roadworthiness
+mot fee	YEARLY	Roadworthiness
+vehicle inspection	YEARLY	Roadworthiness
+car inspection	YEARLY	Roadworthiness
+emission test	YEARLY	Roadworthiness
+smog check	YEARLY	Roadworthiness
+vehicle emission test	YEARLY	Roadworthiness
+road tax disc	YEARLY	Roadworthiness
+vehicle excise duty	YEARLY	Roadworthiness
+ved	YEARLY	Roadworthiness
+tv license	YEARLY	Tv License
+tv licence	YEARLY	Tv License
+bbc license	YEARLY	Tv License
+television licence	YEARLY	Tv License
+software license	YEARLY	Software License
+license renewal software	YEARLY	Software License
+antivirus yearly	YEARLY	Software License
+antivirus renewal	YEARLY	Software License
+vpn yearly	YEARLY	Software License
+vpn annual	YEARLY	Software License
+password manager annual	YEARLY	Software License
+1password yearly	YEARLY	Software License
+nordvpn yearly	YEARLY	Software License
+biye barshiki	YEARLY	Wedding Anniversary
+biyer barshiki	YEARLY	Wedding Anniversary
+wedding anniversary dinner	YEARLY	Wedding Anniversary
+anniversary dinner	YEARLY	Wedding Anniversary
+weekly groceries	WEEKLY	Weekly Groceries
+weekly grocery	WEEKLY	Weekly Groceries
+weekly bazar	WEEKLY	Weekly Groceries
+saptahik bazar	WEEKLY	Weekly Groceries
+soptahik bazar	WEEKLY	Weekly Groceries
+haat	WEEKLY	Weekly Groceries
+hat bazar	WEEKLY	Weekly Groceries
+weekly market	WEEKLY	Weekly Groceries
+weekly shopping	WEEKLY	Weekly Groceries
+weekly bazaar	WEEKLY	Weekly Groceries
+সাপ্তাহিক বাজার	WEEKLY	Weekly Groceries
+হাট	WEEKLY	Weekly Groceries
+weekly allowance	WEEKLY	Weekly Allowance
+weekly pocket money	WEEKLY	Weekly Allowance
+weekly pocket	WEEKLY	Weekly Allowance
+weekly budget	WEEKLY	Weekly Allowance
+weekly spending	WEEKLY	Weekly Allowance
+weekly cash	WEEKLY	Weekly Allowance
+weekly cleaning	WEEKLY	Weekly Cleaning
+weekly cleaner	WEEKLY	Weekly Cleaning
+weekly maid	WEEKLY	Weekly Cleaning
+weekly laundry	WEEKLY	Weekly Cleaning
+weekly dry cleaning	WEEKLY	Weekly Cleaning
+weekly gardener	WEEKLY	Weekly Cleaning
+weekly mow	WEEKLY	Weekly Cleaning
+lawn service weekly	WEEKLY	Weekly Cleaning
+pool service weekly	WEEKLY	Weekly Cleaning
+weekly class	WEEKLY	Weekly Class
+weekly lesson	WEEKLY	Weekly Class
+weekly tuition	WEEKLY	Weekly Class
+weekly coaching	WEEKLY	Weekly Class
+weekly tutor	WEEKLY	Weekly Class
+weekly training	WEEKLY	Weekly Class
+weekly swim	WEEKLY	Weekly Class
+weekly yoga	WEEKLY	Weekly Class
+weekly dance	WEEKLY	Weekly Class
+weekly music lesson	WEEKLY	Weekly Class
+weekly piano	WEEKLY	Weekly Class
+weekly guitar	WEEKLY	Weekly Class
+weekly therapy	WEEKLY	Weekly Class
+weekly session	WEEKLY	Weekly Class
+weekly counselling	WEEKLY	Weekly Class
+weekly counseling	WEEKLY	Weekly Class
+weekly subscription	WEEKLY	Weekly Subscription
+weekly plan	WEEKLY	Weekly Subscription
+weekly pack	WEEKLY	Weekly Subscription
+weekly data pack	WEEKLY	Weekly Subscription
+weekly internet pack	WEEKLY	Weekly Subscription
+weekly recharge	WEEKLY	Weekly Subscription
+weekly bundle	WEEKLY	Weekly Subscription
+saptahik pack	WEEKLY	Weekly Subscription
+soptahik pack	WEEKLY	Weekly Subscription
+সাপ্তাহিক প্যাক	WEEKLY	Weekly Subscription
+weekly delivery	WEEKLY	Weekly Delivery
+weekly meal kit	WEEKLY	Weekly Delivery
+weekly box	WEEKLY	Weekly Delivery
+weekly veg box	WEEKLY	Weekly Delivery
+weekly milk	WEEKLY	Weekly Delivery
+weekly bread	WEEKLY	Weekly Delivery
+weekly eggs	WEEKLY	Weekly Delivery
+weekly fish	WEEKLY	Weekly Delivery
+weekly meat	WEEKLY	Weekly Delivery
+weekly fruit	WEEKLY	Weekly Delivery
+weekly flowers	WEEKLY	Weekly Delivery
+weekly newspaper	WEEKLY	Weekly Delivery
+weekly pass	WEEKLY	Weekly Transport
+weekly travel pass	WEEKLY	Weekly Transport
+weekly bus pass	WEEKLY	Weekly Transport
+weekly metro pass	WEEKLY	Weekly Transport
+weekly parking	WEEKLY	Weekly Transport
+weekly fuel	WEEKLY	Weekly Transport
+weekly petrol	WEEKLY	Weekly Transport
+weekly commute	WEEKLY	Weekly Transport
+weekly train ticket	WEEKLY	Weekly Transport
+weekly ticket	WEEKLY	Weekly Transport
+weekly car wash	WEEKLY	Weekly Transport
+weekly savings	WEEKLY	Weekly Savings
+weekly deposit	WEEKLY	Weekly Savings
+weekly sip	WEEKLY	Weekly Savings
+weekly dps	WEEKLY	Weekly Savings
+weekly installment	WEEKLY	Weekly Savings
+weekly kisti	WEEKLY	Weekly Savings
+saptahik kisti	WEEKLY	Weekly Savings
+soptahik kisti	WEEKLY	Weekly Savings
+weekly samity	WEEKLY	Weekly Savings
+weekly somiti	WEEKLY	Weekly Savings
+weekly loan installment	WEEKLY	Weekly Savings
+weekly microfinance	WEEKLY	Weekly Savings
+weekly ngo kisti	WEEKLY	Weekly Savings
+weekly ngo installment	WEEKLY	Weekly Savings
+সাপ্তাহিক কিস্তি	WEEKLY	Weekly Savings
+weekly rent	WEEKLY	Weekly Rent
+rent weekly	WEEKLY	Weekly Rent
+weekly hostel	WEEKLY	Weekly Rent
+weekly room rent	WEEKLY	Weekly Rent
+weekly stay	WEEKLY	Weekly Rent
+weekly airbnb	WEEKLY	Weekly Rent
+weekly hotel	WEEKLY	Weekly Rent
+weekly lodge	WEEKLY	Weekly Rent
+weekly guesthouse	WEEKLY	Weekly Rent
+weekly sublet	WEEKLY	Weekly Rent
+weekly gym	WEEKLY	Weekly Gym
+weekly workout class	WEEKLY	Weekly Gym
+weekly crossfit	WEEKLY	Weekly Gym
+weekly pilates	WEEKLY	Weekly Gym
+weekly boxing	WEEKLY	Weekly Gym
+weekly martial arts	WEEKLY	Weekly Gym
+weekly football	WEEKLY	Weekly Gym
+weekly futsal	WEEKLY	Weekly Gym
+weekly turf	WEEKLY	Weekly Gym
+weekly badminton	WEEKLY	Weekly Gym
+weekly cricket practice	WEEKLY	Weekly Gym
+weekly salary	WEEKLY	Weekly Payroll
+weekly wage	WEEKLY	Weekly Payroll
+weekly wages	WEEKLY	Weekly Payroll
+weekly pay	WEEKLY	Weekly Payroll
+weekly payroll	WEEKLY	Weekly Payroll
+weekly staff pay	WEEKLY	Weekly Payroll
+weekly labor pay	WEEKLY	Weekly Payroll
+weekly labour pay	WEEKLY	Weekly Payroll
+weekly worker pay	WEEKLY	Weekly Payroll
+weekly maid pay	WEEKLY	Weekly Payroll
+weekly driver pay	WEEKLY	Weekly Payroll
+weekly helper pay	WEEKLY	Weekly Payroll
+weekly cook pay	WEEKLY	Weekly Payroll
+saptahik beton	WEEKLY	Weekly Payroll
+soptahik beton	WEEKLY	Weekly Payroll
+সাপ্তাহিক বেতন	WEEKLY	Weekly Payroll

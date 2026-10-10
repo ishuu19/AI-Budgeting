@@ -40,6 +40,15 @@ interface VoiceHistoryDao {
     @Query("SELECT * FROM voice_history WHERE id = :id AND deletedAt IS NULL LIMIT 1")
     suspend fun getById(id: Long): VoiceHistoryEntity?
 
+    @Query(
+        """
+        SELECT * FROM voice_history
+        WHERE deletedAt IS NULL AND transcript = :transcript AND linkedItemId IS NULL
+        ORDER BY id DESC LIMIT 1
+        """
+    )
+    suspend fun latestUnlinked(transcript: String): VoiceHistoryEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: VoiceHistoryEntity): Long
 

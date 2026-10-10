@@ -10,8 +10,10 @@ import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.ai.IntentSource
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.QuickParse
+import com.ledgerai.app.data.ai.RoutedIntents
 import com.ledgerai.app.data.ai.VoiceResultKind
 import com.ledgerai.app.data.preferences.UserPreferences
 import com.ledgerai.app.data.repository.AiRepository
@@ -63,7 +65,12 @@ enum class ErrorType {
 }
 
 /** One confirm card. [remindersEdited] false lets a new event take the standard reminders. */
-data class VoiceCard(val key: Int, val intent: ParsedIntent, val remindersEdited: Boolean = false)
+data class VoiceCard(
+    val key: Int,
+    val intent: ParsedIntent,
+    val remindersEdited: Boolean = false,
+    val source: IntentSource? = null,
+)
 
 /** A history row being redone: saving a card updates that row, and optionally removes its old item. */
 data class RedoContext(val history: VoiceHistoryItem, val replaceOld: Boolean)
@@ -109,6 +116,7 @@ fun VoiceResultKind.openKind(): OpenKind? = when (this) {
     VoiceResultKind.Goal -> OpenKind.Goal
     VoiceResultKind.Note -> OpenKind.Note
     VoiceResultKind.Job -> OpenKind.Job
+    VoiceResultKind.Edit -> null
     VoiceResultKind.Unsorted -> null
 }
 
@@ -196,7 +204,8 @@ class VoiceRecorderViewModel @Inject constructor(
             showError(ErrorType.PERMISSION, "Mic blocked")
             return
         }
-        if (SpeechRecognizer.isRecognitionAvailable(context)) startLive() else startFileRecording()
+        if (SpeechRecognizer.isRecognitionAvailable(context)) startLive()
+        else showError(ErrorType.RECORDER_FAILED, "Phone speech unavailable")
     }
 
     private fun hasMicPermission() =
@@ -469,14 +478,15 @@ class VoiceRecorderViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            capture.recordHeard(text)
             val parsed = if (kind != null) {
-                Result.success(listOf(QuickParse.asKind(kind, text)))
+                Result.success(RoutedIntents(listOf(QuickParse.asKind(kind, text)), IntentSource.RULES, cloudCalled = false))
             } else {
-                aiRepo.parseVoiceIntents(text)
+                aiRepo.parseVoiceIntentsRouted(text)
             }
             parsed.fold(
-                onSuccess = { intents ->
-                    val cards = intents.map { VoiceCard(cardKeys++, it) }
+                onSuccess = { routed ->
+                    val cards = routed.items.map { VoiceCard(cardKeys++, it, source = routed.source.takeIf { _ -> it !is ParsedIntent.Unmatched }) }
                     _uiState.update { it.copy(recorderState = VoiceRecorderState.RESULT, cards = cards) }
                 },
                 onFailure = { showError(ErrorType.PARSE_FAILED, "Didn't catch that") }
@@ -485,6 +495,12 @@ class VoiceRecorderViewModel @Inject constructor(
     }
 
     fun updateTypedInput(text: String) = _uiState.update { it.copy(typedInput = text) }
+
+    /** Words from the widget. Shows the suggestion cards; nothing is saved until the user confirms. */
+    fun offerText(text: String) {
+        _uiState.update { it.copy(typedInput = "", redo = null) }
+        parseTranscript(text)
+    }
 
     fun parseTypedInput() {
         val input = _uiState.value.typedInput.trim()

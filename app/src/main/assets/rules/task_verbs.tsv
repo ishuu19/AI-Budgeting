@@ -1,0 +1,4648 @@
+# phrase<TAB>KIND (CalendarEventKind; reminder-type phrases map to TASK)
+alarm	ALARM
+alarms	ALARM
+set alarm	ALARM
+set an alarm	ALARM
+set the alarm	ALARM
+set alarm for	ALARM
+set alarm at	ALARM
+set alarm to	ALARM
+set an alarm for	ALARM
+set an alarm at	ALARM
+set an alarm to	ALARM
+set up alarm	ALARM
+add alarm	ALARM
+add an alarm	ALARM
+create alarm	ALARM
+create an alarm	ALARM
+new alarm	ALARM
+make alarm	ALARM
+make an alarm	ALARM
+put alarm	ALARM
+put an alarm	ALARM
+put alarm on	ALARM
+put an alarm on	ALARM
+alarm for	ALARM
+alarm at	ALARM
+alarm to	ALARM
+alarm on	ALARM
+alarm tomorrow	ALARM
+alarm today	ALARM
+alarm tonight	ALARM
+alarm every day	ALARM
+alarm daily	ALARM
+alarm weekdays	ALARM
+alarm weekends	ALARM
+alarm every morning	ALARM
+alarm in the morning	ALARM
+alarm for the morning	ALARM
+alarm for morning	ALARM
+alarm for tomorrow	ALARM
+alarm for tomorrow morning	ALARM
+alarm for tonight	ALARM
+alarm for today	ALARM
+wake me	ALARM
+wake me up	ALARM
+wake me at	ALARM
+wake me up at	ALARM
+wake me up by	ALARM
+wake me by	ALARM
+wake me up in	ALARM
+wake me in	ALARM
+wake me up tomorrow	ALARM
+wake me tomorrow	ALARM
+wake me tonight	ALARM
+wake me up tonight	ALARM
+wake up call	ALARM
+wake-up call	ALARM
+wakeup call	ALARM
+wake up alarm	ALARM
+wake-up alarm	ALARM
+wakeup alarm	ALARM
+wake up time	ALARM
+wake-up time	ALARM
+wakeup time	ALARM
+wake up at	ALARM
+wake-up at	ALARM
+wakeup at	ALARM
+get me up	ALARM
+get me up at	ALARM
+get me up by	ALARM
+get me up in	ALARM
+get me up tomorrow	ALARM
+get me up tonight	ALARM
+rouse me	ALARM
+rouse me at	ALARM
+snooze	ALARM
+snooze alarm	ALARM
+snooze for	ALARM
+snooze 5	ALARM
+snooze 10	ALARM
+snooze 5 min	ALARM
+snooze 10 min	ALARM
+snooze 5 minutes	ALARM
+snooze 10 minutes	ALARM
+ring me	ALARM
+ring me at	ALARM
+ring me up	ALARM
+ring me up at	ALARM
+buzz me	ALARM
+buzz me at	ALARM
+buzz me up	ALARM
+buzz me up at	ALARM
+timer	ALARM
+set timer	ALARM
+set a timer	ALARM
+set the timer	ALARM
+set timer for	ALARM
+set a timer for	ALARM
+set timer to	ALARM
+set a timer to	ALARM
+start timer	ALARM
+start a timer	ALARM
+start the timer	ALARM
+start timer for	ALARM
+start a timer for	ALARM
+new timer	ALARM
+create timer	ALARM
+create a timer	ALARM
+add timer	ALARM
+add a timer	ALARM
+countdown	ALARM
+set countdown	ALARM
+start countdown	ALARM
+countdown for	ALARM
+countdown to	ALARM
+stopwatch	ALARM
+start stopwatch	ALARM
+pomodoro	ALARM
+pomodoro timer	ALARM
+start pomodoro	ALARM
+focus timer	ALARM
+study timer	ALARM
+cooking timer	ALARM
+kitchen timer	ALARM
+egg timer	ALARM
+nap timer	ALARM
+power nap	ALARM
+nap alarm	ALARM
+nap	ALARM
+take a nap	ALARM
+take nap	ALARM
+nap for	ALARM
+nap at	ALARM
+sleep alarm	ALARM
+sleep timer	ALARM
+bedtime alarm	ALARM
+bedtime reminder	ALARM
+bed time alarm	ALARM
+bed time reminder	ALARM
+go to bed alarm	ALARM
+go to bed reminder	ALARM
+medicine alarm	ALARM
+medication alarm	ALARM
+pill alarm	ALARM
+tablet alarm	ALARM
+vitamin alarm	ALARM
+water alarm	ALARM
+drink water alarm	ALARM
+hydration alarm	ALARM
+stand up alarm	ALARM
+stretch alarm	ALARM
+break alarm	ALARM
+eye break alarm	ALARM
+posture alarm	ALARM
+exercise alarm	ALARM
+workout alarm	ALARM
+gym alarm	ALARM
+run alarm	ALARM
+prayer alarm	ALARM
+namaz alarm	ALARM
+azan alarm	ALARM
+adhan alarm	ALARM
+fajr alarm	ALARM
+sehri alarm	ALARM
+suhoor alarm	ALARM
+iftar alarm	ALARM
+tahajjud alarm	ALARM
+tahajud alarm	ALARM
+quran alarm	ALARM
+dua alarm	ALARM
+meeting alarm	ALARM
+class alarm	ALARM
+exam alarm	ALARM
+flight alarm	ALARM
+train alarm	ALARM
+bus alarm	ALARM
+departure alarm	ALARM
+appointment alarm	ALARM
+interview alarm	ALARM
+deadline alarm	ALARM
+task alarm	ALARM
+event alarm	ALARM
+reminder alarm	ALARM
+birthday alarm	ALARM
+anniversary alarm	ALARM
+bill alarm	ALARM
+payment alarm	ALARM
+rent alarm	ALARM
+emi alarm	ALARM
+kisti alarm	ALARM
+sip alarm	ALARM
+recharge alarm	ALARM
+school alarm	ALARM
+office alarm	ALARM
+work alarm	ALARM
+shift alarm	ALARM
+duty alarm	ALARM
+duty time alarm	ALARM
+kids alarm	ALARM
+baby alarm	ALARM
+feeding alarm	ALARM
+feed alarm	ALARM
+diaper alarm	ALARM
+bottle alarm	ALARM
+pickup alarm	ALARM
+drop alarm	ALARM
+school pickup alarm	ALARM
+school drop alarm	ALARM
+alarm dao	ALARM
+alarm de	ALARM
+alarm dio	ALARM
+alarm din	ALARM
+alarm diye dao	ALARM
+alarm diye de	ALARM
+alarm diye dio	ALARM
+alarm diye din	ALARM
+alarm set koro	ALARM
+alarm set kor	ALARM
+alarm set korun	ALARM
+alarm set korbo	ALARM
+alarm set kora	ALARM
+alarm set kore dao	ALARM
+alarm set kore de	ALARM
+alarm set kore dio	ALARM
+alarm set kore din	ALARM
+alarm lagao	ALARM
+alarm lagas	ALARM
+alarm lagan	ALARM
+alarm lagaye dao	ALARM
+alarm lagaye de	ALARM
+alarm lagaye dio	ALARM
+alarm lagaye din	ALARM
+alarm lagiye dao	ALARM
+alarm lagiye de	ALARM
+alarm lagiye dio	ALARM
+alarm lagiye din	ALARM
+alarm rakho	ALARM
+alarm rakhis	ALARM
+alarm rakhun	ALARM
+alarm rekhe dao	ALARM
+alarm rekhe de	ALARM
+alarm rekhe dio	ALARM
+alarm rekhe din	ALARM
+alarm banao	ALARM
+alarm banas	ALARM
+alarm banan	ALARM
+alarm baniye dao	ALARM
+alarm baniye de	ALARM
+alarm baniye dio	ALARM
+alarm baniye din	ALARM
+alarm bajao	ALARM
+alarm bajas	ALARM
+alarm bajan	ALARM
+alarm bajaye dao	ALARM
+alarm bajaye de	ALARM
+alarm bajaye dio	ALARM
+alarm bajaye din	ALARM
+alarm bajiye dao	ALARM
+alarm bajiye de	ALARM
+alarm bajiye dio	ALARM
+alarm bajiye din	ALARM
+alarm bajbe	ALARM
+alarm bajuk	ALARM
+alarm bajte hobe	ALARM
+alarm bajano	ALARM
+alarm bajai	ALARM
+alarm baje	ALARM
+alarm bajche	ALARM
+alarm bajse	ALARM
+alarm bajlo	ALARM
+alarm bajar	ALARM
+alarm bajar por	ALARM
+alarm bajar age	ALARM
+alarm bajar agey	ALARM
+alarm bajar pore	ALARM
+alarm er somoy	ALARM
+alarm er shomoy	ALARM
+alarm er time	ALARM
+alarm er por	ALARM
+alarm er age	ALARM
+alarm er agey	ALARM
+alarm er pore	ALARM
+alarm er jonno	ALARM
+alarm er jonno set	ALARM
+ghum theke uthabi	ALARM
+ghum theke uthabe	ALARM
+ghum theke utha	ALARM
+ghum theke uthiye dio	ALARM
+ghum theke uthiye dao	ALARM
+ghum theke uthiye de	ALARM
+ghum theke uthiye din	ALARM
+ghum theke uthaye dio	ALARM
+ghum theke uthaye dao	ALARM
+ghum theke uthaye de	ALARM
+ghum theke uthaye din	ALARM
+ghum theke tule dio	ALARM
+ghum theke tule dao	ALARM
+ghum theke tule de	ALARM
+ghum theke tule din	ALARM
+ghum theke tulis	ALARM
+ghum theke tulbi	ALARM
+ghum theke tulbe	ALARM
+ghum theke tulo	ALARM
+ghum theke tulun	ALARM
+ghum theke jagabi	ALARM
+ghum theke jagabe	ALARM
+ghum theke jagao	ALARM
+ghum theke jagan	ALARM
+ghum theke jagiye dio	ALARM
+ghum theke jagiye dao	ALARM
+ghum theke jagiye de	ALARM
+ghum theke jagiye din	ALARM
+ghum theke jagaye dio	ALARM
+ghum theke jagaye dao	ALARM
+ghum theke jagaye de	ALARM
+ghum theke jagaye din	ALARM
+uthiye dio	ALARM
+uthiye dao	ALARM
+uthiye de	ALARM
+uthiye din	ALARM
+uthaye dio	ALARM
+uthaye dao	ALARM
+uthaye de	ALARM
+uthaye din	ALARM
+uthas	ALARM
+uthan	ALARM
+uthabi	ALARM
+uthabe	ALARM
+uthate hobe	ALARM
+uthiye diyo	ALARM
+tule dio	ALARM
+tule dao	ALARM
+tule de	ALARM
+tule din	ALARM
+tulis	ALARM
+tulbi	ALARM
+tulbe	ALARM
+tulo	ALARM
+tulun	ALARM
+jagabi	ALARM
+jagabe	ALARM
+jagate hobe	ALARM
+jagiye dio	ALARM
+jagiye dao	ALARM
+jagiye de	ALARM
+jagiye din	ALARM
+jagaye dio	ALARM
+jagaye dao	ALARM
+jagaye de	ALARM
+jagaye din	ALARM
+jagiye diyo	ALARM
+jagano	ALARM
+jagai	ALARM
+jage	ALARM
+jagche	ALARM
+jagse	ALARM
+jaglo	ALARM
+ghum bhangabi	ALARM
+ghum bhangabe	ALARM
+ghum bhangao	ALARM
+ghum bhangan	ALARM
+ghum bhangiye dio	ALARM
+ghum bhangiye dao	ALARM
+ghum bhangiye de	ALARM
+ghum bhangiye din	ALARM
+ghum bhangaye dio	ALARM
+ghum bhangaye dao	ALARM
+ghum bhangaye de	ALARM
+ghum bhangaye din	ALARM
+ghum bhanga	ALARM
+ghum bhanganor	ALARM
+ghum bhangano	ALARM
+ghum bhangai	ALARM
+ghum bhange	ALARM
+ghum bhangche	ALARM
+ghum bhangse	ALARM
+ghum bhanglo	ALARM
+ghum theke ut	ALARM
+ghum theke uth	ALARM
+ghum theke uthbo	ALARM
+ghum theke uthi	ALARM
+ghum theke othar	ALARM
+ghum theke ota	ALARM
+ghum theke othe	ALARM
+ghum theke othbe	ALARM
+ghum theke othbo	ALARM
+ghum theke othi	ALARM
+ghum theke othte	ALARM
+ghum theke uthte	ALARM
+ghum theke uthar	ALARM
+ghum theke uthar somoy	ALARM
+ghum theke uthar shomoy	ALARM
+ghum theke uthar time	ALARM
+ghum theke uthar por	ALARM
+ghum theke uthar age	ALARM
+ghum theke uthar agey	ALARM
+ghum theke uthar pore	ALARM
+uthte hobe	ALARM
+uthbo	ALARM
+uthi	ALARM
+uthar	ALARM
+uthar somoy	ALARM
+uthar shomoy	ALARM
+uthar time	ALARM
+uthar por	ALARM
+uthar age	ALARM
+uthar agey	ALARM
+uthar pore	ALARM
+othte hobe	ALARM
+othbo	ALARM
+othi	ALARM
+othar	ALARM
+othar somoy	ALARM
+othar shomoy	ALARM
+othar time	ALARM
+othar por	ALARM
+othar age	ALARM
+othar agey	ALARM
+othar pore	ALARM
+shokale uthbo	ALARM
+shokale uthte hobe	ALARM
+shokale uthi	ALARM
+shokale othbo	ALARM
+shokale othte hobe	ALARM
+shokale othi	ALARM
+sokale uthbo	ALARM
+sokale uthte hobe	ALARM
+sokale uthi	ALARM
+sokale othbo	ALARM
+sokale othte hobe	ALARM
+sokale othi	ALARM
+bhore uthbo	ALARM
+bhore uthte hobe	ALARM
+bhore uthi	ALARM
+bhore othbo	ALARM
+bhore othte hobe	ALARM
+bhore othi	ALARM
+bhor e uthbo	ALARM
+bhor e uthi	ALARM
+bhor e othbo	ALARM
+bhor e othi	ALARM
+rate uthbo	ALARM
+rate uthte hobe	ALARM
+rate uthi	ALARM
+rate othbo	ALARM
+rate othte hobe	ALARM
+rate othi	ALARM
+tahajjud e uthbo	ALARM
+tahajjud e uthi	ALARM
+tahajud e uthbo	ALARM
+tahajud e uthi	ALARM
+fajr e uthbo	ALARM
+fajr e uthi	ALARM
+fojor e uthbo	ALARM
+fojor e uthi	ALARM
+fozor e uthbo	ALARM
+fozor e uthi	ALARM
+sehri te uthbo	ALARM
+sehri te uthi	ALARM
+seheri te uthbo	ALARM
+seheri te uthi	ALARM
+sehrite uthbo	ALARM
+sehrite uthte hobe	ALARM
+sehrite uthi	ALARM
+seherite uthbo	ALARM
+seherite uthte hobe	ALARM
+seherite uthi	ALARM
+অ্যালার্ম	ALARM
+অ্যালার্ম দাও	ALARM
+অ্যালার্ম দিয়ো	ALARM
+অ্যালার্ম দিন	ALARM
+অ্যালার্ম দিয়ে দাও	ALARM
+অ্যালার্ম সেট করো	ALARM
+অ্যালার্ম সেট করুন	ALARM
+অ্যালার্ম সেট করব	ALARM
+অ্যালার্ম সেট করতে হবে	ALARM
+অ্যালার্ম লাগাও	ALARM
+অ্যালার্ম লাগান	ALARM
+অ্যালার্ম রাখো	ALARM
+অ্যালার্ম রাখুন	ALARM
+অ্যালার্ম বাজবে	ALARM
+অ্যালার্ম বাজুক	ALARM
+অ্যালার্ম বাজাও	ALARM
+অ্যালার্ম বাজান	ALARM
+এলার্ম	ALARM
+এলার্ম দাও	ALARM
+এলার্ম দিন	ALARM
+এলার্ম সেট করো	ALARM
+এলার্ম সেট করুন	ALARM
+এলার্ম লাগাও	ALARM
+এলার্ম লাগান	ALARM
+এলার্ম রাখো	ALARM
+এলার্ম রাখুন	ALARM
+এলার্ম বাজবে	ALARM
+এলার্ম বাজুক	ALARM
+এলার্ম বাজাও	ALARM
+এলার্ম বাজান	ALARM
+ঘুম থেকে তুলে দিও	ALARM
+ঘুম থেকে তুলে দাও	ALARM
+ঘুম থেকে তুলে দিন	ALARM
+ঘুম থেকে তুলিস	ALARM
+ঘুম থেকে তুলবি	ALARM
+ঘুম থেকে ডেকে দিও	ALARM
+ঘুম থেকে ডেকে দাও	ALARM
+ঘুম থেকে ডেকে দিন	ALARM
+ঘুম থেকে জাগিয়ে দিও	ALARM
+ঘুম থেকে জাগিয়ে দাও	ALARM
+ঘুম থেকে জাগিয়ে দিন	ALARM
+ঘুম ভাঙিয়ে দিও	ALARM
+ঘুম ভাঙিয়ে দাও	ALARM
+ঘুম ভাঙিয়ে দিন	ALARM
+জাগিয়ে দিও	ALARM
+জাগিয়ে দাও	ALARM
+জাগিয়ে দিন	ALARM
+জাগাও	ALARM
+জাগান	ALARM
+জাগাবি	ALARM
+জাগাবে	ALARM
+ডেকে দিও	ALARM
+ডেকে দাও	ALARM
+ডেকে দিন	ALARM
+তুলে দিও	ALARM
+তুলে দাও	ALARM
+তুলে দিন	ALARM
+উঠাইয়া দিও	ALARM
+উঠাইয়া দাও	ALARM
+উঠায়া দিও	ALARM
+উঠায়া দাও	ALARM
+উঠতে হবে	ALARM
+উঠব	ALARM
+উঠবো	ALARM
+সকালে উঠতে হবে	ALARM
+সকালে উঠব	ALARM
+ভোরে উঠতে হবে	ALARM
+ভোরে উঠব	ALARM
+রাতে উঠতে হবে	ALARM
+রাতে উঠব	ALARM
+তাহাজ্জুদে উঠব	ALARM
+ফজরে উঠব	ALARM
+সেহরিতে উঠব	ALARM
+টাইমার	ALARM
+টাইমার সেট করো	ALARM
+টাইমার সেট করুন	ALARM
+টাইমার দাও	ALARM
+টাইমার দিন	ALARM
+টাইমার লাগাও	ALARM
+টাইমার লাগান	ALARM
+কাউন্টডাউন	ALARM
+স্টপওয়াচ	ALARM
+পোমোডোরো	ALARM
+ঘুমের সময়	ALARM
+ঘুমানোর সময়	ALARM
+ঘুমাতে যাওয়ার সময়	ALARM
+শোয়ার সময়	ALARM
+উঠার সময়	ALARM
+ওঠার সময়	ALARM
+জাগার সময়	ALARM
+ঘুম থেকে ওঠার সময়	ALARM
+ঘুম থেকে উঠার সময়	ALARM
+ওষুধের অ্যালার্ম	ALARM
+নামাজের অ্যালার্ম	ALARM
+আজানের অ্যালার্ম	ALARM
+সেহরির অ্যালার্ম	ALARM
+ইফতারের অ্যালার্ম	ALARM
+exam	EXAM
+exams	EXAM
+examination	EXAM
+examinations	EXAM
+final exam	EXAM
+final exams	EXAM
+finals	EXAM
+midterm	EXAM
+midterms	EXAM
+mid term	EXAM
+mid-term	EXAM
+mid term exam	EXAM
+midterm exam	EXAM
+mid exam	EXAM
+mid exams	EXAM
+quiz	EXAM
+quizzes	EXAM
+class test	EXAM
+ct	EXAM
+class test 1	EXAM
+class test 2	EXAM
+class test 3	EXAM
+ct 1	EXAM
+ct 2	EXAM
+ct 3	EXAM
+ct1	EXAM
+ct2	EXAM
+ct3	EXAM
+unit test	EXAM
+unit exam	EXAM
+term exam	EXAM
+term final	EXAM
+semester exam	EXAM
+semester final	EXAM
+semester finals	EXAM
+board exam	EXAM
+board exams	EXAM
+hsc	EXAM
+ssc	EXAM
+jsc	EXAM
+psc	EXAM
+jdc	EXAM
+hsc exam	EXAM
+ssc exam	EXAM
+jsc exam	EXAM
+psc exam	EXAM
+hsc exams	EXAM
+ssc exams	EXAM
+a level	EXAM
+a levels	EXAM
+o level	EXAM
+o levels	EXAM
+as level	EXAM
+as levels	EXAM
+igcse	EXAM
+ib exam	EXAM
+ib exams	EXAM
+ap exam	EXAM
+ap exams	EXAM
+gre	EXAM
+gmat	EXAM
+ielts	EXAM
+toefl	EXAM
+pte	EXAM
+duolingo english test	EXAM
+lsat	EXAM
+mcat	EXAM
+bcs	EXAM
+bcs preli	EXAM
+bcs prelim	EXAM
+bcs preliminary	EXAM
+bcs written	EXAM
+bcs viva	EXAM
+preliminary	EXAM
+written exam	EXAM
+written test	EXAM
+oral exam	EXAM
+oral test	EXAM
+viva	EXAM
+viva voce	EXAM
+vivas	EXAM
+viva exam	EXAM
+viva test	EXAM
+practical exam	EXAM
+practical test	EXAM
+practicals	EXAM
+lab exam	EXAM
+lab test	EXAM
+lab final	EXAM
+lab quiz	EXAM
+lab viva	EXAM
+thesis defense	EXAM
+thesis defence	EXAM
+defense	EXAM
+defence	EXAM
+project defense	EXAM
+project defence	EXAM
+project viva	EXAM
+presentation exam	EXAM
+comprehensive	EXAM
+comprehensive exam	EXAM
+qualifying exam	EXAM
+entrance exam	EXAM
+entrance test	EXAM
+admission test	EXAM
+admission exam	EXAM
+admission viva	EXAM
+admission written	EXAM
+admission interview	EXAM
+aptitude test	EXAM
+mock test	EXAM
+mock exam	EXAM
+model test	EXAM
+model exam	EXAM
+practice test	EXAM
+practice exam	EXAM
+practice paper	EXAM
+past paper	EXAM
+past papers	EXAM
+sample paper	EXAM
+sample test	EXAM
+certification exam	EXAM
+cert exam	EXAM
+license exam	EXAM
+licence exam	EXAM
+driving test	EXAM
+driving exam	EXAM
+bar exam	EXAM
+cpa exam	EXAM
+cfa exam	EXAM
+cfa level 1	EXAM
+cfa level 2	EXAM
+cfa level 3	EXAM
+acca exam	EXAM
+ca exam	EXAM
+cma exam	EXAM
+pmp exam	EXAM
+aws exam	EXAM
+azure exam	EXAM
+gcp exam	EXAM
+ccna	EXAM
+ccnp	EXAM
+comptia	EXAM
+comptia a+	EXAM
+comptia security+	EXAM
+comptia network+	EXAM
+cissp	EXAM
+ceh	EXAM
+oscp	EXAM
+prometric	EXAM
+pearson vue	EXAM
+exam day	EXAM
+exam date	EXAM
+exam time	EXAM
+exam hall	EXAM
+exam schedule	EXAM
+exam routine	EXAM
+exam centre	EXAM
+exam center	EXAM
+exam seat	EXAM
+exam admit	EXAM
+admit card	EXAM
+roll number	EXAM
+exam paper	EXAM
+exam prep	EXAM
+exam preparation	EXAM
+exam tomorrow	EXAM
+exam today	EXAM
+exam next week	EXAM
+exam on	EXAM
+exam at	EXAM
+exam starts	EXAM
+exam starts at	EXAM
+exam begins	EXAM
+exam begins at	EXAM
+exam ends	EXAM
+exam ends at	EXAM
+paper tomorrow	EXAM
+paper today	EXAM
+paper next week	EXAM
+paper on	EXAM
+paper at	EXAM
+paper 1	EXAM
+paper 2	EXAM
+paper 3	EXAM
+paper-1	EXAM
+paper-2	EXAM
+paper-3	EXAM
+1st paper	EXAM
+2nd paper	EXAM
+3rd paper	EXAM
+first paper	EXAM
+second paper	EXAM
+third paper	EXAM
+1st half	EXAM
+2nd half	EXAM
+first half	EXAM
+second half	EXAM
+poriksha	EXAM
+pariksha	EXAM
+porikkha	EXAM
+porikkhar	EXAM
+poriksha ache	EXAM
+poriksha hobe	EXAM
+poriksha dibo	EXAM
+poriksha dite hobe	EXAM
+poriksha dei	EXAM
+poriksha dite jabo	EXAM
+poriksha dite jachchi	EXAM
+poriksha dite jacchi	EXAM
+poriksha dite jacci	EXAM
+poriksha dite jachhi	EXAM
+poriksha dite jaitesi	EXAM
+poriksha dite jaitechi	EXAM
+poriksha cholche	EXAM
+poriksha cholbe	EXAM
+poriksha shuru	EXAM
+poriksha suru	EXAM
+poriksha shuru hobe	EXAM
+poriksha suru hobe	EXAM
+poriksha shuru hoyeche	EXAM
+poriksha suru hoyeche	EXAM
+poriksha shesh	EXAM
+poriksha sesh	EXAM
+poriksha shesh hobe	EXAM
+poriksha sesh hobe	EXAM
+poriksha shesh hoyeche	EXAM
+poriksha sesh hoyeche	EXAM
+porikshar date	EXAM
+porikshar tarikh	EXAM
+porikshar routine	EXAM
+porikshar somoy	EXAM
+porikshar shomoy	EXAM
+porikshar prostuti	EXAM
+porikshar preparation	EXAM
+porikshar jonno	EXAM
+porikshar jonno prostuti	EXAM
+porikshar jonno prepare	EXAM
+porikshar jonno porbo	EXAM
+porikshar jonno porashona	EXAM
+porikshar jonno porashuna	EXAM
+porikshar jonno poralekha	EXAM
+porikshar jonno lekhapora	EXAM
+porikshar hall	EXAM
+porikshar kendro	EXAM
+porikshar centre	EXAM
+porikshar center	EXAM
+porikshar seat	EXAM
+porikshar admit	EXAM
+porikshar admit card	EXAM
+porikshar roll	EXAM
+porikshar roll number	EXAM
+porikshar result	EXAM
+porikshar fol	EXAM
+porikshar fee	EXAM
+porikshar form	EXAM
+porikshar form fillup	EXAM
+porikshar form fill up	EXAM
+porikshar form fill-up	EXAM
+porikshar registration	EXAM
+mid term poriksha	EXAM
+midterm poriksha	EXAM
+mid poriksha	EXAM
+final poriksha	EXAM
+semester poriksha	EXAM
+class test poriksha	EXAM
+ct poriksha	EXAM
+quiz poriksha	EXAM
+viva poriksha	EXAM
+lab poriksha	EXAM
+practical poriksha	EXAM
+written poriksha	EXAM
+oral poriksha	EXAM
+board poriksha	EXAM
+hsc poriksha	EXAM
+ssc poriksha	EXAM
+jsc poriksha	EXAM
+psc poriksha	EXAM
+ielts poriksha	EXAM
+toefl poriksha	EXAM
+gre poriksha	EXAM
+gmat poriksha	EXAM
+sat poriksha	EXAM
+bcs poriksha	EXAM
+job poriksha	EXAM
+chakrir poriksha	EXAM
+admission poriksha	EXAM
+bhorti poriksha	EXAM
+bhortir poriksha	EXAM
+medical poriksha	EXAM
+medical admission poriksha	EXAM
+engineering poriksha	EXAM
+engineering admission poriksha	EXAM
+university poriksha	EXAM
+varsity poriksha	EXAM
+college poriksha	EXAM
+school poriksha	EXAM
+madrasa poriksha	EXAM
+madrasha poriksha	EXAM
+dakhil poriksha	EXAM
+alim poriksha	EXAM
+fazil poriksha	EXAM
+kamil poriksha	EXAM
+ebtedayi poriksha	EXAM
+ebtedaye poriksha	EXAM
+scholarship poriksha	EXAM
+britti poriksha	EXAM
+upobritti poriksha	EXAM
+talent poriksha	EXAM
+talentpool poriksha	EXAM
+olympiad	EXAM
+olympiad poriksha	EXAM
+math olympiad	EXAM
+science olympiad	EXAM
+physics olympiad	EXAM
+chemistry olympiad	EXAM
+biology olympiad	EXAM
+informatics olympiad	EXAM
+programming contest	EXAM
+coding contest	EXAM
+competitive exam	EXAM
+competitive programming	EXAM
+পরীক্ষা	EXAM
+পরীক্ষা আছে	EXAM
+পরীক্ষা হবে	EXAM
+পরীক্ষা দিব	EXAM
+পরীক্ষা দিতে হবে	EXAM
+পরীক্ষা দিতে যাব	EXAM
+পরীক্ষা চলছে	EXAM
+পরীক্ষা শুরু	EXAM
+পরীক্ষা শেষ	EXAM
+পরীক্ষার তারিখ	EXAM
+পরীক্ষার রুটিন	EXAM
+পরীক্ষার সময়	EXAM
+পরীক্ষার প্রস্তুতি	EXAM
+পরীক্ষার জন্য	EXAM
+পরীক্ষার হল	EXAM
+পরীক্ষার কেন্দ্র	EXAM
+পরীক্ষার সিট	EXAM
+পরীক্ষার ফলাফল	EXAM
+পরীক্ষার ফি	EXAM
+পরীক্ষার ফরম	EXAM
+মিডটার্ম	EXAM
+মিড টার্ম	EXAM
+মিড পরীক্ষা	EXAM
+ফাইনাল	EXAM
+ফাইনাল পরীক্ষা	EXAM
+সেমিস্টার পরীক্ষা	EXAM
+ক্লাস টেস্ট	EXAM
+সিটি	EXAM
+কুইজ	EXAM
+ভাইভা	EXAM
+ভাইভা পরীক্ষা	EXAM
+মৌখিক পরীক্ষা	EXAM
+লিখিত পরীক্ষা	EXAM
+ব্যবহারিক পরীক্ষা	EXAM
+প্র্যাকটিক্যাল	EXAM
+ল্যাব পরীক্ষা	EXAM
+বোর্ড পরীক্ষা	EXAM
+এইচএসসি	EXAM
+এসএসসি	EXAM
+জেএসসি	EXAM
+পিএসসি	EXAM
+জেডিসি	EXAM
+দাখিল	EXAM
+আলিম	EXAM
+ফাজিল	EXAM
+কামিল	EXAM
+ইবতেদায়ি	EXAM
+ভর্তি পরীক্ষা	EXAM
+ভর্তি কোচিং	EXAM
+মেডিকেল ভর্তি পরীক্ষা	EXAM
+ইঞ্জিনিয়ারিং ভর্তি পরীক্ষা	EXAM
+বিশ্ববিদ্যালয় ভর্তি পরীক্ষা	EXAM
+বিসিএস	EXAM
+বিসিএস প্রিলি	EXAM
+বিসিএস লিখিত	EXAM
+বিসিএস ভাইভা	EXAM
+চাকরির পরীক্ষা	EXAM
+বৃত্তি পরীক্ষা	EXAM
+উপবৃত্তি পরীক্ষা	EXAM
+অলিম্পিয়াড	EXAM
+প্রতিযোগিতা	EXAM
+মডেল টেস্ট	EXAM
+মক টেস্ট	EXAM
+মডেল পরীক্ষা	EXAM
+এডমিট কার্ড	EXAM
+রোল নম্বর	EXAM
+প্রশ্ন	EXAM
+প্রশ্নপত্র	EXAM
+উত্তরপত্র	EXAM
+খাতা	EXAM
+খাতা দেখা	EXAM
+ফলাফল	EXAM
+রেজাল্ট	EXAM
+রেজাল্ট দিবে	EXAM
+রেজাল্ট দেবে	EXAM
+রেজাল্ট বের হবে	EXAM
+রেজাল্ট বের হয়েছে	EXAM
+class	CLASS
+classes	CLASS
+lecture	CLASS
+lectures	CLASS
+lecture class	CLASS
+lab	CLASS
+labs	CLASS
+lab class	CLASS
+lab session	CLASS
+lab hour	CLASS
+lab hours	CLASS
+tutorial	CLASS
+tutorials	CLASS
+tutorial class	CLASS
+seminar	CLASS
+seminars	CLASS
+workshop	CLASS
+workshops	CLASS
+session	CLASS
+sessions	CLASS
+training session	CLASS
+training class	CLASS
+coaching class	CLASS
+coaching	CLASS
+tuition class	CLASS
+tuition	CLASS
+private tuition	CLASS
+home tuition	CLASS
+tutoring	CLASS
+tutor session	CLASS
+lesson	CLASS
+lessons	CLASS
+online class	CLASS
+online classes	CLASS
+zoom class	CLASS
+zoom lecture	CLASS
+zoom session	CLASS
+google meet class	CLASS
+meet class	CLASS
+teams class	CLASS
+class at	CLASS
+class from	CLASS
+class starts	CLASS
+class starts at	CLASS
+class begins	CLASS
+class begins at	CLASS
+class ends	CLASS
+class ends at	CLASS
+class tomorrow	CLASS
+class today	CLASS
+class on	CLASS
+class with	CLASS
+class routine	CLASS
+class schedule	CLASS
+class timetable	CLASS
+timetable	CLASS
+time table	CLASS
+routine class	CLASS
+section	CLASS
+section a	CLASS
+section b	CLASS
+section c	CLASS
+sec a	CLASS
+sec b	CLASS
+sec c	CLASS
+period	CLASS
+periods	CLASS
+first period	CLASS
+second period	CLASS
+third period	CLASS
+1st period	CLASS
+2nd period	CLASS
+3rd period	CLASS
+4th period	CLASS
+school	CLASS
+school hours	CLASS
+school time	CLASS
+college	CLASS
+college hours	CLASS
+college time	CLASS
+university	CLASS
+university hours	CLASS
+uni	CLASS
+uni class	CLASS
+varsity class	CLASS
+office hours	CLASS
+prof office hours	CLASS
+professor office hours	CLASS
+teacher office hours	CLASS
+consultation hour	CLASS
+consultation hours	CLASS
+recitation	CLASS
+recitation class	CLASS
+studio	CLASS
+studio class	CLASS
+studio hours	CLASS
+studio session	CLASS
+dance class	CLASS
+dance lesson	CLASS
+music class	CLASS
+music lesson	CLASS
+guitar class	CLASS
+guitar lesson	CLASS
+piano class	CLASS
+piano lesson	CLASS
+singing class	CLASS
+singing lesson	CLASS
+drawing class	CLASS
+drawing lesson	CLASS
+art class	CLASS
+art lesson	CLASS
+painting class	CLASS
+painting lesson	CLASS
+swimming class	CLASS
+swimming lesson	CLASS
+karate class	CLASS
+karate lesson	CLASS
+taekwondo class	CLASS
+taekwondo lesson	CLASS
+yoga class	CLASS
+yoga session	CLASS
+pilates class	CLASS
+zumba class	CLASS
+gym class	CLASS
+fitness class	CLASS
+spin class	CLASS
+language class	CLASS
+language lesson	CLASS
+english class	CLASS
+english lesson	CLASS
+spoken english class	CLASS
+spoken english	CLASS
+ielts class	CLASS
+ielts lesson	CLASS
+ielts coaching	CLASS
+toefl class	CLASS
+gre class	CLASS
+gmat class	CLASS
+sat class	CLASS
+math class	CLASS
+maths class	CLASS
+physics class	CLASS
+chemistry class	CLASS
+biology class	CLASS
+bangla class	CLASS
+ict class	CLASS
+cse class	CLASS
+eee class	CLASS
+bba class	CLASS
+mba class	CLASS
+law class	CLASS
+history class	CLASS
+geography class	CLASS
+economics class	CLASS
+accounting class	CLASS
+finance class	CLASS
+marketing class	CLASS
+programming class	CLASS
+coding class	CLASS
+coding bootcamp	CLASS
+bootcamp class	CLASS
+bootcamp session	CLASS
+quran class	CLASS
+quran lesson	CLASS
+quran shikkha	CLASS
+quran shikha	CLASS
+quran tutor	CLASS
+arabic class	CLASS
+arabic lesson	CLASS
+madrasa class	CLASS
+maktab	CLASS
+maktab class	CLASS
+hifz class	CLASS
+tajweed class	CLASS
+tajweed lesson	CLASS
+class ache	CLASS
+class hobe	CLASS
+class korte jabo	CLASS
+class korte jachhi	CLASS
+class korte jacchi	CLASS
+class korte jaitesi	CLASS
+class korte jaitechi	CLASS
+class e jabo	CLASS
+class e jachhi	CLASS
+class e jacchi	CLASS
+class e jaitesi	CLASS
+class e jaitechi	CLASS
+class er somoy	CLASS
+class er shomoy	CLASS
+class er routine	CLASS
+class er schedule	CLASS
+class er time	CLASS
+class shuru	CLASS
+class suru	CLASS
+class shuru hobe	CLASS
+class suru hobe	CLASS
+class shuru hoyeche	CLASS
+class suru hoyeche	CLASS
+class shesh	CLASS
+class sesh	CLASS
+class shesh hobe	CLASS
+class sesh hobe	CLASS
+class shesh hoyeche	CLASS
+class sesh hoyeche	CLASS
+classe	CLASS
+classe jabo	CLASS
+classe jachhi	CLASS
+classe jacchi	CLASS
+classe jaitesi	CLASS
+classe jaitechi	CLASS
+classe jete hobe	CLASS
+lecture ache	CLASS
+lecture hobe	CLASS
+lecture dite hobe	CLASS
+lecture dibo	CLASS
+lecture shunte hobe	CLASS
+lecture shunbo	CLASS
+lecture sunbo	CLASS
+lecture suna	CLASS
+lecture shuna	CLASS
+lecture attend korbo	CLASS
+lecture attend kora	CLASS
+lab ache	CLASS
+lab hobe	CLASS
+lab korte hobe	CLASS
+lab korbo	CLASS
+lab kora	CLASS
+lab class ache	CLASS
+lab class hobe	CLASS
+lab class korbo	CLASS
+lab class kora	CLASS
+lab e jabo	CLASS
+lab e jachhi	CLASS
+lab e jacchi	CLASS
+lab e jaitesi	CLASS
+lab e jaitechi	CLASS
+tuition ache	CLASS
+tuition hobe	CLASS
+tuition porate jabo	CLASS
+tuition porate jachhi	CLASS
+tuition porate jacchi	CLASS
+tuition porate jaitesi	CLASS
+tuition porate jaitechi	CLASS
+tuition e jabo	CLASS
+tuition e jachhi	CLASS
+tuition e jacchi	CLASS
+tuition e jaitesi	CLASS
+tuition e jaitechi	CLASS
+tuition pora	CLASS
+tuition porano	CLASS
+tuition porai	CLASS
+tuition poraite	CLASS
+tuition poraite jabo	CLASS
+tuition poraite jachhi	CLASS
+tuition poraite jacchi	CLASS
+tuition poraite jaitesi	CLASS
+tuition poraite jaitechi	CLASS
+tuition er somoy	CLASS
+tuition er shomoy	CLASS
+tuition er routine	CLASS
+tuition er schedule	CLASS
+tuition er time	CLASS
+coaching ache	CLASS
+coaching hobe	CLASS
+coaching e jabo	CLASS
+coaching e jachhi	CLASS
+coaching e jacchi	CLASS
+coaching e jaitesi	CLASS
+coaching e jaitechi	CLASS
+coaching er somoy	CLASS
+coaching er shomoy	CLASS
+coaching er routine	CLASS
+coaching er schedule	CLASS
+coaching er time	CLASS
+coaching class ache	CLASS
+coaching class hobe	CLASS
+coaching class er somoy	CLASS
+coaching class er shomoy	CLASS
+coaching class er routine	CLASS
+coaching class er schedule	CLASS
+coaching class er time	CLASS
+school ache	CLASS
+school hobe	CLASS
+school e jabo	CLASS
+school e jachhi	CLASS
+school e jacchi	CLASS
+school e jaitesi	CLASS
+school e jaitechi	CLASS
+school er somoy	CLASS
+school er shomoy	CLASS
+school er routine	CLASS
+school er schedule	CLASS
+school er time	CLASS
+college ache	CLASS
+college hobe	CLASS
+college e jabo	CLASS
+college e jachhi	CLASS
+college e jacchi	CLASS
+college e jaitesi	CLASS
+college e jaitechi	CLASS
+college er somoy	CLASS
+college er shomoy	CLASS
+college er routine	CLASS
+college er schedule	CLASS
+college er time	CLASS
+university ache	CLASS
+university hobe	CLASS
+university te jabo	CLASS
+university te jachhi	CLASS
+university te jacchi	CLASS
+university te jaitesi	CLASS
+university te jaitechi	CLASS
+university er somoy	CLASS
+university er shomoy	CLASS
+university er routine	CLASS
+university er schedule	CLASS
+university er time	CLASS
+uni ache	CLASS
+uni hobe	CLASS
+uni te jabo	CLASS
+uni te jachhi	CLASS
+uni te jacchi	CLASS
+uni te jaitesi	CLASS
+uni te jaitechi	CLASS
+uni er somoy	CLASS
+uni er shomoy	CLASS
+uni er routine	CLASS
+uni er schedule	CLASS
+uni er time	CLASS
+varsity ache	CLASS
+varsity hobe	CLASS
+varsity te jabo	CLASS
+varsity te jachhi	CLASS
+varsity te jacchi	CLASS
+varsity te jaitesi	CLASS
+varsity te jaitechi	CLASS
+varsity er somoy	CLASS
+varsity er shomoy	CLASS
+varsity er routine	CLASS
+varsity er schedule	CLASS
+varsity er time	CLASS
+ক্লাস	CLASS
+ক্লাস আছে	CLASS
+ক্লাস হবে	CLASS
+ক্লাসে যাব	CLASS
+ক্লাসে যেতে হবে	CLASS
+ক্লাস করতে হবে	CLASS
+ক্লাসের সময়	CLASS
+ক্লাসের রুটিন	CLASS
+ক্লাস শুরু	CLASS
+ক্লাস শেষ	CLASS
+লেকচার	CLASS
+লেকচার আছে	CLASS
+ল্যাব	CLASS
+ল্যাব আছে	CLASS
+ল্যাব ক্লাস	CLASS
+টিউটোরিয়াল	CLASS
+সেমিনার	CLASS
+ওয়ার্কশপ	CLASS
+অনলাইন ক্লাস	CLASS
+জুম ক্লাস	CLASS
+কোচিং ক্লাস	CLASS
+কোচিং	CLASS
+কোচিংয়ে যাব	CLASS
+টিউশন	CLASS
+টিউশন আছে	CLASS
+টিউশনে যাব	CLASS
+টিউশনে যেতে হবে	CLASS
+টিউশন পড়াতে যাব	CLASS
+টিউশন পড়াতে যেতে হবে	CLASS
+টিউশন পড়ানো	CLASS
+স্কুল	CLASS
+স্কুলে যাব	CLASS
+স্কুলে যেতে হবে	CLASS
+কলেজ	CLASS
+কলেজে যাব	CLASS
+কলেজে যেতে হবে	CLASS
+বিশ্ববিদ্যালয়	CLASS
+ভার্সিটি	CLASS
+ভার্সিটিতে যাব	CLASS
+ভার্সিটিতে যেতে হবে	CLASS
+অফিস আওয়ার	CLASS
+ডান্স ক্লাস	CLASS
+মিউজিক ক্লাস	CLASS
+গানের ক্লাস	CLASS
+ছবি আঁকার ক্লাস	CLASS
+আর্ট ক্লাস	CLASS
+সুইমিং ক্লাস	CLASS
+কারাতে ক্লাস	CLASS
+যোগা ক্লাস	CLASS
+ইংরেজি ক্লাস	CLASS
+স্পোকেন ইংলিশ	CLASS
+আইইএলটিএস ক্লাস	CLASS
+গণিত ক্লাস	CLASS
+পদার্থবিজ্ঞান ক্লাস	CLASS
+রসায়ন ক্লাস	CLASS
+জীববিজ্ঞান ক্লাস	CLASS
+বাংলা ক্লাস	CLASS
+কুরআন ক্লাস	CLASS
+কোরআন ক্লাস	CLASS
+কুরআন শিক্ষা	CLASS
+আরবি ক্লাস	CLASS
+মক্তব	CLASS
+মক্তবে যাব	CLASS
+হিফজ ক্লাস	CLASS
+তাজবীদ ক্লাস	CLASS
+routine	ROUTINE
+routines	ROUTINE
+daily routine	ROUTINE
+morning routine	ROUTINE
+evening routine	ROUTINE
+night routine	ROUTINE
+bedtime routine	ROUTINE
+weekly routine	ROUTINE
+weekend routine	ROUTINE
+weekday routine	ROUTINE
+habit	ROUTINE
+habits	ROUTINE
+daily habit	ROUTINE
+daily habits	ROUTINE
+every day	ROUTINE
+everyday	ROUTINE
+each day	ROUTINE
+daily	ROUTINE
+every morning	ROUTINE
+each morning	ROUTINE
+every evening	ROUTINE
+each evening	ROUTINE
+every night	ROUTINE
+each night	ROUTINE
+every afternoon	ROUTINE
+each afternoon	ROUTINE
+every weekday	ROUTINE
+every weekend	ROUTINE
+every week	ROUTINE
+each week	ROUTINE
+weekly	ROUTINE
+every monday	ROUTINE
+every tuesday	ROUTINE
+every wednesday	ROUTINE
+every thursday	ROUTINE
+every friday	ROUTINE
+every saturday	ROUTINE
+every sunday	ROUTINE
+every mon	ROUTINE
+every tue	ROUTINE
+every wed	ROUTINE
+every thu	ROUTINE
+every fri	ROUTINE
+every sat	ROUTINE
+every sun	ROUTINE
+every other day	ROUTINE
+every second day	ROUTINE
+every 2 days	ROUTINE
+every 3 days	ROUTINE
+every two days	ROUTINE
+every three days	ROUTINE
+every other week	ROUTINE
+every second week	ROUTINE
+every 2 weeks	ROUTINE
+every two weeks	ROUTINE
+fortnightly	ROUTINE
+biweekly	ROUTINE
+bi-weekly	ROUTINE
+every month	ROUTINE
+each month	ROUTINE
+monthly	ROUTINE
+every 1st	ROUTINE
+every 15th	ROUTINE
+every month end	ROUTINE
+every month-end	ROUTINE
+every quarter	ROUTINE
+quarterly	ROUTINE
+every year	ROUTINE
+each year	ROUTINE
+yearly	ROUTINE
+annually	ROUTINE
+annual	ROUTINE
+every birthday	ROUTINE
+every anniversary	ROUTINE
+repeat	ROUTINE
+repeating	ROUTINE
+repeat daily	ROUTINE
+repeat weekly	ROUTINE
+repeat monthly	ROUTINE
+repeat yearly	ROUTINE
+repeat every day	ROUTINE
+repeat every week	ROUTINE
+repeat every month	ROUTINE
+repeat every year	ROUTINE
+recurring	ROUTINE
+recurring task	ROUTINE
+recurring event	ROUTINE
+recurring reminder	ROUTINE
+recurring alarm	ROUTINE
+on repeat	ROUTINE
+on a regular basis	ROUTINE
+as usual	ROUTINE
+same time	ROUTINE
+same time every day	ROUTINE
+same time every week	ROUTINE
+same time each day	ROUTINE
+same time each week	ROUTINE
+at the same time	ROUTINE
+gym every morning	ROUTINE
+gym every evening	ROUTINE
+gym every day	ROUTINE
+gym daily	ROUTINE
+gym on weekdays	ROUTINE
+gym mon wed fri	ROUTINE
+gym tue thu sat	ROUTINE
+workout every morning	ROUTINE
+workout every evening	ROUTINE
+workout every day	ROUTINE
+workout daily	ROUTINE
+morning workout	ROUTINE
+evening workout	ROUTINE
+night workout	ROUTINE
+morning run	ROUTINE
+evening run	ROUTINE
+morning walk	ROUTINE
+evening walk	ROUTINE
+night walk	ROUTINE
+after dinner walk	ROUTINE
+morning jog	ROUTINE
+evening jog	ROUTINE
+run every morning	ROUTINE
+run every evening	ROUTINE
+run every day	ROUTINE
+walk every morning	ROUTINE
+walk every evening	ROUTINE
+walk every day	ROUTINE
+cycling every morning	ROUTINE
+cycling every evening	ROUTINE
+swim every morning	ROUTINE
+swim every evening	ROUTINE
+yoga every morning	ROUTINE
+yoga every evening	ROUTINE
+yoga every day	ROUTINE
+yoga daily	ROUTINE
+meditation every morning	ROUTINE
+meditation every evening	ROUTINE
+meditate every morning	ROUTINE
+meditate every evening	ROUTINE
+meditate daily	ROUTINE
+journal every night	ROUTINE
+journal every evening	ROUTINE
+journal every morning	ROUTINE
+journal daily	ROUTINE
+read every night	ROUTINE
+read every evening	ROUTINE
+read every morning	ROUTINE
+read daily	ROUTINE
+read before bed	ROUTINE
+read for 30 minutes	ROUTINE
+study every day	ROUTINE
+study daily	ROUTINE
+study every evening	ROUTINE
+study every night	ROUTINE
+study every morning	ROUTINE
+study session	ROUTINE
+study block	ROUTINE
+study time	ROUTINE
+deep work	ROUTINE
+deep work block	ROUTINE
+focus block	ROUTINE
+focus time	ROUTINE
+work block	ROUTINE
+coding time	ROUTINE
+practice every day	ROUTINE
+practice daily	ROUTINE
+practice every evening	ROUTINE
+practice every morning	ROUTINE
+practice guitar	ROUTINE
+practice piano	ROUTINE
+practice coding	ROUTINE
+leetcode daily	ROUTINE
+leetcode every day	ROUTINE
+duolingo daily	ROUTINE
+duolingo every day	ROUTINE
+language practice	ROUTINE
+language practice daily	ROUTINE
+anki	ROUTINE
+anki daily	ROUTINE
+anki every day	ROUTINE
+anki review	ROUTINE
+flashcards	ROUTINE
+flashcards daily	ROUTINE
+take medicine every day	ROUTINE
+take medicine daily	ROUTINE
+take medicine every morning	ROUTINE
+take medicine every night	ROUTINE
+take medicine after meals	ROUTINE
+take medicine before meals	ROUTINE
+take vitamins every day	ROUTINE
+take vitamins daily	ROUTINE
+take vitamin every morning	ROUTINE
+take pills daily	ROUTINE
+take pills every day	ROUTINE
+water plants every day	ROUTINE
+water plants daily	ROUTINE
+feed cat daily	ROUTINE
+feed dog daily	ROUTINE
+walk dog every morning	ROUTINE
+walk dog every evening	ROUTINE
+walk the dog daily	ROUTINE
+take out trash weekly	ROUTINE
+laundry weekly	ROUTINE
+laundry every week	ROUTINE
+laundry every sunday	ROUTINE
+laundry every saturday	ROUTINE
+clean room weekly	ROUTINE
+clean room every week	ROUTINE
+clean house weekly	ROUTINE
+clean house every week	ROUTINE
+clean house every saturday	ROUTINE
+clean house every sunday	ROUTINE
+grocery weekly	ROUTINE
+grocery every week	ROUTINE
+groceries every saturday	ROUTINE
+groceries every sunday	ROUTINE
+bazar every friday	ROUTINE
+bazar every week	ROUTINE
+bazar weekly	ROUTINE
+bazar every saturday	ROUTINE
+call mom every week	ROUTINE
+call mom every sunday	ROUTINE
+call mom every day	ROUTINE
+call mom daily	ROUTINE
+call dad every week	ROUTINE
+call home every week	ROUTINE
+call home every sunday	ROUTINE
+call home every day	ROUTINE
+call family every week	ROUTINE
+call family every sunday	ROUTINE
+call parents every week	ROUTINE
+call parents every sunday	ROUTINE
+call parents every day	ROUTINE
+family call every sunday	ROUTINE
+family call every week	ROUTINE
+weekly review	ROUTINE
+weekly planning	ROUTINE
+weekly report	ROUTINE
+weekly sync	ROUTINE
+weekly standup	ROUTINE
+weekly meeting	ROUTINE
+weekly call	ROUTINE
+weekly check-in	ROUTINE
+weekly checkin	ROUTINE
+weekly 1:1	ROUTINE
+weekly one on one	ROUTINE
+monthly review	ROUTINE
+monthly planning	ROUTINE
+monthly report	ROUTINE
+monthly sync	ROUTINE
+monthly meeting	ROUTINE
+monthly call	ROUTINE
+monthly check-in	ROUTINE
+monthly checkin	ROUTINE
+monthly budget review	ROUTINE
+monthly bills	ROUTINE
+monthly rent	ROUTINE
+monthly emi	ROUTINE
+monthly kisti	ROUTINE
+monthly sip	ROUTINE
+monthly recharge	ROUTINE
+monthly subscription	ROUTINE
+daily standup	ROUTINE
+daily scrum	ROUTINE
+daily sync	ROUTINE
+daily check-in	ROUTINE
+daily checkin	ROUTINE
+daily review	ROUTINE
+daily planning	ROUTINE
+daily report	ROUTINE
+daily log	ROUTINE
+daily journal	ROUTINE
+daily gratitude	ROUTINE
+daily affirmation	ROUTINE
+daily affirmations	ROUTINE
+daily prayer	ROUTINE
+daily prayers	ROUTINE
+daily quran	ROUTINE
+daily dua	ROUTINE
+daily dhikr	ROUTINE
+daily zikr	ROUTINE
+daily tasbih	ROUTINE
+daily azkar	ROUTINE
+daily adhkar	ROUTINE
+daily wird	ROUTINE
+daily wazifa	ROUTINE
+daily workout	ROUTINE
+daily run	ROUTINE
+daily walk	ROUTINE
+daily jog	ROUTINE
+daily swim	ROUTINE
+daily yoga	ROUTINE
+daily meditation	ROUTINE
+daily reading	ROUTINE
+daily study	ROUTINE
+daily practice	ROUTINE
+daily coding	ROUTINE
+daily exercise	ROUTINE
+daily stretch	ROUTINE
+daily stretching	ROUTINE
+daily water	ROUTINE
+daily steps	ROUTINE
+daily step goal	ROUTINE
+daily calories	ROUTINE
+daily budget	ROUTINE
+daily expense	ROUTINE
+daily expenses	ROUTINE
+daily spending	ROUTINE
+daily savings	ROUTINE
+daily save	ROUTINE
+daily saving	ROUTINE
+school routine	ROUTINE
+college routine	ROUTINE
+university routine	ROUTINE
+uni routine	ROUTINE
+varsity routine	ROUTINE
+office routine	ROUTINE
+work routine	ROUTINE
+study routine	ROUTINE
+gym routine	ROUTINE
+workout routine	ROUTINE
+fitness routine	ROUTINE
+diet routine	ROUTINE
+skin care routine	ROUTINE
+skincare routine	ROUTINE
+hair care routine	ROUTINE
+haircare routine	ROUTINE
+sleep routine	ROUTINE
+sleep schedule	ROUTINE
+sleep time	ROUTINE
+bed time	ROUTINE
+bedtime	ROUTINE
+wake time	ROUTINE
+lunch time	ROUTINE
+lunchtime	ROUTINE
+dinner time	ROUTINE
+dinnertime	ROUTINE
+breakfast time	ROUTINE
+tea time	ROUTINE
+teatime	ROUTINE
+snack time	ROUTINE
+prayer time	ROUTINE
+prayer times	ROUTINE
+namaz time	ROUTINE
+namaz times	ROUTINE
+namaz er somoy	ROUTINE
+namaz er shomoy	ROUTINE
+namaz er time	ROUTINE
+namaz routine	ROUTINE
+namaz schedule	ROUTINE
+salah time	ROUTINE
+salah times	ROUTINE
+salat time	ROUTINE
+salat times	ROUTINE
+salah routine	ROUTINE
+salah schedule	ROUTINE
+salat routine	ROUTINE
+salat schedule	ROUTINE
+five times prayer	ROUTINE
+5 times prayer	ROUTINE
+five daily prayers	ROUTINE
+5 daily prayers	ROUTINE
+five prayers	ROUTINE
+5 prayers	ROUTINE
+fajr	ROUTINE
+fajr prayer	ROUTINE
+fajr namaz	ROUTINE
+fajr salah	ROUTINE
+fajr salat	ROUTINE
+fajr time	ROUTINE
+fojor	ROUTINE
+fojor namaz	ROUTINE
+fozor	ROUTINE
+fozor namaz	ROUTINE
+zuhr	ROUTINE
+zuhr prayer	ROUTINE
+zuhr namaz	ROUTINE
+zuhr salah	ROUTINE
+zuhr salat	ROUTINE
+zuhr time	ROUTINE
+zohr	ROUTINE
+zohr prayer	ROUTINE
+zohr namaz	ROUTINE
+johor	ROUTINE
+johor namaz	ROUTINE
+dhuhr	ROUTINE
+dhuhr prayer	ROUTINE
+dhuhr namaz	ROUTINE
+dhuhr salah	ROUTINE
+dhuhr salat	ROUTINE
+dhuhr time	ROUTINE
+asr	ROUTINE
+asr prayer	ROUTINE
+asr namaz	ROUTINE
+asr salah	ROUTINE
+asr salat	ROUTINE
+asr time	ROUTINE
+asor	ROUTINE
+asor namaz	ROUTINE
+asar	ROUTINE
+asar namaz	ROUTINE
+maghrib	ROUTINE
+maghrib prayer	ROUTINE
+maghrib namaz	ROUTINE
+maghrib salah	ROUTINE
+maghrib salat	ROUTINE
+maghrib time	ROUTINE
+magrib	ROUTINE
+magrib prayer	ROUTINE
+magrib namaz	ROUTINE
+magrib salah	ROUTINE
+magrib salat	ROUTINE
+magrib time	ROUTINE
+margib	ROUTINE
+margib namaz	ROUTINE
+isha	ROUTINE
+isha prayer	ROUTINE
+isha namaz	ROUTINE
+isha salah	ROUTINE
+isha salat	ROUTINE
+isha time	ROUTINE
+esha	ROUTINE
+esha prayer	ROUTINE
+esha namaz	ROUTINE
+esha salah	ROUTINE
+esha salat	ROUTINE
+esha time	ROUTINE
+eshar namaz	ROUTINE
+isar namaz	ROUTINE
+ishar namaz	ROUTINE
+tahajjud	ROUTINE
+tahajjud prayer	ROUTINE
+tahajjud namaz	ROUTINE
+tahajjud salah	ROUTINE
+tahajjud salat	ROUTINE
+tahajjud time	ROUTINE
+tahajud	ROUTINE
+tahajud prayer	ROUTINE
+tahajud namaz	ROUTINE
+tahajud salah	ROUTINE
+tahajud salat	ROUTINE
+tahajud time	ROUTINE
+taheajjud	ROUTINE
+taheajjud namaz	ROUTINE
+duha	ROUTINE
+duha prayer	ROUTINE
+duha namaz	ROUTINE
+duha salah	ROUTINE
+duha salat	ROUTINE
+duha time	ROUTINE
+chasht	ROUTINE
+chasht namaz	ROUTINE
+chast	ROUTINE
+chast namaz	ROUTINE
+ishraq	ROUTINE
+ishraq prayer	ROUTINE
+ishraq namaz	ROUTINE
+ishraq salah	ROUTINE
+ishraq salat	ROUTINE
+ishraq time	ROUTINE
+awwabin	ROUTINE
+awwabin prayer	ROUTINE
+awwabin namaz	ROUTINE
+awabin	ROUTINE
+awabin namaz	ROUTINE
+witr	ROUTINE
+witr prayer	ROUTINE
+witr namaz	ROUTINE
+witr salah	ROUTINE
+witr salat	ROUTINE
+witr time	ROUTINE
+jumma	ROUTINE
+jummah	ROUTINE
+jumah	ROUTINE
+jumuah	ROUTINE
+juma	ROUTINE
+jumma namaz	ROUTINE
+jummah namaz	ROUTINE
+jumah namaz	ROUTINE
+jumuah namaz	ROUTINE
+juma namaz	ROUTINE
+jumma prayer	ROUTINE
+jummah prayer	ROUTINE
+jumah prayer	ROUTINE
+jumuah prayer	ROUTINE
+juma prayer	ROUTINE
+friday prayer	ROUTINE
+friday namaz	ROUTINE
+friday salah	ROUTINE
+friday salat	ROUTINE
+jumma er namaz	ROUTINE
+jumar namaz	ROUTINE
+jumar namaj	ROUTINE
+jumar nmaz	ROUTINE
+taraweeh	ROUTINE
+tarawih	ROUTINE
+taraweeh prayer	ROUTINE
+tarawih prayer	ROUTINE
+taraweeh namaz	ROUTINE
+tarawih namaz	ROUTINE
+taraweeh salah	ROUTINE
+tarawih salah	ROUTINE
+taraweeh salat	ROUTINE
+tarawih salat	ROUTINE
+taraweeh time	ROUTINE
+tarawih time	ROUTINE
+tarabi	ROUTINE
+tarabi namaz	ROUTINE
+tarabir namaz	ROUTINE
+taravi	ROUTINE
+taravi namaz	ROUTINE
+taravir namaz	ROUTINE
+sehri time	ROUTINE
+suhoor time	ROUTINE
+seheri time	ROUTINE
+iftar time	ROUTINE
+azan time	ROUTINE
+adhan time	ROUTINE
+azan er somoy	ROUTINE
+adhan er somoy	ROUTINE
+azan er shomoy	ROUTINE
+adhan er shomoy	ROUTINE
+azan er time	ROUTINE
+adhan er time	ROUTINE
+azan dile	ROUTINE
+azan dilo	ROUTINE
+azan hole	ROUTINE
+azan holo	ROUTINE
+azan hoile	ROUTINE
+azan hoilo	ROUTINE
+roj roj	ROUTINE
+roj roj korbo	ROUTINE
+roj korbo	ROUTINE
+roj kori	ROUTINE
+roj korte hobe	ROUTINE
+roj kora	ROUTINE
+roj shokale	ROUTINE
+roj sokale	ROUTINE
+roj bikele	ROUTINE
+roj bikale	ROUTINE
+roj raate	ROUTINE
+roj rate	ROUTINE
+roj sondhay	ROUTINE
+roj shondhay	ROUTINE
+roj sandhay	ROUTINE
+roj dupure	ROUTINE
+roj dupur e	ROUTINE
+roj shokal e	ROUTINE
+roj sokal e	ROUTINE
+roj bikel e	ROUTINE
+roj bikal e	ROUTINE
+roj rat e	ROUTINE
+roj sondha e	ROUTINE
+roj shondha e	ROUTINE
+roj sandha e	ROUTINE
+protidin	ROUTINE
+protidin korbo	ROUTINE
+protidin kori	ROUTINE
+protidin korte hobe	ROUTINE
+protidin kora	ROUTINE
+protidin shokale	ROUTINE
+protidin sokale	ROUTINE
+protidin bikele	ROUTINE
+protidin bikale	ROUTINE
+protidin raate	ROUTINE
+protidin rate	ROUTINE
+protidin sondhay	ROUTINE
+protidin shondhay	ROUTINE
+protidin sandhay	ROUTINE
+protidin dupure	ROUTINE
+protidin dupur e	ROUTINE
+protidin shokal e	ROUTINE
+protidin sokal e	ROUTINE
+protidin bikel e	ROUTINE
+protidin bikal e	ROUTINE
+protidin rat e	ROUTINE
+protidin sondha e	ROUTINE
+protidin shondha e	ROUTINE
+protidin sandha e	ROUTINE
+prottohik	ROUTINE
+prottohik routine	ROUTINE
+prottohik kaj	ROUTINE
+prottohik kajer list	ROUTINE
+prottohik kajer talika	ROUTINE
+prottohik abhyas	ROUTINE
+prottohik obbhash	ROUTINE
+prottohik obhyash	ROUTINE
+dainik	ROUTINE
+dainik routine	ROUTINE
+dainik kaj	ROUTINE
+dainik kajer list	ROUTINE
+dainik kajer talika	ROUTINE
+dainik abhyas	ROUTINE
+dainik obbhash	ROUTINE
+dainik obhyash	ROUTINE
+dinik	ROUTINE
+dinik routine	ROUTINE
+dinik kaj	ROUTINE
+proti shokale	ROUTINE
+proti sokale	ROUTINE
+proti bikele	ROUTINE
+proti bikale	ROUTINE
+proti raate	ROUTINE
+proti rate	ROUTINE
+proti sondhay	ROUTINE
+proti shondhay	ROUTINE
+proti sandhay	ROUTINE
+proti dupure	ROUTINE
+proti dupur e	ROUTINE
+proti shokal e	ROUTINE
+proti sokal e	ROUTINE
+proti bikel e	ROUTINE
+proti bikal e	ROUTINE
+proti rat e	ROUTINE
+proti sondha e	ROUTINE
+proti shondha e	ROUTINE
+proti sandha e	ROUTINE
+proti shukrobar	ROUTINE
+proti sukrobar	ROUTINE
+proti shanibar	ROUTINE
+proti sanibar	ROUTINE
+proti robibar	ROUTINE
+proti shombar	ROUTINE
+proti sombar	ROUTINE
+proti mongolbar	ROUTINE
+proti budhbar	ROUTINE
+proti brihospotibar	ROUTINE
+proti brihaspatibar	ROUTINE
+proti sobbar	ROUTINE
+proti shobbar	ROUTINE
+proti shomobar	ROUTINE
+proti somobar	ROUTINE
+proti sompbar	ROUTINE
+proti sopthaha	ROUTINE
+proti saptaha	ROUTINE
+proti soptaho	ROUTINE
+proti saptaho	ROUTINE
+proti mash e	ROUTINE
+proti mase	ROUTINE
+proti mashe	ROUTINE
+proti mas e	ROUTINE
+proti bochor	ROUTINE
+proti bosor	ROUTINE
+proti bochhor	ROUTINE
+proti bosshor	ROUTINE
+protisopthaha	ROUTINE
+protisaptaha	ROUTINE
+protimash	ROUTINE
+protibochor	ROUTINE
+protibosor	ROUTINE
+prottek	ROUTINE
+prottek din	ROUTINE
+prottek shokal	ROUTINE
+prottek sokal	ROUTINE
+prottek bikel	ROUTINE
+prottek bikal	ROUTINE
+prottek rat	ROUTINE
+prottek sondha	ROUTINE
+prottek shondha	ROUTINE
+prottek sandha	ROUTINE
+prottek shukrobar	ROUTINE
+prottek sukrobar	ROUTINE
+prottek shanibar	ROUTINE
+prottek sanibar	ROUTINE
+prottek robibar	ROUTINE
+prottek shombar	ROUTINE
+prottek sombar	ROUTINE
+prottek mongolbar	ROUTINE
+prottek budhbar	ROUTINE
+prottek brihospotibar	ROUTINE
+prottek brihaspatibar	ROUTINE
+prottek shopthaha	ROUTINE
+prottek saptaha	ROUTINE
+prottek mash	ROUTINE
+prottek mas	ROUTINE
+prottek bochor	ROUTINE
+prottek bosor	ROUTINE
+shokale gym	ROUTINE
+sokale gym	ROUTINE
+shokale jim	ROUTINE
+sokale jim	ROUTINE
+shokale hanta	ROUTINE
+sokale hanta	ROUTINE
+shokale haata	ROUTINE
+sokale haata	ROUTINE
+shokale hatte jabo	ROUTINE
+sokale hatte jabo	ROUTINE
+shokale hatte jai	ROUTINE
+sokale hatte jai	ROUTINE
+shokale hatte jaoa	ROUTINE
+sokale hatte jaoa	ROUTINE
+shokale hatte jawa	ROUTINE
+sokale hatte jawa	ROUTINE
+shokale daur	ROUTINE
+sokale daur	ROUTINE
+shokale dour	ROUTINE
+sokale dour	ROUTINE
+shokale dourabo	ROUTINE
+sokale dourabo	ROUTINE
+shokale dourai	ROUTINE
+sokale dourai	ROUTINE
+shokale jog	ROUTINE
+sokale jog	ROUTINE
+shokale jogging	ROUTINE
+sokale jogging	ROUTINE
+shokale running	ROUTINE
+sokale running	ROUTINE
+shokale yoga	ROUTINE
+sokale yoga	ROUTINE
+shokale byayam	ROUTINE
+sokale byayam	ROUTINE
+shokale beyam	ROUTINE
+sokale beyam	ROUTINE
+shokale exercise	ROUTINE
+sokale exercise	ROUTINE
+shokale workout	ROUTINE
+sokale workout	ROUTINE
+shokale porbo	ROUTINE
+sokale porbo	ROUTINE
+shokale pora	ROUTINE
+sokale pora	ROUTINE
+shokale porte hobe	ROUTINE
+sokale porte hobe	ROUTINE
+shokale porashona	ROUTINE
+sokale porashona	ROUTINE
+shokale porashuna	ROUTINE
+sokale porashuna	ROUTINE
+shokale poralekha	ROUTINE
+sokale poralekha	ROUTINE
+shokale lekhapora	ROUTINE
+sokale lekhapora	ROUTINE
+shokale study	ROUTINE
+sokale study	ROUTINE
+shokale quran	ROUTINE
+sokale quran	ROUTINE
+shokale quran pora	ROUTINE
+sokale quran pora	ROUTINE
+shokale quran porbo	ROUTINE
+sokale quran porbo	ROUTINE
+shokale tilawat	ROUTINE
+sokale tilawat	ROUTINE
+shokale tilawat korbo	ROUTINE
+sokale tilawat korbo	ROUTINE
+shokale dua	ROUTINE
+sokale dua	ROUTINE
+shokale doa	ROUTINE
+sokale doa	ROUTINE
+shokale zikr	ROUTINE
+sokale zikr	ROUTINE
+shokale jikir	ROUTINE
+sokale jikir	ROUTINE
+shokale dhikr	ROUTINE
+sokale dhikr	ROUTINE
+shokale tasbih	ROUTINE
+sokale tasbih	ROUTINE
+shokale azkar	ROUTINE
+sokale azkar	ROUTINE
+shokale adhkar	ROUTINE
+sokale adhkar	ROUTINE
+shokale wazifa	ROUTINE
+sokale wazifa	ROUTINE
+shokale wird	ROUTINE
+sokale wird	ROUTINE
+shokale nasta	ROUTINE
+sokale nasta	ROUTINE
+shokale nashta	ROUTINE
+sokale nashta	ROUTINE
+shokale breakfast	ROUTINE
+sokale breakfast	ROUTINE
+raate ghum	ROUTINE
+raate ghumabo	ROUTINE
+raate ghumai	ROUTINE
+raate ghumate jabo	ROUTINE
+raate ghumate jai	ROUTINE
+raate ghumate jaoa	ROUTINE
+raate ghumate jawa	ROUTINE
+raate ghumano	ROUTINE
+raate shuye pori	ROUTINE
+raate shuye porbo	ROUTINE
+raate shuye pora	ROUTINE
+raate shuite jabo	ROUTINE
+raate shuite jai	ROUTINE
+raate shuite jaoa	ROUTINE
+raate shuite jawa	ROUTINE
+raate shuya	ROUTINE
+raate shuyo	ROUTINE
+raate shuye	ROUTINE
+প্রতিদিন	ROUTINE
+প্রতিদিন সকালে	ROUTINE
+প্রতিদিন বিকেলে	ROUTINE
+প্রতিদিন সন্ধ্যায়	ROUTINE
+প্রতিদিন রাতে	ROUTINE
+প্রতি সকালে	ROUTINE
+প্রতি বিকেলে	ROUTINE
+প্রতি সন্ধ্যায়	ROUTINE
+প্রতি রাতে	ROUTINE
+প্রতি শুক্রবার	ROUTINE
+প্রতি শনিবার	ROUTINE
+প্রতি রবিবার	ROUTINE
+প্রতি সোমবার	ROUTINE
+প্রতি মঙ্গলবার	ROUTINE
+প্রতি বুধবার	ROUTINE
+প্রতি বৃহস্পতিবার	ROUTINE
+প্রতি সপ্তাহে	ROUTINE
+প্রতি মাসে	ROUTINE
+প্রতি বছর	ROUTINE
+প্রতি বছরে	ROUTINE
+প্রত্যেক দিন	ROUTINE
+প্রত্যেক সকালে	ROUTINE
+প্রত্যেক রাতে	ROUTINE
+রোজ	ROUTINE
+রোজ সকালে	ROUTINE
+রোজ বিকেলে	ROUTINE
+রোজ সন্ধ্যায়	ROUTINE
+রোজ রাতে	ROUTINE
+নিয়মিত	ROUTINE
+নিয়মিত অভ্যাস	ROUTINE
+দৈনন্দিন	ROUTINE
+দৈনন্দিন রুটিন	ROUTINE
+দৈনন্দিন কাজ	ROUTINE
+দৈনিক	ROUTINE
+দৈনিক রুটিন	ROUTINE
+দৈনিক কাজ	ROUTINE
+সাপ্তাহিক	ROUTINE
+সাপ্তাহিক রুটিন	ROUTINE
+মাসিক	ROUTINE
+মাসিক রুটিন	ROUTINE
+বার্ষিক	ROUTINE
+রুটিন	ROUTINE
+সকালের রুটিন	ROUTINE
+রাতের রুটিন	ROUTINE
+ঘুমের রুটিন	ROUTINE
+অভ্যাস	ROUTINE
+দৈনিক অভ্যাস	ROUTINE
+সকালে হাঁটা	ROUTINE
+সকালে দৌড়	ROUTINE
+সকালে জগিং	ROUTINE
+সকালে ব্যায়াম	ROUTINE
+সকালে যোগব্যায়াম	ROUTINE
+সকালে জিম	ROUTINE
+সকালে পড়া	ROUTINE
+সকালে কুরআন তিলাওয়াত	ROUTINE
+সকালে কোরআন পড়া	ROUTINE
+সকালে নাস্তা	ROUTINE
+বিকেলে হাঁটা	ROUTINE
+বিকেলে খেলা	ROUTINE
+বিকেলে ক্রিকেট	ROUTINE
+বিকেলে ফুটবল	ROUTINE
+সন্ধ্যায় হাঁটা	ROUTINE
+সন্ধ্যায় পড়া	ROUTINE
+রাতে হাঁটা	ROUTINE
+রাতে পড়া	ROUTINE
+রাতে ঘুমানো	ROUTINE
+রাতে ঘুমাতে যাওয়া	ROUTINE
+ফজর	ROUTINE
+ফজরের নামাজ	ROUTINE
+ফজরের সময়	ROUTINE
+ফজর নামাজ	ROUTINE
+যোহর	ROUTINE
+জোহর	ROUTINE
+যোহরের নামাজ	ROUTINE
+জোহরের নামাজ	ROUTINE
+যোহরের সময়	ROUTINE
+জোহরের সময়	ROUTINE
+আসর	ROUTINE
+আসরের নামাজ	ROUTINE
+আসরের সময়	ROUTINE
+মাগরিব	ROUTINE
+মাগরিবের নামাজ	ROUTINE
+মাগরিবের সময়	ROUTINE
+ইশা	ROUTINE
+এশা	ROUTINE
+ইশার নামাজ	ROUTINE
+এশার নামাজ	ROUTINE
+ইশার সময়	ROUTINE
+এশার সময়	ROUTINE
+তাহাজ্জুদ	ROUTINE
+তাহাজ্জুদ নামাজ	ROUTINE
+তাহাজ্জুদের সময়	ROUTINE
+চাশত	ROUTINE
+চাশতের নামাজ	ROUTINE
+ইশরাক	ROUTINE
+ইশরাকের নামাজ	ROUTINE
+আওয়াবিন	ROUTINE
+আওয়াবীন	ROUTINE
+বিতর	ROUTINE
+বিতরের নামাজ	ROUTINE
+জুমা	ROUTINE
+জুমার নামাজ	ROUTINE
+জুম্মা	ROUTINE
+জুম্মার নামাজ	ROUTINE
+তারাবিহ	ROUTINE
+তারাবিহর নামাজ	ROUTINE
+তারাবির নামাজ	ROUTINE
+তারাবী	ROUTINE
+নামাজ	ROUTINE
+নামাজের সময়	ROUTINE
+নামাজ পড়া	ROUTINE
+নামাজ পড়ব	ROUTINE
+নামাজ পড়তে হবে	ROUTINE
+নামায	ROUTINE
+নামাযের সময়	ROUTINE
+সালাত	ROUTINE
+সালাতের সময়	ROUTINE
+আজান	ROUTINE
+আজানের সময়	ROUTINE
+আজান দিলে	ROUTINE
+সেহরির সময়	ROUTINE
+ইফতারের সময়	ROUTINE
+সেহরি	ROUTINE
+ইফতার	ROUTINE
+কুরআন তিলাওয়াত	ROUTINE
+কোরআন তিলাওয়াত	ROUTINE
+কুরআন পড়া	ROUTINE
+কোরআন পড়া	ROUTINE
+দোয়া	ROUTINE
+দোয়া পড়া	ROUTINE
+জিকির	ROUTINE
+যিকির	ROUTINE
+তাসবিহ	ROUTINE
+আযকার	ROUTINE
+ওযিফা	ROUTINE
+ওজিফা	ROUTINE
+meeting	EVENT
+meetings	EVENT
+meet	EVENT
+meet up	EVENT
+meetup	EVENT
+catch up	EVENT
+catchup	EVENT
+catch-up	EVENT
+sync	EVENT
+standup	EVENT
+stand-up	EVENT
+stand up	EVENT
+daily stand-up	EVENT
+scrum	EVENT
+sprint planning	EVENT
+sprint review	EVENT
+sprint retro	EVENT
+retro	EVENT
+retrospective	EVENT
+planning meeting	EVENT
+planning session	EVENT
+brainstorm	EVENT
+brainstorming	EVENT
+kickoff	EVENT
+kick-off	EVENT
+kick off	EVENT
+demo	EVENT
+demo day	EVENT
+review meeting	EVENT
+one on one	EVENT
+1:1	EVENT
+1on1	EVENT
+one-on-one	EVENT
+one to one	EVENT
+1-1	EVENT
+interview	EVENT
+job interview	EVENT
+phone interview	EVENT
+video interview	EVENT
+technical interview	EVENT
+hr interview	EVENT
+final interview	EVENT
+panel interview	EVENT
+screening call	EVENT
+phone screen	EVENT
+recruiter call	EVENT
+recruiter screen	EVENT
+hiring manager call	EVENT
+onsite	EVENT
+on-site	EVENT
+on site	EVENT
+onsite interview	EVENT
+coding interview	EVENT
+system design interview	EVENT
+behavioral interview	EVENT
+behavioural interview	EVENT
+culture fit	EVENT
+cultural fit	EVENT
+offer call	EVENT
+negotiation call	EVENT
+salary discussion	EVENT
+appointment	EVENT
+appointments	EVENT
+doctor appointment	EVENT
+dentist appointment	EVENT
+dentist	EVENT
+doctor	EVENT
+doctors appointment	EVENT
+dr appointment	EVENT
+dr visit	EVENT
+doctor visit	EVENT
+checkup	EVENT
+check up	EVENT
+check-up	EVENT
+eye test	EVENT
+eye checkup	EVENT
+eye appointment	EVENT
+vaccination	EVENT
+vaccine appointment	EVENT
+therapy	EVENT
+therapy session	EVENT
+counseling	EVENT
+counselling	EVENT
+physio	EVENT
+physio session	EVENT
+physiotherapy	EVENT
+massage	EVENT
+massage appointment	EVENT
+salon	EVENT
+salon appointment	EVENT
+haircut appointment	EVENT
+hair appointment	EVENT
+barber appointment	EVENT
+spa appointment	EVENT
+nail appointment	EVENT
+vet	EVENT
+vet appointment	EVENT
+vet visit	EVENT
+car service appointment	EVENT
+bike service appointment	EVENT
+mechanic appointment	EVENT
+bank appointment	EVENT
+visa appointment	EVENT
+visa interview	EVENT
+passport appointment	EVENT
+embassy appointment	EVENT
+biometric	EVENT
+biometrics	EVENT
+biometric appointment	EVENT
+court	EVENT
+court date	EVENT
+court hearing	EVENT
+hearing	EVENT
+trial	EVENT
+mediation	EVENT
+lawyer meeting	EVENT
+lawyer appointment	EVENT
+notary appointment	EVENT
+consultation	EVENT
+consult	EVENT
+consultation call	EVENT
+consultation appointment	EVENT
+client meeting	EVENT
+client call	EVENT
+client visit	EVENT
+client demo	EVENT
+client lunch	EVENT
+client dinner	EVENT
+team meeting	EVENT
+team lunch	EVENT
+team dinner	EVENT
+team outing	EVENT
+team building	EVENT
+team event	EVENT
+all hands	EVENT
+all-hands	EVENT
+town hall	EVENT
+townhall	EVENT
+company event	EVENT
+company party	EVENT
+office party	EVENT
+office event	EVENT
+office trip	EVENT
+office picnic	EVENT
+office outing	EVENT
+annual dinner	EVENT
+annual party	EVENT
+annual meeting	EVENT
+annual conference	EVENT
+annual day	EVENT
+annual function	EVENT
+farewell	EVENT
+farewell party	EVENT
+farewell lunch	EVENT
+farewell dinner	EVENT
+welcome party	EVENT
+welcome lunch	EVENT
+welcome dinner	EVENT
+birthday	EVENT
+birthday party	EVENT
+bday	EVENT
+bday party	EVENT
+birthday dinner	EVENT
+birthday lunch	EVENT
+birthday celebration	EVENT
+anniversary	EVENT
+anniversary dinner	EVENT
+anniversary party	EVENT
+wedding	EVENT
+wedding ceremony	EVENT
+wedding reception	EVENT
+reception	EVENT
+engagement	EVENT
+engagement ceremony	EVENT
+holud	EVENT
+gaye holud	EVENT
+mehendi	EVENT
+mehedi	EVENT
+sangeet	EVENT
+bou bhat	EVENT
+boubhat	EVENT
+walima	EVENT
+aqiqah	EVENT
+aqeeqah	EVENT
+khatna	EVENT
+mukhe bhat	EVENT
+annaprashan	EVENT
+janaza	EVENT
+janazah	EVENT
+funeral	EVENT
+shok sobha	EVENT
+doa mahfil	EVENT
+dua mahfil	EVENT
+milad	EVENT
+milad mahfil	EVENT
+quran khani	EVENT
+khatam	EVENT
+khatam quran	EVENT
+iftar	EVENT
+iftar party	EVENT
+iftar mahfil	EVENT
+iftar dawat	EVENT
+sehri	EVENT
+eid prayer	EVENT
+eid jamaat	EVENT
+eid namaz	EVENT
+eid party	EVENT
+eid gathering	EVENT
+eid reunion	EVENT
+puja	EVENT
+durga puja	EVENT
+kali puja	EVENT
+saraswati puja	EVENT
+lakshmi puja	EVENT
+pohela boishakh	EVENT
+boishakh	EVENT
+new year	EVENT
+new year party	EVENT
+new year eve	EVENT
+nye	EVENT
+christmas	EVENT
+christmas party	EVENT
+christmas dinner	EVENT
+thanksgiving	EVENT
+thanksgiving dinner	EVENT
+halloween	EVENT
+halloween party	EVENT
+diwali	EVENT
+diwali party	EVENT
+holi	EVENT
+holi party	EVENT
+valentines	EVENT
+valentine	EVENT
+valentines day	EVENT
+valentine's day	EVENT
+date night	EVENT
+dinner date	EVENT
+lunch date	EVENT
+coffee date	EVENT
+movie date	EVENT
+movie night	EVENT
+game night	EVENT
+board game night	EVENT
+poker night	EVENT
+karaoke night	EVENT
+party	EVENT
+parties	EVENT
+house party	EVENT
+pool party	EVENT
+beach party	EVENT
+bbq	EVENT
+barbecue	EVENT
+cookout	EVENT
+potluck	EVENT
+picnic	EVENT
+outing	EVENT
+trip	EVENT
+tour	EVENT
+road trip	EVENT
+weekend trip	EVENT
+weekend getaway	EVENT
+getaway	EVENT
+vacation	EVENT
+holiday	EVENT
+honeymoon	EVENT
+flight	EVENT
+train	EVENT
+train journey	EVENT
+bus journey	EVENT
+travel	EVENT
+departure	EVENT
+departs	EVENT
+arrival	EVENT
+arrives	EVENT
+check-in	EVENT
+check in	EVENT
+checkin	EVENT
+check-out	EVENT
+check out	EVENT
+checkout	EVENT
+hotel check-in	EVENT
+hotel check-out	EVENT
+airport	EVENT
+airport pickup	EVENT
+airport drop	EVENT
+airport drop off	EVENT
+airport pick up	EVENT
+pickup time	EVENT
+drop time	EVENT
+boarding time	EVENT
+gate opens	EVENT
+connecting flight	EVENT
+concert	EVENT
+live show	EVENT
+festival	EVENT
+fest	EVENT
+expo	EVENT
+exhibition	EVENT
+conference	EVENT
+summit	EVENT
+symposium	EVENT
+convention	EVENT
+meetup group	EVENT
+networking	EVENT
+networking event	EVENT
+career fair	EVENT
+job fair	EVENT
+hackathon	EVENT
+game jam	EVENT
+datathon	EVENT
+webinar	EVENT
+webinar at	EVENT
+talk	EVENT
+tech talk	EVENT
+ted talk	EVENT
+lecture series	EVENT
+guest lecture	EVENT
+panel	EVENT
+panel discussion	EVENT
+fireside chat	EVENT
+ama	EVENT
+ask me anything	EVENT
+product launch	EVENT
+launch event	EVENT
+release party	EVENT
+ceremony	EVENT
+graduation	EVENT
+graduation ceremony	EVENT
+convocation	EVENT
+award ceremony	EVENT
+awards	EVENT
+prize giving	EVENT
+prize distribution	EVENT
+orientation	EVENT
+orientation day	EVENT
+induction	EVENT
+induction day	EVENT
+onboarding	EVENT
+onboarding session	EVENT
+training day	EVENT
+offsite	EVENT
+off-site	EVENT
+off site	EVENT
+retreat	EVENT
+football match	EVENT
+cricket match	EVENT
+finals match	EVENT
+drama	EVENT
+natok	EVENT
+cinema	EVENT
+movie	EVENT
+film	EVENT
+screening	EVENT
+opening day	EVENT
+grand opening	EVENT
+inauguration	EVENT
+ribbon cutting	EVENT
+housewarming	EVENT
+house warming	EVENT
+griho prabesh	EVENT
+gruhopravesh	EVENT
+naming ceremony	EVENT
+baby shower	EVENT
+gender reveal	EVENT
+bridal shower	EVENT
+bachelor party	EVENT
+bachelorette party	EVENT
+stag party	EVENT
+hen party	EVENT
+reunion	EVENT
+family reunion	EVENT
+school reunion	EVENT
+college reunion	EVENT
+batch reunion	EVENT
+get together	EVENT
+get-together	EVENT
+gettogether	EVENT
+gathering	EVENT
+family gathering	EVENT
+family dinner	EVENT
+family lunch	EVENT
+family visit	EVENT
+family trip	EVENT
+family event	EVENT
+family function	EVENT
+social event	EVENT
+community event	EVENT
+charity event	EVENT
+fundraiser	EVENT
+fundraising	EVENT
+donation drive	EVENT
+blood donation camp	EVENT
+free medical camp	EVENT
+health camp	EVENT
+cleanup drive	EVENT
+volunteering	EVENT
+volunteer day	EVENT
+meeting ache	EVENT
+meeting hobe	EVENT
+meeting e jabo	EVENT
+meeting e jachhi	EVENT
+meeting e jacchi	EVENT
+meeting e jaitesi	EVENT
+meeting e jaitechi	EVENT
+meeting er somoy	EVENT
+meeting er shomoy	EVENT
+meeting shuru	EVENT
+meeting suru	EVENT
+meeting shesh	EVENT
+meeting sesh	EVENT
+meeting dibo	EVENT
+meeting dite hobe	EVENT
+meeting korbo	EVENT
+meeting korte hobe	EVENT
+meeting kora	EVENT
+meeting attend korbo	EVENT
+meeting attend kora	EVENT
+meet korbo	EVENT
+meet korte hobe	EVENT
+meet kora	EVENT
+dekha korbo	EVENT
+dekha korte hobe	EVENT
+dekha kora	EVENT
+dekha hobe	EVENT
+dekha ache	EVENT
+dekha korte jabo	EVENT
+dekha korte jachhi	EVENT
+dekha korte jacchi	EVENT
+dekha korte jaitesi	EVENT
+dekha korte jaitechi	EVENT
+dekha kore ashbo	EVENT
+dekha kore asbo	EVENT
+saksat	EVENT
+shakkhat	EVENT
+sakkhat	EVENT
+shakshat	EVENT
+saksat korbo	EVENT
+saksat korte hobe	EVENT
+saksat kora	EVENT
+sakkhat korbo	EVENT
+sakkhat korte hobe	EVENT
+sakkhat kora	EVENT
+shakkhat korbo	EVENT
+shakkhat korte hobe	EVENT
+shakkhat kora	EVENT
+interview ache	EVENT
+interview hobe	EVENT
+interview dibo	EVENT
+interview dite hobe	EVENT
+interview dite jabo	EVENT
+interview dite jachhi	EVENT
+interview dite jacchi	EVENT
+interview dite jaitesi	EVENT
+interview dite jaitechi	EVENT
+interview er somoy	EVENT
+interview er shomoy	EVENT
+interview er date	EVENT
+interview er tarikh	EVENT
+interview er prostuti	EVENT
+interview er preparation	EVENT
+interview er jonno	EVENT
+interview er jonno prostuti	EVENT
+interview er jonno prepare	EVENT
+appointment ache	EVENT
+appointment hobe	EVENT
+appointment nibo	EVENT
+appointment nite hobe	EVENT
+appointment neya	EVENT
+appointment er somoy	EVENT
+appointment er shomoy	EVENT
+doctor er appointment	EVENT
+doctor dekhate jabo	EVENT
+doctor dekhate jachhi	EVENT
+doctor dekhate jacchi	EVENT
+doctor dekhate jaitesi	EVENT
+doctor dekhate jaitechi	EVENT
+doctor dekhano	EVENT
+doctor dekhaite	EVENT
+doctor dekhaite jabo	EVENT
+doctor dekhaite jachhi	EVENT
+doctor dekhaite jacchi	EVENT
+doctor dekhaite jaitesi	EVENT
+doctor dekhaite jaitechi	EVENT
+daktar er appointment	EVENT
+daktar dekhate jabo	EVENT
+daktar dekhate jachhi	EVENT
+daktar dekhate jacchi	EVENT
+daktar dekhate jaitesi	EVENT
+daktar dekhate jaitechi	EVENT
+daktar dekhano	EVENT
+daktar dekhaite	EVENT
+daktar dekhaite jabo	EVENT
+daktar dekhaite jachhi	EVENT
+daktar dekhaite jacchi	EVENT
+daktar dekhaite jaitesi	EVENT
+daktar dekhaite jaitechi	EVENT
+dawat	EVENT
+dawat ache	EVENT
+dawat khete jabo	EVENT
+dawat khete jachhi	EVENT
+dawat khete jacchi	EVENT
+dawat khete jaitesi	EVENT
+dawat khete jaitechi	EVENT
+dawat e jabo	EVENT
+dawat e jachhi	EVENT
+dawat e jacchi	EVENT
+dawat e jaitesi	EVENT
+dawat e jaitechi	EVENT
+nimontron	EVENT
+nimontron ache	EVENT
+nimontron khete jabo	EVENT
+nimontron e jabo	EVENT
+nimantran	EVENT
+nimantran ache	EVENT
+nimantran khete jabo	EVENT
+nimantran e jabo	EVENT
+biye	EVENT
+biye ache	EVENT
+biye te jabo	EVENT
+biyer dawat	EVENT
+biyer nimontron	EVENT
+biyer onushthan	EVENT
+biye bari	EVENT
+biye barite jabo	EVENT
+biye barir dawat	EVENT
+holud ache	EVENT
+holud e jabo	EVENT
+gaye holud ache	EVENT
+reception ache	EVENT
+reception e jabo	EVENT
+walima ache	EVENT
+walima e jabo	EVENT
+janaza ache	EVENT
+janaza e jabo	EVENT
+janazar namaz	EVENT
+milad ache	EVENT
+milad e jabo	EVENT
+milad mahfil ache	EVENT
+dua mahfil ache	EVENT
+doa mahfil ache	EVENT
+iftar ache	EVENT
+iftar e jabo	EVENT
+iftar party ache	EVENT
+iftar dawat ache	EVENT
+eid ache	EVENT
+eid e jabo	EVENT
+eid er dawat	EVENT
+eid reunion ache	EVENT
+eid er somoy	EVENT
+eid er shomoy	EVENT
+eid er por	EVENT
+eid er age	EVENT
+eid er agey	EVENT
+eid er pore	EVENT
+puja ache	EVENT
+puja te jabo	EVENT
+pujo ache	EVENT
+pujo te jabo	EVENT
+pujar somoy	EVENT
+pujar shomoy	EVENT
+pujar por	EVENT
+pujar age	EVENT
+pujar agey	EVENT
+pujar pore	EVENT
+mela ache	EVENT
+mela te jabo	EVENT
+mela dekhte jabo	EVENT
+picnic ache	EVENT
+picnic e jabo	EVENT
+picnic korbo	EVENT
+picnic korte hobe	EVENT
+picnic kora	EVENT
+outing ache	EVENT
+outing e jabo	EVENT
+outing korbo	EVENT
+outing korte hobe	EVENT
+outing kora	EVENT
+trip ache	EVENT
+trip e jabo	EVENT
+trip korbo	EVENT
+trip korte hobe	EVENT
+trip kora	EVENT
+tour ache	EVENT
+tour e jabo	EVENT
+tour korbo	EVENT
+tour korte hobe	EVENT
+tour kora	EVENT
+ghurte jabo	EVENT
+ghurte jete hobe	EVENT
+ghurte jachhi	EVENT
+ghurte jacchi	EVENT
+ghurte jaitesi	EVENT
+ghurte jaitechi	EVENT
+ghurbo	EVENT
+ghora	EVENT
+ghorafera	EVENT
+ghurafera	EVENT
+ghura ghuri	EVENT
+ghura-ghuri	EVENT
+ghuraghuri	EVENT
+bhromon	EVENT
+bhromon korbo	EVENT
+bhromon korte hobe	EVENT
+bhromon kora	EVENT
+bhromone jabo	EVENT
+bhromone jete hobe	EVENT
+bhromone jachhi	EVENT
+bhromone jacchi	EVENT
+bhromone jaitesi	EVENT
+bhromone jaitechi	EVENT
+adda	EVENT
+adda ache	EVENT
+adda dibo	EVENT
+adda dite hobe	EVENT
+adda dite jabo	EVENT
+adda marbo	EVENT
+adda marte hobe	EVENT
+adda mara	EVENT
+adda hobe	EVENT
+adda cholbe	EVENT
+adda cholche	EVENT
+adda shuru	EVENT
+adda suru	EVENT
+adda shesh	EVENT
+adda sesh	EVENT
+party ache	EVENT
+party hobe	EVENT
+party te jabo	EVENT
+party dibo	EVENT
+party dite hobe	EVENT
+party korbo	EVENT
+party korte hobe	EVENT
+party kora	EVENT
+treat ache	EVENT
+treat hobe	EVENT
+treat dibo	EVENT
+treat dite hobe	EVENT
+treat korbo	EVENT
+treat korte hobe	EVENT
+treat kora	EVENT
+treat khete jabo	EVENT
+birthday ache	EVENT
+birthday hobe	EVENT
+birthday te jabo	EVENT
+birthday party ache	EVENT
+birthday party hobe	EVENT
+bday ache	EVENT
+bday hobe	EVENT
+bday te jabo	EVENT
+bday party ache	EVENT
+bday party hobe	EVENT
+jonmodin	EVENT
+jonmodin ache	EVENT
+jonmodin hobe	EVENT
+jonmodin e jabo	EVENT
+jonmodiner party	EVENT
+jonmodiner dawat	EVENT
+jonmodiner onushthan	EVENT
+anniversary ache	EVENT
+anniversary hobe	EVENT
+anniversary te jabo	EVENT
+biyer barshiki	EVENT
+biyer barshikir	EVENT
+biyer barshikir party	EVENT
+biyer barshikir dawat	EVENT
+biyer barshikir onushthan	EVENT
+concert ache	EVENT
+concert e jabo	EVENT
+concert dekhte jabo	EVENT
+cinema ache	EVENT
+cinema dekhte jabo	EVENT
+cinemay jabo	EVENT
+cinemay jete hobe	EVENT
+movie ache	EVENT
+movie dekhte jabo	EVENT
+match ache	EVENT
+match dekhte jabo	EVENT
+match khelte jabo	EVENT
+khela ache	EVENT
+khela dekhte jabo	EVENT
+khelte jabo	EVENT
+khelte jete hobe	EVENT
+football khelte jabo	EVENT
+cricket khelte jabo	EVENT
+badminton khelte jabo	EVENT
+মিটিং	EVENT
+মিটিং আছে	EVENT
+মিটিং হবে	EVENT
+মিটিংয়ে যাব	EVENT
+মিটিংয়ে যেতে হবে	EVENT
+সভা	EVENT
+সভা আছে	EVENT
+সভা হবে	EVENT
+বৈঠক	EVENT
+বৈঠক আছে	EVENT
+দেখা করতে হবে	EVENT
+দেখা করব	EVENT
+দেখা হবে	EVENT
+সাক্ষাৎ	EVENT
+সাক্ষাৎকার	EVENT
+ইন্টারভিউ	EVENT
+ইন্টারভিউ আছে	EVENT
+ইন্টারভিউ দিতে যাব	EVENT
+ইন্টারভিউ দিতে হবে	EVENT
+অ্যাপয়েন্টমেন্ট	EVENT
+অ্যাপয়েন্টমেন্ট আছে	EVENT
+ডাক্তারের অ্যাপয়েন্টমেন্ট	EVENT
+ডাক্তারের কাছে যাব	EVENT
+ডাক্তারের কাছে যেতে হবে	EVENT
+ডাক্তার দেখাতে যাব	EVENT
+ডাক্তার দেখাতে হবে	EVENT
+দাঁতের ডাক্তারের কাছে যাব	EVENT
+চেকআপ	EVENT
+দাওয়াত	EVENT
+দাওয়াত আছে	EVENT
+দাওয়াত খেতে যাব	EVENT
+দাওয়াতে যাব	EVENT
+দাওয়াতে যেতে হবে	EVENT
+নিমন্ত্রণ	EVENT
+নিমন্ত্রণ আছে	EVENT
+বিয়ে	EVENT
+বিয়ে আছে	EVENT
+বিয়েতে যাব	EVENT
+বিয়েতে যেতে হবে	EVENT
+বিয়ের দাওয়াত	EVENT
+বিয়ের অনুষ্ঠান	EVENT
+গায়ে হলুদ	EVENT
+হলুদ	EVENT
+মেহেদি	EVENT
+মেহেদী	EVENT
+রিসেপশন	EVENT
+ওয়ালিমা	EVENT
+আকিকা	EVENT
+জানাজা	EVENT
+জানাজা আছে	EVENT
+জানাজায় যাব	EVENT
+মিলাদ	EVENT
+মিলাদ মাহফিল	EVENT
+দোয়া মাহফিল	EVENT
+ইফতার পার্টি	EVENT
+ইফতার মাহফিল	EVENT
+ঈদ জামাত	EVENT
+ঈদের নামাজ	EVENT
+ঈদ রিইউনিয়ন	EVENT
+পূজা	EVENT
+দুর্গাপূজা	EVENT
+পহেলা বৈশাখ	EVENT
+নববর্ষ	EVENT
+থার্টি ফার্স্ট নাইট	EVENT
+জন্মদিন	EVENT
+জন্মদিন আছে	EVENT
+জন্মদিনের পার্টি	EVENT
+জন্মদিনের দাওয়াত	EVENT
+বার্থডে	EVENT
+বার্থডে পার্টি	EVENT
+বিবাহবার্ষিকী	EVENT
+বিয়ের বার্ষিকী	EVENT
+পার্টি	EVENT
+পার্টি আছে	EVENT
+পার্টিতে যাব	EVENT
+ট্রিট	EVENT
+ট্রিট দিতে হবে	EVENT
+ট্রিট দিব	EVENT
+আড্ডা	EVENT
+আড্ডা আছে	EVENT
+আড্ডা দিব	EVENT
+আড্ডা দিতে যাব	EVENT
+পিকনিক	EVENT
+পিকনিক আছে	EVENT
+পিকনিকে যাব	EVENT
+আউটিং	EVENT
+ট্যুর	EVENT
+ট্যুর আছে	EVENT
+ট্যুরে যাব	EVENT
+ট্রিপ	EVENT
+ট্রিপ আছে	EVENT
+ট্রিপে যাব	EVENT
+ঘুরতে যাব	EVENT
+ঘুরতে যেতে হবে	EVENT
+ভ্রমণ	EVENT
+ভ্রমণে যাব	EVENT
+ফ্লাইট	EVENT
+ফ্লাইট আছে	EVENT
+ট্রেন	EVENT
+ট্রেন আছে	EVENT
+বাস	EVENT
+বাস আছে	EVENT
+লঞ্চ	EVENT
+লঞ্চ আছে	EVENT
+কনসার্ট	EVENT
+কনসার্ট আছে	EVENT
+কনসার্টে যাব	EVENT
+সিনেমা	EVENT
+সিনেমা দেখতে যাব	EVENT
+সিনেমা আছে	EVENT
+ম্যাচ	EVENT
+ম্যাচ আছে	EVENT
+ম্যাচ দেখতে যাব	EVENT
+ম্যাচ খেলতে যাব	EVENT
+খেলা	EVENT
+খেলা আছে	EVENT
+খেলতে যাব	EVENT
+ফুটবল খেলতে যাব	EVENT
+ক্রিকেট খেলতে যাব	EVENT
+ব্যাডমিন্টন খেলতে যাব	EVENT
+অনুষ্ঠান	EVENT
+অনুষ্ঠান আছে	EVENT
+অনুষ্ঠানে যাব	EVENT
+সম্মেলন	EVENT
+সেমিনার আছে	EVENT
+ওয়ার্কশপ আছে	EVENT
+কর্মশালা	EVENT
+প্রদর্শনী	EVENT
+মেলা	EVENT
+মেলা আছে	EVENT
+মেলায় যাব	EVENT
+বইমেলা	EVENT
+বইমেলায় যাব	EVENT
+বিদায়ী অনুষ্ঠান	EVENT
+বিদায় অনুষ্ঠান	EVENT
+অভ্যর্থনা	EVENT
+উদ্বোধন	EVENT
+উদ্বোধনী অনুষ্ঠান	EVENT
+সমাবর্তন	EVENT
+পুরস্কার বিতরণী	EVENT
+পুনর্মিলনী	EVENT
+রিইউনিয়ন	EVENT
+গেট টুগেদার	EVENT
+পারিবারিক অনুষ্ঠান	EVENT
+পারিবারিক দাওয়াত	EVENT
+পারিবারিক ভ্রমণ	EVENT
+submit	TASK
+finish	TASK
+complete	TASK
+complete the	TASK
+do the	TASK
+work on	TASK
+write	TASK
+draft	TASK
+prepare	TASK
+send	TASK
+email	TASK
+e-mail	TASK
+mail	TASK
+text	TASK
+message	TASK
+whatsapp	TASK
+ping	TASK
+call	TASK
+phone	TASK
+ring	TASK
+call back	TASK
+callback	TASK
+follow up	TASK
+followup	TASK
+reply	TASK
+respond	TASK
+review	TASK
+check	TASK
+verify	TASK
+confirm	TASK
+update	TASK
+upload	TASK
+download	TASK
+backup	TASK
+back up	TASK
+install	TASK
+fix	TASK
+debug	TASK
+deploy	TASK
+push	TASK
+merge	TASK
+commit	TASK
+refactor	TASK
+clean	TASK
+clean up	TASK
+tidy	TASK
+organize	TASK
+organise	TASK
+sort	TASK
+pack	TASK
+unpack	TASK
+wash	TASK
+laundry	TASK
+iron	TASK
+cook	TASK
+prep meals	TASK
+meal prep	TASK
+buy	TASK
+purchase	TASK
+order	TASK
+shop for	TASK
+pick up	TASK
+pickup	TASK
+collect	TASK
+grab	TASK
+fetch	TASK
+drop off	TASK
+deliver	TASK
+renew	TASK
+apply	TASK
+register	TASK
+enroll	TASK
+enrol	TASK
+sign up	TASK
+signup	TASK
+print	TASK
+scan	TASK
+photocopy	TASK
+fax	TASK
+file taxes	TASK
+file the	TASK
+pay	TASK
+pay the	TASK
+pay bill	TASK
+pay rent	TASK
+pay fee	TASK
+pay installment	TASK
+settle	TASK
+clear dues	TASK
+transfer	TASK
+send money	TASK
+top up	TASK
+topup	TASK
+book	TASK
+book a	TASK
+reserve	TASK
+schedule	TASK
+reschedule	TASK
+cancel	TASK
+postpone	TASK
+plan	TASK
+arrange	TASK
+organize the	TASK
+set up	TASK
+setup	TASK
+prepare for	TASK
+get ready	TASK
+research	TASK
+read	TASK
+read chapter	TASK
+read book	TASK
+study	TASK
+revise	TASK
+revision	TASK
+memorize	TASK
+memorise	TASK
+learn	TASK
+watch lecture	TASK
+finish assignment	TASK
+complete assignment	TASK
+do homework	TASK
+homework	TASK
+assignment	TASK
+essay	TASK
+report	TASK
+thesis	TASK
+proposal	TASK
+presentation slides	TASK
+slides	TASK
+prepare slides	TASK
+resume	TASK
+update resume	TASK
+update cv	TASK
+cv	TASK
+cover letter	TASK
+apply for job	TASK
+apply to	TASK
+job application	TASK
+follow up with	TASK
+thank you email	TASK
+send invoice	TASK
+invoice	TASK
+send quote	TASK
+quote	TASK
+estimate	TASK
+renew subscription	TASK
+cancel subscription	TASK
+renew license	TASK
+renew passport	TASK
+renew visa	TASK
+renew insurance	TASK
+pay tax	TASK
+tax return	TASK
+file return	TASK
+water plants	TASK
+feed the cat	TASK
+feed the dog	TASK
+walk the dog	TASK
+take out trash	TASK
+take out the trash	TASK
+change bulb	TASK
+change filter	TASK
+charge phone	TASK
+charge laptop	TASK
+refill	TASK
+restock	TASK
+stock up	TASK
+take medicine	TASK
+take medication	TASK
+take pills	TASK
+take vitamins	TASK
+drink water	TASK
+take a break	TASK
+stretch	TASK
+meditate	TASK
+journal	TASK
+call mom	TASK
+call dad	TASK
+call home	TASK
+visit	TASK
+visit parents	TASK
+hang out	TASK
+wish happy birthday	TASK
+send gift	TASK
+buy gift	TASK
+buy groceries	TASK
+groceries	TASK
+get groceries	TASK
+buy milk	TASK
+buy bread	TASK
+buy eggs	TASK
+buy vegetables	TASK
+bazar	TASK
+go to bazar	TASK
+go to market	TASK
+go shopping	TASK
+go to bank	TASK
+go to post office	TASK
+go to atm	TASK
+withdraw cash	TASK
+deposit cash	TASK
+deposit check	TASK
+deposit cheque	TASK
+collect parcel	TASK
+collect package	TASK
+collect documents	TASK
+collect certificate	TASK
+collect report	TASK
+collect results	TASK
+pick up kids	TASK
+pick up laundry	TASK
+pick up order	TASK
+pick up prescription	TASK
+get prescription	TASK
+refill prescription	TASK
+car service	TASK
+service the car	TASK
+service bike	TASK
+wash car	TASK
+get haircut	TASK
+haircut	TASK
+get a haircut	TASK
+shave	TASK
+trim beard	TASK
+get nails done	TASK
+book salon	TASK
+book doctor	TASK
+book appointment	TASK
+book flight	TASK
+book ticket	TASK
+book train	TASK
+book bus	TASK
+book hotel	TASK
+book table	TASK
+book venue	TASK
+book cab	TASK
+book ride	TASK
+web check-in	TASK
+online check-in	TASK
+pack bags	TASK
+pack luggage	TASK
+pack suitcase	TASK
+print ticket	TASK
+print boarding pass	TASK
+charge power bank	TASK
+exchange currency	TASK
+get visa	TASK
+apply visa	TASK
+apply for visa	TASK
+apply passport	TASK
+collect visa	TASK
+translate	TASK
+proofread	TASK
+edit	TASK
+publish	TASK
+tweet	TASK
+reply to email	TASK
+reply to message	TASK
+clear inbox	TASK
+inbox zero	TASK
+unsubscribe	TASK
+delete	TASK
+archive	TASK
+cancel order	TASK
+return order	TASK
+return item	TASK
+exchange item	TASK
+claim refund	TASK
+request refund	TASK
+claim reimbursement	TASK
+submit expense	TASK
+submit expenses	TASK
+submit timesheet	TASK
+submit report	TASK
+submit form	TASK
+submit application	TASK
+submit paper	TASK
+submit thesis	TASK
+submit proposal	TASK
+submit assignment	TASK
+submit project	TASK
+submit homework	TASK
+submit invoice	TASK
+submit documents	TASK
+submit claim	TASK
+due	TASK
+deadline	TASK
+due date	TASK
+by friday	TASK
+by monday	TASK
+by tomorrow	TASK
+by tonight	TASK
+by eod	TASK
+by end of day	TASK
+by end of week	TASK
+by eow	TASK
+by month end	TASK
+by end of month	TASK
+to do	TASK
+todo	TASK
+to-do	TASK
+task	TASK
+tasks	TASK
+chore	TASK
+chores	TASK
+errand	TASK
+errands	TASK
+run errands	TASK
+pending	TASK
+pending work	TASK
+remaining work	TASK
+unfinished	TASK
+backlog	TASK
+action item	TASK
+action items	TASK
+next step	TASK
+next steps	TASK
+follow-up	TASK
+follow ups	TASK
+must do	TASK
+need to	TASK
+have to	TASK
+got to	TASK
+gotta	TASK
+should	TASK
+ought to	TASK
+don't forget	TASK
+dont forget	TASK
+do not forget	TASK
+remember to	TASK
+make sure	TASK
+make sure to	TASK
+be sure to	TASK
+remind me	TASK
+remind me to	TASK
+reminder	TASK
+set reminder	TASK
+set a reminder	TASK
+reminder to	TASK
+reminder for	TASK
+remind	TASK
+remind us	TASK
+remind him	TASK
+remind her	TASK
+notify me	TASK
+notify me to	TASK
+alert me	TASK
+alert me to	TASK
+nudge me	TASK
+ping me	TASK
+tell me to	TASK
+let me know	TASK
+don't let me forget	TASK
+dont let me forget	TASK
+note to self	TASK
+note to self to	TASK
+jama dite hobe	TASK
+jama dibo	TASK
+joma dite hobe	TASK
+submit korte hobe	TASK
+submit korbo	TASK
+submit kora	TASK
+shesh korte hobe	TASK
+shesh korbo	TASK
+sesh korte hobe	TASK
+sesh korbo	TASK
+shesh kora	TASK
+kaj	TASK
+kaj ache	TASK
+kaj korte hobe	TASK
+kaj korbo	TASK
+kaj kora	TASK
+kajer list	TASK
+kajer talika	TASK
+kaj gulo	TASK
+kaj shesh	TASK
+kaj sesh	TASK
+kaj baki	TASK
+kaj baki ache	TASK
+korte hobe	TASK
+korbo	TASK
+kore felbo	TASK
+kore fela	TASK
+kore felte hobe	TASK
+kore dite hobe	TASK
+kore dibo	TASK
+kore rakhbo	TASK
+kore rakhte hobe	TASK
+likhte hobe	TASK
+likhbo	TASK
+lekha	TASK
+likhe felbo	TASK
+likhe rakhbo	TASK
+pathate hobe	TASK
+pathabo	TASK
+patha	TASK
+pathiye dibo	TASK
+pathiye dite hobe	TASK
+call dite hobe	TASK
+call korbo	TASK
+call korte hobe	TASK
+call kore nibo	TASK
+phone korbo	TASK
+phone korte hobe	TASK
+phone dite hobe	TASK
+fon korbo	TASK
+fon korte hobe	TASK
+message dibo	TASK
+message dite hobe	TASK
+message korbo	TASK
+mail korbo	TASK
+mail korte hobe	TASK
+mail dibo	TASK
+mail dite hobe	TASK
+email korbo	TASK
+email korte hobe	TASK
+email dibo	TASK
+email dite hobe	TASK
+kinte hobe	TASK
+kinbo	TASK
+kena	TASK
+kine ante hobe	TASK
+kine anbo	TASK
+kine rakhbo	TASK
+order dibo	TASK
+order dite hobe	TASK
+order korbo	TASK
+order korte hobe	TASK
+bill dite hobe	TASK
+bill dibo	TASK
+bill pay korbo	TASK
+bill mitate hobe	TASK
+bill mitabo	TASK
+taka dite hobe	TASK
+taka dibo	TASK
+taka pathate hobe	TASK
+taka pathabo	TASK
+taka tulte hobe	TASK
+taka tulbo	TASK
+taka jama dibo	TASK
+taka ferot dibo	TASK
+dhar shodh korbo	TASK
+kisti dite hobe	TASK
+kisti dibo	TASK
+kisti mitate hobe	TASK
+kisti mitabo	TASK
+fee dite hobe	TASK
+fee dibo	TASK
+ferot dite hobe	TASK
+ferot dibo	TASK
+ferot nite hobe	TASK
+ferot nibo	TASK
+nite hobe	TASK
+nibo	TASK
+anbo	TASK
+ante hobe	TASK
+ane rakhbo	TASK
+ane dibo	TASK
+ane dite hobe	TASK
+niye ashbo	TASK
+niye asbo	TASK
+niye aste hobe	TASK
+niye jabo	TASK
+niye jete hobe	TASK
+tule ante hobe	TASK
+tule anbo	TASK
+tule rakhbo	TASK
+tule rakhte hobe	TASK
+rakhte hobe	TASK
+rakhbo	TASK
+rekhe dibo	TASK
+rekhe dite hobe	TASK
+gucha	TASK
+gucha te hobe	TASK
+gochabo	TASK
+gochate hobe	TASK
+gochano	TASK
+goch	TASK
+parishkar korte hobe	TASK
+parishkar korbo	TASK
+poriskar korbo	TASK
+poriskar korte hobe	TASK
+pori kar	TASK
+dhuye felbo	TASK
+dhuye felte hobe	TASK
+dhuye dibo	TASK
+dhuye dite hobe	TASK
+dhoa	TASK
+dhuya	TASK
+dhuye ante hobe	TASK
+ranna korbo	TASK
+ranna korte hobe	TASK
+randhte hobe	TASK
+randhbo	TASK
+ranna	TASK
+bazar korbo	TASK
+bazar korte hobe	TASK
+bazar kore anbo	TASK
+bazar e jabo	TASK
+dokane jabo	TASK
+dokane jete hobe	TASK
+dokan theke anbo	TASK
+bank e jabo	TASK
+bank e taka dibo	TASK
+bank theke taka tulbo	TASK
+atm e jabo	TASK
+atm theke taka tulbo	TASK
+courier korbo	TASK
+courier korte hobe	TASK
+courier pathabo	TASK
+courier pathate hobe	TASK
+courier anbo	TASK
+courier ante hobe	TASK
+parcel anbo	TASK
+parcel ante hobe	TASK
+parcel nibo	TASK
+parcel nite hobe	TASK
+parcel pathabo	TASK
+parcel pathate hobe	TASK
+parcel collect korbo	TASK
+collect korbo	TASK
+collect korte hobe	TASK
+jogar korbo	TASK
+jogar korte hobe	TASK
+jogar kora	TASK
+jogar	TASK
+jogad	TASK
+jogad korbo	TASK
+jogad korte hobe	TASK
+thik korbo	TASK
+thik korte hobe	TASK
+thik kora	TASK
+thik kore felbo	TASK
+thik kore dibo	TASK
+thik kore rakhbo	TASK
+repair korbo	TASK
+repair korte hobe	TASK
+repair kora	TASK
+repair kore anbo	TASK
+marammot korbo	TASK
+marammot korte hobe	TASK
+marammot kora	TASK
+maramot korbo	TASK
+maramot korte hobe	TASK
+maramot kora	TASK
+service korbo	TASK
+service korte hobe	TASK
+service kora	TASK
+service dite hobe	TASK
+service dibo	TASK
+service e dibo	TASK
+servicing e dibo	TASK
+change korbo	TASK
+change korte hobe	TASK
+change kora	TASK
+badlabo	TASK
+badlate hobe	TASK
+bodlabo	TASK
+bodlate hobe	TASK
+bodlano	TASK
+update korbo	TASK
+update korte hobe	TASK
+update kora	TASK
+upload korbo	TASK
+upload korte hobe	TASK
+upload kora	TASK
+download korbo	TASK
+download korte hobe	TASK
+download kora	TASK
+install korbo	TASK
+install korte hobe	TASK
+install kora	TASK
+backup nibo	TASK
+backup nite hobe	TASK
+backup neya	TASK
+backup rakhbo	TASK
+backup rakhte hobe	TASK
+print korbo	TASK
+print korte hobe	TASK
+print kora	TASK
+print kore anbo	TASK
+print out korbo	TASK
+printout korbo	TASK
+printout korte hobe	TASK
+photocopy korbo	TASK
+photocopy korte hobe	TASK
+photocopy kora	TASK
+xerox korbo	TASK
+xerox korte hobe	TASK
+xerox kora	TASK
+scan korbo	TASK
+scan korte hobe	TASK
+scan kora	TASK
+sign korbo	TASK
+sign korte hobe	TASK
+sign kora	TASK
+sign nibo	TASK
+sign nite hobe	TASK
+sign neya	TASK
+apply korbo	TASK
+apply korte hobe	TASK
+apply kora	TASK
+abedon korbo	TASK
+abedon korte hobe	TASK
+abedon kora	TASK
+abedon	TASK
+ebedon	TASK
+avedon	TASK
+register korbo	TASK
+register korte hobe	TASK
+register kora	TASK
+registration korbo	TASK
+registration korte hobe	TASK
+registration kora	TASK
+renew korbo	TASK
+renew korte hobe	TASK
+renew kora	TASK
+renew dite hobe	TASK
+renew dibo	TASK
+nobayon korbo	TASK
+nobayon korte hobe	TASK
+nobayon kora	TASK
+booking dibo	TASK
+booking dite hobe	TASK
+booking korbo	TASK
+booking korte hobe	TASK
+book korbo	TASK
+book korte hobe	TASK
+book kora	TASK
+ticket kinbo	TASK
+ticket kinte hobe	TASK
+ticket kata	TASK
+ticket katbo	TASK
+ticket katte hobe	TASK
+ticket book korbo	TASK
+ticket nite hobe	TASK
+ticket nibo	TASK
+seat book korbo	TASK
+seat nibo	TASK
+seat nite hobe	TASK
+room book korbo	TASK
+hotel book korbo	TASK
+table book korbo	TASK
+appointment book korbo	TASK
+serial nibo	TASK
+serial nite hobe	TASK
+serial neya	TASK
+serial dibo	TASK
+serial dite hobe	TASK
+serial number nibo	TASK
+plan korbo	TASK
+plan korte hobe	TASK
+plan kora	TASK
+plan banabo	TASK
+plan banate hobe	TASK
+prostuti nibo	TASK
+prostuti nite hobe	TASK
+prostuti neya	TASK
+prostuti	TASK
+prepare hobo	TASK
+prepare hote hobe	TASK
+prepare korbo	TASK
+prepare korte hobe	TASK
+prepare kora	TASK
+porbo	TASK
+porte hobe	TASK
+pora	TASK
+pora ache	TASK
+porashona korbo	TASK
+porashona korte hobe	TASK
+porashona	TASK
+porashuna korbo	TASK
+porashuna korte hobe	TASK
+porashuna	TASK
+poralekha korbo	TASK
+poralekha korte hobe	TASK
+poralekha	TASK
+lekhapora korbo	TASK
+lekhapora korte hobe	TASK
+lekhapora	TASK
+study korbo	TASK
+study korte hobe	TASK
+study kora	TASK
+revise korbo	TASK
+revise korte hobe	TASK
+revise kora	TASK
+revision dibo	TASK
+revision dite hobe	TASK
+practice korbo	TASK
+practice korte hobe	TASK
+practice kora	TASK
+mukhosto korbo	TASK
+mukhosto korte hobe	TASK
+mukhosto kora	TASK
+mukhosto	TASK
+shikhbo	TASK
+shikhte hobe	TASK
+shikha	TASK
+sikhbo	TASK
+sikhte hobe	TASK
+sikha	TASK
+homework korbo	TASK
+homework korte hobe	TASK
+homework kora	TASK
+assignment korbo	TASK
+assignment korte hobe	TASK
+assignment kora	TASK
+assignment dibo	TASK
+assignment dite hobe	TASK
+assignment jama dibo	TASK
+lab report jama dibo	TASK
+lab report likhbo	TASK
+report likhbo	TASK
+report likhte hobe	TASK
+report jama dibo	TASK
+report banabo	TASK
+report banate hobe	TASK
+presentation banabo	TASK
+presentation banate hobe	TASK
+presentation prepare korbo	TASK
+slide banabo	TASK
+slide banate hobe	TASK
+slide prepare korbo	TASK
+thesis likhbo	TASK
+thesis likhte hobe	TASK
+thesis jama dibo	TASK
+project korbo	TASK
+project korte hobe	TASK
+project kora	TASK
+project jama dibo	TASK
+project shesh korbo	TASK
+cv banabo	TASK
+cv banate hobe	TASK
+cv update korbo	TASK
+resume banabo	TASK
+resume banate hobe	TASK
+resume update korbo	TASK
+job apply korbo	TASK
+job e apply korbo	TASK
+chakrir jonno apply korbo	TASK
+chakrir abedon korbo	TASK
+interview prepare korbo	TASK
+interview er prostuti nibo	TASK
+follow up korbo	TASK
+followup korbo	TASK
+followup korte hobe	TASK
+follow-up korbo	TASK
+follow-up korte hobe	TASK
+jogajog korbo	TASK
+jogajog korte hobe	TASK
+jogajog kora	TASK
+jogajog	TASK
+kotha bolbo	TASK
+kotha bolte hobe	TASK
+kotha bola	TASK
+kotha hobe	TASK
+kotha bole nibo	TASK
+janabo	TASK
+janate hobe	TASK
+janiye dibo	TASK
+janiye dite hobe	TASK
+jiggesh korbo	TASK
+jiggesh korte hobe	TASK
+jiggesh kora	TASK
+jigyesh korbo	TASK
+jigyesh korte hobe	TASK
+jigyasha korbo	TASK
+jigyasha korte hobe	TASK
+khoj nibo	TASK
+khoj nite hobe	TASK
+khoj neya	TASK
+khoj korbo	TASK
+khoj korte hobe	TASK
+khoj kora	TASK
+khuje dekhbo	TASK
+khuje dekhte hobe	TASK
+khuje dekha	TASK
+khuje ber korbo	TASK
+khuje ber kora	TASK
+dekhte hobe	TASK
+dekhe nibo	TASK
+dekhe nite hobe	TASK
+dekhe neya	TASK
+dekhe rakhbo	TASK
+dekhe rakhte hobe	TASK
+check korbo	TASK
+check korte hobe	TASK
+check kora	TASK
+check kore dekhbo	TASK
+check kore nibo	TASK
+check kore neya	TASK
+jachai korbo	TASK
+jachai korte hobe	TASK
+jachai kora	TASK
+jachai	TASK
+yachai	TASK
+jacai	TASK
+verify korbo	TASK
+verify korte hobe	TASK
+verify kora	TASK
+confirm korbo	TASK
+confirm korte hobe	TASK
+confirm kora	TASK
+confirm kore nibo	TASK
+confirm kore neya	TASK
+nishchit korbo	TASK
+nishchit korte hobe	TASK
+nishchit kora	TASK
+nishchit	TASK
+nishchit hobo	TASK
+nishchit hote hobe	TASK
+nishchit hoye nibo	TASK
+nishchit hoye neya	TASK
+কাজ	TASK
+কাজ আছে	TASK
+কাজ করতে হবে	TASK
+করতে হবে	TASK
+করব	TASK
+করবো	TASK
+করা	TASK
+শেষ করতে হবে	TASK
+শেষ করব	TASK
+শেষ করবো	TASK
+শেষ করা	TASK
+জমা দিতে হবে	TASK
+জমা দিব	TASK
+জমা দেব	TASK
+জমা দেওয়া	TASK
+সাবমিট করতে হবে	TASK
+সাবমিট করব	TASK
+সাবমিট করবো	TASK
+সাবমিট করা	TASK
+লিখতে হবে	TASK
+লিখব	TASK
+লিখবো	TASK
+লেখা	TASK
+পাঠাতে হবে	TASK
+পাঠাব	TASK
+পাঠাবো	TASK
+পাঠানো	TASK
+কল করতে হবে	TASK
+কল করব	TASK
+কল করবো	TASK
+কল করা	TASK
+ফোন করতে হবে	TASK
+ফোন করব	TASK
+ফোন করবো	TASK
+ফোন করা	TASK
+মেসেজ দিতে হবে	TASK
+মেসেজ দিব	TASK
+মেসেজ করব	TASK
+মেইল করতে হবে	TASK
+মেইল করব	TASK
+ইমেইল করতে হবে	TASK
+ইমেইল করব	TASK
+কিনতে হবে	TASK
+কিনব	TASK
+কিনবো	TASK
+কেনা	TASK
+কিনে আনতে হবে	TASK
+কিনে আনব	TASK
+অর্ডার করতে হবে	TASK
+অর্ডার করব	TASK
+অর্ডার দিতে হবে	TASK
+বিল দিতে হবে	TASK
+বিল দিব	TASK
+বিল পরিশোধ করতে হবে	TASK
+টাকা দিতে হবে	TASK
+টাকা দিব	TASK
+টাকা পাঠাতে হবে	TASK
+টাকা পাঠাব	TASK
+টাকা তুলতে হবে	TASK
+টাকা তুলব	TASK
+টাকা জমা দিতে হবে	TASK
+টাকা জমা দিব	TASK
+কিস্তি দিতে হবে	TASK
+কিস্তি দিব	TASK
+ফি দিতে হবে	TASK
+ফি দিব	TASK
+ফেরত দিতে হবে	TASK
+ফেরত দিব	TASK
+ফেরত নিতে হবে	TASK
+ফেরত নিব	TASK
+নিতে হবে	TASK
+নিব	TASK
+নেব	TASK
+আনতে হবে	TASK
+আনব	TASK
+আনবো	TASK
+নিয়ে আসব	TASK
+নিয়ে আসতে হবে	TASK
+রাখতে হবে	TASK
+রাখব	TASK
+রাখবো	TASK
+গোছাতে হবে	TASK
+গোছাব	TASK
+গুছিয়ে রাখব	TASK
+পরিষ্কার করতে হবে	TASK
+পরিষ্কার করব	TASK
+ধুতে হবে	TASK
+ধুয়ে ফেলব	TASK
+রান্না করতে হবে	TASK
+রান্না করব	TASK
+বাজার করতে হবে	TASK
+বাজার করব	TASK
+বাজারে যেতে হবে	TASK
+বাজারে যাব	TASK
+দোকানে যেতে হবে	TASK
+দোকানে যাব	TASK
+ব্যাংকে যেতে হবে	TASK
+ব্যাংকে যাব	TASK
+ব্যাংকে টাকা জমা দিব	TASK
+ব্যাংক থেকে টাকা তুলব	TASK
+এটিএম থেকে টাকা তুলব	TASK
+ডাকঘরে যেতে হবে	TASK
+কুরিয়ার করতে হবে	TASK
+কুরিয়ার করব	TASK
+পার্সেল আনতে হবে	TASK
+পার্সেল আনব	TASK
+পার্সেল পাঠাতে হবে	TASK
+পার্সেল পাঠাব	TASK
+পার্সেল নিতে হবে	TASK
+পার্সেল নিব	TASK
+যোগাড় করতে হবে	TASK
+যোগাড় করব	TASK
+জোগাড় করতে হবে	TASK
+জোগাড় করব	TASK
+ঠিক করতে হবে	TASK
+ঠিক করব	TASK
+মেরামত করতে হবে	TASK
+মেরামত করব	TASK
+সার্ভিসিং করতে হবে	TASK
+সার্ভিসিং করব	TASK
+সার্ভিসে দিতে হবে	TASK
+সার্ভিসে দিব	TASK
+বদলাতে হবে	TASK
+বদলাব	TASK
+পাল্টাতে হবে	TASK
+পাল্টাব	TASK
+আপডেট করতে হবে	TASK
+আপডেট করব	TASK
+আপলোড করতে হবে	TASK
+আপলোড করব	TASK
+ডাউনলোড করতে হবে	TASK
+ডাউনলোড করব	TASK
+ইনস্টল করতে হবে	TASK
+ইনস্টল করব	TASK
+প্রিন্ট করতে হবে	TASK
+প্রিন্ট করব	TASK
+ফটোকপি করতে হবে	TASK
+ফটোকপি করব	TASK
+জেরক্স করতে হবে	TASK
+স্ক্যান করতে হবে	TASK
+সাইন করতে হবে	TASK
+সাইন করব	TASK
+আবেদন করতে হবে	TASK
+আবেদন করব	TASK
+রেজিস্ট্রেশন করতে হবে	TASK
+রেজিস্ট্রেশন করব	TASK
+নবায়ন করতে হবে	TASK
+নবায়ন করব	TASK
+রিনিউ করতে হবে	TASK
+রিনিউ করব	TASK
+বুকিং দিতে হবে	TASK
+বুকিং দিব	TASK
+বুক করতে হবে	TASK
+বুক করব	TASK
+টিকেট কিনতে হবে	TASK
+টিকেট কিনব	TASK
+টিকিট কাটতে হবে	TASK
+টিকিট কাটব	TASK
+সিট বুক করতে হবে	TASK
+রুম বুক করতে হবে	TASK
+হোটেল বুক করতে হবে	TASK
+অ্যাপয়েন্টমেন্ট নিতে হবে	TASK
+অ্যাপয়েন্টমেন্ট নিব	TASK
+সিরিয়াল নিতে হবে	TASK
+সিরিয়াল নিব	TASK
+পরিকল্পনা করতে হবে	TASK
+পরিকল্পনা করব	TASK
+প্রস্তুতি নিতে হবে	TASK
+প্রস্তুতি নিব	TASK
+প্রস্তুত হতে হবে	TASK
+পড়তে হবে	TASK
+পড়ব	TASK
+পড়বো	TASK
+পড়া	TASK
+পড়াশোনা করতে হবে	TASK
+পড়াশোনা করব	TASK
+পড়ালেখা করতে হবে	TASK
+পড়ালেখা করব	TASK
+রিভিশন দিতে হবে	TASK
+রিভিশন দিব	TASK
+অনুশীলন করতে হবে	TASK
+অনুশীলন করব	TASK
+মুখস্থ করতে হবে	TASK
+মুখস্থ করব	TASK
+শিখতে হবে	TASK
+শিখব	TASK
+হোমওয়ার্ক করতে হবে	TASK
+হোমওয়ার্ক করব	TASK
+অ্যাসাইনমেন্ট করতে হবে	TASK
+অ্যাসাইনমেন্ট করব	TASK
+অ্যাসাইনমেন্ট জমা দিতে হবে	TASK
+রিপোর্ট লিখতে হবে	TASK
+রিপোর্ট লিখব	TASK
+রিপোর্ট জমা দিতে হবে	TASK
+প্রেজেন্টেশন বানাতে হবে	TASK
+প্রেজেন্টেশন বানাব	TASK
+স্লাইড বানাতে হবে	TASK
+থিসিস লিখতে হবে	TASK
+থিসিস জমা দিতে হবে	TASK
+প্রজেক্ট করতে হবে	TASK
+প্রজেক্ট জমা দিতে হবে	TASK
+সিভি বানাতে হবে	TASK
+সিভি আপডেট করতে হবে	TASK
+চাকরির আবেদন করতে হবে	TASK
+ইন্টারভিউর প্রস্তুতি নিতে হবে	TASK
+ফলো আপ করতে হবে	TASK
+যোগাযোগ করতে হবে	TASK
+যোগাযোগ করব	TASK
+কথা বলতে হবে	TASK
+কথা বলব	TASK
+জানাতে হবে	TASK
+জানাব	TASK
+জিজ্ঞেস করতে হবে	TASK
+জিজ্ঞেস করব	TASK
+খোঁজ নিতে হবে	TASK
+খোঁজ নিব	TASK
+খুঁজে দেখতে হবে	TASK
+দেখতে হবে	TASK
+দেখব	TASK
+দেখে নিতে হবে	TASK
+চেক করতে হবে	TASK
+চেক করব	TASK
+যাচাই করতে হবে	TASK
+ভেরিফাই করতে হবে	TASK
+নিশ্চিত করতে হবে	TASK
+কনফার্ম করতে হবে	TASK
+কনফার্ম করব	TASK
+ভুলবো না	TASK
+ভুলে যাব না	TASK
+মনে রাখতে হবে	TASK
+মনে রাখব	TASK
+মনে করিয়ে দিও	TASK
+মনে করিয়ে দিন	TASK
+মনে করিয়ে দাও	TASK
+মনে করাইয়া দিয়ো	TASK
+মনে করায়ে দিস	TASK
+মনে রাখিস	TASK
+মনে করিস	TASK
+মনে করাস	TASK
+মনে করিয়ে দিস	TASK
+মনে করিয়ে দিবি	TASK
+মনে রাখবি	TASK
+মনে রাখো	TASK
+মনে রাখুন	TASK
+monay rakhis	TASK
+monay rakhish	TASK
+monay rekho	TASK
+mone rekho	TASK
+mone rakhis	TASK
+mone rakhish	TASK
+mone rakhbi	TASK
+mone rakhbe	TASK
+mone korio	TASK
+mone korish	TASK
+mone korbi	TASK
+mone korabi	TASK
+mone koriye dio	TASK
+mone koriye dis	TASK
+mone koriye dibi	TASK
+mone koriye diyo	TASK
+mone koriye din	TASK
+mone koriye dite	TASK
+mone koriye dibe	TASK
+mone koraiya dio	TASK
+mone koraiya dis	TASK
+mone koraiya dibi	TASK
+mone koraiya diyo	TASK
+mone koraiya din	TASK
+mone koraiya dite	TASK
+mone koraiya dibe	TASK
+mone koray dio	TASK
+mone koray dis	TASK
+mone koray dibi	TASK
+mone koray diyo	TASK
+mone koray din	TASK
+mone koray dite	TASK
+mone koray dibe	TASK
+mone poriye dio	TASK
+mone poriye dis	TASK
+mone poriye dibi	TASK
+mone poriye diyo	TASK
+mone poriye din	TASK
+mone poriye dite	TASK
+mone poriye dibe	TASK
+monay koriye dio	TASK
+monay koriye dis	TASK
+monay koriye dibi	TASK
+monay koriye diyo	TASK
+monay koriye din	TASK
+monay koriye dite	TASK
+monay koriye dibe	TASK
+monay koraiya dio	TASK
+monay koraiya dis	TASK
+monay koraiya dibi	TASK
+monay koraiya diyo	TASK
+monay koraiya din	TASK
+monay koraiya dite	TASK
+monay koraiya dibe	TASK
+monay korio	TASK
+monay korish	TASK
+monay korbi	TASK
+monay korabi	TASK
+mone thakbe	TASK
+mone thakle	TASK
+mone thakuk	TASK
+mone thake	TASK
+mone ache	TASK
+mone nai	TASK
+mone nei	TASK
+mone porena	TASK
+mone pore na	TASK
+mone pore nai	TASK
+mone pore nei	TASK
+mone porbe	TASK
+mone porle	TASK
+mone poruk	TASK
+mone pore	TASK
+bhule jabo na	TASK
+bhule jaiyo na	TASK
+bhule jeyo na	TASK
+bhule jas na	TASK
+bhule jaish na	TASK
+bhule jabi na	TASK
+bhule jabe na	TASK
+bhule jabona	TASK
+bhule jaona	TASK
+bhule jeona	TASK
+bhulo na	TASK
+bhulona	TASK
+bhulis na	TASK
+bhulish na	TASK
+bhulbi na	TASK
+bhulbe na	TASK
+bhulbona	TASK
+bhulbo na	TASK
+bhula jabe na	TASK
+bhula jaibo na	TASK
+bhula jabona	TASK
+bhula jaibona	TASK
+bhula jaona	TASK
+bhula jeona	TASK
+bhula jas na	TASK
+bhula jaish na	TASK
+bhula jabi na	TASK
+personal	PERSONAL
+personal time	PERSONAL
+me time	PERSONAL
+my time	PERSONAL
+alone time	PERSONAL
+self care	PERSONAL
+self-care	PERSONAL
+selfcare	PERSONAL
+personal day	PERSONAL
+personal leave	PERSONAL
+day off	PERSONAL
+off day	PERSONAL
+leave	PERSONAL
+leave day	PERSONAL
+sick leave	PERSONAL
+sick day	PERSONAL
+casual leave	PERSONAL
+annual leave	PERSONAL
+vacation day	PERSONAL
+holiday leave	PERSONAL
+half day	PERSONAL
+half-day	PERSONAL
+full day off	PERSONAL
+rest day	PERSONAL
+rest time	PERSONAL
+relax time	PERSONAL
+free time	PERSONAL
+free day	PERSONAL
+free evening	PERSONAL
+free morning	PERSONAL
+free afternoon	PERSONAL
+free slot	PERSONAL
+free period	PERSONAL
+lunch break	PERSONAL
+tea break	PERSONAL
+coffee break	PERSONAL
+short break	PERSONAL
+long break	PERSONAL
+mental health day	PERSONAL
+mental health break	PERSONAL
+digital detox	PERSONAL
+offline day	PERSONAL
+offline time	PERSONAL
+hobby	PERSONAL
+hobby time	PERSONAL
+hobbies	PERSONAL
+side project	PERSONAL
+side projects	PERSONAL
+passion project	PERSONAL
+personal project	PERSONAL
+personal projects	PERSONAL
+family time	PERSONAL
+family day	PERSONAL
+family evening	PERSONAL
+quality time	PERSONAL
+couple time	PERSONAL
+partner time	PERSONAL
+friends time	PERSONAL
+friends day	PERSONAL
+friends night	PERSONAL
+friend time	PERSONAL
+hangout	PERSONAL
+hanging out	PERSONAL
+chilling	PERSONAL
+chill time	PERSONAL
+netflix and chill	PERSONAL
+movie time	PERSONAL
+tv time	PERSONAL
+gaming time	PERSONAL
+game time	PERSONAL
+play time	PERSONAL
+playtime	PERSONAL
+reading time	PERSONAL
+book time	PERSONAL
+music time	PERSONAL
+practice time	PERSONAL
+art time	PERSONAL
+drawing time	PERSONAL
+painting time	PERSONAL
+writing time	PERSONAL
+journaling time	PERSONAL
+meditation time	PERSONAL
+quiet time	PERSONAL
+reflection time	PERSONAL
+thinking time	PERSONAL
+planning time	PERSONAL
+review time	PERSONAL
+weekly review time	PERSONAL
+sunday reset	PERSONAL
+sunday planning	PERSONAL
+reset day	PERSONAL
+recharge day	PERSONAL
+recharge time	PERSONAL
+spa day	PERSONAL
+self care day	PERSONAL
+pamper day	PERSONAL
+me day	PERSONAL
+my day	PERSONAL
+my birthday	PERSONAL
+my bday	PERSONAL
+my anniversary	PERSONAL
+wedding anniversary	PERSONAL
+my graduation	PERSONAL
+my convocation	PERSONAL
+my wedding	PERSONAL
+my engagement	PERSONAL
+personal appointment	PERSONAL
+personal errand	PERSONAL
+personal errands	PERSONAL
+personal task	PERSONAL
+personal tasks	PERSONAL
+personal note	PERSONAL
+personal reminder	PERSONAL
+private time	PERSONAL
+private appointment	PERSONAL
+private note	PERSONAL
+private reminder	PERSONAL
+no meetings	PERSONAL
+no meeting	PERSONAL
+focus day	PERSONAL
+focus morning	PERSONAL
+focus afternoon	PERSONAL
+deep work day	PERSONAL
+do not disturb	PERSONAL
+block time	PERSONAL
+blocked time	PERSONAL
+unavailable	PERSONAL
+out of office	PERSONAL
+travelling	PERSONAL
+traveling	PERSONAL
+on leave	PERSONAL
+on vacation	PERSONAL
+on holiday	PERSONAL
+on break	PERSONAL
+off work	PERSONAL
+not working	PERSONAL
+nijer jonno	PERSONAL
+nijer jonno somoy	PERSONAL
+nijer somoy	PERSONAL
+nijer shomoy	PERSONAL
+nijer kaj	PERSONAL
+nijer kajer jonno	PERSONAL
+amar somoy	PERSONAL
+amar shomoy	PERSONAL
+amar kaj	PERSONAL
+amar jonno	PERSONAL
+amar jonno somoy	PERSONAL
+amar nijer somoy	PERSONAL
+amar nijer shomoy	PERSONAL
+amar nijer kaj	PERSONAL
+amar nijer jonno	PERSONAL
+ekhon free	PERSONAL
+free ache	PERSONAL
+free achi	PERSONAL
+free thakbo	PERSONAL
+free thaki	PERSONAL
+free thakle	PERSONAL
+free thakbe	PERSONAL
+free thakben	PERSONAL
+free thakbi	PERSONAL
+chhuti	PERSONAL
+chuti	PERSONAL
+chhuti ache	PERSONAL
+chuti ache	PERSONAL
+chhuti nibo	PERSONAL
+chuti nibo	PERSONAL
+chhuti nite hobe	PERSONAL
+chuti nite hobe	PERSONAL
+chhuti neya	PERSONAL
+chuti neya	PERSONAL
+chhutir din	PERSONAL
+chutir din	PERSONAL
+chhutir diner	PERSONAL
+chutir diner	PERSONAL
+chhutir diner kaj	PERSONAL
+chutir diner kaj	PERSONAL
+chhutir diner plan	PERSONAL
+chutir diner plan	PERSONAL
+chhutir plan	PERSONAL
+chutir plan	PERSONAL
+chhuti kata	PERSONAL
+chuti kata	PERSONAL
+chhuti katabo	PERSONAL
+chuti katabo	PERSONAL
+chhuti katate hobe	PERSONAL
+chuti katate hobe	PERSONAL
+chhuti kate	PERSONAL
+chuti kate	PERSONAL
+chhuti kaate	PERSONAL
+chuti kaate	PERSONAL
+chhuti kaatabo	PERSONAL
+chuti kaatabo	PERSONAL
+chhuti kaatate hobe	PERSONAL
+chuti kaatate hobe	PERSONAL
+bishram	PERSONAL
+bishram nibo	PERSONAL
+bishram nite hobe	PERSONAL
+bishram neya	PERSONAL
+bishram korbo	PERSONAL
+bishram korte hobe	PERSONAL
+bishram kora	PERSONAL
+bishram er somoy	PERSONAL
+bishram er shomoy	PERSONAL
+bishram er din	PERSONAL
+bishram er diner	PERSONAL
+bishram er diner kaj	PERSONAL
+bishram er diner plan	PERSONAL
+bishram er plan	PERSONAL
+aram	PERSONAL
+aram korbo	PERSONAL
+aram korte hobe	PERSONAL
+aram kora	PERSONAL
+aram er somoy	PERSONAL
+aram er shomoy	PERSONAL
+aram er din	PERSONAL
+aram er diner	PERSONAL
+aram er diner kaj	PERSONAL
+aram er diner plan	PERSONAL
+aram er plan	PERSONAL
+ghumabo	PERSONAL
+ghumate hobe	PERSONAL
+ghumano	PERSONAL
+ghumai	PERSONAL
+ghum	PERSONAL
+ghum dibo	PERSONAL
+ghum dite hobe	PERSONAL
+ghum deya	PERSONAL
+ghum dei	PERSONAL
+ghumer somoy	PERSONAL
+ghumer shomoy	PERSONAL
+ghumer time	PERSONAL
+ghumer jonno	PERSONAL
+ghumer jonno somoy	PERSONAL
+ghumer jonno shomoy	PERSONAL
+ghumer jonno time	PERSONAL
+nijeke somoy dibo	PERSONAL
+nijeke somoy deya	PERSONAL
+nijeke somoy dei	PERSONAL
+nijeke shomoy dibo	PERSONAL
+nijeke shomoy deya	PERSONAL
+nijeke shomoy dei	PERSONAL
+nijeke time dibo	PERSONAL
+nijeke time deya	PERSONAL
+nijeke time dei	PERSONAL
+shokher kaj	PERSONAL
+sokher kaj	PERSONAL
+shokher jinish	PERSONAL
+sokher jinish	PERSONAL
+shokher somoy	PERSONAL
+sokher somoy	PERSONAL
+shokher shomoy	PERSONAL
+sokher shomoy	PERSONAL
+shokher time	PERSONAL
+sokher time	PERSONAL
+hobby korbo	PERSONAL
+hobby korte hobe	PERSONAL
+hobby kora	PERSONAL
+hobby er somoy	PERSONAL
+hobby er shomoy	PERSONAL
+hobby er time	PERSONAL
+shokh	PERSONAL
+sokh	PERSONAL
+shokh korbo	PERSONAL
+sokh korbo	PERSONAL
+shokh korte hobe	PERSONAL
+sokh korte hobe	PERSONAL
+shokh kora	PERSONAL
+sokh kora	PERSONAL
+shokh er somoy	PERSONAL
+sokh er somoy	PERSONAL
+shokh er shomoy	PERSONAL
+sokh er shomoy	PERSONAL
+shokh er time	PERSONAL
+sokh er time	PERSONAL
+porivar er shathe	PERSONAL
+poribarer shathe	PERSONAL
+poribarer sathe	PERSONAL
+porivarer shathe	PERSONAL
+porivarer sathe	PERSONAL
+poribar er shathe	PERSONAL
+poribar er sathe	PERSONAL
+porivar er sathe	PERSONAL
+poribarer shange	PERSONAL
+poribarer songe	PERSONAL
+porivarer shange	PERSONAL
+porivarer songe	PERSONAL
+family er shathe	PERSONAL
+family er sathe	PERSONAL
+familyr shathe	PERSONAL
+familyr sathe	PERSONAL
+family r shathe	PERSONAL
+family r sathe	PERSONAL
+familyr shange	PERSONAL
+familyr songe	PERSONAL
+family r shange	PERSONAL
+family r songe	PERSONAL
+bondhur shathe	PERSONAL
+bondhur sathe	PERSONAL
+bondhuder shathe	PERSONAL
+bondhuder sathe	PERSONAL
+bondhur shange	PERSONAL
+bondhur songe	PERSONAL
+bondhuder shange	PERSONAL
+bondhuder songe	PERSONAL
+friend er shathe	PERSONAL
+friend er sathe	PERSONAL
+friender shathe	PERSONAL
+friender sathe	PERSONAL
+friends der shathe	PERSONAL
+friends der sathe	PERSONAL
+friend der shathe	PERSONAL
+friend der sathe	PERSONAL
+friend er shange	PERSONAL
+friend er songe	PERSONAL
+friender shange	PERSONAL
+friender songe	PERSONAL
+friends der shange	PERSONAL
+friends der songe	PERSONAL
+friend der shange	PERSONAL
+friend der songe	PERSONAL
+ব্যক্তিগত	PERSONAL
+ব্যক্তিগত সময়	PERSONAL
+ব্যক্তিগত কাজ	PERSONAL
+নিজের জন্য	PERSONAL
+নিজের সময়	PERSONAL
+নিজের কাজ	PERSONAL
+আমার সময়	PERSONAL
+আমার কাজ	PERSONAL
+আমার জন্য	PERSONAL
+ছুটি	PERSONAL
+ছুটি আছে	PERSONAL
+ছুটি নিব	PERSONAL
+ছুটি নিতে হবে	PERSONAL
+ছুটির দিন	PERSONAL
+ছুটির দিনের কাজ	PERSONAL
+ছুটির প্ল্যান	PERSONAL
+বিশ্রাম	PERSONAL
+বিশ্রাম নিব	PERSONAL
+বিশ্রাম নিতে হবে	PERSONAL
+আরাম	PERSONAL
+আরাম করব	PERSONAL
+ঘুম	PERSONAL
+ঘুমাব	PERSONAL
+ঘুমাতে হবে	PERSONAL
+শখ	PERSONAL
+শখের কাজ	PERSONAL
+শখের সময়	PERSONAL
+হবি	PERSONAL
+পরিবারের সাথে	PERSONAL
+পরিবারের সঙ্গে	PERSONAL
+ফ্যামিলির সাথে	PERSONAL
+ফ্যামিলির সঙ্গে	PERSONAL
+বন্ধুদের সাথে	PERSONAL
+বন্ধুদের সঙ্গে	PERSONAL
+বন্ধুর সাথে	PERSONAL
+বন্ধুর সঙ্গে	PERSONAL
+ফ্রি	PERSONAL
+ফ্রি আছি	PERSONAL
+ফ্রি থাকব	PERSONAL
+ফ্রি থাকলে	PERSONAL
+অবসর	PERSONAL
+অবসর সময়	PERSONAL
+অবসরে	PERSONAL
+আড্ডার সময়	PERSONAL
+গল্প	PERSONAL
+গল্প করব	PERSONAL
+গল্প করতে হবে	PERSONAL
+ছুটি কাটাব	PERSONAL
+ছুটি কাটাতে হবে	PERSONAL

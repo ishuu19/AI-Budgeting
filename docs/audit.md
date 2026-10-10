@@ -354,3 +354,38 @@ Status values: open, confirmed, already done, dropped.
 | H8 | done | Focus sessions and nudge proposals push and pull when online. Location points and visits stay on the phone. |
 | H9 | done | A failed sign-out upload keeps Room and `pendingUploadUserId`. The same account uploads next time. A different account still wipes first. |
 | H10 | already done | Quotes sync in `QuoteRepository`, not inside `syncAll`. Left there so two writers do not race. |
+
+## H2. Rules-first for other sections
+
+Every non-voice AI feature now tries a deterministic rule path first. The cloud is called only when rules cannot answer, or (opt-in) to reword text. Numbers always come from local data.
+
+| Section | Rule path | Cloud use now | Label |
+|---|---|---|---|
+| Ask / chat | `data/ai/RuleAnswers.kt` (pattern table, English + Banglish): spent on category/merchant/period, budget left, safe today (SpendGuideCalculator), over budget, next class/exam/alarm/task, agenda, free time, due bills/debts/tasks, goals, income vs expense, biggest expense/category, compare to last month/week, savings rate, runway, balance, summary. `AskService` loads a `RuleSnapshot` from Room. | `AiRepository.chat` only when no rule matches | "Rules" / "AI" under each reply bubble (`ChatMessage.source`) |
+| Notes | `data/ai/NoteRules.kt`: keyword tags (+ hashtags), extractive summary with bullets, action items (tasks vs ideas, dates via QuickParse), nudge detection with trigger phrases. `NoteLexicon` merges `assets/rules/notes_tags.tsv` (`keyword<TAB>tag`) and `nudge_triggers.tsv` over embedded defaults. | Summarize/Tag never need the cloud. Ask-about-note still does. Nudge scan calls the cloud only if rules find nothing and the note has `[nudge]`/`#nudge`. | Toast text ends with "Rules"/"AI"; summary card shows the source |
+| Nudge dedupe | `NudgeProposalDao.countFor(noteId, message)`; no duplicate proposal per note+message in any state | n/a | n/a |
+| Insight / forecast / advice | `data/insight/InsightRules.kt`: daily insight (over budget, overdue/due bills, near limit, InsightEngine pattern, pace vs income, top category) with per-detector templates; `ForecastRules` (bills + weekday averages + income pattern); `BudgetAdviceRules` (pace cap, trend, reallocation). Health score was already local. | `generateDailyInsight(rewordWithCloud=true)` may reword and must keep every number; `generateForecast(useCloud=true)` is opt-in. Defaults are rules only. | Today insight label "Insight · Rules/AI"; forecast "Rules"; advice "(Rules)" |
+| Manual transaction | `data/ai/MerchantLookup.kt`: `MerchantCategoryLookup`, `TsvMerchantLookup` (merchants.tsv, columns found by content, embedded fallback list), per-user corrections in SharedPreferences that win next time. AddTransactionSheet suggests category and canonical name until the user picks one. | none | "Suggested · Rules/Remembered" |
+| Schedule suggestions | `data/ai/ScheduleRules.kt`: clash detection, free gaps, bill reminders, exam prep, study blocks. `ScheduleDraftRepository.loadSuggestions` | cloud only when rules give nothing | reason prefix "Rules:" / "AI:" |
+| Jobs paste/share | `data/ai/JobPasteParser.kt` (company, role, url, source, status, location, dates; `job_terms.tsv` rows `term<TAB>ROLE|STATUS|SOURCE[<TAB>value]`). Used by JobsViewModel.savePasted and JobShareActivity. | JobShareActivity asks the voice parser only if both company and role are missing | n/a |
+| Timetable import | `data/schedule/TimetableRules.kt` (JSON, CSV, per-line, day-heading blocks) in `ScheduleImportService.parseRows` | `parseTimetable` only when rules find no rows | n/a |
+
+Tests (table driven, `app/src/test/.../data`): RuleAnswersTest, NoteRulesTest, InsightRulesTest, MerchantLookupTest, JobPasteParserTest, ScheduleRulesTest.
+
+Not done: NoteScanWorker itself is unchanged (it already calls `NudgeProposalRepository.scanNote`, which is now rules-first); no UI to toggle cloud rewording; `RuleLexicon` from the voice agent is not used (own small TSV loaders instead); Ask-about-note stays cloud only; no link-chip navigation for `RuleAnswer.link` (stored on the message, not yet rendered).
+
+---
+
+## H1. Rules-first entry routing
+
+Voice, typed and widget entries now try the offline rules first. The cloud is a fallback, not the first call.
+
+- `AiRepository.parseVoiceIntentsRouted` runs `RuleEngine` (wraps `QuickParse.parseVoiceIntents`). Each item gets a confidence from concrete evidence: amount found, merchant or keyword known from the lexicon, spoken date and clock resolved, explicit kind keyword, non-empty title that is not the raw sentence, named person or company, direction verb, frequency.
+- Threshold is 0.7. If every item is at or above it, the result returns with no network call. Otherwise (or for unmatched text) the cloud is asked once (edge, then direct provider) and merged: rule fields with evidence stay, the cloud fills only what the rules could not. Offline, failure or an empty answer keeps the rule result. `preferLocalKinds` and place snapping still apply.
+- Setting: You > Voice and AI > "Cloud fallback", default on. Off means the cloud is never called for entry parsing (`UserPreferences.cloudFallback`).
+- The voice confirm card shows a one-word "Rules" or "AI" pill next to the kind pill.
+- Lexicon: `RuleLexicon` loads the tab-separated files in `assets/rules` lazily and once (hashed by first token, longest phrase first, plural and punctuation normalised). Missing or empty files are empty tables. Provided by `RulesModule`; a plain constructor takes lists for tests. Small built-in tables (`BuiltinRules`) keep the parser useful with nothing loaded.
+- Parser: number words, `k`, lakh, crore, currency words; half past, quarter to, noon, midnight, prayer times; day after tomorrow, next friday, end of month, this weekend, in N weeks or months; every other day, every second monday, twice a week, weekdays; durations and time ranges; Bangla and Banglish words; income, expense, debt direction, bill, goal, budget, note, edit and delete, job phrasings. Code: `SpeechNorm`, `DateRules`, `QuickParse`, `RuleEngine`.
+- Tests: `RulesTableTest` (600+ table cases), `VoiceRoutingTest` (routing, merge, fallback, lexicon), plus the existing QuickParse tests.
+
+Not done: cloud-transcribed audio (`parseVoiceAudio`) still comes from the cloud by nature; the real lexicon files were not checked in when tested, so lexicon behaviour is covered with in-code fixtures.

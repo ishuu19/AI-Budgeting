@@ -118,19 +118,21 @@ fun WidgetProgressBar(
 fun WidgetRoundAction(
     iconRes: Int,
     palette: WidgetPalette,
-    onClick: Action
+    onClick: Action,
+    iconSize: androidx.compose.ui.unit.Dp = 22.dp,
+    backgroundRes: Int = palette.tileRaised
 ) {
     Box(
         modifier = GlanceModifier
             .size(WidgetTheme.actionSize)
-            .background(ImageProvider(palette.tileRaised))
+            .background(ImageProvider(backgroundRes))
             .clickable(onClick),
         contentAlignment = Alignment.Center
     ) {
         Image(
             provider = ImageProvider(iconRes),
             contentDescription = null,
-            modifier = GlanceModifier.size(22.dp)
+            modifier = GlanceModifier.size(iconSize)
         )
     }
 }

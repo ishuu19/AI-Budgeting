@@ -104,7 +104,9 @@ fun JobApplicationEntity.toDomain() = JobApplication(
     appliedOn = appliedOn,
     followUpOn = followUpOn,
     notes = notes,
-    contact = contact
+    contact = contact,
+    location = location,
+    extraDates = extraDates
 )
 
 fun JobApplication.toEntity(now: Long = System.currentTimeMillis()) = JobApplicationEntity(
@@ -118,5 +120,7 @@ fun JobApplication.toEntity(now: Long = System.currentTimeMillis()) = JobApplica
     followUpOn = followUpOn,
     notes = notes,
     contact = contact,
+    location = location,
+    extraDates = extraDates,
     updatedAt = now
 )

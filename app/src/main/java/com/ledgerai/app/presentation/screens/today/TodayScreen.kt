@@ -384,19 +384,22 @@ private fun androidx.compose.foundation.lazy.LazyListScope.insight(dash: Dashboa
     val card = dash.aiInsightCard
     val headline: String
     val context: String
+    val source: String
     when {
         top != null -> {
             headline = top.headline
             context = "${top.headline}\n${top.action}"
+            source = "Rules"
         }
         card != null && !dash.isLoading -> {
             headline = card.body.ifBlank { card.title }
             context = card.chatContext
+            source = card.source
         }
         else -> return
     }
     item(key = "insight") {
-        LWide(label = "Insight", onClick = { links.chat(context) }) {
+        LWide(label = "Insight · $source", onClick = { links.chat(context) }) {
             Text(headline, style = MaterialTheme.typography.bodyMedium, color = L.OnBox, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }

@@ -146,7 +146,11 @@ data class ChatMessage(
     val id: Long = System.currentTimeMillis(),
     val content: String,
     val isFromUser: Boolean,
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
+    /** "Rules" or "AI" for assistant replies; null for user messages. */
+    val source: String? = null,
+    /** Screen the reply points at, when it has one. */
+    val link: String? = null
 )
 
 data class ParsedTransaction(

@@ -80,5 +80,8 @@ data class JobApplication(
     val appliedOn: LocalDate,
     val followUpOn: LocalDate? = null,
     val notes: String = "",
-    val contact: String = ""
+    val contact: String = "",
+    val location: String = "",
+    /** Other dates, one per line: "Interview · 12 Oct 2026". */
+    val extraDates: String = ""
 )

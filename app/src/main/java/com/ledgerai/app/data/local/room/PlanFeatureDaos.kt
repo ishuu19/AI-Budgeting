@@ -146,6 +146,10 @@ interface NudgeProposalDao {
     @Query("UPDATE nudge_proposals SET state = :state WHERE id = :id")
     suspend fun updateState(id: Long, state: String)
 
+    /** How many proposals (any state) this note already has with this exact message. Used to avoid duplicates. */
+    @Query("SELECT COUNT(*) FROM nudge_proposals WHERE noteId = :noteId AND message = :message AND deletedAt IS NULL")
+    suspend fun countFor(noteId: Long, message: String): Int
+
     @Update
     suspend fun update(entity: NudgeProposalEntity)
 

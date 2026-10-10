@@ -93,17 +93,21 @@ class MainActivity : ComponentActivity() {
             }
         }
         val hasFocus = intent.hasExtra(EXTRA_OPEN_FOCUS_BLOCK_ID) && intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L) != 0L
+        val voiceSeed = intent.getStringExtra(WidgetActions.EXTRA_VOICE_TEXT)?.trim()?.takeIf { it.isNotEmpty() }
         val req = LaunchRequest(
             id = id,
-            voice = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_VOICE, false),
+            voice = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_VOICE, false) || voiceSeed != null,
+            voiceSeed = voiceSeed,
+            notes = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_NOTES, false),
             plan = planSeg,
             spendGuide = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_TODAY, false),
+            addTransaction = intent.getBooleanExtra(WidgetActions.EXTRA_ADD_TRANSACTION, false),
             bills = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_BILLS, false),
             focusBlockId = intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L),
             focusTopic = intent.getStringExtra(EXTRA_FOCUS_TOPIC),
             hasFocus = hasFocus
         )
-        val any = req.voice || req.plan != null || req.spendGuide || req.bills || req.hasFocus
+        val any = req.voice || req.notes || req.plan != null || req.spendGuide || req.addTransaction || req.bills || req.hasFocus
         return if (any) req else null
     }
 

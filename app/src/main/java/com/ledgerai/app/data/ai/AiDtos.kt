@@ -252,8 +252,27 @@ sealed class ParsedIntent {
         val appliedOn: LocalDate,
         val followUpOn: LocalDate? = null,
         val notes: String = "",
+        val source: String = "",
+        val url: String = "",
+        val location: String = "",
+        /** Labeled dates other than the application date. */
+        val extraDates: String = "",
+        val appliedSpoken: Boolean = false,
         override val rawTranscript: String = "",
         override val confidence: Float = 0.7f,
+    ) : ParsedIntent()
+
+    /**
+     * Remove or edit something already saved. [query] is the words that identify it.
+     * [replacement] is the new wording when [remove] is false.
+     */
+    data class Adjust(
+        val remove: Boolean,
+        val query: String,
+        val kindHint: String = "",
+        val replacement: String = "",
+        override val confidence: Float = 0.8f,
+        override val rawTranscript: String = "",
     ) : ParsedIntent()
 
     /** Monthly limit for a category, for the current month. */
@@ -314,12 +333,16 @@ data class InsightDto(
     val body: String? = null,
     val severity: String? = null,
     val actions: List<String>? = null,
+    /** "Rules" when built on device, "AI" when a model wrote it. */
+    val source: String? = null,
 )
 
 data class NoteSummaryDto(
     val summary: String? = null,
     val tags: List<String>? = null,
     val highlights: List<String>? = null,
+    /** "Rules" or "AI". */
+    val source: String? = null,
 )
 
 data class ScheduleDraftListDto(

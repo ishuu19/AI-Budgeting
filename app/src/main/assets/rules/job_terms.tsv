@@ -1,0 +1,2051 @@
+# phrase<TAB>TYPE (ROLE,SOURCE,STATUS,LOCATION_HINT,COMPANY_SUFFIX)
+software engineer	ROLE
+software developer	ROLE
+software development engineer	ROLE
+sde	ROLE
+sde 1	ROLE
+sde 2	ROLE
+sde i	ROLE
+sde ii	ROLE
+sde intern	ROLE
+swe	ROLE
+backend engineer	ROLE
+backend developer	ROLE
+back end developer	ROLE
+frontend engineer	ROLE
+frontend developer	ROLE
+front end developer	ROLE
+front-end developer	ROLE
+full stack developer	ROLE
+full stack engineer	ROLE
+fullstack developer	ROLE
+fullstack engineer	ROLE
+web developer	ROLE
+web engineer	ROLE
+mobile developer	ROLE
+mobile engineer	ROLE
+android developer	ROLE
+android engineer	ROLE
+ios developer	ROLE
+ios engineer	ROLE
+flutter developer	ROLE
+react native developer	ROLE
+react developer	ROLE
+angular developer	ROLE
+vue developer	ROLE
+node developer	ROLE
+nodejs developer	ROLE
+laravel developer	ROLE
+php developer	ROLE
+python developer	ROLE
+java developer	ROLE
+kotlin developer	ROLE
+swift developer	ROLE
+golang developer	ROLE
+go developer	ROLE
+rust developer	ROLE
+c++ developer	ROLE
+c# developer	ROLE
+dotnet developer	ROLE
+.net developer	ROLE
+ruby developer	ROLE
+rails developer	ROLE
+django developer	ROLE
+wordpress developer	ROLE
+shopify developer	ROLE
+unity developer	ROLE
+game developer	ROLE
+game designer	ROLE
+game artist	ROLE
+unreal developer	ROLE
+embedded engineer	ROLE
+embedded software engineer	ROLE
+firmware engineer	ROLE
+iot engineer	ROLE
+robotics engineer	ROLE
+devops engineer	ROLE
+site reliability engineer	ROLE
+sre	ROLE
+platform engineer	ROLE
+cloud engineer	ROLE
+cloud architect	ROLE
+solutions architect	ROLE
+software architect	ROLE
+technical architect	ROLE
+enterprise architect	ROLE
+systems engineer	ROLE
+systems administrator	ROLE
+system administrator	ROLE
+sysadmin	ROLE
+network engineer	ROLE
+network administrator	ROLE
+it support	ROLE
+it support specialist	ROLE
+it technician	ROLE
+help desk	ROLE
+helpdesk	ROLE
+desktop support	ROLE
+technical support engineer	ROLE
+support engineer	ROLE
+customer support engineer	ROLE
+qa engineer	ROLE
+qa analyst	ROLE
+qa tester	ROLE
+quality assurance engineer	ROLE
+sdet	ROLE
+test engineer	ROLE
+software tester	ROLE
+automation engineer	ROLE
+manual tester	ROLE
+security engineer	ROLE
+cybersecurity analyst	ROLE
+information security analyst	ROLE
+penetration tester	ROLE
+pentester	ROLE
+soc analyst	ROLE
+security analyst	ROLE
+database administrator	ROLE
+dba	ROLE
+data engineer	ROLE
+data scientist	ROLE
+data analyst	ROLE
+business analyst	ROLE
+business intelligence analyst	ROLE
+bi developer	ROLE
+bi analyst	ROLE
+analytics engineer	ROLE
+machine learning engineer	ROLE
+ml engineer	ROLE
+ai engineer	ROLE
+ai researcher	ROLE
+research scientist	ROLE
+research engineer	ROLE
+research assistant	ROLE
+applied scientist	ROLE
+nlp engineer	ROLE
+computer vision engineer	ROLE
+deep learning engineer	ROLE
+mlops engineer	ROLE
+prompt engineer	ROLE
+blockchain developer	ROLE
+smart contract developer	ROLE
+product manager	ROLE
+associate product manager	ROLE
+technical product manager	ROLE
+product owner	ROLE
+program manager	ROLE
+technical program manager	ROLE
+project manager	ROLE
+it project manager	ROLE
+scrum master	ROLE
+agile coach	ROLE
+engineering manager	ROLE
+development manager	ROLE
+cto	ROLE
+vp engineering	ROLE
+tech lead	ROLE
+team lead	ROLE
+technical lead	ROLE
+lead engineer	ROLE
+staff engineer	ROLE
+principal engineer	ROLE
+distinguished engineer	ROLE
+ux designer	ROLE
+ui designer	ROLE
+ui ux designer	ROLE
+product designer	ROLE
+graphic designer	ROLE
+visual designer	ROLE
+interaction designer	ROLE
+motion designer	ROLE
+motion graphics designer	ROLE
+3d artist	ROLE
+3d modeler	ROLE
+animator	ROLE
+illustrator	ROLE
+video editor	ROLE
+videographer	ROLE
+photographer	ROLE
+art director	ROLE
+creative director	ROLE
+brand designer	ROLE
+ux researcher	ROLE
+user researcher	ROLE
+technical writer	ROLE
+content writer	ROLE
+copywriter	ROLE
+content strategist	ROLE
+content creator	ROLE
+content marketer	ROLE
+editor	ROLE
+proofreader	ROLE
+translator	ROLE
+interpreter	ROLE
+journalist	ROLE
+reporter	ROLE
+news anchor	ROLE
+social media manager	ROLE
+social media executive	ROLE
+community manager	ROLE
+digital marketer	ROLE
+digital marketing executive	ROLE
+digital marketing manager	ROLE
+performance marketer	ROLE
+seo specialist	ROLE
+seo executive	ROLE
+sem specialist	ROLE
+ppc specialist	ROLE
+email marketer	ROLE
+growth marketer	ROLE
+growth hacker	ROLE
+marketing manager	ROLE
+marketing executive	ROLE
+marketing associate	ROLE
+marketing intern	ROLE
+marketing coordinator	ROLE
+brand manager	ROLE
+brand ambassador	ROLE
+pr manager	ROLE
+pr executive	ROLE
+public relations officer	ROLE
+communications manager	ROLE
+communications officer	ROLE
+event manager	ROLE
+event coordinator	ROLE
+event planner	ROLE
+sales executive	ROLE
+sales manager	ROLE
+sales associate	ROLE
+sales representative	ROLE
+sales rep	ROLE
+sales engineer	ROLE
+business development executive	ROLE
+business development manager	ROLE
+bdm	ROLE
+bde	ROLE
+account executive	ROLE
+account manager	ROLE
+key account manager	ROLE
+customer success manager	ROLE
+customer success associate	ROLE
+customer service representative	ROLE
+customer service executive	ROLE
+customer care executive	ROLE
+call center agent	ROLE
+call centre agent	ROLE
+telesales executive	ROLE
+telemarketer	ROLE
+relationship manager	ROLE
+area sales manager	ROLE
+regional sales manager	ROLE
+territory manager	ROLE
+field sales executive	ROLE
+medical representative	ROLE
+retail manager	ROLE
+store manager	ROLE
+store associate	ROLE
+cashier	ROLE
+shop assistant	ROLE
+merchandiser	ROLE
+visual merchandiser	ROLE
+procurement officer	ROLE
+procurement manager	ROLE
+purchase officer	ROLE
+purchase manager	ROLE
+buyer	ROLE
+supply chain analyst	ROLE
+supply chain manager	ROLE
+logistics coordinator	ROLE
+logistics manager	ROLE
+warehouse manager	ROLE
+warehouse associate	ROLE
+inventory manager	ROLE
+fleet manager	ROLE
+dispatcher	ROLE
+delivery driver	ROLE
+delivery rider	ROLE
+driver	ROLE
+truck driver	ROLE
+accountant	ROLE
+senior accountant	ROLE
+junior accountant	ROLE
+account officer	ROLE
+accounts officer	ROLE
+accounts executive	ROLE
+accounts manager	ROLE
+finance officer	ROLE
+finance executive	ROLE
+finance manager	ROLE
+financial analyst	ROLE
+financial controller	ROLE
+controller	ROLE
+chief financial officer	ROLE
+cfo	ROLE
+auditor	ROLE
+internal auditor	ROLE
+external auditor	ROLE
+audit associate	ROLE
+audit executive	ROLE
+tax consultant	ROLE
+tax analyst	ROLE
+tax accountant	ROLE
+bookkeeper	ROLE
+payroll specialist	ROLE
+payroll officer	ROLE
+treasury analyst	ROLE
+credit analyst	ROLE
+risk analyst	ROLE
+risk manager	ROLE
+compliance officer	ROLE
+compliance analyst	ROLE
+investment banker	ROLE
+investment analyst	ROLE
+equity research analyst	ROLE
+portfolio manager	ROLE
+fund manager	ROLE
+wealth manager	ROLE
+financial advisor	ROLE
+financial planner	ROLE
+insurance agent	ROLE
+insurance underwriter	ROLE
+actuary	ROLE
+loan officer	ROLE
+branch manager	ROLE
+bank officer	ROLE
+probationary officer	ROLE
+management trainee	ROLE
+mto	ROLE
+mto officer	ROLE
+trainee officer	ROLE
+assistant officer	ROLE
+senior officer	ROLE
+executive officer	ROLE
+senior executive	ROLE
+assistant manager	ROLE
+deputy manager	ROLE
+senior manager	ROLE
+general manager	ROLE
+deputy general manager	ROLE
+assistant vice president	ROLE
+avp	ROLE
+vice president	ROLE
+senior vice president	ROLE
+svp	ROLE
+executive vice president	ROLE
+evp	ROLE
+managing director	ROLE
+md	ROLE
+ceo	ROLE
+coo	ROLE
+chief operating officer	ROLE
+chief executive officer	ROLE
+chief technology officer	ROLE
+chief product officer	ROLE
+cpo	ROLE
+chief marketing officer	ROLE
+cmo	ROLE
+chief data officer	ROLE
+chief information officer	ROLE
+cio	ROLE
+chief people officer	ROLE
+founder	ROLE
+co-founder	ROLE
+cofounder	ROLE
+entrepreneur	ROLE
+owner	ROLE
+proprietor	ROLE
+partner	ROLE
+director	ROLE
+head of engineering	ROLE
+head of product	ROLE
+head of design	ROLE
+head of marketing	ROLE
+head of sales	ROLE
+head of hr	ROLE
+head of finance	ROLE
+head of operations	ROLE
+hr executive	ROLE
+hr officer	ROLE
+hr manager	ROLE
+hr generalist	ROLE
+hr business partner	ROLE
+hrbp	ROLE
+talent acquisition specialist	ROLE
+talent acquisition executive	ROLE
+recruiter	ROLE
+technical recruiter	ROLE
+recruitment consultant	ROLE
+headhunter	ROLE
+learning and development specialist	ROLE
+l&d manager	ROLE
+training manager	ROLE
+trainer	ROLE
+compensation analyst	ROLE
+people operations manager	ROLE
+office manager	ROLE
+office assistant	ROLE
+office administrator	ROLE
+administrative assistant	ROLE
+admin executive	ROLE
+admin officer	ROLE
+executive assistant	ROLE
+personal assistant	ROLE
+secretary	ROLE
+receptionist	ROLE
+front desk executive	ROLE
+data entry operator	ROLE
+data entry clerk	ROLE
+clerk	ROLE
+operations manager	ROLE
+operations executive	ROLE
+operations analyst	ROLE
+operations associate	ROLE
+business operations manager	ROLE
+management consultant	ROLE
+consultant	ROLE
+strategy consultant	ROLE
+strategy analyst	ROLE
+associate consultant	ROLE
+senior consultant	ROLE
+principal consultant	ROLE
+it consultant	ROLE
+sap consultant	ROLE
+erp consultant	ROLE
+salesforce developer	ROLE
+salesforce administrator	ROLE
+servicenow developer	ROLE
+power bi developer	ROLE
+tableau developer	ROLE
+excel analyst	ROLE
+vba developer	ROLE
+rpa developer	ROLE
+civil engineer	ROLE
+structural engineer	ROLE
+site engineer	ROLE
+project engineer	ROLE
+construction manager	ROLE
+quantity surveyor	ROLE
+architect	ROLE
+interior designer	ROLE
+landscape architect	ROLE
+urban planner	ROLE
+mechanical engineer	ROLE
+design engineer	ROLE
+production engineer	ROLE
+manufacturing engineer	ROLE
+maintenance engineer	ROLE
+plant engineer	ROLE
+quality engineer	ROLE
+quality control officer	ROLE
+quality inspector	ROLE
+process engineer	ROLE
+industrial engineer	ROLE
+chemical engineer	ROLE
+petroleum engineer	ROLE
+mining engineer	ROLE
+materials engineer	ROLE
+textile engineer	ROLE
+merchandiser garments	ROLE
+garments merchandiser	ROLE
+apparel merchandiser	ROLE
+fashion designer	ROLE
+pattern maker	ROLE
+sewing operator	ROLE
+production manager	ROLE
+production supervisor	ROLE
+line supervisor	ROLE
+floor manager	ROLE
+compliance manager	ROLE
+electrical engineer	ROLE
+electronics engineer	ROLE
+power engineer	ROLE
+telecom engineer	ROLE
+rf engineer	ROLE
+network planning engineer	ROLE
+noc engineer	ROLE
+noc executive	ROLE
+biomedical engineer	ROLE
+environmental engineer	ROLE
+safety officer	ROLE
+hse officer	ROLE
+hse manager	ROLE
+aeronautical engineer	ROLE
+aerospace engineer	ROLE
+automotive engineer	ROLE
+marine engineer	ROLE
+naval architect	ROLE
+agricultural engineer	ROLE
+agronomist	ROLE
+farm manager	ROLE
+food technologist	ROLE
+food scientist	ROLE
+nutritionist	ROLE
+dietitian	ROLE
+chef	ROLE
+sous chef	ROLE
+head chef	ROLE
+cook	ROLE
+baker	ROLE
+pastry chef	ROLE
+barista	ROLE
+waiter	ROLE
+waitress	ROLE
+restaurant manager	ROLE
+hotel manager	ROLE
+front office manager	ROLE
+housekeeping supervisor	ROLE
+concierge	ROLE
+flight attendant	ROLE
+cabin crew	ROLE
+pilot	ROLE
+air traffic controller	ROLE
+travel agent	ROLE
+tour guide	ROLE
+tour manager	ROLE
+doctor	ROLE
+physician	ROLE
+general practitioner	ROLE
+medical officer	ROLE
+resident doctor	ROLE
+junior doctor	ROLE
+consultant physician	ROLE
+surgeon	ROLE
+dentist	ROLE
+pharmacist	ROLE
+clinical pharmacist	ROLE
+nurse	ROLE
+registered nurse	ROLE
+staff nurse	ROLE
+midwife	ROLE
+paramedic	ROLE
+physiotherapist	ROLE
+occupational therapist	ROLE
+speech therapist	ROLE
+psychologist	ROLE
+clinical psychologist	ROLE
+counselor	ROLE
+counsellor	ROLE
+therapist	ROLE
+psychiatrist	ROLE
+radiographer	ROLE
+lab technician	ROLE
+medical laboratory scientist	ROLE
+medical technologist	ROLE
+veterinarian	ROLE
+vet	ROLE
+public health officer	ROLE
+epidemiologist	ROLE
+clinical research associate	ROLE
+clinical research coordinator	ROLE
+research associate	ROLE
+research fellow	ROLE
+postdoctoral researcher	ROLE
+postdoc	ROLE
+phd student	ROLE
+phd candidate	ROLE
+graduate research assistant	ROLE
+teaching assistant	ROLE
+graduate teaching assistant	ROLE
+lecturer	ROLE
+assistant professor	ROLE
+associate professor	ROLE
+professor	ROLE
+adjunct professor	ROLE
+visiting professor	ROLE
+teacher	ROLE
+school teacher	ROLE
+primary teacher	ROLE
+secondary teacher	ROLE
+english teacher	ROLE
+math teacher	ROLE
+science teacher	ROLE
+tutor	ROLE
+private tutor	ROLE
+instructor	ROLE
+trainer instructor	ROLE
+academic advisor	ROLE
+admissions officer	ROLE
+education counselor	ROLE
+librarian	ROLE
+lawyer	ROLE
+advocate	ROLE
+attorney	ROLE
+solicitor	ROLE
+barrister	ROLE
+paralegal	ROLE
+legal assistant	ROLE
+legal counsel	ROLE
+legal advisor	ROLE
+legal officer	ROLE
+company secretary	ROLE
+judge	ROLE
+magistrate	ROLE
+police officer	ROLE
+army officer	ROLE
+naval officer	ROLE
+air force officer	ROLE
+civil servant	ROLE
+administrative officer	ROLE
+bcs cadre	ROLE
+bcs officer	ROLE
+upsc officer	ROLE
+ias officer	ROLE
+government officer	ROLE
+field officer	ROLE
+field coordinator	ROLE
+project officer	ROLE
+program officer	ROLE
+programme officer	ROLE
+project coordinator	ROLE
+program coordinator	ROLE
+programme coordinator	ROLE
+monitoring and evaluation officer	ROLE
+m&e officer	ROLE
+m&e specialist	ROLE
+ngo worker	ROLE
+social worker	ROLE
+community mobilizer	ROLE
+community health worker	ROLE
+development officer	ROLE
+research officer	ROLE
+policy analyst	ROLE
+policy advisor	ROLE
+economist	ROLE
+statistician	ROLE
+data collector	ROLE
+survey enumerator	ROLE
+enumerator	ROLE
+geologist	ROLE
+geophysicist	ROLE
+surveyor	ROLE
+gis analyst	ROLE
+gis specialist	ROLE
+remote sensing analyst	ROLE
+meteorologist	ROLE
+biologist	ROLE
+microbiologist	ROLE
+biochemist	ROLE
+biotechnologist	ROLE
+chemist	ROLE
+analytical chemist	ROLE
+lab chemist	ROLE
+physicist	ROLE
+mathematician	ROLE
+laboratory assistant	ROLE
+lab assistant	ROLE
+electrician	ROLE
+plumber	ROLE
+carpenter	ROLE
+welder	ROLE
+mechanic	ROLE
+technician	ROLE
+machine operator	ROLE
+cnc operator	ROLE
+forklift operator	ROLE
+security guard	ROLE
+security officer	ROLE
+cleaner	ROLE
+janitor	ROLE
+housekeeper	ROLE
+nanny	ROLE
+caregiver	ROLE
+babysitter	ROLE
+maid	ROLE
+gardener	ROLE
+barber	ROLE
+hairdresser	ROLE
+beautician	ROLE
+makeup artist	ROLE
+tailor	ROLE
+photographer assistant	ROLE
+freelancer	ROLE
+freelance developer	ROLE
+freelance designer	ROLE
+freelance writer	ROLE
+consultant freelance	ROLE
+contractor	ROLE
+gig worker	ROLE
+volunteer	ROLE
+intern	ROLE
+internship	ROLE
+trainee	ROLE
+apprentice	ROLE
+fresher	ROLE
+graduate trainee	ROLE
+graduate engineer trainee	ROLE
+management associate	ROLE
+associate	ROLE
+analyst	ROLE
+senior analyst	ROLE
+junior analyst	ROLE
+specialist	ROLE
+senior specialist	ROLE
+coordinator	ROLE
+executive	ROLE
+officer	ROLE
+engineer	ROLE
+developer	ROLE
+designer	ROLE
+manager	ROLE
+lead	ROLE
+head	ROLE
+supervisor	ROLE
+assistant	ROLE
+advisor	ROLE
+adviser	ROLE
+administrator	ROLE
+representative	ROLE
+agent	ROLE
+scientist	ROLE
+researcher	ROLE
+strategist	ROLE
+planner	ROLE
+senior	ROLE
+junior	ROLE
+jr	ROLE
+sr	ROLE
+principal	ROLE
+staff	ROLE
+deputy	ROLE
+chief	ROLE
+head of	ROLE
+vp of	ROLE
+director of	ROLE
+manager of	ROLE
+entry level	ROLE
+entry-level	ROLE
+mid level	ROLE
+mid-level	ROLE
+midlevel	ROLE
+senior level	ROLE
+senior-level	ROLE
+early career	ROLE
+new grad	ROLE
+new graduate	ROLE
+experienced	ROLE
+co-op	ROLE
+coop	ROLE
+apprenticeship	ROLE
+graduate scheme	ROLE
+graduate program	ROLE
+graduate programme	ROLE
+trainee program	ROLE
+management trainee program	ROLE
+summer intern	ROLE
+winter intern	ROLE
+summer internship	ROLE
+winter internship	ROLE
+part time	ROLE
+part-time	ROLE
+full time	ROLE
+full-time	ROLE
+contract	ROLE
+freelance	ROLE
+temporary	ROLE
+temp	ROLE
+permanent	ROLE
+seasonal	ROLE
+casual	ROLE
+probation	ROLE
+probationary	ROLE
+linkedin	SOURCE
+linked in	SOURCE
+linkedin easy apply	SOURCE
+linkedin jobs	SOURCE
+indeed	SOURCE
+indeed.com	SOURCE
+indeed easy apply	SOURCE
+glassdoor	SOURCE
+ziprecruiter	SOURCE
+zip recruiter	SOURCE
+monster	SOURCE
+monster.com	SOURCE
+careerbuilder	SOURCE
+simplyhired	SOURCE
+snagajob	SOURCE
+flexjobs	SOURCE
+remote ok	SOURCE
+remoteok	SOURCE
+we work remotely	SOURCE
+weworkremotely	SOURCE
+remotive	SOURCE
+working nomads	SOURCE
+workingnomads	SOURCE
+himalayas	SOURCE
+otta	SOURCE
+wellfound	SOURCE
+angellist	SOURCE
+angel list	SOURCE
+angel.co	SOURCE
+y combinator	SOURCE
+ycombinator	SOURCE
+yc jobs	SOURCE
+work at a startup	SOURCE
+workatastartup	SOURCE
+hacker news	SOURCE
+hn who is hiring	SOURCE
+whoishiring	SOURCE
+stack overflow jobs	SOURCE
+dice	SOURCE
+dice.com	SOURCE
+handshake	SOURCE
+joinhandshake	SOURCE
+ripplematch	SOURCE
+wayup	SOURCE
+internships.com	SOURCE
+chegg internships	SOURCE
+parker dewey	SOURCE
+idealist	SOURCE
+usajobs	SOURCE
+usa jobs	SOURCE
+government jobs	SOURCE
+federal jobs	SOURCE
+builtin	SOURCE
+built in	SOURCE
+levels.fyi	SOURCE
+teamblind	SOURCE
+naukri	SOURCE
+naukri.com	SOURCE
+shine	SOURCE
+shine.com	SOURCE
+foundit	SOURCE
+monsterindia	SOURCE
+timesjobs	SOURCE
+times jobs	SOURCE
+apna	SOURCE
+apna app	SOURCE
+instahyre	SOURCE
+hirist	SOURCE
+cutshort	SOURCE
+internshala	SOURCE
+unstop	SOURCE
+dare2compete	SOURCE
+freshersworld	SOURCE
+bdjobs	SOURCE
+bd jobs	SOURCE
+bdjobs.com	SOURCE
+skill jobs	SOURCE
+skilljobs	SOURCE
+chakri.com	SOURCE
+chakri bd	SOURCE
+jobs.com.bd	SOURCE
+jobsbd	SOURCE
+bdjobs app	SOURCE
+prothom alo jobs	SOURCE
+prothom alo chakri	SOURCE
+daily star jobs	SOURCE
+jobsdb	SOURCE
+jobstreet	SOURCE
+jobstreet.com	SOURCE
+kalibrr	SOURCE
+glints	SOURCE
+topcv	SOURCE
+vietnamworks	SOURCE
+jobkorea	SOURCE
+saramin	SOURCE
+rikunabi	SOURCE
+mynavi	SOURCE
+doda	SOURCE
+indeed japan	SOURCE
+seek	SOURCE
+seek.com.au	SOURCE
+seek.co.nz	SOURCE
+gumtree jobs	SOURCE
+reed	SOURCE
+reed.co.uk	SOURCE
+totaljobs	SOURCE
+cv-library	SOURCE
+cv library	SOURCE
+jobsite	SOURCE
+adzuna	SOURCE
+guardian jobs	SOURCE
+milkround	SOURCE
+prospects	SOURCE
+gradcracker	SOURCE
+targetjobs	SOURCE
+stepstone	SOURCE
+xing	SOURCE
+kununu	SOURCE
+jobware	SOURCE
+arbeitsagentur	SOURCE
+apec	SOURCE
+pole emploi	SOURCE
+france travail	SOURCE
+welcome to the jungle	SOURCE
+infojobs	SOURCE
+jobandtalent	SOURCE
+jobbank	SOURCE
+job bank canada	SOURCE
+workopolis	SOURCE
+eluta	SOURCE
+bayt	SOURCE
+bayt.com	SOURCE
+gulf talent	SOURCE
+gulftalent	SOURCE
+naukrigulf	SOURCE
+naukri gulf	SOURCE
+dubizzle jobs	SOURCE
+laimoon	SOURCE
+jobs.ch	SOURCE
+jobup	SOURCE
+jobscout24	SOURCE
+jobindex	SOURCE
+finn.no	SOURCE
+nav	SOURCE
+arbetsförmedlingen	SOURCE
+platsbanken	SOURCE
+monster uk	SOURCE
+upwork	SOURCE
+fiverr	SOURCE
+freelancer.com	SOURCE
+toptal	SOURCE
+peopleperhour	SOURCE
+99designs	SOURCE
+contra	SOURCE
+andela	SOURCE
+crossover	SOURCE
+arc.dev	SOURCE
+lemon.io	SOURCE
+gun.io	SOURCE
+braintrust	SOURCE
+a.team	SOURCE
+deel	SOURCE
+remote.com	SOURCE
+oyster hr	SOURCE
+papaya global	SOURCE
+careers page	SOURCE
+career page	SOURCE
+careers site	SOURCE
+company website	SOURCE
+company site	SOURCE
+company career page	SOURCE
+company careers	SOURCE
+jobs page	SOURCE
+official website	SOURCE
+direct apply	SOURCE
+applied directly	SOURCE
+referral	SOURCE
+employee referral	SOURCE
+referred	SOURCE
+referred by	SOURCE
+internal referral	SOURCE
+friend referral	SOURCE
+alumni referral	SOURCE
+alumni network	SOURCE
+alumni	SOURCE
+cold email	SOURCE
+cold emailed	SOURCE
+cold outreach	SOURCE
+cold dm	SOURCE
+cold message	SOURCE
+recruiter email	SOURCE
+recruiter message	SOURCE
+recruiter reached out	SOURCE
+recruiter inmail	SOURCE
+inmail	SOURCE
+head hunter	SOURCE
+staffing agency	SOURCE
+recruitment agency	SOURCE
+recruiting agency	SOURCE
+job fair	SOURCE
+career fair	SOURCE
+campus drive	SOURCE
+campus recruitment	SOURCE
+campus placement	SOURCE
+on campus	SOURCE
+on-campus	SOURCE
+off campus	SOURCE
+off-campus	SOURCE
+walk in	SOURCE
+walk-in	SOURCE
+walk in interview	SOURCE
+walkin	SOURCE
+newspaper ad	SOURCE
+newspaper advertisement	SOURCE
+job circular	SOURCE
+job circular bd	SOURCE
+bd circular	SOURCE
+facebook group	SOURCE
+facebook jobs	SOURCE
+fb group	SOURCE
+fb job group	SOURCE
+whatsapp group	SOURCE
+telegram group	SOURCE
+telegram channel	SOURCE
+discord server	SOURCE
+slack community	SOURCE
+r/forhire	SOURCE
+r/jobs	SOURCE
+x jobs	SOURCE
+tweet	SOURCE
+twitter dm	SOURCE
+mastodon	SOURCE
+hacker news jobs	SOURCE
+product hunt jobs	SOURCE
+github jobs	SOURCE
+kaggle jobs	SOURCE
+kaggle	SOURCE
+ai jobs	SOURCE
+ai-jobs.net	SOURCE
+mlcareers	SOURCE
+data jobs	SOURCE
+datajobs	SOURCE
+nodesk	SOURCE
+jobspresso	SOURCE
+authentic jobs	SOURCE
+dribbble jobs	SOURCE
+behance jobs	SOURCE
+coroflot	SOURCE
+working not working	SOURCE
+krop	SOURCE
+creativepool	SOURCE
+mediabistro	SOURCE
+journalismjobs	SOURCE
+higheredjobs	SOURCE
+chronicle vitae	SOURCE
+academickeys	SOURCE
+jobs.ac.uk	SOURCE
+academic positions	SOURCE
+euraxess	SOURCE
+nature careers	SOURCE
+science careers	SOURCE
+scijobs	SOURCE
+mendeley jobs	SOURCE
+researchgate jobs	SOURCE
+naukri campus	SOURCE
+letsintern	SOURCE
+twenty19	SOURCE
+youthall	SOURCE
+hello intern	SOURCE
+glassdoor jobs	SOURCE
+comparably	SOURCE
+fairygodboss	SOURCE
+powertofly	SOURCE
+diversity jobs	SOURCE
+jopwell	SOURCE
+pride jobs	SOURCE
+80000 hours	SOURCE
+80	SOURCE
+000 hours	SOURCE
+idealist.org	SOURCE
+devex	SOURCE
+reliefweb	SOURCE
+un jobs	SOURCE
+unjobs	SOURCE
+un careers	SOURCE
+world bank jobs	SOURCE
+ngo jobs	SOURCE
+brac jobs	SOURCE
+brac career	SOURCE
+grameen career	SOURCE
+ngo jobs bd	SOURCE
+devnet	SOURCE
+devnet jobs	SOURCE
+jobs for good	SOURCE
+wishlist	STATUS
+saved	STATUS
+bookmarked	STATUS
+to apply	STATUS
+will apply	STATUS
+planning to apply	STATUS
+interested	STATUS
+researching	STATUS
+applied	STATUS
+application submitted	STATUS
+submitted application	STATUS
+application sent	STATUS
+sent application	STATUS
+sent resume	STATUS
+sent cv	STATUS
+applied online	STATUS
+applied via linkedin	STATUS
+applied through referral	STATUS
+application received	STATUS
+application under review	STATUS
+under review	STATUS
+in review	STATUS
+reviewing	STATUS
+being reviewed	STATUS
+in progress	STATUS
+pending	STATUS
+waiting	STATUS
+awaiting response	STATUS
+waiting for response	STATUS
+no response	STATUS
+no reply	STATUS
+no update	STATUS
+no news	STATUS
+ghosted	STATUS
+got ghosted	STATUS
+ghosting	STATUS
+followed up	STATUS
+follow up sent	STATUS
+follow-up sent	STATUS
+sent follow up	STATUS
+sent follow-up	STATUS
+emailed recruiter	STATUS
+messaged recruiter	STATUS
+connected with recruiter	STATUS
+recruiter screen	STATUS
+recruiter call	STATUS
+recruiter contacted	STATUS
+hr call	STATUS
+hr screen	STATUS
+hr screening	STATUS
+hr round	STATUS
+hr interview	STATUS
+phone screen	STATUS
+phone screening	STATUS
+phone interview	STATUS
+screening call	STATUS
+intro call	STATUS
+introductory call	STATUS
+initial call	STATUS
+first call	STATUS
+first round	STATUS
+round 1	STATUS
+round one	STATUS
+1st round	STATUS
+second round	STATUS
+round 2	STATUS
+round two	STATUS
+2nd round	STATUS
+third round	STATUS
+round 3	STATUS
+round three	STATUS
+3rd round	STATUS
+final round	STATUS
+last round	STATUS
+online assessment	STATUS
+oa	STATUS
+coding assessment	STATUS
+coding test	STATUS
+coding challenge	STATUS
+online test	STATUS
+online coding test	STATUS
+hackerrank test	STATUS
+codility test	STATUS
+leetcode style	STATUS
+take home	STATUS
+take-home	STATUS
+take home assignment	STATUS
+take-home assignment	STATUS
+take home task	STATUS
+take-home task	STATUS
+assignment	STATUS
+assignment sent	STATUS
+assignment submitted	STATUS
+case study	STATUS
+case interview	STATUS
+presentation round	STATUS
+demo round	STATUS
+technical interview	STATUS
+tech interview	STATUS
+technical round	STATUS
+technical screen	STATUS
+tech screen	STATUS
+coding interview	STATUS
+coding round	STATUS
+system design interview	STATUS
+system design round	STATUS
+design round	STATUS
+architecture round	STATUS
+behavioral interview	STATUS
+behavioural interview	STATUS
+behavioral round	STATUS
+behavioural round	STATUS
+managerial round	STATUS
+manager round	STATUS
+hiring manager interview	STATUS
+hiring manager round	STATUS
+culture fit	STATUS
+cultural fit	STATUS
+culture round	STATUS
+team match	STATUS
+team matching	STATUS
+team fit	STATUS
+panel interview	STATUS
+panel round	STATUS
+group interview	STATUS
+group discussion	STATUS
+gd	STATUS
+gd round	STATUS
+aptitude test	STATUS
+aptitude round	STATUS
+written test	STATUS
+written round	STATUS
+written exam	STATUS
+viva	STATUS
+viva round	STATUS
+onsite	STATUS
+on-site	STATUS
+on site	STATUS
+onsite interview	STATUS
+onsite round	STATUS
+virtual onsite	STATUS
+final interview	STATUS
+final onsite	STATUS
+interview scheduled	STATUS
+interview set	STATUS
+interview booked	STATUS
+interview confirmed	STATUS
+interview invitation	STATUS
+interview invite	STATUS
+invited to interview	STATUS
+shortlisted	STATUS
+short listed	STATUS
+shortlist	STATUS
+selected	STATUS
+got selected	STATUS
+selected for interview	STATUS
+moved forward	STATUS
+moving forward	STATUS
+advanced	STATUS
+advanced to next round	STATUS
+passed	STATUS
+cleared	STATUS
+cleared round	STATUS
+cleared interview	STATUS
+cleared oa	STATUS
+passed oa	STATUS
+passed screening	STATUS
+passed phone screen	STATUS
+passed technical	STATUS
+passed onsite	STATUS
+waitlisted	STATUS
+wait listed	STATUS
+on hold	STATUS
+on-hold	STATUS
+hold	STATUS
+put on hold	STATUS
+paused	STATUS
+position paused	STATUS
+hiring freeze	STATUS
+freeze	STATUS
+headcount freeze	STATUS
+position closed	STATUS
+role closed	STATUS
+job closed	STATUS
+closed	STATUS
+position filled	STATUS
+role filled	STATUS
+filled	STATUS
+position cancelled	STATUS
+cancelled	STATUS
+canceled	STATUS
+reference check	STATUS
+references	STATUS
+reference requested	STATUS
+background check	STATUS
+background verification	STATUS
+bgv	STATUS
+verification	STATUS
+documents verification	STATUS
+document verification	STATUS
+salary negotiation	STATUS
+negotiating	STATUS
+negotiation	STATUS
+offer	STATUS
+offered	STATUS
+got offer	STATUS
+got an offer	STATUS
+received offer	STATUS
+offer received	STATUS
+offer letter	STATUS
+offer letter received	STATUS
+verbal offer	STATUS
+written offer	STATUS
+formal offer	STATUS
+offer pending	STATUS
+offer expires	STATUS
+offer deadline	STATUS
+offer accepted	STATUS
+accepted offer	STATUS
+accepted	STATUS
+signed offer	STATUS
+signed	STATUS
+offer declined	STATUS
+declined offer	STATUS
+declined	STATUS
+turned down	STATUS
+turned down offer	STATUS
+rejected offer	STATUS
+counter offer	STATUS
+counteroffer	STATUS
+counter-offer	STATUS
+competing offer	STATUS
+rejected	STATUS
+got rejected	STATUS
+rejection	STATUS
+rejection email	STATUS
+rejection letter	STATUS
+not selected	STATUS
+not shortlisted	STATUS
+not moving forward	STATUS
+not proceeding	STATUS
+unsuccessful	STATUS
+regret	STATUS
+we regret	STATUS
+regret email	STATUS
+withdrew	STATUS
+withdrawn	STATUS
+withdrew application	STATUS
+withdrawn application	STATUS
+application withdrawn	STATUS
+self withdrew	STATUS
+pulled out	STATUS
+backed out	STATUS
+not interested	STATUS
+no longer interested	STATUS
+dropped	STATUS
+dropped out	STATUS
+joined	STATUS
+joining	STATUS
+joining date	STATUS
+start date	STATUS
+starting	STATUS
+onboarding	STATUS
+onboarded	STATUS
+resigned	STATUS
+resignation	STATUS
+notice period	STATUS
+serving notice	STATUS
+last working day	STATUS
+lwd	STATUS
+relieved	STATUS
+relieving letter	STATUS
+experience letter	STATUS
+probation period	STATUS
+confirmed	STATUS
+confirmation	STATUS
+promoted	STATUS
+promotion	STATUS
+laid off	STATUS
+layoff	STATUS
+laid-off	STATUS
+terminated	STATUS
+fired	STATUS
+contract ended	STATUS
+contract ending	STATUS
+contract renewal	STATUS
+contract renewed	STATUS
+internship ended	STATUS
+internship converted	STATUS
+converted to full time	STATUS
+ppo	STATUS
+pre placement offer	STATUS
+pre-placement offer	STATUS
+applied hoyeche	STATUS
+apply korechi	STATUS
+apply korlam	STATUS
+apply kora hoyeche	STATUS
+abedon korechi	STATUS
+abedon korlam	STATUS
+abedon kora hoyeche	STATUS
+আবেদন করেছি	STATUS
+আবেদন করা হয়েছে	STATUS
+আবেদন করলাম	STATUS
+interview dilam	STATUS
+interview diyechi	STATUS
+interview hoyeche	STATUS
+interview hobe	STATUS
+interview ache	STATUS
+ইন্টারভিউ দিয়েছি	STATUS
+ইন্টারভিউ হয়েছে	STATUS
+ইন্টারভিউ হবে	STATUS
+ইন্টারভিউ আছে	STATUS
+call pelam	STATUS
+call peyechi	STATUS
+call ashche	STATUS
+কল পেয়েছি	STATUS
+কল এসেছে	STATUS
+shortlist hoyechi	STATUS
+shortlisted hoyechi	STATUS
+শর্টলিস্ট হয়েছি	STATUS
+select hoyechi	STATUS
+selected hoyechi	STATUS
+সিলেক্ট হয়েছি	STATUS
+নির্বাচিত হয়েছি	STATUS
+offer pelam	STATUS
+offer peyechi	STATUS
+offer ashche	STATUS
+অফার পেয়েছি	STATUS
+অফার এসেছে	STATUS
+reject hoyechi	STATUS
+rejected hoyechi	STATUS
+রিজেক্ট হয়েছি	STATUS
+কোনো খবর নেই	STATUS
+kono khobor nai	STATUS
+kono khobor nei	STATUS
+reply pai nai	STATUS
+reply pai ni	STATUS
+reply pacchi na	STATUS
+উত্তর পাইনি	STATUS
+জবাব পাইনি	STATUS
+join korbo	STATUS
+join korlam	STATUS
+জয়েন করব	STATUS
+জয়েন করেছি	STATUS
+resign korlam	STATUS
+রিজাইন করেছি	STATUS
+notice period cholche	STATUS
+নোটিশ পিরিয়ড চলছে	STATUS
+inc	COMPANY_SUFFIX
+inc.	COMPANY_SUFFIX
+incorporated	COMPANY_SUFFIX
+corp	COMPANY_SUFFIX
+corp.	COMPANY_SUFFIX
+corporation	COMPANY_SUFFIX
+co.	COMPANY_SUFFIX
+company	COMPANY_SUFFIX
+ltd	COMPANY_SUFFIX
+ltd.	COMPANY_SUFFIX
+limited	COMPANY_SUFFIX
+llc	COMPANY_SUFFIX
+l.l.c.	COMPANY_SUFFIX
+llp	COMPANY_SUFFIX
+l.l.p.	COMPANY_SUFFIX
+lp	COMPANY_SUFFIX
+plc	COMPANY_SUFFIX
+p.l.c.	COMPANY_SUFFIX
+pvt	COMPANY_SUFFIX
+pvt.	COMPANY_SUFFIX
+pvt ltd	COMPANY_SUFFIX
+pvt. ltd.	COMPANY_SUFFIX
+private limited	COMPANY_SUFFIX
+private ltd	COMPANY_SUFFIX
+pte	COMPANY_SUFFIX
+pte ltd	COMPANY_SUFFIX
+pte. ltd.	COMPANY_SUFFIX
+sdn bhd	COMPANY_SUFFIX
+sdn. bhd.	COMPANY_SUFFIX
+bhd	COMPANY_SUFFIX
+gmbh	COMPANY_SUFFIX
+ag	COMPANY_SUFFIX
+kg	COMPANY_SUFFIX
+ug	COMPANY_SUFFIX
+e.v.	COMPANY_SUFFIX
+nv	COMPANY_SUFFIX
+bv	COMPANY_SUFFIX
+b.v.	COMPANY_SUFFIX
+s.a.	COMPANY_SUFFIX
+sas	COMPANY_SUFFIX
+sarl	COMPANY_SUFFIX
+s.a.r.l.	COMPANY_SUFFIX
+srl	COMPANY_SUFFIX
+s.r.l.	COMPANY_SUFFIX
+spa	COMPANY_SUFFIX
+s.p.a.	COMPANY_SUFFIX
+sl	COMPANY_SUFFIX
+s.l.	COMPANY_SUFFIX
+aps	COMPANY_SUFFIX
+a/s	COMPANY_SUFFIX
+oy	COMPANY_SUFFIX
+oyj	COMPANY_SUFFIX
+asa	COMPANY_SUFFIX
+ltda	COMPANY_SUFFIX
+ltda.	COMPANY_SUFFIX
+s.a. de c.v.	COMPANY_SUFFIX
+sa de cv	COMPANY_SUFFIX
+sac	COMPANY_SUFFIX
+pty	COMPANY_SUFFIX
+pty ltd	COMPANY_SUFFIX
+pty. ltd.	COMPANY_SUFFIX
+pty limited	COMPANY_SUFFIX
+nz ltd	COMPANY_SUFFIX
+kk	COMPANY_SUFFIX
+k.k.	COMPANY_SUFFIX
+co ltd	COMPANY_SUFFIX
+co. ltd.	COMPANY_SUFFIX
+jsc	COMPANY_SUFFIX
+ojsc	COMPANY_SUFFIX
+pjsc	COMPANY_SUFFIX
+ooo	COMPANY_SUFFIX
+zao	COMPANY_SUFFIX
+ao	COMPANY_SUFFIX
+tbk	COMPANY_SUFFIX
+pt	COMPANY_SUFFIX
+pt.	COMPANY_SUFFIX
+cv	COMPANY_SUFFIX
+cv.	COMPANY_SUFFIX
+berhad	COMPANY_SUFFIX
+bangladesh ltd	COMPANY_SUFFIX
+bangladesh limited	COMPANY_SUFFIX
+group	COMPANY_SUFFIX
+holdings	COMPANY_SUFFIX
+holding	COMPANY_SUFFIX
+technologies	COMPANY_SUFFIX
+technology	COMPANY_SUFFIX
+tech	COMPANY_SUFFIX
+technologies ltd	COMPANY_SUFFIX
+solutions	COMPANY_SUFFIX
+systems	COMPANY_SUFFIX
+software	COMPANY_SUFFIX
+labs	COMPANY_SUFFIX
+lab	COMPANY_SUFFIX
+studios	COMPANY_SUFFIX
+studio	COMPANY_SUFFIX
+digital	COMPANY_SUFFIX
+interactive	COMPANY_SUFFIX
+ventures	COMPANY_SUFFIX
+capital	COMPANY_SUFFIX
+partners	COMPANY_SUFFIX
+associates	COMPANY_SUFFIX
+consulting	COMPANY_SUFFIX
+consultants	COMPANY_SUFFIX
+services	COMPANY_SUFFIX
+enterprises	COMPANY_SUFFIX
+enterprise	COMPANY_SUFFIX
+industries	COMPANY_SUFFIX
+international	COMPANY_SUFFIX
+global	COMPANY_SUFFIX
+worldwide	COMPANY_SUFFIX
+intl	COMPANY_SUFFIX
+bank	COMPANY_SUFFIX
+banking	COMPANY_SUFFIX
+financial	COMPANY_SUFFIX
+finance	COMPANY_SUFFIX
+insurance	COMPANY_SUFFIX
+securities	COMPANY_SUFFIX
+bangladesh	COMPANY_SUFFIX
+soft	COMPANY_SUFFIX
+softwares	COMPANY_SUFFIX
+ict	COMPANY_SUFFIX
+infotech	COMPANY_SUFFIX
+infosystems	COMPANY_SUFFIX
+networks	COMPANY_SUFFIX
+telecom	COMPANY_SUFFIX
+communications	COMPANY_SUFFIX
+media	COMPANY_SUFFIX
+entertainment	COMPANY_SUFFIX
+pharma	COMPANY_SUFFIX
+pharmaceuticals	COMPANY_SUFFIX
+healthcare	COMPANY_SUFFIX
+hospitals	COMPANY_SUFFIX
+foods	COMPANY_SUFFIX
+beverages	COMPANY_SUFFIX
+textiles	COMPANY_SUFFIX
+garments	COMPANY_SUFFIX
+apparel	COMPANY_SUFFIX
+fashion	COMPANY_SUFFIX
+knitwear	COMPANY_SUFFIX
+denim	COMPANY_SUFFIX
+spinning	COMPANY_SUFFIX
+weaving	COMPANY_SUFFIX
+dyeing	COMPANY_SUFFIX
+fabrics	COMPANY_SUFFIX
+ceramics	COMPANY_SUFFIX
+cement	COMPANY_SUFFIX
+petroleum	COMPANY_SUFFIX
+chemicals	COMPANY_SUFFIX
+plastics	COMPANY_SUFFIX
+packaging	COMPANY_SUFFIX
+printing	COMPANY_SUFFIX
+publications	COMPANY_SUFFIX
+education	COMPANY_SUFFIX
+institute	COMPANY_SUFFIX
+university	COMPANY_SUFFIX
+college	COMPANY_SUFFIX
+school	COMPANY_SUFFIX
+foundation	COMPANY_SUFFIX
+trust	COMPANY_SUFFIX
+society	COMPANY_SUFFIX
+association	COMPANY_SUFFIX
+ngo	COMPANY_SUFFIX
+ministry	COMPANY_SUFFIX
+department	COMPANY_SUFFIX
+authority	COMPANY_SUFFIX
+board	COMPANY_SUFFIX
+commission	COMPANY_SUFFIX
+corporation bd	COMPANY_SUFFIX
+authority bd	COMPANY_SUFFIX
+startup	COMPANY_SUFFIX
+startups	COMPANY_SUFFIX
+labs ai	COMPANY_SUFFIX
+robotics	COMPANY_SUFFIX
+analytics	COMPANY_SUFFIX
+cloud	COMPANY_SUFFIX
+cyber	COMPANY_SUFFIX
+security	COMPANY_SUFFIX
+games	COMPANY_SUFFIX
+gaming	COMPANY_SUFFIX
+apps	COMPANY_SUFFIX
+mobile	COMPANY_SUFFIX
+online	COMPANY_SUFFIX
+e-commerce	COMPANY_SUFFIX
+ecommerce	COMPANY_SUFFIX
+retail	COMPANY_SUFFIX
+wholesale	COMPANY_SUFFIX
+trading	COMPANY_SUFFIX
+traders	COMPANY_SUFFIX
+logistics	COMPANY_SUFFIX
+transport	COMPANY_SUFFIX
+shipping	COMPANY_SUFFIX
+airlines	COMPANY_SUFFIX
+airways	COMPANY_SUFFIX
+aviation	COMPANY_SUFFIX
+travel	COMPANY_SUFFIX
+tours	COMPANY_SUFFIX
+hotels	COMPANY_SUFFIX
+resorts	COMPANY_SUFFIX
+restaurants	COMPANY_SUFFIX
+real estate	COMPANY_SUFFIX
+properties	COMPANY_SUFFIX
+builders	COMPANY_SUFFIX
+developers	COMPANY_SUFFIX
+construction	COMPANY_SUFFIX
+engineering	COMPANY_SUFFIX
+architects	COMPANY_SUFFIX
+designers	COMPANY_SUFFIX
+advertising	COMPANY_SUFFIX
+marketing	COMPANY_SUFFIX
+communications ltd	COMPANY_SUFFIX
+creative	COMPANY_SUFFIX
+productions	COMPANY_SUFFIX
+pictures	COMPANY_SUFFIX
+records	COMPANY_SUFFIX
+music	COMPANY_SUFFIX
+sports	COMPANY_SUFFIX
+fitness	COMPANY_SUFFIX
+fully remote	LOCATION_HINT
+100% remote	LOCATION_HINT
+remote first	LOCATION_HINT
+remote-first	LOCATION_HINT
+remote friendly	LOCATION_HINT
+remote-friendly	LOCATION_HINT
+work from home	LOCATION_HINT
+wfh	LOCATION_HINT
+work from anywhere	LOCATION_HINT
+wfa	LOCATION_HINT
+anywhere	LOCATION_HINT
+distributed	LOCATION_HINT
+hybrid	LOCATION_HINT
+hybrid remote	LOCATION_HINT
+hybrid work	LOCATION_HINT
+flexible	LOCATION_HINT
+flexible location	LOCATION_HINT
+in office	LOCATION_HINT
+in-office	LOCATION_HINT
+office based	LOCATION_HINT
+office-based	LOCATION_HINT
+field	LOCATION_HINT
+field work	LOCATION_HINT
+travel required	LOCATION_HINT
+relocation	LOCATION_HINT
+relocation assistance	LOCATION_HINT
+willing to relocate	LOCATION_HINT
+visa sponsorship	LOCATION_HINT
+sponsorship	LOCATION_HINT
+h1b	LOCATION_HINT
+h-1b	LOCATION_HINT
+opt	LOCATION_HINT
+cpt	LOCATION_HINT
+stem opt	LOCATION_HINT
+work permit	LOCATION_HINT
+work visa	LOCATION_HINT
+skilled worker visa	LOCATION_HINT
+blue card	LOCATION_HINT
+eu blue card	LOCATION_HINT
+express entry	LOCATION_HINT
+global talent visa	LOCATION_HINT
+tier 2	LOCATION_HINT
+remote usa	LOCATION_HINT
+remote us	LOCATION_HINT
+remote uk	LOCATION_HINT
+remote eu	LOCATION_HINT
+remote europe	LOCATION_HINT
+remote canada	LOCATION_HINT
+remote india	LOCATION_HINT
+remote asia	LOCATION_HINT
+remote apac	LOCATION_HINT
+remote emea	LOCATION_HINT
+remote latam	LOCATION_HINT
+remote bangladesh	LOCATION_HINT
+remote bd	LOCATION_HINT
+us only	LOCATION_HINT
+usa only	LOCATION_HINT
+uk only	LOCATION_HINT
+eu only	LOCATION_HINT
+apac only	LOCATION_HINT
+emea only	LOCATION_HINT
+latam only	LOCATION_HINT
+timezone	LOCATION_HINT
+time zone	LOCATION_HINT
+aest	LOCATION_HINT
+dhaka	LOCATION_HINT
+dhaka bd	LOCATION_HINT
+dhaka bangladesh	LOCATION_HINT
+gulshan	LOCATION_HINT
+banani	LOCATION_HINT
+uttara	LOCATION_HINT
+mirpur	LOCATION_HINT
+dhanmondi	LOCATION_HINT
+mohakhali	LOCATION_HINT
+motijheel	LOCATION_HINT
+tejgaon	LOCATION_HINT
+bashundhara	LOCATION_HINT
+badda	LOCATION_HINT
+banasree	LOCATION_HINT
+farmgate	LOCATION_HINT
+panthapath	LOCATION_HINT
+kawran bazar	LOCATION_HINT
+karwan bazar	LOCATION_HINT
+kakrail	LOCATION_HINT
+malibagh	LOCATION_HINT
+mohammadpur	LOCATION_HINT
+savar	LOCATION_HINT
+ashulia	LOCATION_HINT
+gazipur	LOCATION_HINT
+narayanganj	LOCATION_HINT
+tongi	LOCATION_HINT
+chattogram	LOCATION_HINT
+chittagong	LOCATION_HINT
+ctg	LOCATION_HINT
+agrabad	LOCATION_HINT
+nasirabad	LOCATION_HINT
+khulshi	LOCATION_HINT
+panchlaish	LOCATION_HINT
+sylhet	LOCATION_HINT
+rajshahi	LOCATION_HINT
+khulna	LOCATION_HINT
+barishal	LOCATION_HINT
+barisal	LOCATION_HINT
+rangpur	LOCATION_HINT
+mymensingh	LOCATION_HINT
+comilla	LOCATION_HINT
+cumilla	LOCATION_HINT
+cox's bazar	LOCATION_HINT
+coxs bazar	LOCATION_HINT
+jessore	LOCATION_HINT
+jashore	LOCATION_HINT
+bogura	LOCATION_HINT
+bogra	LOCATION_HINT
+dinajpur	LOCATION_HINT
+tangail	LOCATION_HINT
+narsingdi	LOCATION_HINT
+kolkata	LOCATION_HINT
+calcutta	LOCATION_HINT
+mumbai	LOCATION_HINT
+bombay	LOCATION_HINT
+delhi	LOCATION_HINT
+new delhi	LOCATION_HINT
+gurgaon	LOCATION_HINT
+gurugram	LOCATION_HINT
+noida	LOCATION_HINT
+bangalore	LOCATION_HINT
+bengaluru	LOCATION_HINT
+hyderabad	LOCATION_HINT
+chennai	LOCATION_HINT
+pune	LOCATION_HINT
+ahmedabad	LOCATION_HINT
+jaipur	LOCATION_HINT
+chandigarh	LOCATION_HINT
+kochi	LOCATION_HINT
+cochin	LOCATION_HINT
+coimbatore	LOCATION_HINT
+thiruvananthapuram	LOCATION_HINT
+trivandrum	LOCATION_HINT
+indore	LOCATION_HINT
+nagpur	LOCATION_HINT
+lucknow	LOCATION_HINT
+bhubaneswar	LOCATION_HINT
+karachi	LOCATION_HINT
+lahore	LOCATION_HINT
+islamabad	LOCATION_HINT
+rawalpindi	LOCATION_HINT
+peshawar	LOCATION_HINT
+colombo	LOCATION_HINT
+kathmandu	LOCATION_HINT
+thimphu	LOCATION_HINT
+kabul	LOCATION_HINT
+singapore	LOCATION_HINT
+kuala lumpur	LOCATION_HINT
+penang	LOCATION_HINT
+johor bahru	LOCATION_HINT
+jakarta	LOCATION_HINT
+bandung	LOCATION_HINT
+surabaya	LOCATION_HINT
+bali	LOCATION_HINT
+manila	LOCATION_HINT
+cebu	LOCATION_HINT
+bangkok	LOCATION_HINT
+chiang mai	LOCATION_HINT
+ho chi minh city	LOCATION_HINT
+saigon	LOCATION_HINT
+hanoi	LOCATION_HINT
+da nang	LOCATION_HINT
+phnom penh	LOCATION_HINT
+yangon	LOCATION_HINT
+vientiane	LOCATION_HINT
+hong kong	LOCATION_HINT
+shenzhen	LOCATION_HINT
+shanghai	LOCATION_HINT
+beijing	LOCATION_HINT
+guangzhou	LOCATION_HINT
+hangzhou	LOCATION_HINT
+chengdu	LOCATION_HINT
+taipei	LOCATION_HINT
+hsinchu	LOCATION_HINT
+seoul	LOCATION_HINT
+busan	LOCATION_HINT
+tokyo	LOCATION_HINT
+osaka	LOCATION_HINT
+kyoto	LOCATION_HINT
+yokohama	LOCATION_HINT
+fukuoka	LOCATION_HINT
+sydney	LOCATION_HINT
+melbourne	LOCATION_HINT
+brisbane	LOCATION_HINT
+perth	LOCATION_HINT
+adelaide	LOCATION_HINT
+canberra	LOCATION_HINT
+auckland	LOCATION_HINT
+wellington	LOCATION_HINT
+christchurch	LOCATION_HINT
+dubai	LOCATION_HINT
+abu dhabi	LOCATION_HINT
+sharjah	LOCATION_HINT
+doha	LOCATION_HINT
+riyadh	LOCATION_HINT
+jeddah	LOCATION_HINT
+dammam	LOCATION_HINT
+neom	LOCATION_HINT
+kuwait city	LOCATION_HINT
+manama	LOCATION_HINT
+muscat	LOCATION_HINT
+amman	LOCATION_HINT
+beirut	LOCATION_HINT
+tel aviv	LOCATION_HINT
+jerusalem	LOCATION_HINT
+haifa	LOCATION_HINT
+istanbul	LOCATION_HINT
+ankara	LOCATION_HINT
+izmir	LOCATION_HINT
+cairo	LOCATION_HINT
+alexandria	LOCATION_HINT
+casablanca	LOCATION_HINT
+rabat	LOCATION_HINT
+tunis	LOCATION_HINT
+algiers	LOCATION_HINT
+lagos	LOCATION_HINT
+abuja	LOCATION_HINT
+accra	LOCATION_HINT
+nairobi	LOCATION_HINT
+mombasa	LOCATION_HINT
+kigali	LOCATION_HINT
+addis ababa	LOCATION_HINT
+kampala	LOCATION_HINT
+dar es salaam	LOCATION_HINT
+johannesburg	LOCATION_HINT
+cape town	LOCATION_HINT
+durban	LOCATION_HINT
+pretoria	LOCATION_HINT
+london	LOCATION_HINT
+manchester	LOCATION_HINT
+birmingham	LOCATION_HINT
+leeds	LOCATION_HINT
+edinburgh	LOCATION_HINT
+glasgow	LOCATION_HINT
+bristol	LOCATION_HINT
+cambridge	LOCATION_HINT
+oxford	LOCATION_HINT
+belfast	LOCATION_HINT
+cardiff	LOCATION_HINT
+dublin	LOCATION_HINT
+cork	LOCATION_HINT
+paris	LOCATION_HINT
+lyon	LOCATION_HINT
+toulouse	LOCATION_HINT
+marseille	LOCATION_HINT
+berlin	LOCATION_HINT
+munich	LOCATION_HINT
+hamburg	LOCATION_HINT
+frankfurt	LOCATION_HINT
+cologne	LOCATION_HINT
+stuttgart	LOCATION_HINT
+dusseldorf	LOCATION_HINT
+amsterdam	LOCATION_HINT
+rotterdam	LOCATION_HINT
+the hague	LOCATION_HINT
+utrecht	LOCATION_HINT
+eindhoven	LOCATION_HINT
+brussels	LOCATION_HINT
+antwerp	LOCATION_HINT
+luxembourg	LOCATION_HINT
+zurich	LOCATION_HINT
+geneva	LOCATION_HINT
+basel	LOCATION_HINT
+lausanne	LOCATION_HINT
+vienna	LOCATION_HINT
+graz	LOCATION_HINT
+madrid	LOCATION_HINT
+barcelona	LOCATION_HINT
+valencia	LOCATION_HINT
+seville	LOCATION_HINT
+malaga	LOCATION_HINT
+lisbon	LOCATION_HINT
+porto	LOCATION_HINT
+rome	LOCATION_HINT
+milan	LOCATION_HINT
+turin	LOCATION_HINT
+bologna	LOCATION_HINT
+florence	LOCATION_HINT
+athens	LOCATION_HINT
+thessaloniki	LOCATION_HINT
+stockholm	LOCATION_HINT
+gothenburg	LOCATION_HINT
+malmo	LOCATION_HINT
+copenhagen	LOCATION_HINT
+aarhus	LOCATION_HINT
+oslo	LOCATION_HINT
+bergen	LOCATION_HINT
+helsinki	LOCATION_HINT
+espoo	LOCATION_HINT
+tampere	LOCATION_HINT
+reykjavik	LOCATION_HINT
+warsaw	LOCATION_HINT
+krakow	LOCATION_HINT
+wroclaw	LOCATION_HINT
+gdansk	LOCATION_HINT
+prague	LOCATION_HINT
+brno	LOCATION_HINT
+budapest	LOCATION_HINT
+bucharest	LOCATION_HINT
+cluj	LOCATION_HINT
+sofia	LOCATION_HINT
+belgrade	LOCATION_HINT
+zagreb	LOCATION_HINT
+ljubljana	LOCATION_HINT
+bratislava	LOCATION_HINT
+vilnius	LOCATION_HINT
+riga	LOCATION_HINT
+tallinn	LOCATION_HINT
+kyiv	LOCATION_HINT
+kiev	LOCATION_HINT
+lviv	LOCATION_HINT
+minsk	LOCATION_HINT
+moscow	LOCATION_HINT
+st petersburg	LOCATION_HINT
+saint petersburg	LOCATION_HINT
+tbilisi	LOCATION_HINT
+yerevan	LOCATION_HINT
+baku	LOCATION_HINT
+almaty	LOCATION_HINT
+astana	LOCATION_HINT
+tashkent	LOCATION_HINT
+new york	LOCATION_HINT
+nyc	LOCATION_HINT
+new york city	LOCATION_HINT
+brooklyn	LOCATION_HINT
+manhattan	LOCATION_HINT
+san francisco	LOCATION_HINT
+bay area	LOCATION_HINT
+silicon valley	LOCATION_HINT
+palo alto	LOCATION_HINT
+mountain view	LOCATION_HINT
+menlo park	LOCATION_HINT
+sunnyvale	LOCATION_HINT
+san jose	LOCATION_HINT
+santa clara	LOCATION_HINT
+cupertino	LOCATION_HINT
+oakland	LOCATION_HINT
+los angeles	LOCATION_HINT
+santa monica	LOCATION_HINT
+irvine	LOCATION_HINT
+san diego	LOCATION_HINT
+seattle	LOCATION_HINT
+bellevue	LOCATION_HINT
+redmond	LOCATION_HINT
+portland	LOCATION_HINT
+austin	LOCATION_HINT
+dallas	LOCATION_HINT
+houston	LOCATION_HINT
+san antonio	LOCATION_HINT
+denver	LOCATION_HINT
+boulder	LOCATION_HINT
+salt lake city	LOCATION_HINT
+phoenix	LOCATION_HINT
+las vegas	LOCATION_HINT
+chicago	LOCATION_HINT
+detroit	LOCATION_HINT
+ann arbor	LOCATION_HINT
+minneapolis	LOCATION_HINT
+st louis	LOCATION_HINT
+kansas city	LOCATION_HINT
+columbus	LOCATION_HINT
+cleveland	LOCATION_HINT
+pittsburgh	LOCATION_HINT
+cincinnati	LOCATION_HINT
+indianapolis	LOCATION_HINT
+nashville	LOCATION_HINT
+atlanta	LOCATION_HINT
+charlotte	LOCATION_HINT
+raleigh	LOCATION_HINT
+durham	LOCATION_HINT
+research triangle	LOCATION_HINT
+miami	LOCATION_HINT
+tampa	LOCATION_HINT
+orlando	LOCATION_HINT
+boston	LOCATION_HINT
+cambridge ma	LOCATION_HINT
+providence	LOCATION_HINT
+hartford	LOCATION_HINT
+philadelphia	LOCATION_HINT
+baltimore	LOCATION_HINT
+washington dc	LOCATION_HINT
+arlington	LOCATION_HINT
+reston	LOCATION_HINT
+mclean	LOCATION_HINT
+richmond	LOCATION_HINT
+new jersey	LOCATION_HINT
+jersey city	LOCATION_HINT
+newark	LOCATION_HINT
+princeton	LOCATION_HINT
+stamford	LOCATION_HINT
+toronto	LOCATION_HINT
+mississauga	LOCATION_HINT
+ottawa	LOCATION_HINT
+montreal	LOCATION_HINT
+quebec city	LOCATION_HINT
+vancouver	LOCATION_HINT
+calgary	LOCATION_HINT
+edmonton	LOCATION_HINT
+waterloo	LOCATION_HINT
+kitchener	LOCATION_HINT
+winnipeg	LOCATION_HINT
+halifax	LOCATION_HINT
+mexico city	LOCATION_HINT
+guadalajara	LOCATION_HINT
+monterrey	LOCATION_HINT
+bogota	LOCATION_HINT
+medellin	LOCATION_HINT
+lima	LOCATION_HINT
+santiago	LOCATION_HINT
+buenos aires	LOCATION_HINT
+montevideo	LOCATION_HINT
+sao paulo	LOCATION_HINT
+rio de janeiro	LOCATION_HINT
+brasilia	LOCATION_HINT
+curitiba	LOCATION_HINT
+florianopolis	LOCATION_HINT
+panama city	LOCATION_HINT
+san jose costa rica	LOCATION_HINT
+kingston	LOCATION_HINT
+san juan	LOCATION_HINT
+remote	LOCATION_HINT
+co	COMPANY_SUFFIX
+it	COMPANY_SUFFIX
+bd	COMPANY_SUFFIX
+sa	COMPANY_SUFFIX
+ab	COMPANY_SUFFIX
+as	COMPANY_SUFFIX
+gmt	LOCATION_HINT
+utc	LOCATION_HINT
+sf	LOCATION_HINT
+la	LOCATION_HINT
+kl	LOCATION_HINT
+dc	LOCATION_HINT
+github	SOURCE
+reddit	SOURCE
+turing	SOURCE
+guru	SOURCE

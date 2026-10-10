@@ -203,6 +203,8 @@ data class JobApplicationEntity(
     val followUpOn: LocalDate? = null,
     val notes: String = "",
     val contact: String = "",
+    val location: String = "",
+    val extraDates: String = "",
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null,
     val remoteId: String? = null,

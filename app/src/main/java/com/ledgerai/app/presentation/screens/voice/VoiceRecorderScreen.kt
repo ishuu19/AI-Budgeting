@@ -100,6 +100,8 @@ fun VoiceRecorderScreen(
     embedded: Boolean = false,
     links: AppLinks = AppLinks(),
     holdMic: Boolean = false,
+    seed: String? = null,
+    onSeedConsumed: () -> Unit = {},
     viewModel: VoiceRecorderViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -131,6 +133,14 @@ fun VoiceRecorderScreen(
 
     LaunchedEffect(holdMic) {
         if (holdMic) startMic() else viewModel.stopRecording()
+    }
+
+    LaunchedEffect(seed) {
+        val text = seed?.trim().orEmpty()
+        if (text.isNotEmpty()) {
+            viewModel.offerText(text)
+            onSeedConsumed()
+        }
     }
 
     // The mic never keeps running behind another screen, another segment or a backgrounded app.

@@ -18,14 +18,22 @@ fun VoiceTabScreen(
     links: AppLinks,
     open: OpenItem? = null,
     onOpened: () -> Unit = {},
-    holdMic: Boolean = false
+    holdMic: Boolean = false,
+    seed: String? = null,
+    onSeedConsumed: () -> Unit = {}
 ) {
     LTabPage(
         title = "Voice",
         segments = { LSegments(VoiceSeg.values().toList(), seg, { it.label }, onSeg) }
     ) {
         when (seg) {
-            VoiceSeg.Speak -> VoiceRecorderScreen(embedded = true, links = links, holdMic = holdMic)
+            VoiceSeg.Speak -> VoiceRecorderScreen(
+                embedded = true,
+                links = links,
+                holdMic = holdMic,
+                seed = seed,
+                onSeedConsumed = onSeedConsumed
+            )
             VoiceSeg.Notes -> NotesScreen(open = open?.takeIf { it.kind == OpenKind.Note }, onOpened = onOpened)
             VoiceSeg.Ask -> AiAssistantScreen()
         }

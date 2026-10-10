@@ -11,6 +11,7 @@ import com.ledgerai.app.data.local.room.EventReminderDao
 import com.ledgerai.app.data.local.room.MIGRATION_6_7
 import com.ledgerai.app.data.local.room.MIGRATION_7_8
 import com.ledgerai.app.data.local.room.MIGRATION_8_9
+import com.ledgerai.app.data.local.room.MIGRATION_9_10
 import com.ledgerai.app.data.local.room.VoiceHistoryDao
 import com.ledgerai.app.data.local.room.DebtDao
 import com.ledgerai.app.data.local.room.GoalDao
@@ -46,7 +47,7 @@ object DatabaseModule {
     @Singleton
     fun provideLedgerDatabase(@ApplicationContext context: Context): LedgerDatabase =
         Room.databaseBuilder(context, LedgerDatabase::class.java, "ledgerai.db")
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
             .fallbackToDestructiveMigrationFrom(1)
             .build()
 

@@ -142,11 +142,12 @@ class ForecastViewModel @Inject constructor(
             val now = LocalDate.now()
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val transactions = transactionRepo.getRecentTransactions(100).first()
+                val transactions = transactionRepo.getAllTransactions().first()
+                val bills = billRepo.getActiveBills().first()
                 val budgets = budgetRepo.getBudgetsForMonth(now.monthValue, now.year).first()
                 val budgetMap = budgets.associate { it.category to it.monthlyLimit }
 
-                aiRepo.generateForecast(transactions, budgetMap).fold(
+                aiRepo.generateForecast(transactions, budgetMap, bills).fold(
                     onSuccess = { forecasts ->
                         _uiState.update { it.copy(forecasts = forecasts, isLoading = false) }
                     },
@@ -216,6 +217,10 @@ fun LazyListScope.forecastItems(
                         money(forecast.predictedSpend),
                         if (forecast.riskLevel == RiskLevel.HIGH) L.Danger else L.Gold
                     )
+                    Text(forecast.insight, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+                }
+                if (state.forecasts.isNotEmpty()) {
+                    Text("Rules", style = MaterialTheme.typography.labelSmall, color = L.Gold)
                 }
                 if (state.isLoading) {
                     CircularProgressIndicator(

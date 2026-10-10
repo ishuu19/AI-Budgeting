@@ -79,30 +79,7 @@ class VoskTranscriber @Inject constructor(
         Result.failure(IllegalStateException(message))
 
     private fun recognizePcm(modelPath: String, pcm: ByteArray, sampleRate: Int): String {
-        // Real Vosk API (org.vosk.Model / Recognizer).
-        val model = org.vosk.Model(modelPath)
-        try {
-            val recognizer = org.vosk.Recognizer(model, sampleRate.toFloat())
-            try {
-                val chunk = ByteArray(CHUNK_BYTES)
-                var offset = 0
-                val parts = mutableListOf<String>()
-                while (offset < pcm.size) {
-                    val len = minOf(CHUNK_BYTES, pcm.size - offset)
-                    System.arraycopy(pcm, offset, chunk, 0, len)
-                    if (recognizer.acceptWaveForm(chunk, len)) {
-                        extractText(recognizer.result)?.let { parts += it }
-                    }
-                    offset += len
-                }
-                extractText(recognizer.finalResult)?.let { parts += it }
-                return parts.joinToString(" ").trim().replace(Regex("\\s+"), " ")
-            } finally {
-                recognizer.close()
-            }
-        } finally {
-            model.close()
-        }
+        error("File speech models are off. The phone listener is the only voice path.")
     }
 
     private fun extractText(json: String?): String? {
@@ -126,14 +103,7 @@ class VoskTranscriber @Inject constructor(
         private const val TARGET_SAMPLE_RATE = 16_000
         private const val CHUNK_BYTES = 4096
 
-        fun isVoskAvailable(): Boolean =
-            try {
-                Class.forName("org.vosk.Model")
-                Class.forName("org.vosk.Recognizer")
-                true
-            } catch (_: Throwable) {
-                false
-            }
+        fun isVoskAvailable(): Boolean = false
     }
 }
 
