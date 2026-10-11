@@ -56,6 +56,7 @@ class HouseholdRepository(
         householdId: String,
         actorUserId: String,
         memberUserId: String,
+        displayName: String = "",
     ): MembershipDecision {
         val rows = dao.membersOf(householdId).map { it.toDomain() }
         val active = HouseholdMembership.activeMembers(rows)
@@ -73,6 +74,7 @@ class HouseholdRepository(
                 role = HouseholdRole.MEMBER.stored,
                 joinedAt = nowDateTime(),
                 updatedAt = now,
+                displayName = displayName.trim().take(60),
             )
         )
         return decision

@@ -1,21 +1,29 @@
 package com.ledgerai.app.presentation.screens.bills
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.EventRepeat
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,13 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ledgerai.app.data.ai.DefaultMerchantLookup
 import com.ledgerai.app.data.repository.BillRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.Bill
@@ -43,35 +48,40 @@ import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LGroupRow
-import com.ledgerai.app.presentation.components.LGhostButton
 import com.ledgerai.app.presentation.components.LItemSheet
 import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.components.money
+import com.ledgerai.app.presentation.components.LToolButton
 import com.ledgerai.app.presentation.screens.money.DecimalField
 import com.ledgerai.app.presentation.screens.money.LimitedGroup
+import com.ledgerai.app.presentation.screens.money.PillAction
+import com.ledgerai.app.presentation.screens.money.dueLabel
+import com.ledgerai.app.presentation.screens.money.todayTicker
 import com.ledgerai.app.presentation.screens.transactions.CategoryChipsRow
 import com.ledgerai.app.presentation.screens.transactions.DatePickChip
 import com.ledgerai.app.presentation.screens.transactions.amountInput
-import com.ledgerai.app.presentation.screens.transactions.shortDate
 import com.ledgerai.app.presentation.screens.transactions.spendIcon
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class BillsViewModel @Inject constructor(
     private val billRepo: BillRepository,
-    private val transactionRepo: TransactionRepository
+    private val transactionRepo: TransactionRepository,
+    private val merchantLookup: DefaultMerchantLookup
 ) : ViewModel() {
 
     /** Unpaused bills first, soonest due first, then paused bills. */
@@ -86,6 +96,19 @@ class BillsViewModel @Inject constructor(
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
+
+    /** Spending this month whose merchant matches a bill name. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val paidThisMonth: StateFlow<Double> = todayTicker().flatMapLatest { today ->
+        combine(bills, transactionRepo.getTransactionsForMonth(today.year, today.monthValue)) { list, tx ->
+            val names = list.map { it.name.trim().lowercase() }.toSet()
+            tx.filter { it.type == TransactionType.EXPENSE && it.merchant.trim().lowercase() in names }
+                .sumOf { it.amount }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    fun suggestCategory(name: String): TransactionCategory? =
+        if (name.isBlank()) null else merchantLookup.lookup(name)?.category
 
     /** "id:dueDate" of cycles already being paid or paid. A cycle can be paid once, so a double tap is ignored. */
     private val payingCycles = mutableSetOf<String>()
@@ -194,26 +217,49 @@ fun LazyListScope.billItems(
     val overdue = bills.filter { it.isActive && it.nextDueDate.isBefore(today) }
     val upcoming = bills.filter { it.isActive && !it.nextDueDate.isBefore(today) }
     val paused = bills.filter { !it.isActive }
+    val activeDue = overdue + upcoming
     val labelled = overdue.isNotEmpty() || paused.isNotEmpty()
 
-    item(key = "bills-header") { LSection("Bills", action = "Add", onAction = onAdd) }
+    item(key = "bills-header") { LSection("Bills", action = "New bill", onAction = onAdd) }
     if (bills.isEmpty()) {
-        item(key = "bills-empty") { LEmpty(Icons.Filled.EventRepeat, "Say: rent 1200 due on the 1st") }
+        item(key = "bills-empty") { LEmpty(Icons.Filled.EventRepeat, "No bills yet") }
         return
+    }
+    if (activeDue.isNotEmpty()) {
+        item(key = "bills-strip") { DueStrip(activeDue, today) }
     }
     if (overdue.isNotEmpty()) {
         item(key = "bills-overdue") {
-            BillGroup("Overdue", L.Danger, overdue, "bills-overdue", today, onEdit, onPaid)
+            BillGroup("Late", overdue, "bills-overdue", today, onEdit, onPaid)
         }
     }
     if (upcoming.isNotEmpty()) {
         item(key = "bills-upcoming") {
-            BillGroup(if (labelled) "Coming up" else null, L.InkMuted, upcoming, "bills-upcoming", today, onEdit, onPaid)
+            BillGroup(if (labelled) "Coming up" else null, upcoming, "bills-upcoming", today, onEdit, onPaid)
         }
     }
     if (paused.isNotEmpty()) {
         item(key = "bills-paused") {
-            BillGroup("Paused", L.InkMuted, paused, "bills-paused", today, onEdit, onPaid)
+            BillGroup("Paused", paused, "bills-paused", today, onEdit, onPaid)
+        }
+    }
+}
+
+@Composable
+private fun DueStrip(bills: List<Bill>, today: LocalDate) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        repeat(30) { offset ->
+            val day = today.plusDays(offset.toLong())
+            val hit = bills.any { it.nextDueDate == day }
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(if (hit) L.Gold else L.Line)
+            )
         }
     }
 }
@@ -221,7 +267,6 @@ fun LazyListScope.billItems(
 @Composable
 private fun BillGroup(
     label: String?,
-    labelColor: Color,
     bills: List<Bill>,
     expandKey: String,
     today: LocalDate,
@@ -230,7 +275,7 @@ private fun BillGroup(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (label != null) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = labelColor, modifier = Modifier.padding(horizontal = 4.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, color = L.Ink, modifier = Modifier.padding(horizontal = 4.dp))
         }
         LimitedGroup(bills, id = { it.id }, expandKey = expandKey) { bill ->
             BillRow(bill, today, onClick = { onEdit(bill) }, onPaid = { onPaid(bill) })
@@ -240,50 +285,23 @@ private fun BillGroup(
 
 @Composable
 private fun BillRow(bill: Bill, today: LocalDate, onClick: () -> Unit, onPaid: () -> Unit) {
-    val days = ChronoUnit.DAYS.between(today, bill.nextDueDate)
-    val late = bill.isActive && days < 0
+    val late = bill.isActive && bill.nextDueDate.isBefore(today)
+    val sub = buildList {
+        add(if (bill.isActive) dueLabel(bill.nextDueDate, today) else "Paused")
+        if (bill.frequency != BillFrequency.MONTHLY) add(bill.frequency.displayName)
+        if (bill.category != TransactionCategory.OTHER) add(bill.category.displayName)
+    }.joinToString(" · ")
     LGroupRow(
         title = bill.name,
-        sub = (if (bill.isActive) dueLabel(days, bill.nextDueDate) else "Paused") + " · " + bill.frequency.displayName,
+        sub = sub,
         trailing = money(bill.amount),
         trailingColor = if (late) L.Danger else if (bill.isActive) L.OnBox else L.OnBoxMuted,
-        icon = spendIcon(bill.category),
+        icon = if (bill.category == TransactionCategory.OTHER) null else spendIcon(bill.category),
         onClick = onClick,
         end = if (bill.isActive) {
-            { PaidPill("Mark ${bill.name} paid", late, onPaid) }
+            { PillAction("Paid", "Mark ${bill.name} paid", onPaid) }
         } else null
     )
-}
-
-/** One-tap "Paid" action, at least 48dp tall. */
-@Composable
-private fun PaidPill(description: String, danger: Boolean, onClick: () -> Unit) {
-    val tint = if (danger) L.Danger else L.Primary
-    Box(
-        Modifier
-            .heightIn(min = 48.dp)
-            .clip(RoundedCornerShape(50))
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            "Paid",
-            style = MaterialTheme.typography.labelLarge,
-            color = tint,
-            modifier = Modifier
-                .border(1.dp, tint.copy(alpha = 0.5f), RoundedCornerShape(50))
-                .padding(horizontal = 14.dp, vertical = 8.dp)
-        )
-    }
-}
-
-private fun dueLabel(days: Long, date: LocalDate): String = when {
-    days < 0 -> "Overdue ${-days}d"
-    days == 0L -> "Today"
-    days == 1L -> "Tomorrow"
-    days <= 7 -> "In $days days"
-    else -> shortDate(date)
 }
 
 @Composable
@@ -291,6 +309,7 @@ fun BillSheet(
     existing: Bill?,
     onDismiss: () -> Unit,
     onSave: (String, Double, BillFrequency, LocalDate, TransactionCategory) -> Unit,
+    suggest: ((String) -> TransactionCategory?)? = null,
     onPaid: (() -> Unit)? = null,
     onSkip: (() -> Unit)? = null,
     onToggleActive: (() -> Unit)? = null,
@@ -300,10 +319,17 @@ fun BillSheet(
     var amountText by rememberSaveable { mutableStateOf(existing?.amount?.let(::amountInput) ?: "") }
     var frequency by rememberSaveable { mutableStateOf(existing?.frequency ?: BillFrequency.MONTHLY) }
     var dueDate by rememberSaveable { mutableStateOf(existing?.nextDueDate ?: LocalDate.now().plusMonths(1)) }
-    var category by rememberSaveable { mutableStateOf(existing?.category ?: TransactionCategory.SUBSCRIPTIONS) }
+    var category by rememberSaveable { mutableStateOf(existing?.category ?: TransactionCategory.OTHER) }
+    var categoryTouched by rememberSaveable { mutableStateOf(existing != null && existing.category != TransactionCategory.OTHER) }
+    var showCategories by rememberSaveable { mutableStateOf(false) }
+    var menu by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(name) {
+        if (!categoryTouched) suggest?.invoke(name)?.let { category = it }
+    }
     val amount = amountText.toDoubleOrNull()?.takeIf { it > 0 }
     val canSave = name.isNotBlank() && amount != null
     val save = { amount?.let { onSave(name.trim(), it, frequency, dueDate, category) }; Unit }
+    val inferred = !categoryTouched && category != TransactionCategory.OTHER
 
     val body: @Composable ColumnScope.() -> Unit = {
         LField(name, { name = it }, label = "Name")
@@ -320,17 +346,37 @@ fun BillSheet(
             }
         }
 
-        CategoryChipsRow(selected = category, onSelect = { category = it })
-
-        if (existing != null) {
-            if (existing.isActive && (onPaid != null || onSkip != null)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (onPaid != null) LGhostButton("Paid", onClick = onPaid, modifier = Modifier.weight(1f))
-                    if (onSkip != null) LGhostButton("Skip", onClick = onSkip, modifier = Modifier.weight(1f))
-                }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (inferred) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = L.Highlight, modifier = Modifier.size(16.dp))
             }
-            if (onToggleActive != null) {
-                LGhostButton(if (existing.isActive) "Pause" else "Resume", onClick = onToggleActive)
+            LChip(
+                if (category == TransactionCategory.OTHER) "Category" else category.displayName,
+                category != TransactionCategory.OTHER,
+                onClick = { showCategories = !showCategories }
+            )
+        }
+        if (showCategories) {
+            CategoryChipsRow(selected = category, onSelect = { category = it; categoryTouched = true })
+        }
+
+        if (existing != null && (onPaid != null || onSkip != null || onToggleActive != null)) {
+            Box {
+                LToolButton(Icons.Filled.MoreVert, "More", onClick = { menu = true })
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (existing.isActive && onPaid != null) {
+                        DropdownMenuItem(text = { Text("Paid") }, onClick = { menu = false; onPaid() })
+                    }
+                    if (existing.isActive && onSkip != null) {
+                        DropdownMenuItem(text = { Text("Skip") }, onClick = { menu = false; onSkip() })
+                    }
+                    if (onToggleActive != null) {
+                        DropdownMenuItem(
+                            text = { Text(if (existing.isActive) "Pause" else "Resume") },
+                            onClick = { menu = false; onToggleActive() }
+                        )
+                    }
+                }
             }
         }
     }

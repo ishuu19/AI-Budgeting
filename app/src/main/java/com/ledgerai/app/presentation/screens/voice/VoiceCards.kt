@@ -2,7 +2,6 @@ package com.ledgerai.app.presentation.screens.voice
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,12 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ledgerai.app.data.ai.IntentSource
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.QuickParse
 import com.ledgerai.app.data.ai.VoiceResultKind
@@ -44,10 +43,10 @@ import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.domain.schedule.labelForMinutesBefore
 import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
-import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LTextLink
 import com.ledgerai.app.presentation.components.TimePickChip
 import com.ledgerai.app.presentation.components.label
 import com.ledgerai.app.presentation.components.money
@@ -90,7 +89,10 @@ private fun durationLabel(minutes: Int) = when {
     else -> "${minutes / 60}.5 hours"
 }
 
-private fun typeLabel(type: TransactionType) = type.name.lowercase().replaceFirstChar { it.uppercase() }
+private fun typeLabel(type: TransactionType) = when (type) {
+    TransactionType.INCOME -> "Income"
+    TransactionType.EXPENSE -> "Spending"
+}
 
 /** Headline and one detail line for a card. */
 internal fun summarize(intent: ParsedIntent): Pair<String, String?> = when (intent) {
@@ -118,7 +120,7 @@ internal fun summarize(intent: ParsedIntent): Pair<String, String?> = when (inte
     is ParsedIntent.Debt -> Pair(
         "${money(intent.amount)} · ${intent.friendName}",
         listOfNotNull(
-            if (intent.direction == DebtDirection.I_OWE) "I owe" else "They owe",
+            if (intent.direction == DebtDirection.I_OWE) "You owe" else "Owes you",
             intent.dueDate?.let { "Due ${it.format(DateShort)}" }
         ).joinToString(" · ")
     )
@@ -138,7 +140,7 @@ internal fun summarize(intent: ParsedIntent): Pair<String, String?> = when (inte
         ).joinToString(" · ")
     )
     is ParsedIntent.Adjust -> Pair(
-        if (intent.remove) "Remove" else "Edit",
+        if (intent.remove) "Remove" else "Edit item",
         intent.query
     )
     is ParsedIntent.Unmatched -> Pair("\"${intent.rawTranscript}\"", null)
@@ -157,48 +159,25 @@ internal fun canSave(intent: ParsedIntent): Boolean = when (intent) {
     is ParsedIntent.Unmatched -> intent.rawTranscript.isNotBlank()
 }
 
-/** Result label chip used on cards and history rows. */
+/** Result label chip used on cards and history rows. [muted] is the quiet history style. */
 @Composable
-internal fun KindPill(kind: VoiceResultKind, onDark: Boolean = true) {
+internal fun KindPill(kind: VoiceResultKind, muted: Boolean = false) {
     Text(
         kind.label,
         style = MaterialTheme.typography.labelMedium,
-        color = if (onDark) L.BoxDeep else L.OnBox,
+        color = if (muted) L.InkMuted else L.OnPrimary,
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (onDark) L.Gold else L.Box)
+            .background(if (muted) L.Box else L.Gold)
+            .then(if (muted) Modifier.border(1.dp, L.Line, RoundedCornerShape(50)) else Modifier)
             .padding(horizontal = 12.dp, vertical = 4.dp)
-    )
-}
-
-/** Which path read the words: the offline rules or the cloud AI. */
-@Composable
-internal fun SourcePill(source: IntentSource) {
-    Text(
-        source.label,
-        style = MaterialTheme.typography.labelMedium,
-        color = L.OnBoxMuted,
-        maxLines = 1,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .border(1.dp, L.OnBoxMuted, RoundedCornerShape(50))
-            .padding(horizontal = 12.dp, vertical = 3.dp)
     )
 }
 
 @Composable
 private fun CardAction(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .heightIn(min = 48.dp)
-            .clip(RoundedCornerShape(L.RadiusSm))
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = L.Primary)
-    }
+    LTextLink(text, onClick, modifier)
 }
 
 /**
@@ -223,7 +202,7 @@ internal fun ConfirmCard(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(L.Radius))
-            .border(1.5.dp, L.Primary, RoundedCornerShape(L.Radius))
+            .border(1.dp, L.Line, RoundedCornerShape(L.Radius))
             .semantics(mergeDescendants = false) {}
     ) {
         Column(
@@ -231,12 +210,9 @@ internal fun ConfirmCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (unmatched) {
-                Text("DIDN'T CATCH", style = MaterialTheme.typography.labelSmall, color = L.Gold)
+                Text("Didn't catch", style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
             } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    KindPill(kind)
-                    card.source?.let { SourcePill(it) }
-                }
+                KindPill(kind)
             }
             Text(
                 headline,
@@ -266,7 +242,7 @@ internal fun ConfirmCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(Modifier.weight(1f)) {
-                    LButton(
+                    TonalButton(
                         if (unmatched) "Keep as note" else "Save",
                         onClick = onSave,
                         enabled = canSave(intent)
@@ -434,14 +410,37 @@ private fun CategorySheet(
     onPick: (TransactionCategory) -> Unit
 ) = PickSheet("Category", TransactionCategory.entries.toList(), selected, { it.displayName }, onDismiss, onPick)
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CategoryChips(selected: TransactionCategory, onPick: (TransactionCategory) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        TransactionCategory.entries.forEach { c ->
-            LChip(c.displayName, selected = selected == c, onClick = { onPick(c) })
+private fun CategoryPick(selected: TransactionCategory, onPick: (TransactionCategory) -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    LChip(selected.displayName, selected = true, onClick = { open = true })
+    if (open) {
+        CategorySheet(selected, onDismiss = { open = false }) {
+            onPick(it)
+            open = false
         }
     }
+}
+
+@Composable
+private fun TonalButton(text: String, onClick: () -> Unit, enabled: Boolean) {
+    FilledTonalButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        shape = RoundedCornerShape(L.RadiusSm),
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = L.BoxDeep,
+            contentColor = L.Primary,
+            disabledContainerColor = L.BoxDeep,
+            disabledContentColor = L.InkMuted,
+        )
+    ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+}
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(text, style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
 }
 
 private val DecimalKeyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -468,7 +467,7 @@ private fun TransactionDraftSheet(
     val value = amount.asAmount()
 
     LSheet(
-        title = "Edit",
+        title = if (type == TransactionType.INCOME) "Edit income" else "Edit spending",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -483,7 +482,7 @@ private fun TransactionDraftSheet(
         }
         LField(value = amount, onValueChange = { amount = it }, label = "Amount", keyboardOptions = DecimalKeyboard)
         LField(value = merchant, onValueChange = { merchant = it }, label = "Merchant")
-        CategoryChips(category) { category = it }
+        CategoryPick(category) { category = it }
         ChipsRow { DatePickChip(date, selected = true, onDate = { date = it }) }
         LField(value = note, onValueChange = { note = it }, label = "Note", singleLine = false)
     }
@@ -526,8 +525,11 @@ private fun EventDraftSheet(
     val isAlarm = kind == CalendarEventKind.ALARM
     val timed = kind == CalendarEventKind.EVENT || kind == CalendarEventKind.EXAM || kind == CalendarEventKind.ROUTINE
 
+    val moreOpen = parsed.notes.isNotBlank() || remindersEdited
+    var more by rememberSaveable { mutableStateOf(moreOpen) }
+
     LSheet(
-        title = "Edit",
+        title = "Edit ${kind.label().replaceFirstChar { it.lowercase() }}",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -556,6 +558,7 @@ private fun EventDraftSheet(
         },
         primaryEnabled = isAlarm || title.isNotBlank()
     ) {
+        FieldLabel("Kind")
         ChipsRow {
             listOf(
                 CalendarEventKind.TASK, CalendarEventKind.EVENT, CalendarEventKind.EXAM,
@@ -563,16 +566,19 @@ private fun EventDraftSheet(
             ).forEach { k -> LChip(k.label(), selected = kind == k, onClick = { kind = k }) }
         }
         LField(value = title, onValueChange = { title = it }, label = if (isAlarm) "Label" else "Title")
+        FieldLabel("When")
         ChipsRow {
             DatePickChip(date, selected = true, onDate = { date = it })
             TimePickChip(time, onTime = { time = it })
         }
         if (timed) {
+            FieldLabel("Length")
             ChipsRow {
                 DurationOptions.forEach { m -> LChip(durationLabel(m), selected = minutes == m, onClick = { minutes = m }) }
             }
         }
         if (isAlarm) {
+            FieldLabel("Repeat")
             ChipsRow {
                 AlarmRepeats.forEach { (mask, name) ->
                     LChip(name, selected = !custom && alarmMask == mask, onClick = { alarmMask = mask; custom = false })
@@ -589,18 +595,23 @@ private fun EventDraftSheet(
             }
         }
         if (kind == CalendarEventKind.ROUTINE) {
+            FieldLabel("Repeat")
             ChipsRow {
                 listOf("DAILY", "WEEKDAYS", "WEEKLY").forEach { r -> LChip(ruleLabel(r), selected = rule == r, onClick = { rule = r }) }
             }
         }
         if (!isAlarm) {
-            ChipsRow {
-                ReminderOptions.forEachIndexed { i, m ->
-                    val on = remMask and (1 shl i) != 0
-                    LChip(reminderChip(m), selected = on, onClick = { remMask = remMask xor (1 shl i); touched = true })
+            LTextLink(if (more) "Less" else "More", { more = !more })
+            if (more) {
+                FieldLabel("Reminders")
+                ChipsRow {
+                    ReminderOptions.forEachIndexed { i, m ->
+                        val on = remMask and (1 shl i) != 0
+                        LChip(reminderChip(m), selected = on, onClick = { remMask = remMask xor (1 shl i); touched = true })
+                    }
                 }
+                LField(value = notes, onValueChange = { notes = it }, label = "Notes", singleLine = false)
             }
-            LField(value = notes, onValueChange = { notes = it }, label = "Notes", singleLine = false)
         }
     }
 }
@@ -612,7 +623,7 @@ private fun NoteDraftSheet(parsed: ParsedIntent.Note, onDismiss: () -> Unit, onA
     var tags by rememberSaveable { mutableStateOf(parsed.tags.joinToString(", ")) }
 
     LSheet(
-        title = "Edit",
+        title = "Edit note",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -636,7 +647,7 @@ private fun BillDraftSheet(parsed: ParsedIntent.Bill, onDismiss: () -> Unit, onA
     val value = amount.asAmount()
 
     LSheet(
-        title = "Edit",
+        title = "Edit bill",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -649,7 +660,7 @@ private fun BillDraftSheet(parsed: ParsedIntent.Bill, onDismiss: () -> Unit, onA
         ChipsRow {
             BillFrequency.entries.forEach { f -> LChip(f.displayName, selected = frequency == f, onClick = { frequency = f }) }
         }
-        CategoryChips(category) { category = it }
+        CategoryPick(category) { category = it }
         ChipsRow { DatePickChip(due, selected = true, onDate = { due = it }, label = "Due ${due.format(DateShort)}") }
     }
 }
@@ -663,7 +674,7 @@ private fun DebtDraftSheet(parsed: ParsedIntent.Debt, onDismiss: () -> Unit, onA
     val value = amount.asAmount()
 
     LSheet(
-        title = "Edit",
+        title = "Edit debt",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -672,8 +683,8 @@ private fun DebtDraftSheet(parsed: ParsedIntent.Debt, onDismiss: () -> Unit, onA
         primaryEnabled = name.isNotBlank() && value != null && value > 0.0
     ) {
         ChipsRow {
-            LChip("They owe", selected = direction == DebtDirection.THEY_OWE, onClick = { direction = DebtDirection.THEY_OWE })
-            LChip("I owe", selected = direction == DebtDirection.I_OWE, onClick = { direction = DebtDirection.I_OWE })
+            LChip("Owes you", selected = direction == DebtDirection.THEY_OWE, onClick = { direction = DebtDirection.THEY_OWE })
+            LChip("You owe", selected = direction == DebtDirection.I_OWE, onClick = { direction = DebtDirection.I_OWE })
         }
         LField(value = name, onValueChange = { name = it }, label = "Name")
         LField(value = amount, onValueChange = { amount = it }, label = "Amount", keyboardOptions = DecimalKeyboard)
@@ -699,7 +710,7 @@ private fun JobDraftSheet(parsed: ParsedIntent.Job, onDismiss: () -> Unit, onApp
     var status by rememberSaveable { mutableStateOf(parsed.status.name) }
 
     LSheet(
-        title = "Edit",
+        title = "Edit job",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = {
@@ -736,7 +747,7 @@ private fun GoalDraftSheet(parsed: ParsedIntent.Goal, onDismiss: () -> Unit, onA
     val value = amount.asAmount()
 
     LSheet(
-        title = "Edit",
+        title = "Edit goal",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = { value?.let { onApply(parsed.copy(name = name.trim(), targetAmount = it)) } },
@@ -754,13 +765,13 @@ private fun BudgetDraftSheet(parsed: ParsedIntent.Budget, onDismiss: () -> Unit,
     val value = amount.asAmount()
 
     LSheet(
-        title = "Edit",
+        title = "Edit budget",
         onDismiss = onDismiss,
         primary = "Done",
         onPrimary = { value?.let { onApply(parsed.copy(category = category, limit = it)) } },
         primaryEnabled = value != null && value > 0.0
     ) {
-        CategoryChips(category) { category = it }
+        CategoryPick(category) { category = it }
         LField(value = amount, onValueChange = { amount = it }, label = "Monthly limit", keyboardOptions = DecimalKeyboard)
     }
 }

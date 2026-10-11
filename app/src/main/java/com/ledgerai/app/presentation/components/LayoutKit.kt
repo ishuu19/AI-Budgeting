@@ -1,6 +1,7 @@
 package com.ledgerai.app.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,9 +26,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,10 +46,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ledgerai.app.presentation.navigation.AppLinks
 
 /*
  * Layout kit (U1): the block vocabulary every tab uses.
@@ -60,18 +67,20 @@ fun LHeroCard(
     onClick: (() -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null
 ) {
-    val base = modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+    val shape = RoundedCornerShape(L.Radius)
+    val base = modifier.fillMaxWidth().clip(shape)
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
             .background(L.Box)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .border(1.dp, L.Line, shape)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = L.Gold)
-        Text(title, style = MaterialTheme.typography.headlineMedium, color = L.OnBox, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+        Text(title, style = MaterialTheme.typography.displaySmall, color = L.OnBox, maxLines = 2, overflow = TextOverflow.Ellipsis)
         if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (actions != null) {
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), content = actions)
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
         }
     }
 }
@@ -85,7 +94,7 @@ fun LWide(
     content: @Composable ColumnScope.() -> Unit
 ) {
     LCard(modifier = modifier, onClick = onClick) {
-        if (label != null) Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = L.Gold)
+        if (label != null) Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
         content()
     }
 }
@@ -99,17 +108,23 @@ fun LSmallBlock(
     sub: String? = null,
     valueColor: Color = L.OnBox,
     onClick: (() -> Unit)? = null,
-    footer: (@Composable ColumnScope.() -> Unit)? = null
+    delta: Delta? = null,
+    trend: List<Float>? = null,
+    footer: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    val base = modifier.clip(RoundedCornerShape(L.Radius))
+    val shape = RoundedCornerShape(L.Radius)
+    val base = modifier.clip(shape)
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
             .background(L.Box)
-            .padding(20.dp),
+            .border(1.dp, L.Line, shape)
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = L.Gold, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1)
         Text(value, style = MaterialTheme.typography.titleLarge, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (delta != null) DeltaLine(delta)
+        if (!trend.isNullOrEmpty()) LSparkline(trend, Modifier.fillMaxWidth())
         if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         footer?.invoke(this)
     }
@@ -134,15 +149,16 @@ fun LSmallPair(
 /** One container for related rows, separated by dividers. */
 @Composable
 fun LGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val shape = RoundedCornerShape(L.Radius)
     Column(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(L.Radius)).background(L.Box),
+        modifier.fillMaxWidth().clip(shape).background(L.Box).border(1.dp, L.Line, shape),
         content = content
     )
 }
 
 @Composable
 fun LGroupDivider() {
-    HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = L.OnBox.copy(alpha = 0.12f))
+    HorizontalDivider(Modifier.padding(horizontal = L.Space.x16), color = L.Line)
 }
 
 /** Row inside an [LGroup]: no box of its own. Minimum height 56dp. */
@@ -152,9 +168,10 @@ fun LGroupRow(
     modifier: Modifier = Modifier,
     sub: String? = null,
     trailing: String? = null,
-    trailingColor: Color = L.Gold,
+    trailingColor: Color = L.OnBox,
     icon: ImageVector? = null,
     onClick: (() -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
     end: (@Composable () -> Unit)? = null
 ) {
     Row(
@@ -162,17 +179,49 @@ fun LGroupRow(
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = L.Space.x16, vertical = L.Space.x16),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(L.Space.x12)
     ) {
-        if (icon != null) Icon(icon, contentDescription = null, tint = L.Gold, modifier = Modifier.size(20.dp))
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (leading != null) leading()
+        else if (icon != null) Icon(icon, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(24.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = L.OnBox, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (trailing != null) Text(trailing, style = MaterialTheme.typography.titleSmall, color = trailingColor, maxLines = 1)
         end?.invoke()
+    }
+}
+
+/**
+ * Swipe between [options]. Tapping a segment still calls [onSelect]; a horizontal swipe does the same
+ * once the page settles. [selected] from outside moves the pager to that page.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun <T> LSwipePages(
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    page: @Composable (T) -> Unit,
+) {
+    val initial = options.indexOf(selected).coerceAtLeast(0)
+    val pagerState = rememberPagerState(initialPage = initial, pageCount = { options.size })
+    LaunchedEffect(selected, options) {
+        val index = options.indexOf(selected)
+        if (index >= 0 && index != pagerState.currentPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(index)
+    }
+    // The tab bar follows the page as soon as it is more than half across, not after it settles.
+    LaunchedEffect(pagerState, options) {
+        androidx.compose.runtime.snapshotFlow { pagerState.currentPage }.collect { page ->
+            val item = options.getOrNull(page) ?: return@collect
+            if (item != selected) onSelect(item)
+        }
+    }
+    HorizontalPager(state = pagerState, modifier = modifier.fillMaxSize()) { index ->
+        page(options[index])
     }
 }
 
@@ -189,9 +238,9 @@ fun <T> LSegments(
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(50))
+            .clip(L.RadiusPill)
             .background(L.Line)
-            .padding(4.dp),
+            .padding(L.Space.x4),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         options.forEach { option ->
@@ -200,7 +249,7 @@ fun <T> LSegments(
                 Modifier
                     .weight(1f)
                     .heightIn(min = 48.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(L.RadiusPill)
                     .background(if (on) L.Box else Color.Transparent)
                     .selectable(selected = on, role = Role.Tab, onClick = { onSelect(option) }),
                 contentAlignment = Alignment.Center
@@ -208,7 +257,7 @@ fun <T> LSegments(
                 Text(
                     label(option),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (on) L.OnBox else L.Ink,
+                    color = if (on) L.OnBox else L.InkMuted,
                     maxLines = 1
                 )
             }
@@ -234,16 +283,39 @@ fun <T> LKindChips(
     }
 }
 
-/** Small confirm dialog used by every delete. */
+/** Confirm dialog. Destructive confirms use [L.Danger]. */
 @Composable
-fun LConfirmDelete(onConfirm: () -> Unit, onDismiss: () -> Unit, title: String = "Delete?") {
+fun LConfirm(
+    title: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    confirm: String = "Delete",
+    dismiss: String = "Cancel",
+    destructive: Boolean = true,
+    body: String? = null,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = L.Page,
         title = { Text(title, color = L.Ink) },
-        confirmButton = { TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = 48.dp)) { Text("Delete", color = L.Primary) } },
-        dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) { Text("Cancel", color = L.InkMuted) } }
+        text = if (body.isNullOrBlank()) null else ({ Text(body, color = L.InkMuted) }),
+        confirmButton = {
+            TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = L.Target)) {
+                Text(confirm, color = if (destructive) L.Danger else L.Accent)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = L.Target)) {
+                Text(dismiss, color = L.InkMuted)
+            }
+        }
     )
+}
+
+/** Small confirm dialog used by every delete. */
+@Composable
+fun LConfirmDelete(onConfirm: () -> Unit, onDismiss: () -> Unit, title: String = "Delete?") {
+    LConfirm(title = title, onConfirm = onConfirm, onDismiss = onDismiss)
 }
 
 /**
@@ -269,6 +341,7 @@ fun LItemSheet(
         primaryEnabled = primaryEnabled,
         secondary = if (onDelete != null) "Delete" else null,
         onSecondary = { confirm = true },
+        secondaryDestructive = onDelete != null,
         content = content
     )
     if (confirm && onDelete != null) {
@@ -280,24 +353,69 @@ fun LItemSheet(
 @Composable
 fun LLoading(modifier: Modifier = Modifier) {
     Box(
-        modifier.fillMaxWidth().padding(vertical = 48.dp).semantics { contentDescription = "Loading" },
+        modifier.fillMaxWidth().padding(vertical = 24.dp).semantics { contentDescription = "Loading" },
         contentAlignment = Alignment.Center
-    ) { CircularProgressIndicator(color = L.Primary, modifier = Modifier.size(32.dp)) }
+    ) { CircularProgressIndicator(color = L.Accent, modifier = Modifier.size(32.dp)) }
 }
 
-/** Error state: icon, short text, Retry. */
+/** Error state: same circle as [LEmpty], short text, Retry. */
 @Composable
 fun LError(text: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
     Column(
-        modifier.fillMaxWidth().padding(vertical = 48.dp),
+        modifier.fillMaxWidth().padding(vertical = L.Space.x24),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(L.Space.x8)
     ) {
-        Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = L.Primary, modifier = Modifier.size(32.dp))
+        Box(
+            Modifier.size(64.dp).clip(androidx.compose.foundation.shape.CircleShape).background(L.Box).border(1.dp, L.Line, androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(24.dp))
+        }
         Text(text, style = MaterialTheme.typography.bodyLarge, color = L.InkMuted)
-        if (onRetry != null) LGhostButton("Retry", onRetry, Modifier.width(160.dp))
+        if (onRetry != null) LGhostButton("Retry", onRetry, Modifier.width(160.dp), fill = false)
     }
 }
+
+@Composable
+fun LSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = L.OnAccent,
+            checkedTrackColor = L.Accent,
+            uncheckedThumbColor = L.Box,
+            uncheckedTrackColor = L.BoxDeep,
+            uncheckedBorderColor = L.Line,
+        ),
+    )
+}
+
+@Composable
+fun LSwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    sub: String? = null,
+) {
+    Row(
+        modifier.fillMaxWidth().heightIn(min = L.Target),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(L.Space.x12),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(L.Space.x4)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = L.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = L.InkMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        LSwitch(checked, onCheckedChange)
+    }
+}
+
+/** Shell links for the shared AI bar. The navigation host provides the real actions. */
+val LocalLinks = androidx.compose.runtime.staticCompositionLocalOf { AppLinks() }
 
 /**
  * Page frame for a tab: heading, optional trailing action, segmented control, then the body.
@@ -307,27 +425,50 @@ fun LError(text: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? =
 fun LTabPage(
     title: String,
     modifier: Modifier = Modifier,
+    compact: Boolean = true,
     action: (@Composable RowScope.() -> Unit)? = null,
+    /** Icon row directly under the title. */
+    tools: (@Composable () -> Unit)? = null,
     segments: (@Composable () -> Unit)? = null,
     /** Shown under the segments: the AI-first way to add something on this tab. */
     aiBar: (@Composable () -> Unit)? = null,
     body: @Composable () -> Unit
 ) {
     Column(modifier.fillMaxSize().background(L.Page)) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = L.Gutter, end = L.Gutter, top = 20.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.headlineMedium,
-                color = L.Ink,
-                modifier = Modifier.weight(1f).semantics { heading() }
+        Box(
+            Modifier.padding(
+                start = L.Gutter,
+                end = L.Gutter,
+                top = if (compact) L.Space.x8 else L.Space.x16,
+                bottom = L.Space.x8,
             )
-            action?.invoke(this)
+        ) {
+            LHeader(title = title, actions = action)
         }
-        if (segments != null) Box(Modifier.padding(start = L.Gutter, end = L.Gutter, top = 16.dp, bottom = 8.dp)) { segments() }
-        if (aiBar != null) Box(Modifier.padding(start = L.Gutter, end = L.Gutter, bottom = 8.dp)) { aiBar() }
+        if (tools != null) Box { tools() }
+        if (segments != null) {
+            Box(
+                Modifier.padding(
+                    start = L.Gutter,
+                    end = L.Gutter,
+                    top = if (compact) L.Space.x8 else L.Space.x16,
+                    bottom = L.Space.x8,
+                )
+            ) { segments() }
+        }
+        val bar = aiBar
+        val hint = when (title) {
+            "Money" -> "Coffee 4.50"
+            "Life" -> "Buy milk"
+            else -> "Dentist Friday at 3"
+        }
+        Box(Modifier.padding(start = L.Gutter, end = L.Gutter, bottom = L.Space.x8)) {
+            if (bar != null) bar()
+            else {
+                val links = LocalLinks.current
+                LAiBar(hint, onSend = { links.speak(it) }, onMic = links.listen)
+            }
+        }
         Box(Modifier.weight(1f).fillMaxWidth()) { LEmbedded(body) }
     }
 }

@@ -79,7 +79,7 @@ private fun RecentRow(tx: Transaction) {
         title = tx.merchant.ifBlank { tx.category.displayName },
         sub = tx.category.displayName,
         trailing = (if (income) "+" else "-") + money(tx.amount),
-        trailingColor = if (income) L.Gold else L.OnBox,
+        trailingColor = L.OnBox,
     )
 }
 

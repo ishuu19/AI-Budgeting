@@ -37,6 +37,7 @@ data class HouseholdMember(
     val joinedAt: LocalDateTime,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null,
+    val displayName: String = "",
 )
 
 sealed class MembershipDecision {

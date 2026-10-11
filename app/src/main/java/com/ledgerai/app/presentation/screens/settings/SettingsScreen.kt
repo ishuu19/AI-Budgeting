@@ -21,7 +21,9 @@ import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
@@ -69,7 +71,10 @@ import com.ledgerai.app.presentation.components.LGroupDivider
 import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LProgress
 import com.ledgerai.app.presentation.components.LScreen
+import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LSnackbar
+import com.ledgerai.app.presentation.components.LTextLink
 import com.ledgerai.app.presentation.screens.auth.AuthViewModel
 import com.ledgerai.app.widget.FocusWidget
 import com.ledgerai.app.widget.HomeWidget
@@ -160,7 +165,7 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, About }
+private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, About, Privacy }
 
 @Composable
 fun SettingsScreen(
@@ -181,24 +186,8 @@ fun SettingsScreen(
     val isLocal = user.userId.isBlank() || user.userId.startsWith("local-")
     val engineLabel = OfflineVoiceEngine.entries.firstOrNull { it.id == state.voiceEngine }?.label ?: "Default"
 
-    LScreen(title = "More", onBack = onBack) {
-        item {
-            LGroup {
-                LGroupRow(title = "Full day", sub = "Schedule, tasks, habits", icon = Icons.Filled.Today, onClick = links.today, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Voice log", sub = "Everything you said, fix or redo", icon = Icons.Filled.Mic, onClick = links.voiceLog, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Life log", sub = "What you did today", icon = Icons.Filled.Info, onClick = { links.plan(com.ledgerai.app.presentation.navigation.PlanSeg.Log) }, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Ask about my money", sub = "Chat with the finance assistant", icon = Icons.Filled.Person, onClick = { links.voice(com.ledgerai.app.presentation.navigation.VoiceSeg.Ask) }, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Insights", sub = "Trends and patterns", icon = Icons.Filled.CurrencyExchange, onClick = links.insights, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Subscriptions", sub = "Renewals", icon = Icons.Filled.Notifications, onClick = links.subscriptions, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Focus timer", sub = "Start a focus block", icon = Icons.Filled.Today, onClick = { links.focus(0L, "Focus") }, end = { Chevron() })
-            }
-        }
+    LScreen(title = "Settings", onBack = onBack) {
+        item { LSection("Account") }
         item {
             LGroup {
                 LGroupRow(
@@ -206,10 +195,15 @@ fun SettingsScreen(
                     sub = user.email.ifBlank { "On this device" },
                     icon = Icons.Filled.Person,
                     trailing = if (isLocal) "Sign in" else null,
+                    trailingColor = L.Primary,
                     onClick = { sheet = YouSheet.Profile },
                     end = { Chevron() }
                 )
-                LGroupDivider()
+            }
+        }
+        item { LSection("Preferences") }
+        item {
+            LGroup {
                 LGroupRow(
                     title = "Appearance",
                     sub = when (themeMode) { "light" -> "Light"; "dark" -> "Dark"; else -> "Follow system" },
@@ -228,7 +222,7 @@ fun SettingsScreen(
                 LGroupDivider()
                 LGroupRow(
                     title = "Money rules",
-                    sub = "${state.currency} · ${if (trackMode == "expenses") "Expenses" else "Income and expenses"}",
+                    sub = "${state.currency} · ${if (trackMode == "expenses") "Spending" else "Income and spending"}",
                     icon = Icons.Filled.CurrencyExchange,
                     onClick = { sheet = YouSheet.Money },
                     end = { Chevron() }
@@ -241,7 +235,19 @@ fun SettingsScreen(
                     onClick = { sheet = YouSheet.Alerts },
                     end = { Chevron() }
                 )
+            }
+        }
+        item { LSection("Shortcuts") }
+        item {
+            LGroup {
+                LGroupRow(title = "Life log", icon = Icons.Filled.History, onClick = { links.plan(com.ledgerai.app.presentation.navigation.PlanSeg.Log) }, end = { Chevron() })
                 LGroupDivider()
+                LGroupRow(title = "Insights", icon = Icons.Filled.Insights, onClick = links.insights, end = { Chevron() })
+            }
+        }
+        item { LSection("About") }
+        item {
+            LGroup {
                 LGroupRow(
                     title = "About",
                     sub = "Version ${BuildConfig.VERSION_NAME}",
@@ -277,7 +283,10 @@ fun SettingsScreen(
             threshold = state.budgetAlertThreshold,
             onDismiss = close
         )
-        YouSheet.About -> AboutSheet(isLocal = isLocal, onDismiss = close)
+        YouSheet.About -> AboutSheet(isLocal = isLocal, onPrivacy = { sheet = YouSheet.Privacy }, onDismiss = close)
+        YouSheet.Privacy -> LSheet(title = "Privacy policy", onDismiss = { sheet = YouSheet.About }, primary = "Done", onPrimary = { sheet = YouSheet.About }) {
+            Text(PRIVACY_POLICY_TEXT, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
+        }
     }
 }
 
@@ -321,12 +330,7 @@ private fun ProfileSheet(
             LGroupDivider()
             LGroupRow(title = "Sync", trailing = if (isLocal) "Off" else "On")
         }
-        if (isLocal && !user.googleSignInAvailable) {
-            Text("Google sign-in is not set up", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
-        }
-        user.errorMessage?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-        }
+        user.errorMessage?.let { LSnackbar(it) }
     }
 
     if (confirmOut) {
@@ -362,20 +366,25 @@ private fun VoiceSheet(viewModel: SettingsViewModel, selected: String, onDismiss
         LGroup {
             LGroupRow(
                 title = "Cloud fallback",
-                sub = "Ask AI only when the rules are unsure",
+                sub = "When rules are unsure",
                 onClick = { viewModel.setCloudFallback(!cloudFallback) },
                 end = { LSwitch(cloudFallback, "Cloud fallback") { viewModel.setCloudFallback(it) } }
             )
         }
         LGroup {
-            val modelStatus by viewModel.localModelStatus.collectAsState()
-            LGroupRow(
-                title = "Phone speech",
-                sub = "The phone's built-in listener. No extra voice model.",
-                onClick = { viewModel.setVoiceEngine(OfflineVoiceEngine.ANDROID.id) }
-            )
-            LGroupDivider()
-            LGroupRow(title = "On-phone parser", sub = modelStatus, onClick = {})
+            OfflineVoiceEngine.entries.forEachIndexed { index, engine ->
+                if (index > 0) LGroupDivider()
+                val status = remember(statusTick, engine) { viewModel.engineStatus(engine) }
+                EngineRow(
+                    engine = engine,
+                    selected = selected == engine.id,
+                    status = status,
+                    progress = downloads[engine.id],
+                    failed = engine.id in failed,
+                    onSelect = { viewModel.setVoiceEngine(engine.id) },
+                    onGet = { viewModel.prepare(engine) }
+                )
+            }
         }
     }
 }
@@ -396,6 +405,7 @@ private fun EngineRow(
         sub = when {
             progress != null -> "${(progress.coerceIn(0f, 1f) * 100).toInt()}%"
             failed -> "Download failed"
+            engine == OfflineVoiceEngine.ANDROID -> "Built in"
             needsGet -> engine.sizeHint
             else -> "Ready"
         },
@@ -404,12 +414,10 @@ private fun EngineRow(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
                     progress != null -> Box(Modifier.width(56.dp)) { LProgress(progress) }
-                    needsGet || failed -> TextButton(onClick = onGet, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(if (failed) "Retry" else "Get", style = MaterialTheme.typography.labelLarge, color = L.Gold)
-                    }
+                    needsGet || failed -> LTextLink(if (failed) "Retry" else "Get", onGet)
                 }
                 if (selected) {
-                    Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Gold, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Primary, modifier = Modifier.size(20.dp))
                 } else {
                     Box(Modifier.size(20.dp))
                 }
@@ -434,11 +442,8 @@ private fun MoneySheet(
     LSheet(
         title = "Money rules",
         onDismiss = onDismiss,
-        primary = "Save",
-        onPrimary = {
-            viewModel.setCashOnHand(cash)
-            onDismiss()
-        }
+        primary = "Done",
+        onPrimary = onDismiss
     ) {
         LGroup {
             LGroupRow(
@@ -450,12 +455,16 @@ private fun MoneySheet(
         }
         Text("Track", style = MaterialTheme.typography.titleSmall, color = L.Ink)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LChip("Expenses", trackMode == "expenses", onClick = { viewModel.setTrackMode("expenses") })
-            LChip("Both", trackMode != "expenses", onClick = { viewModel.setTrackMode("both") })
+            LChip("Spending", trackMode == "expenses", onClick = { viewModel.setTrackMode("expenses") })
+            LChip("Income and spending", trackMode != "expenses", onClick = { viewModel.setTrackMode("both") })
         }
         LField(
             value = cash,
-            onValueChange = { cash = it.filter { ch -> ch.isDigit() || ch == '.' } },
+            onValueChange = {
+                val next = it.filter { ch -> ch.isDigit() || ch == '.' }
+                cash = next
+                viewModel.setCashOnHand(next)
+            },
             label = "Cash on hand",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
         )
@@ -508,12 +517,13 @@ private fun CurrencySheet(
             shown.forEachIndexed { index, (code, symbol, name) ->
                 if (index > 0) LGroupDivider()
                 LGroupRow(
-                    title = "$code  $symbol",
+                    title = code,
                     sub = name,
+                    trailing = symbol,
                     onClick = { onPick(code, symbol) },
                     end = {
                         if (code == selected) {
-                            Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Gold, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Filled.Check, contentDescription = "Selected", tint = L.Primary, modifier = Modifier.size(20.dp))
                         }
                     }
                 )
@@ -550,8 +560,11 @@ private fun AlertsSheet(
 
     LSheet(
         title = "Alerts and widget",
-        onDismiss = onDismiss,
-        primary = "Save",
+        onDismiss = {
+            viewModel.setAlertThreshold(value.toInt())
+            onDismiss()
+        },
+        primary = "Done",
         onPrimary = {
             viewModel.setAlertThreshold(value.toInt())
             onDismiss()
@@ -585,6 +598,7 @@ private fun AlertsSheet(
         Slider(
             value = value,
             onValueChange = { value = it },
+            onValueChangeFinished = { viewModel.setAlertThreshold(value.toInt()) },
             valueRange = 50f..95f,
             colors = SliderDefaults.colors(
                 thumbColor = L.Primary,
@@ -617,7 +631,7 @@ private fun LSwitch(checked: Boolean, label: String, onChange: (Boolean) -> Unit
         onCheckedChange = onChange,
         modifier = Modifier.semantics { contentDescription = label },
         colors = SwitchDefaults.colors(
-            checkedThumbColor = L.BoxDeep,
+            checkedThumbColor = L.OnPrimary,
             checkedTrackColor = L.Gold,
             checkedBorderColor = Color.Transparent,
             uncheckedThumbColor = L.OnBoxMuted,
@@ -630,15 +644,15 @@ private fun LSwitch(checked: Boolean, label: String, onChange: (Boolean) -> Unit
 // --- about ---------------------------------------------------------------------------------
 
 @Composable
-private fun AboutSheet(isLocal: Boolean, onDismiss: () -> Unit) {
+private fun AboutSheet(isLocal: Boolean, onPrivacy: () -> Unit, onDismiss: () -> Unit) {
     LSheet(title = "About", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
         LGroup {
             LGroupRow(title = "Version", trailing = BuildConfig.VERSION_NAME)
             LGroupDivider()
             LGroupRow(title = "Sync", trailing = if (isLocal) "Off" else "On")
+            LGroupDivider()
+            LGroupRow(title = "Privacy policy", onClick = onPrivacy, end = { Chevron() })
         }
-        Text("Privacy", style = MaterialTheme.typography.titleSmall, color = L.Ink)
-        Text(PRIVACY_POLICY_TEXT, style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
     }
 }
 
@@ -650,7 +664,7 @@ What we process locally
 • On-device summaries used to build compact AI context
 • Preferences such as currency, notifications, and widget display
 
-Cloud AI (optional)
+Cloud AI
 • When signed in, prompts may be sent through a Supabase Edge Function so API keys never ship in the release APK
 • Do not include secrets or passwords in notes or voice input
 

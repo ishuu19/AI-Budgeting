@@ -1,21 +1,24 @@
 package com.ledgerai.app.presentation.screens.memory
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.FilterChip
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,12 +45,15 @@ import com.ledgerai.app.domain.people.Person
 import com.ledgerai.app.domain.people.RecordVisibility
 import java.time.LocalDate
 import com.ledgerai.app.presentation.components.L
-import com.ledgerai.app.presentation.components.LButton
-import com.ledgerai.app.presentation.components.LCard
+import com.ledgerai.app.presentation.components.LAiBar
 import com.ledgerai.app.presentation.components.LEmpty
-import com.ledgerai.app.presentation.components.LHero
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
+import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LScreen
-import com.ledgerai.app.presentation.components.LSection
+import com.ledgerai.app.presentation.components.LToolButton
+import com.ledgerai.app.presentation.components.rememberVoiceInput
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
@@ -61,8 +67,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LField
-import com.ledgerai.app.presentation.components.LGhostButton
-import com.ledgerai.app.presentation.components.LRow
 import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.components.LocalPhoto
 import com.ledgerai.app.presentation.components.PhotoField
@@ -70,6 +74,8 @@ import com.ledgerai.app.presentation.components.PhotoSaveViewModel
 import com.ledgerai.app.presentation.screens.money.OptionalDateField
 import com.ledgerai.app.presentation.screens.transactions.DatePickChip
 import java.io.File
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -266,14 +272,15 @@ fun PersonMemoryScreen(
             commitmentMessage = commitmentMessage,
         )
         ready -> MissingPerson(onBack)
-        else -> LScreen(title = "Person", onBack = onBack) { }
+        else -> LScreen(title = person?.name ?: "Person", onBack = onBack) {
+            item { LLoading() }
+        }
     }
 }
 
 /**
  * Memories, moments (with photos) and promises the caller already loaded for [person].
- * Moments are the photo-first way in: add a photo, pick the day, say what happened. Dates come from a
- * date picker and status from chips, so nothing is typed in a special format and no file path is asked for.
+ * One timeline. Say what happened in the bar, or open New moment, New memory, or New promise.
  */
 @Composable
 fun PersonMemoryScreen(
@@ -306,65 +313,144 @@ fun PersonMemoryScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var sheet by rememberSaveable { mutableStateOf("") }
+    var menu by rememberSaveable { mutableStateOf(false) }
     var localError by rememberSaveable { mutableStateOf<String?>(null) }
+    var heard by remember { mutableStateOf("") }
+    var armed by remember { mutableStateOf(false) }
 
     val subtitle = listOfNotNull(person.org, person.role).joinToString(" · ").ifBlank { null }
     val visible = memories.filter { it.personId == person.id && it.deletedAt == null }
     val moments = interactions.filter { it.personId == person.id && it.deletedAt == null }
     val promises = commitments.filter { it.personId == person.id && it.deletedAt == null }
+    val first = person.name.substringBefore(' ').ifBlank { person.name }
     fun photoOf(moment: Interaction): File? =
         moment.sourceId?.let { File(context.filesDir, "media/${it}_t.jpg") }?.takeIf { it.exists() }
-
-    LScreen(title = person.name, onBack = onBack) {
-        item { LHero(label = "Person", value = person.name, sub = subtitle) }
-        if (person.notes.isNotBlank()) {
-            item { Text(person.notes, style = MaterialTheme.typography.bodyLarge, color = L.Ink) }
-        }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LButton("Add photo or moment", onClick = { sheet = "moment" })
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LGhostButton("Memory", onClick = { sheet = "memory" }, modifier = Modifier.weight(1f))
-                    LGhostButton("Promise", onClick = { sheet = "promise" }, modifier = Modifier.weight(1f))
+    fun tell(text: String) {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return
+        when (classify(trimmed)) {
+            "promise" -> onAddCommitment(null, trimmed, null, "Open", person.id) { }
+            "moment" -> onAddInteraction(LocalDate.now(), null, trimmed, null) { }
+            else -> {
+                val draft = MemoryDraft(person.id, trimmed, MemoryKind.FACT, MemoryStatus.CONFIRMED, MANUAL_SOURCE, null)
+                when (val check = MemoryRules.validate(draft)) {
+                    is MemoryCheck.Rejected -> localError = check.reason
+                    MemoryCheck.Accepted -> onAddMemory(draft) { saved -> if (saved) localError = null }
                 }
             }
         }
+    }
+    val voice = rememberVoiceInput { heard = it }
+    LaunchedEffect(voice.listening) {
+        if (voice.listening) {
+            armed = true
+        } else if (armed) {
+            val said = heard
+            heard = ""
+            armed = false
+            if (said.isNotBlank()) tell(said)
+        }
+    }
+    val openPromises = promises.filter { isOpen(it.status) }
+        .sortedWith(compareBy<Commitment, LocalDate?>(nullsLast()) { it.dueOn })
+    val rest = buildList {
+        moments.forEach { add(Line.Moment(it) to it.occurredOn) }
+        visible.forEach { add(Line.Remembered(it) to memoryDay(it.updatedAt)) }
+        promises.filter { !isOpen(it.status) }.forEach { add(Line.Promise(it) to (it.dueOn ?: memoryDay(it.updatedAt))) }
+    }.sortedByDescending { it.second }.map { it.first }
+    val barError = when {
+        sheet.isNotEmpty() -> null
+        !localError.isNullOrBlank() -> localError
+        !message.isNullOrBlank() -> message
+        !interactionMessage.isNullOrBlank() -> interactionMessage
+        else -> commitmentMessage
+    }
 
-        item { LSection("Moments") }
-        if (moments.isEmpty()) {
-            item { LEmpty(Icons.Filled.Place, "No moments yet. Add a photo from when you met.") }
-        } else {
-            items(moments, key = { "moment-${it.id}" }) { moment ->
-                LCard(padding = 12.dp) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        photoOf(moment)?.let { LocalPhoto(it, Modifier.size(84.dp).clip(RoundedCornerShape(L.RadiusSm))) }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(moment.summary, style = MaterialTheme.typography.bodyLarge, color = L.OnBox)
-                            Text(momentLine(moment), style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
-                        }
+    LScreen(title = person.name, onBack = onBack) {
+        item {
+            Column(
+                Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val headerPhoto = moments.sortedByDescending { it.occurredOn }.firstNotNullOfOrNull { photoOf(it) }
+                if (headerPhoto != null) {
+                    LocalPhoto(headerPhoto, Modifier.size(96.dp).clip(CircleShape))
+                } else {
+                    Box(
+                        Modifier.size(96.dp).clip(CircleShape).background(L.BoxDeep),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(initials(person.name), style = MaterialTheme.typography.titleLarge, color = L.OnBox)
+                    }
+                }
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+                }
+            }
+        }
+        if (person.notes.isNotBlank()) {
+            item {
+                Text(
+                    person.notes,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = L.Ink,
+                    maxLines = 2,
+                )
+            }
+        }
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                LAiBar(
+                    hint = "Tell me about $first…",
+                    onSend = ::tell,
+                    onMic = voice.toggle,
+                    modifier = Modifier.weight(1f),
+                )
+                Box {
+                    LToolButton(Icons.Filled.Add, "New", onClick = { menu = true })
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("New moment") },
+                            onClick = { menu = false; sheet = "moment" },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New memory") },
+                            onClick = { menu = false; sheet = "memory" },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New promise") },
+                            onClick = { menu = false; sheet = "promise" },
+                        )
                     }
                 }
             }
         }
-
-        item { LSection("Memories") }
-        if (visible.isEmpty()) {
-            item { LEmpty(Icons.Default.Lightbulb, "Nothing remembered yet") }
-        } else {
-            items(visible, key = { it.id }) { memory ->
-                LCard {
-                    Text(memory.text, style = MaterialTheme.typography.bodyLarge, color = L.OnBox)
-                    Text(memoryLine(memory), style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
-                }
-            }
+        if (!barError.isNullOrBlank()) {
+            item { Text(barError, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
         }
-
-        item { LSection("Promises") }
-        if (promises.isEmpty()) {
-            item { LEmpty(Icons.Filled.Place, "No promises. Add one to be reminded.") }
+        if (openPromises.isEmpty() && rest.isEmpty()) {
+            item { LEmpty(Icons.Filled.PhotoCamera, "No moments yet") }
         } else {
-            items(promises, key = { "promise-${it.id}" }) { c ->
-                LRow(title = c.text, sub = commitmentLine(c))
+            item {
+                LGroup {
+                    var index = 0
+                    openPromises.forEach { promise ->
+                        if (index++ > 0) LGroupDivider()
+                        PromiseRow(promise)
+                    }
+                    rest.forEach { line ->
+                        if (index++ > 0) LGroupDivider()
+                        when (line) {
+                            is Line.Moment -> MomentRow(line.item, photoOf(line.item))
+                            is Line.Remembered -> MemoryRow(line.item)
+                            is Line.Promise -> PromiseRow(line.item)
+                        }
+                    }
+                }
             }
         }
     }
@@ -413,7 +499,7 @@ private fun MomentSheet(
     var what by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     LSheet(
-        title = "Add photo or moment",
+        title = "New moment",
         onDismiss = onDismiss,
         primary = if (busy) "Saving…" else "Save",
         onPrimary = {
@@ -427,8 +513,8 @@ private fun MomentSheet(
             Text("When", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
             DatePickChip(date = day, selected = true, onDate = { day = it })
         }
-        LField(what, { what = it }, "What happened (optional)")
-        LField(place, { place = it }, "Where (optional)")
+        LField(what, { what = it }, "What happened")
+        LField(place, { place = it }, "Where")
         error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
     }
 }
@@ -438,7 +524,7 @@ private fun MemorySheet(error: String?, onDismiss: () -> Unit, onSave: (String, 
     var text by rememberSaveable { mutableStateOf("") }
     var kind by rememberSaveable { mutableStateOf(MemoryKind.FACT.name) }
     LSheet(
-        title = "Add a memory",
+        title = "New memory",
         onDismiss = onDismiss,
         primary = "Save",
         onPrimary = { onSave(text, MemoryKind.valueOf(kind)) },
@@ -446,7 +532,9 @@ private fun MemorySheet(error: String?, onDismiss: () -> Unit, onSave: (String, 
     ) {
         LField(text, { text = it }, "What you remember", singleLine = false, minLines = 3)
         ChipsRow {
-            MemoryKind.entries.forEach { LChip(it.name.lowercase().replaceFirstChar { c -> c.uppercase() }, kind == it.name, onClick = { kind = it.name }) }
+            MemoryKind.entries.forEach { kindOption ->
+                LChip(kindLabel(kindOption), kind == kindOption.name, onClick = { kind = kindOption.name })
+            }
         }
         error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
     }
@@ -456,17 +544,15 @@ private fun MemorySheet(error: String?, onDismiss: () -> Unit, onSave: (String, 
 private fun PromiseSheet(error: String?, onDismiss: () -> Unit, onSave: (String, LocalDate?, String) -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     var due by remember { mutableStateOf<LocalDate?>(null) }
-    var status by rememberSaveable { mutableStateOf("Open") }
     LSheet(
-        title = "Add a promise",
+        title = "New promise",
         onDismiss = onDismiss,
         primary = "Save",
-        onPrimary = { onSave(text, due, status) },
+        onPrimary = { onSave(text, due, "Open") },
         primaryEnabled = text.isNotBlank(),
     ) {
         LField(text, { text = it }, "What did you promise?")
         OptionalDateField("Due", due) { due = it }
-        ChipsRow { listOf("Open", "Done").forEach { LChip(it, status == it, onClick = { status = it }) } }
         error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
     }
 }
@@ -474,7 +560,7 @@ private fun PromiseSheet(error: String?, onDismiss: () -> Unit, onSave: (String,
 @Composable
 private fun MissingPerson(onBack: () -> Unit) {
     LScreen(title = "Person", onBack = onBack) {
-        item { LEmpty(Icons.Default.Person, "This person is not in your list") }
+        item { LEmpty(Icons.Filled.Person, "This person is not in your list") }
     }
 }
 
@@ -483,24 +569,99 @@ private fun visibilityLabel(visibility: RecordVisibility): String = when (visibi
     RecordVisibility.HOUSEHOLD -> "Household"
 }
 
-private fun memoryLine(memory: Memory): String {
-    val kind = memory.kind.name.lowercase()
-    val status = memory.status.name.lowercase()
-    val source = memory.sourceType.ifBlank { "unknown source" }
-    return "$kind · $status · $source"
+private sealed class Line {
+    data class Moment(val item: Interaction) : Line()
+    data class Remembered(val item: Memory) : Line()
+    data class Promise(val item: Commitment) : Line()
 }
 
-private fun momentLine(interaction: Interaction): String {
-    val parts = mutableListOf(interaction.occurredOn.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy")))
-    val place = interaction.where?.trim().orEmpty()
-    if (place.isNotEmpty()) parts.add(place)
-    return parts.joinToString(" · ")
+@Composable
+private fun MomentRow(moment: Interaction, photo: File?) {
+    val file = photo
+    LGroupRow(
+        title = moment.summary,
+        sub = momentSub(moment),
+        icon = Icons.Filled.PhotoCamera,
+        end = if (file != null) {
+            { LocalPhoto(file, Modifier.size(64.dp).clip(RoundedCornerShape(L.RadiusSm))) }
+        } else {
+            null
+        },
+    )
 }
 
-private fun commitmentLine(commitment: Commitment): String {
-    val parts = mutableListOf<String>()
-    val status = commitment.status.trim()
-    if (status.isNotEmpty()) parts.add(status)
-    commitment.dueOn?.let { parts.add("due " + it.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"))) }
-    return parts.joinToString(" · ")
+@Composable
+private fun MemoryRow(memory: Memory) {
+    LGroupRow(
+        title = memory.text,
+        sub = if (memory.updatedAt > 0) relativeDay(memoryDay(memory.updatedAt)) else null,
+        icon = Icons.Filled.Lightbulb,
+        trailing = if (memory.status == MemoryStatus.INFERRED) "Inferred" else null,
+        trailingColor = L.Highlight,
+    )
+}
+
+@Composable
+private fun PromiseRow(promise: Commitment) {
+    LGroupRow(
+        title = promise.text,
+        sub = promise.dueOn?.let { dueLabel(it) },
+        icon = Icons.Filled.Handshake,
+    )
+}
+
+private fun classify(text: String): String {
+    val folded = text.lowercase()
+    return when {
+        listOf("promise", "i'll", "i will", "remind me").any { folded.contains(it) } -> "promise"
+        listOf("met ", "saw ", "visited", "moment", "photo").any { folded.contains(it) } -> "moment"
+        else -> "memory"
+    }
+}
+
+private fun isOpen(status: String): Boolean {
+    val folded = status.trim().lowercase()
+    return folded != "done" && folded != "closed"
+}
+
+private fun kindLabel(kind: MemoryKind): String = when (kind) {
+    MemoryKind.FACT -> "Fact"
+    MemoryKind.PREFERENCE -> "Preference"
+    MemoryKind.GOAL -> "Goal"
+}
+
+private fun momentSub(moment: Interaction): String {
+    val place = moment.where?.trim().orEmpty()
+    val day = relativeDay(moment.occurredOn)
+    return if (place.isEmpty()) day else "$day · $place"
+}
+
+private fun dueLabel(date: LocalDate): String {
+    val days = ChronoUnit.DAYS.between(LocalDate.now(), date)
+    return if (days == 0L) "Due today" else "Due ${date.format(DateTimeFormatter.ofPattern("MMM d"))}"
+}
+
+private fun relativeDay(date: LocalDate): String {
+    val days = ChronoUnit.DAYS.between(date, LocalDate.now())
+    return when {
+        days == 0L -> "Today"
+        days == 1L -> "1d ago"
+        days in 2..6 -> "${days}d ago"
+        days in -6..-1 -> date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+        else -> date.format(DateTimeFormatter.ofPattern("MMM d"))
+    }
+}
+
+private fun memoryDay(updatedAt: Long): LocalDate =
+    if (updatedAt > 0) {
+        java.time.Instant.ofEpochMilli(updatedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+    } else {
+        LocalDate.MIN
+    }
+
+private fun initials(name: String): String {
+    val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+    if (parts.isEmpty()) return "?"
+    if (parts.size == 1) return parts[0].take(2).uppercase()
+    return (parts[0].take(1) + parts[1].take(1)).uppercase()
 }

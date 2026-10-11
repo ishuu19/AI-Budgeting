@@ -14,9 +14,9 @@ import javax.inject.Inject
 
 enum class DebtFilter(val label: String) {
     ALL("All"),
-    I_OWE("I owe"),
-    THEY_OWE("They owe"),
-    OVERDUE("Overdue")
+    THEY_OWE("Owes you"),
+    I_OWE("You owe"),
+    OVERDUE("Late")
 }
 
 data class DebtsUiState(

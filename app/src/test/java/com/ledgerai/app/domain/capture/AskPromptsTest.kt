@@ -41,10 +41,39 @@ class AskPromptsTest {
             stock,
         )
         assertEquals(1, ideas.size)
-        assertEquals(listOf("eggs", "Rice"), ideas[0].uses)
+        assertEquals(listOf("Eggs", "Rice"), ideas[0].uses)
         assertEquals(listOf("Spring onion", "Soy sauce"), ideas[0].missing)
         assertEquals(15, ideas[0].minutes)
         assertEquals(listOf("Cook rice.", "Scramble eggs."), ideas[0].steps)
+    }
+
+    @Test
+    fun namesWithAmountsStillMatchThePantry() {
+        // The model often copies the amount from the stock line. That must not turn owned food into "missing".
+        val pantry = listOf(
+            PantryLine("Chicken Leg Piece", 6.0, "", null),
+            PantryLine("potatoes", 3.0, "whole", null),
+            PantryLine("Turmeric Powder", 250.0, "grams", null),
+            PantryLine("onion", 6.0, "", null),
+        )
+        val ideas = AskPrompts.parseMeals(
+            """{"ideas":[{"title":"Chicken curry","minutes":45,
+                "uses":["Chicken Leg Piece 6","potatoes 3 whole","Turmeric Powder 250 grams","onions"],
+                "missing":["Rice"],"steps":["Cook."]}]}""",
+            pantry,
+        )
+        assertEquals(1, ideas.size)
+        assertEquals(listOf("Chicken Leg Piece", "potatoes", "Turmeric Powder", "onion"), ideas[0].uses)
+        assertEquals(listOf("Rice"), ideas[0].missing)
+    }
+
+    @Test
+    fun somethingTheModelCallsMissingButTheUserHasIsNotMissing() {
+        val ideas = AskPrompts.parseMeals(
+            """{"ideas":[{"title":"Egg rice","uses":["Rice"],"missing":["eggs","Soy sauce"],"steps":["Cook."]}]}""",
+            stock,
+        )
+        assertEquals(listOf("Soy sauce"), ideas[0].missing)
     }
 
     @Test

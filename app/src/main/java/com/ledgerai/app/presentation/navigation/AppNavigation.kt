@@ -3,18 +3,13 @@ package com.ledgerai.app.presentation.navigation
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,15 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.withTimeoutOrNull
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -92,16 +81,16 @@ import com.ledgerai.app.presentation.screens.voice.VoiceRecorderScreen
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Today        : Screen("today",        "Today",    Icons.Filled.Today)
     object Plan         : Screen("plan",         "Plan",     Icons.Filled.CalendarMonth)
-    object Chat         : Screen("chat",         "Home",     Icons.Filled.AutoAwesome)
+    object Chat         : Screen("chat",         "Home",     Icons.Filled.Home)
     /** The big centre button. It is not a page: it opens Home and starts listening. */
     object Mic          : Screen("mic",          "Speak",    Icons.Filled.Mic)
-    object VoiceLog     : Screen("voice_log",    "Voice log", Icons.Filled.Mic)
+    object VoiceLog     : Screen("voice_log",    "Voice log", Icons.Filled.GraphicEq)
     object Money        : Screen("money",        "Money",    Icons.Filled.AccountBalanceWallet)
     object Life         : Screen("life",         "Life",     Icons.Filled.Category)
     object Settings     : Screen("settings",     "Settings", Icons.Filled.Settings)
 
     object Insights     : Screen("insights",     "Insights", Icons.Filled.Insights)
-    object SpendGuide   : Screen("spend_guide",  "Safe today", Icons.AutoMirrored.Filled.TrendingUp)
+    object SpendGuide   : Screen("spend_guide",  "Safe to spend", Icons.AutoMirrored.Filled.TrendingUp)
     object AiAssistant  : Screen("ai_assistant", "Ask",      Icons.Filled.AutoAwesome)
     object Search       : Screen("search",       "Search",   Icons.Filled.Search)
     object Focus        : Screen("focus",        "Focus",    Icons.Filled.Timer)
@@ -216,6 +205,18 @@ fun AppNavigation(request: LaunchRequest? = null) {
         }
     }
 
+    val auth: AuthViewModel = hiltViewModel()
+    val account by auth.uiState.collectAsState()
+    val profile = remember(account.displayName, nav) {
+        com.ledgerai.app.presentation.components.ProfileUi(
+            initial = account.displayName.trim().firstOrNull()?.uppercase() ?: "M",
+            onOpen = { nav.go(Screen.Settings.route) },
+        )
+    }
+    androidx.compose.runtime.CompositionLocalProvider(
+        com.ledgerai.app.presentation.components.LocalProfile provides profile,
+        com.ledgerai.app.presentation.components.LocalLinks provides links,
+    ) {
     Scaffold(
         containerColor = L.Page,
         bottomBar = {
@@ -280,7 +281,11 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 )
             }
             composable(Screen.Life.route) {
-                LifeTab(lifeSeg, { lifeSeg = it }, onOpenPerson = { id -> nav.go("person/${Uri.encode(id)}") })
+                LifeTab(
+                    lifeSeg,
+                    { lifeSeg = it },
+                    onOpenPerson = { id -> nav.go("person/${Uri.encode(id)}") },
+                )
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(links = links, onBack = back)
@@ -385,6 +390,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
             }
         }
     }
+    }
 }
 
 @Composable
@@ -394,54 +400,29 @@ private fun LedgerTabBar(
     onVoiceHoldStart: () -> Unit,
     onVoiceHoldEnd: () -> Unit
 ) {
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(30.dp)
-    // Floating bar: a rounded card on the page; the selected tab sits in a soft pill.
-    Box(Modifier.fillMaxWidth().background(L.Page).navigationBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp)) {
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(L.Radius)
+    // Floating bar: same radius and border as every other card. The mic stays the one round control.
+    Box(Modifier.fillMaxWidth().background(L.Page).navigationBarsPadding().padding(horizontal = L.Gutter, vertical = L.Space.x8)) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(72.dp)
-                .shadow(10.dp, shape, clip = false)
+                .height(64.dp)
                 .clip(shape)
                 .background(L.Box)
                 .border(1.dp, L.Line, shape)
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = L.Space.x8),
             verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEach { screen ->
                 val on = selected(screen)
                 if (screen == Screen.Mic) {
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Box(
-                            Modifier
-                                .size(56.dp)
-                                .shadow(6.dp, CircleShape)
-                                .clip(CircleShape)
-                                .background(L.Highlight)
-                                .semantics { role = Role.Button; contentDescription = "Speak. Tap to talk, or hold." }
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            awaitFirstDown()
-                                            val tap = withTimeoutOrNull(200) { waitForUpOrCancellation() }
-                                            if (tap != null) onSelect(screen)
-                                            else {
-                                                onVoiceHoldStart()
-                                                waitForUpOrCancellation()
-                                                onVoiceHoldEnd()
-                                            }
-                                        }
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                screen.icon,
-                                contentDescription = screen.label,
-                                tint = androidx.compose.ui.graphics.Color(0xFF0B1B45),
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
+                        com.ledgerai.app.presentation.components.LMicButton(
+                            onClick = { onSelect(screen) },
+                            label = "Speak. Tap to talk, or hold.",
+                            onHoldStart = onVoiceHoldStart,
+                            onHoldEnd = onVoiceHoldEnd,
+                        )
                     }
                 } else {
                     Column(
@@ -460,22 +441,22 @@ private fun LedgerTabBar(
                     ) {
                         Box(
                             Modifier
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(L.Radius))
                                 .background(if (on) L.BoxDeep else androidx.compose.ui.graphics.Color.Transparent)
-                                .padding(horizontal = 16.dp, vertical = 5.dp)
+                                .padding(horizontal = L.Space.x16, vertical = L.Space.x8)
                         ) {
                             Icon(
                                 screen.icon,
                                 contentDescription = null,
-                                tint = if (on) L.Primary else L.InkMuted,
-                                modifier = Modifier.size(22.dp)
+                                tint = if (on) L.Ink else L.InkMuted,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(L.Space.x4))
                         Text(
                             screen.label,
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (on) L.Primary else L.InkMuted
+                            color = if (on) L.Ink else L.InkMuted
                         )
                     }
                 }

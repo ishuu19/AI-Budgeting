@@ -1,6 +1,7 @@
 package com.ledgerai.app.presentation.screens.auth
 
 import android.app.Activity
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -18,8 +19,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class AuthUiState(
@@ -70,16 +73,14 @@ class AuthViewModel @Inject constructor(
     fun signInWithGoogle(activity: Activity) {
         viewModelScope.launch {
             if (!authRepository.isSupabaseConfigured) {
-                _uiState.update {
-                    it.copy(errorMessage = "Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.")
-                }
+                Log.w("Auth", "Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.")
+                _uiState.update { it.copy(errorMessage = "Sign-in unavailable") }
                 return@launch
             }
             val webClientId = BuildConfig.SUPABASE_GOOGLE_WEB_CLIENT_ID.trim()
             if (webClientId.isEmpty()) {
-                _uiState.update {
-                    it.copy(errorMessage = "Google Sign-In not configured. Set SUPABASE_GOOGLE_WEB_CLIENT_ID in secrets.properties.")
-                }
+                Log.w("Auth", "Google Sign-In not configured. Set SUPABASE_GOOGLE_WEB_CLIENT_ID in secrets.properties.")
+                _uiState.update { it.copy(errorMessage = "Sign-in unavailable") }
                 return@launch
             }
 
@@ -135,6 +136,22 @@ class AuthViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    /** Keeps data on this device when Google sign-in is not available. */
+    fun continueOnDevice() {
+        viewModelScope.launch {
+            val existing = userSession.userInfo.first()
+            if (existing.userId.isBlank()) {
+                userSession.saveUser(
+                    userId = "local-${UUID.randomUUID()}",
+                    name = "",
+                    email = "",
+                    photoUrl = "",
+                )
+            }
+            _uiState.update { it.copy(isSignedIn = true, errorMessage = null, isLoading = false) }
         }
     }
 

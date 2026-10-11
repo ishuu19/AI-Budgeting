@@ -13,11 +13,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.dp
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LHero
+import com.ledgerai.app.presentation.components.LProgress
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.navigation.AppLinks
+import com.ledgerai.app.presentation.navigation.MoneySeg
 import com.ledgerai.app.presentation.navigation.OpenItem
 import com.ledgerai.app.presentation.navigation.OpenKind
 import com.ledgerai.app.presentation.navigation.VoiceSeg
@@ -82,19 +87,42 @@ fun MoneyPlanScreen(
     }
 
     val overCount = budgetState.budgets.count { it.isOverBudget }
-    val heroSub = if (overCount > 0) "$daysSub · $overCount over budget" else daysSub
+    val limit = budgetState.budgets.sumOf { it.monthlyLimit }
+    val spent = budgetState.budgets.sumOf { it.spent }
+    val marker = today.dayOfMonth.toFloat() / today.lengthOfMonth().toFloat()
+    val ahead = limit * marker - spent
+    val pace = when {
+        limit <= 0.0 -> null
+        kotlin.math.abs(ahead) <= (limit * 0.02).coerceAtLeast(1.0) -> "on pace"
+        ahead > 0 -> "${money(ahead)} ahead"
+        else -> "${money(-ahead)} over"
+    }
+    val heroSub = listOfNotNull(
+        if (overCount > 0) "$daysSub · $overCount over budget" else daysSub,
+        pace
+    ).joinToString(" · ")
 
-    LScreen(title = "Plan", snackbarHost = { SnackbarHost(snackbar) }) {
+    LScreen(title = "Budget", snackbarHost = { SnackbarHost(snackbar) }) {
         item(key = "hero") {
-            LHero(
-                label = "Budget left",
-                value = money(budgetState.totalRemaining),
-                sub = heroSub,
-                valueColor = if (budgetState.totalRemaining < 0) L.Danger else L.OnBox
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LHero(
+                    label = "Budget left",
+                    value = money(budgetState.totalRemaining),
+                    sub = heroSub,
+                    valueColor = if (budgetState.totalRemaining < 0) L.Danger else L.OnBox
+                )
+                if (limit > 0.0) {
+                    LProgress(
+                        fraction = (spent / limit).toFloat(),
+                        marker = marker,
+                        color = if (spent > limit) L.Danger else L.Gold
+                    )
+                }
+            }
         }
         budgetItems(
             state = budgetState,
+            today = today,
             onAdd = { addingBudget = true },
             onEdit = { editingBudget = it.id },
             onAsk = { links.voice(VoiceSeg.Ask) },
@@ -113,7 +141,8 @@ fun MoneyPlanScreen(
             state = forecast,
             expanded = forecastOpen,
             onToggle = { forecastOpen = !forecastOpen },
-            onPredict = forecastVm::generateForecast
+            onPredict = forecastVm::generateForecast,
+            onOwed = { links.money(MoneySeg.Owed) }
         )
     }
 

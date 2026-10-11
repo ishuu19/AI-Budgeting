@@ -2,64 +2,53 @@ package com.ledgerai.app.presentation.screens.capture
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ledgerai.app.data.capture.AskResult
-import com.ledgerai.app.presentation.components.AsyncUriThumb
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LCard
 import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
+import com.ledgerai.app.presentation.components.LProgress
+import com.ledgerai.app.presentation.components.LTextLink
 import com.ledgerai.app.presentation.components.LocalPhoto
 import java.io.File
 
-private val Prompts = listOf("What can I cook today?", "I have a party tonight", "What should I wear today?")
-
 /**
- * The one input. Used in the Capture tab and in the floating quick-capture window.
+ * The one input. Used in the floating quick-capture window.
  * Mic, camera and gallery all feed the same box; the AI decides what the input is.
  */
 @Composable
@@ -106,168 +95,126 @@ fun CaptureComposer(
         if (autoMic) toggleMic() else if (autoCamera) openCamera()
     }
 
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = ui.text,
-            onValueChange = vm::setText,
-            placeholder = {
-                Text(
-                    if (ui.listening) "Listening…" else "Say, type or snap anything",
-                    color = L.InkMuted,
-                )
-            },
-            minLines = 2,
-            maxLines = 5,
-            shape = RoundedCornerShape(L.Radius),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = L.Primary,
-                unfocusedBorderColor = L.Line,
-                focusedContainerColor = L.Box,
-                unfocusedContainerColor = L.Box,
-                cursorColor = L.Primary,
-                focusedTextColor = L.Ink,
-                unfocusedTextColor = L.Ink,
-            ),
-            modifier = Modifier.fillMaxWidth(),
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        AskComposer(
+            text = ui.text,
+            onText = vm::setText,
+            images = ui.images,
+            listening = ui.listening,
+            canSend = !ui.busy && (ui.text.isNotBlank() || ui.images.isNotEmpty()),
+            notice = ui.notice,
+            showStarters = ui.text.isBlank() && ui.images.isEmpty(),
+            showBusy = ui.busy,
+            onMic = ::toggleMic,
+            onSend = vm::submit,
+            onCamera = ::openCamera,
+            onGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onRemoveImage = vm::removeImage,
+            onStarter = vm::quickAsk,
+            onManual = onManual,
         )
-
-        if (ui.images.isNotEmpty()) {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ui.images.forEach { uri -> Attachment(uri) { vm.removeImage(uri) } }
-            }
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            RoundAction(
-                icon = if (ui.listening) Icons.Filled.Stop else Icons.Filled.Mic,
-                label = if (ui.listening) "Stop listening" else "Speak",
-                filled = ui.listening,
-                onClick = ::toggleMic,
-            )
-            RoundAction(Icons.Filled.PhotoCamera, "Take a photo", onClick = ::openCamera)
-            RoundAction(
-                Icons.Filled.PhotoLibrary, "Choose photos",
-                onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-            )
-            Box(Modifier.weight(1f))
-            val canSend = !ui.busy && (ui.text.isNotBlank() || ui.images.isNotEmpty())
-            Box(
-                Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(if (canSend) L.Highlight else L.BoxDeep)
-                    .semantics { role = Role.Button; contentDescription = "Send" }
-                    .clickable(enabled = canSend, onClick = vm::submit),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Filled.Send, contentDescription = null, tint = if (canSend) L.Ink else L.InkMuted)
-            }
-        }
-
-        if (ui.text.isBlank() && ui.images.isEmpty()) {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Prompts.forEach { p -> LChip(p, selected = false, onClick = { vm.quickAsk(p) }) }
-            }
-        }
-
-        if (onManual != null) {
-            Text(
-                "Add manually",
-                style = MaterialTheme.typography.labelLarge,
-                color = L.Primary,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onManual).padding(vertical = 6.dp, horizontal = 4.dp)
-            )
-        }
-
-        ui.notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted) }
-        if (ui.busy) Text("Thinking…", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
-
         AnswerCards(ui.answer, vm)
-    }
-}
-
-@Composable
-private fun RoundAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    filled: Boolean = false,
-    onClick: () -> Unit,
-) {
-    Box(
-        Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(if (filled) L.Primary else L.Box)
-            .border(BorderStroke(1.dp, L.Line), CircleShape)
-            .semantics { role = Role.Button; contentDescription = label }
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = null, tint = if (filled) L.OnPrimary else L.Primary)
-    }
-}
-
-@Composable
-private fun Attachment(uri: Uri, onRemove: () -> Unit) {
-    Box(Modifier.size(72.dp)) {
-        AsyncUriThumb(uri, Modifier.size(72.dp).clip(RoundedCornerShape(L.RadiusSm)))
-        Box(
-            Modifier
-                .align(Alignment.TopEnd)
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(L.Ink.copy(alpha = 0.75f))
-                .semantics { role = Role.Button; contentDescription = "Remove photo" }
-                .clickable(onClick = onRemove),
-            contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Filled.Close, contentDescription = null, tint = L.Page, modifier = Modifier.size(14.dp)) }
     }
 }
 
 /** The AI's reply to a meal or outfit question. Used by the composer and the chat. */
 @Composable
 internal fun AnswerCards(answer: AskResult?, vm: CaptureViewModel) {
-        when (val answer = answer) {
-            is AskResult.Meals -> answer.ideas.forEach { idea ->
+    when (val answer = answer) {
+        is AskResult.Meals -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            answer.ideas.forEachIndexed { index, idea ->
+                var open by rememberSaveable(index, idea.title) { mutableStateOf(false) }
+                val have = idea.uses.size
+                val total = have + idea.missing.size
                 LCard {
-                    Text(idea.title, style = MaterialTheme.typography.titleMedium, color = L.OnBox)
-                    Text(
-                        listOfNotNull(idea.minutes?.let { "$it min" }, if (idea.missing.isEmpty()) "You have everything" else null).joinToString(" · "),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = L.Gold,
-                    )
-                    if (idea.uses.isNotEmpty()) {
-                        Text("From your pantry: ${idea.uses.joinToString()}", style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted)
+                    Text(idea.title, style = MaterialTheme.typography.titleMedium, color = L.OnBox, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (idea.minutes != null || idea.missing.isEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            idea.minutes?.let { minutes ->
+                                Text("$minutes min", style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted)
+                            }
+                            if (idea.missing.isEmpty()) {
+                                Icon(
+                                    Icons.Filled.Check,
+                                    contentDescription = "Have everything",
+                                    tint = L.Primary,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
                     }
-                    if (idea.missing.isNotEmpty()) {
-                        Text("You need: ${idea.missing.joinToString()}", style = MaterialTheme.typography.bodyMedium, color = L.Highlight)
+                    if (total > 0) {
+                        Text("$have of $total ingredients", style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted)
+                        LProgress(have.toFloat() / total.toFloat())
                     }
-                    idea.steps.forEachIndexed { i, step ->
-                        Text("${i + 1}. $step", style = MaterialTheme.typography.bodyMedium, color = L.OnBox)
+                    if (idea.uses.isNotEmpty() || idea.missing.isNotEmpty()) {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            idea.uses.forEach { name -> LChip(name, selected = true, onClick = {}) }
+                            idea.missing.forEach { name -> LChip(name, selected = false, onClick = {}) }
+                        }
+                    }
+                    if (idea.steps.isNotEmpty()) {
+                        LTextLink(if (open) "Hide steps" else "Steps", { open = !open })
+                        if (open) {
+                            idea.steps.forEachIndexed { stepIndex, step ->
+                                Text("${stepIndex + 1}. $step", style = MaterialTheme.typography.bodyMedium, color = L.OnBox)
+                            }
+                        }
                     }
                 }
             }
-            is AskResult.Outfits -> answer.ideas.forEach { idea ->
+        }
+        is AskResult.Outfits -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            answer.ideas.forEachIndexed { index, idea ->
+                var showWhy by rememberSaveable(index, idea.title) { mutableStateOf(false) }
                 LCard {
                     Text(idea.title, style = MaterialTheme.typography.titleMedium, color = L.OnBox)
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        idea.itemIds.mapNotNull { answer.garments[it] }.forEach { g ->
+                        idea.itemIds.mapNotNull { answer.garments[it] }.forEach { garment ->
                             Column(Modifier.size(width = 84.dp, height = 112.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                // Only the picked garments load a photo, and only from this phone.
                                 LocalPhoto(
-                                    file = g.photoPath?.let { vm.thumb(it) } ?: File(""),
+                                    file = garment.photoPath?.let { vm.thumb(it) } ?: File(""),
                                     modifier = Modifier.size(84.dp).clip(RoundedCornerShape(L.RadiusSm)),
                                 )
-                                Text(g.name, style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted, maxLines = 1)
+                                Text(garment.name, style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted, maxLines = 1)
                             }
                         }
                     }
                     if (idea.why.isNotBlank()) {
-                        Text(idea.why, style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted)
+                        Text(
+                            idea.why,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = L.OnBoxMuted,
+                            maxLines = if (showWhy) Int.MAX_VALUE else 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .clickable { showWhy = !showWhy }
+                                .padding(vertical = 8.dp),
+                        )
                     }
                 }
             }
-            is AskResult.Empty -> Text(answer.reason, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
-            AskResult.LogIt, null -> Unit
         }
+        is AskResult.Shopping -> if (answer.items.isNotEmpty()) {
+            var added by rememberSaveable(answer) { mutableStateOf<Int?>(null) }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Worth buying", style = MaterialTheme.typography.titleMedium, color = L.OnBox)
+                LGroup {
+                    answer.items.forEachIndexed { index, item ->
+                        if (index > 0) LGroupDivider()
+                        LGroupRow(title = item.name, sub = item.reason.ifBlank { null })
+                    }
+                }
+                LButton(
+                    if (added == null) "Add all" else "Added $added",
+                    onClick = { if (added == null) vm.addToShopping(answer.items.map { it.name }) { added = it } },
+                    enabled = added == null,
+                )
+            }
+        }
+        is AskResult.Empty -> Text(answer.reason, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
+        AskResult.LogIt, null -> Unit
+    }
 }

@@ -1,7 +1,5 @@
 package com.ledgerai.app.presentation.screens.capture
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Checkroom
@@ -11,8 +9,9 @@ import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import com.ledgerai.app.presentation.components.LRow
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.navigation.AppLinks
 import com.ledgerai.app.presentation.navigation.LifeSeg
@@ -26,15 +25,21 @@ import com.ledgerai.app.presentation.navigation.VoiceSeg
 @Composable
 fun ManualAddSheet(links: AppLinks, onDismiss: () -> Unit) {
     fun go(action: () -> Unit): () -> Unit = { onDismiss(); action() }
+    val rows = listOf(
+        Triple("Income or spending", Icons.Filled.Payments, go(links.addExpense)),
+        Triple("Task", Icons.Filled.CheckCircle, go { links.plan(PlanSeg.Tasks) }),
+        Triple("Event or reminder", Icons.Filled.CalendarMonth, go { links.plan(PlanSeg.Calendar) }),
+        Triple("Note", Icons.Filled.StickyNote2, go { links.voice(VoiceSeg.Notes) }),
+        Triple("Pantry item", Icons.Filled.Kitchen, go { links.life(LifeSeg.Pantry) }),
+        Triple("Clothes", Icons.Filled.Checkroom, go { links.life(LifeSeg.Wardrobe) }),
+        Triple("Person", Icons.Filled.Groups, go { links.life(LifeSeg.People) }),
+    )
     LSheet(title = "Add manually", onDismiss = onDismiss, primary = "Close", onPrimary = onDismiss) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            LRow("Expense or income", icon = Icons.Filled.Payments, onClick = go(links.addExpense))
-            LRow("Task", icon = Icons.Filled.CheckCircle, onClick = go { links.plan(PlanSeg.Tasks) })
-            LRow("Event or reminder", icon = Icons.Filled.CalendarMonth, onClick = go { links.plan(PlanSeg.Calendar) })
-            LRow("Note", icon = Icons.Filled.StickyNote2, onClick = go { links.voice(VoiceSeg.Notes) })
-            LRow("Pantry item", icon = Icons.Filled.Kitchen, onClick = go { links.life(LifeSeg.Pantry) })
-            LRow("Clothes", icon = Icons.Filled.Checkroom, onClick = go { links.life(LifeSeg.Wardrobe) })
-            LRow("Person", icon = Icons.Filled.Groups, onClick = go { links.life(LifeSeg.People) })
+        LGroup {
+            rows.forEachIndexed { index, (title, icon, onClick) ->
+                if (index > 0) LGroupDivider()
+                LGroupRow(title = title, icon = icon, onClick = onClick)
+            }
         }
     }
 }

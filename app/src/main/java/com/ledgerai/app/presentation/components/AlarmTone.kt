@@ -3,7 +3,6 @@ package com.ledgerai.app.presentation.components
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
@@ -109,22 +107,24 @@ fun ToneChips(toneUri: String?, onTone: (String) -> Unit) {
     val selected = toneUri ?: defaultTone
     val isCustom = AlarmToneHelper.builtInTones.none { it.uriString == selected }
     val preview = rememberTonePreview()
+    var notice by remember { mutableStateOf<String?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri == null) return@rememberLauncherForActivityResult
         AlarmToneHelper.copyCustomTone(context, uri)
             .onSuccess { path -> onTone(path) }
-            .onFailure { e -> Toast.makeText(context, e.message ?: "Import failed", Toast.LENGTH_LONG).show() }
+            .onFailure { notice = "Import failed" }
     }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Tone", style = MaterialTheme.typography.titleSmall, color = L.Ink)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(L.Space.x4)) {
+        LFieldLabel("Tone")
         ChipsRow {
-            if (isCustom) LChip(AlarmToneHelper.displayName(selected), selected = true, onClick = {})
+            if (isCustom) LFilterChip(AlarmToneHelper.displayName(selected), selected = true, onClick = {})
             AlarmToneHelper.builtInTones.forEach { tone ->
-                LChip(tone.displayName, selected = selected == tone.uriString, onClick = { onTone(tone.uriString) })
+                LFilterChip(tone.displayName, selected = selected == tone.uriString, onClick = { onTone(tone.uriString) })
             }
-            LChip("Custom", selected = false, onClick = { picker.launch(arrayOf("audio/*")) })
+            LActionChip("Custom", onClick = { picker.launch(arrayOf("audio/*")) })
         }
         ChipsRow { TonePreviewButton(selected, preview) }
+        notice?.let { LSnackbar(it) }
     }
 }
 
@@ -139,14 +139,14 @@ fun LIconTextChip(
     Box(modifier.heightIn(min = 48.dp).clickable(role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
         Row(
             Modifier
-                .clip(RoundedCornerShape(50))
-                .border(1.dp, L.Primary.copy(alpha = 0.35f), RoundedCornerShape(50))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .clip(L.RadiusPill)
+                .border(1.dp, L.Line, L.RadiusPill)
+                .padding(horizontal = L.Space.x16, vertical = L.Space.x8),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(L.Space.x8)
         ) {
-            Icon(icon, contentDescription = null, tint = L.Primary, modifier = Modifier.size(20.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge, color = L.Primary)
+            Icon(icon, contentDescription = null, tint = L.Ink, modifier = Modifier.size(24.dp))
+            Text(text, style = MaterialTheme.typography.labelLarge, color = L.Ink)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.ledgerai.app.presentation.screens.ai
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,20 +9,25 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -32,9 +38,11 @@ import com.ledgerai.app.domain.model.ChatMessage
 import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
-import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LError
+import com.ledgerai.app.presentation.components.LHeader
+import com.ledgerai.app.presentation.components.LMicButton
 import com.ledgerai.app.presentation.components.LocalEmbedded
+import com.ledgerai.app.presentation.components.rememberVoiceInput
 import com.ledgerai.app.presentation.components.money
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -191,29 +199,24 @@ fun AiAssistantScreen(
                 .consumeWindowInsets(padding)
                 .imePadding()
         ) {
-            // Inside the Voice tab the tab header and segments already say "Ask".
+            // Inside the Voice tab the tab header already names this screen.
             if (!embedded) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = L.Gutter, end = L.Gutter, top = 12.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = L.Ink)
-                    }
-                    Text(
-                        "Ask",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = L.Ink,
-                        modifier = Modifier.weight(1f).semantics { heading() }
-                    )
-                }
+                LHeader(
+                    title = "Chat",
+                    modifier = Modifier.padding(horizontal = L.Gutter, vertical = 8.dp),
+                    onBack = onBack,
+                )
             }
 
             if (itemCount == 0) {
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    LEmpty(Icons.Filled.AutoAwesome, "Ask anything")
+                Column(
+                    Modifier.weight(1f).fillMaxWidth().padding(horizontal = L.Gutter),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    SuggestionChips(onPick = { prompt ->
+                        viewModel.updateInput(prompt)
+                        viewModel.sendMessage()
+                    })
                 }
             } else {
                 LazyColumn(
@@ -228,20 +231,7 @@ fun AiAssistantScreen(
                 }
             }
 
-            if (state.messages.isEmpty() && !state.isTyping) {
-                Box(Modifier.padding(horizontal = L.Gutter, vertical = 8.dp)) {
-                    ChipsRow {
-                        Suggestions.forEach { (label, prompt) ->
-                            LChip(label, selected = false, onClick = {
-                                viewModel.updateInput(prompt)
-                                viewModel.sendMessage()
-                            })
-                        }
-                    }
-                }
-            }
-
-            InputBar(
+            AskComposer(
                 text = state.inputText,
                 onTextChange = viewModel::updateInput,
                 canSend = state.inputText.isNotBlank() && !state.isTyping,
@@ -272,16 +262,8 @@ private fun Bubble(message: ChatMessage) {
             Text(
                 message.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) L.BoxDeep else L.OnBox
+                color = if (isUser) L.OnAccent else L.OnBox
             )
-            message.source?.let { source ->
-                Text(
-                    source,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = L.OnBoxMuted,
-                    modifier = Modifier.semantics { contentDescription = "Answered by $source" }
-                )
-            }
         }
     }
 }
@@ -291,13 +273,13 @@ private fun TypingBubble() {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
         Box(
             Modifier
-                .clip(RoundedCornerShape(4.dp, L.Radius, L.Radius, L.Radius))
+                .clip(RoundedCornerShape(8.dp, L.Radius, L.Radius, L.Radius))
                 .background(L.Box)
-                .padding(horizontal = 20.dp, vertical = 14.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(16.dp).semantics { contentDescription = "Thinking" },
-                color = L.Gold,
+                color = L.Primary,
                 strokeWidth = 2.dp
             )
         }
@@ -305,46 +287,84 @@ private fun TypingBubble() {
 }
 
 @Composable
-private fun InputBar(text: String, onTextChange: (String) -> Unit, canSend: Boolean, onSend: () -> Unit) {
-    HorizontalDivider(color = L.Line)
+private fun SuggestionChips(onPick: (String) -> Unit) {
+    ChipsRow {
+        Suggestions.forEach { (label, prompt) ->
+            LChip(label, selected = false, onClick = { onPick(prompt) })
+        }
+    }
+}
+
+/** Pill composer: mic fills the field, send when there is text. */
+@Composable
+private fun AskComposer(text: String, onTextChange: (String) -> Unit, canSend: Boolean, onSend: () -> Unit) {
+    val voice = rememberVoiceInput(onTextChange)
+    val listening = voice.listening
+    val sendMode = canSend && !listening
+    val shape = RoundedCornerShape(L.Radius)
     Row(
         Modifier
             .fillMaxWidth()
             .background(L.Page)
-            .padding(horizontal = L.Gutter, vertical = 12.dp),
+            .padding(horizontal = L.Gutter, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = onTextChange,
-            placeholder = { Text("Ask", color = L.InkMuted) },
-            maxLines = 4,
-            shape = RoundedCornerShape(L.RadiusSm),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = L.Primary,
-                unfocusedBorderColor = L.Line,
-                cursorColor = L.Primary,
-                focusedTextColor = L.Ink,
-                unfocusedTextColor = L.Ink
-            ),
-            modifier = Modifier.weight(1f)
-        )
-        Box(
+        Row(
             Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(if (canSend) L.Gold else L.Gold.copy(alpha = 0.4f))
-                .semantics { role = Role.Button }
-                .clickable(enabled = canSend, onClick = onSend),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .clip(shape)
+                .background(L.Box)
+                .border(1.dp, L.Line, shape)
+                .padding(start = 16.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Send",
-                tint = L.BoxDeep,
-                modifier = Modifier.size(20.dp)
-            )
+            Box(Modifier.weight(1f).padding(vertical = 16.dp)) {
+                if (text.isEmpty()) {
+                    Text(
+                        if (listening) "Listening…" else "Ask or say…",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = L.InkMuted,
+                        maxLines = 1,
+                    )
+                }
+                BasicTextField(
+                    value = text,
+                    onValueChange = onTextChange,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = L.Ink),
+                    cursorBrush = SolidColor(L.Accent),
+                    maxLines = 4,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
+        when {
+            sendMode -> ComposerAction(Icons.AutoMirrored.Filled.Send, "Send", L.Accent, L.OnAccent, onSend)
+            listening -> ComposerAction(Icons.Filled.Stop, "Stop listening", L.Danger, L.OnAccent, voice.toggle)
+            else -> LMicButton(onClick = voice.toggle, label = "Speak")
+        }
+    }
+}
+
+@Composable
+private fun ComposerAction(
+    icon: ImageVector,
+    label: String,
+    fill: Color,
+    tint: Color,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .size(L.Mic)
+            .clip(CircleShape)
+            .background(fill)
+            .semantics { role = Role.Button; contentDescription = label }
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
     }
 }

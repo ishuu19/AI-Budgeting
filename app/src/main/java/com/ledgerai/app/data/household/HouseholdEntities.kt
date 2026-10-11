@@ -30,6 +30,8 @@ data class HouseholdMemberEntity(
     val joinedAt: LocalDateTime,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null,
+    /** The name the household uses for this person. Empty until someone sets it. */
+    val displayName: String = "",
 )
 
 fun HouseholdEntity.toDomain() = Household(
@@ -47,4 +49,5 @@ fun HouseholdMemberEntity.toDomain() = HouseholdMember(
     joinedAt = joinedAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
+    displayName = displayName,
 )

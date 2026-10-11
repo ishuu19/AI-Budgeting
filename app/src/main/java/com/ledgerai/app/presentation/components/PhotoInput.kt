@@ -1,8 +1,5 @@
 package com.ledgerai.app.presentation.components
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -15,10 +12,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
@@ -82,34 +76,19 @@ fun rememberPhotoActions(max: Int = 1, onPicked: (List<Uri>) -> Unit): PhotoActi
 @Composable
 fun PhotoField(photo: Uri?, onPhoto: (Uri?) -> Unit, modifier: Modifier = Modifier) {
     val actions = rememberPhotoActions { onPhoto(it.firstOrNull()) }
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(L.Space.x8), verticalAlignment = Alignment.CenterVertically) {
         if (photo != null) {
-            Box(Modifier.size(96.dp)) {
-                AsyncUriThumb(photo, Modifier.size(96.dp).clip(RoundedCornerShape(L.RadiusSm)))
-                Box(
-                    Modifier.align(Alignment.TopEnd).size(28.dp).clip(RoundedCornerShape(50)).background(L.Ink.copy(alpha = 0.75f))
-                        .clickable { onPhoto(null) },
-                    contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Filled.Close, contentDescription = "Remove photo", tint = L.Page, modifier = Modifier.size(16.dp)) }
+            Box(Modifier.size(L.ThumbLg)) {
+                AsyncUriThumb(photo, Modifier.size(L.ThumbLg).clip(RoundedCornerShape(L.Radius)))
+                LRemoveBadge({ onPhoto(null) }, Modifier.align(Alignment.TopEnd), "Remove photo")
             }
         }
-        PhotoButton(Icons.Filled.PhotoCamera, if (photo == null) "Take photo" else "Retake", actions.shoot)
-        PhotoButton(Icons.Filled.PhotoLibrary, "Choose", actions.pick)
+        PhotoButton(Icons.Filled.PhotoCamera, "Camera", actions.shoot)
+        PhotoButton(Icons.Filled.PhotoLibrary, "Gallery", actions.pick)
     }
 }
 
 @Composable
 fun PhotoButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .clip(RoundedCornerShape(50))
-            .background(L.BoxDeep)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(icon, contentDescription = null, tint = L.Primary, modifier = Modifier.size(20.dp))
-        androidx.compose.material3.Text(label, style = androidx.compose.material3.MaterialTheme.typography.labelLarge, color = L.Primary)
-    }
+    LIconTextChip(label, icon, onClick)
 }

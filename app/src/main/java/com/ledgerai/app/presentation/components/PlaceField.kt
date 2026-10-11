@@ -1,16 +1,13 @@
 package com.ledgerai.app.presentation.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.ledgerai.app.data.places.PlaceSearchService
 import com.ledgerai.app.domain.util.PlaceLinks
 import dagger.hilt.android.EntryPointAccessors
@@ -62,11 +59,11 @@ fun LPlaceField(
         context.startActivity(intent)
     }
 
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(L.Space.x8)) {
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(L.Space.x8)
         ) {
             LField(
                 value = query,
@@ -88,64 +85,43 @@ fun LPlaceField(
                 label = label,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(
-                onClick = { openMapsSearch(query) },
-                enabled = query.trim().length >= 2
-            ) {
-                Icon(Icons.Default.OpenInNew, contentDescription = "Search in Google Maps", tint = L.Primary)
-            }
+            LToolButton(
+                Icons.Filled.Map,
+                "Maps",
+                { openMapsSearch(query) },
+                enabled = query.trim().length >= 2,
+            )
         }
         if (searching) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
         }
         if (suggestions.isNotEmpty()) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = L.Line.copy(alpha = 0.35f)
-            ) {
-                Column(Modifier.padding(4.dp)) {
-                    suggestions.forEach { place ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onLocationChange(place.displayName)
-                                    query = place.displayName
-                                    onLinksChange(PlaceLinks.mergeMapsLink(links, place.mapsUrl))
-                                    suggestions = emptyList()
-                                }
-                                .heightIn(min = 48.dp)
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Default.Map, contentDescription = null, tint = L.Primary, modifier = Modifier.size(20.dp))
-                            Text(
-                                place.displayName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = L.Ink,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
+            LGroup {
+                suggestions.forEachIndexed { index, place ->
+                    if (index > 0) LGroupDivider()
+                    LGroupRow(
+                        title = place.displayName,
+                        icon = Icons.Filled.Map,
+                        onClick = {
+                            onLocationChange(place.displayName)
+                            query = place.displayName
+                            onLinksChange(PlaceLinks.mergeMapsLink(links, place.mapsUrl))
+                            suggestions = emptyList()
+                        },
+                    )
                 }
             }
         }
         val mapsLine = links.lines().firstOrNull { it.contains("google.com/maps") }
         if (mapsLine != null) {
-            Text(
-                "Open saved Maps link",
-                style = MaterialTheme.typography.labelSmall,
-                color = L.Gold,
-                modifier = Modifier.clickable {
-                    context.startActivity(
-                        android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse(mapsLine.trim())
-                        )
+            LIconTextChip("Maps", Icons.Filled.Map, onClick = {
+                context.startActivity(
+                    android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse(mapsLine.trim())
                     )
-                }
-            )
+                )
+            })
         }
     }
 }

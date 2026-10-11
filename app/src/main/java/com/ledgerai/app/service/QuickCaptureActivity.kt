@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,12 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LToolButton
 import com.ledgerai.app.presentation.screens.capture.CaptureComposer
 import com.ledgerai.app.presentation.screens.capture.CaptureEvent
 import com.ledgerai.app.presentation.screens.capture.CaptureViewModel
 import com.ledgerai.app.presentation.theme.LedgerAITheme
 import com.ledgerai.app.widget.WidgetActions
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * The app without opening the app. A floating sheet over whatever is on screen, with the same
@@ -73,7 +75,7 @@ class QuickCaptureActivity : ComponentActivity() {
                             is CaptureEvent.Saved -> {
                                 Toast.makeText(
                                     this@QuickCaptureActivity,
-                                    "Saved. I'll sort it out in the background.",
+                                    "Sent — sorting it now",
                                     Toast.LENGTH_SHORT,
                                 ).show()
                                 finish()
@@ -90,7 +92,7 @@ class QuickCaptureActivity : ComponentActivity() {
                 ) {
                     Surface(
                         color = L.Page,
-                        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                        shape = RoundedCornerShape(topStart = L.Radius, topEnd = L.Radius),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { },
@@ -101,22 +103,18 @@ class QuickCaptureActivity : ComponentActivity() {
                                 .imePadding()
                                 .heightIn(max = 640.dp)
                                 .verticalScroll(rememberScrollState())
-                                .padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                                .padding(horizontal = L.Gutter)
+                                .padding(top = 16.dp, bottom = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    "Add or ask",
+                                    homeTitle(),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = L.Ink,
                                     modifier = Modifier.weight(1f),
                                 )
-                                Icon(
-                                    Icons.Filled.Close,
-                                    contentDescription = "Close",
-                                    tint = L.InkMuted,
-                                    modifier = Modifier.clickable { finish() }.padding(8.dp),
-                                )
+                                LToolButton(Icons.Filled.Close, "Close", onClick = { finish() })
                             }
                             CaptureComposer(
                                 vm = vm,
@@ -146,11 +144,15 @@ class QuickCaptureActivity : ComponentActivity() {
         (if (Build.VERSION.SDK_INT >= 33) intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
         else intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)).orEmpty()
 
+    private fun homeTitle(): String = LocalDate.now().format(HomeTitle)
+
     companion object {
         const val ACTION_QUICK_CAPTURE = "com.ledgerai.app.action.QUICK_CAPTURE"
         const val EXTRA_MODE = "capture_mode"
         const val MODE_VOICE = "voice"
         const val MODE_CAMERA = "camera"
+
+        private val HomeTitle = DateTimeFormatter.ofPattern("EEE d MMM")
 
         fun intent(context: Context, mode: String? = null): Intent =
             Intent(context, QuickCaptureActivity::class.java)

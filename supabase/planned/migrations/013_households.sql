@@ -25,7 +25,8 @@ create table if not exists public.household_members (
   joined_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
-  primary key (household_id, user_id)
+  primary key (household_id, user_id),
+  display_name text not null default '' check (char_length(display_name) <= 60)
 );
 
 create index if not exists household_members_user_id_idx

@@ -19,7 +19,7 @@ import dagger.hilt.android.EntryPointAccessors
 
 /**
  * Life tab: the things you own and the people around you, in one place.
- * Pantry (stock and shopping), Wardrobe, People (memories) and Home (shared living).
+ * Pantry, wardrobe, people and household.
  * The Capture tab files photos into these.
  */
 @Composable
@@ -36,7 +36,8 @@ fun LifeTab(
         title = "Life",
         segments = { LSegments(LifeSeg.values().toList(), seg, { it.label }, onSeg) }
     ) {
-        when (seg) {
+        com.ledgerai.app.presentation.components.LSwipePages(LifeSeg.entries, seg, onSeg) { page ->
+        when (page) {
             LifeSeg.Pantry -> {
                 val repository = remember(appContext) {
                     EntryPointAccessors.fromApplication(appContext, InventoryEntryPoint::class.java).inventoryRepository()
@@ -51,12 +52,13 @@ fun LifeTab(
                 WardrobeScreen(userId = user.userId, repository = repository, onBack = {})
             }
             LifeSeg.People -> {
-                val repository = remember(appContext) {
-                    EntryPointAccessors.fromApplication(appContext, PeopleEntryPoint::class.java).peopleRepository()
+                val entry = remember(appContext) {
+                    EntryPointAccessors.fromApplication(appContext, PeopleEntryPoint::class.java)
                 }
                 PeopleScreen(
                     userId = user.userId,
-                    repository = repository,
+                    repository = entry.peopleRepository(),
+                    interactions = entry.interactionRepository(),
                     onOpenPerson = { person -> onOpenPerson(person.id) },
                     onBack = {},
                 )
@@ -65,8 +67,9 @@ fun LifeTab(
                 val repository = remember(appContext) {
                     EntryPointAccessors.fromApplication(appContext, HouseholdEntryPoint::class.java).householdRepository()
                 }
-                HouseholdScreen(userId = user.userId, repository = repository, onBack = {})
+                HouseholdScreen(userId = user.userId, repository = repository, onBack = {}, selfName = user.displayName)
             }
+        }
         }
     }
 }

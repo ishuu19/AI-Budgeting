@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -19,9 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.domain.model.CalendarEvent
@@ -44,7 +41,6 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -75,8 +71,6 @@ enum class AddKind(val label: String) {
         }
     }
 }
-
-private val ErrorInk = Color(0xFFB3261E)
 
 private val DateSaver = Saver<LocalDate, Long>(save = { it.toEpochDay() }, restore = { LocalDate.ofEpochDay(it) })
 private val OptDateSaver = Saver<LocalDate?, Long>(
@@ -209,8 +203,6 @@ fun PlanAddSheet(
     var saving by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val dateFmt = remember { DateTimeFormatter.ofPattern("MMM d, yyyy") }
-    val timeFmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
     val canRemind = kind.calendarKind?.let { EventReminderRules.supportsReminders(it) } == true
     val timed = when {
         isTask -> hasDate && !noTime
@@ -303,7 +295,7 @@ fun PlanAddSheet(
     }
 
     LSheet(
-        title = if (editing) "Edit ${kind.label.lowercase()}" else "Add",
+        title = if (editing) "Edit ${kind.label.lowercase()}" else "New ${kind.label.lowercase()}",
         onDismiss = onDismiss,
         primary = when {
             saving -> "Saving"
@@ -355,7 +347,7 @@ fun PlanAddSheet(
                         deadline ?: defaultDate.plusDays(7),
                         selected = deadline != null,
                         onDate = { deadline = it },
-                        label = deadline?.format(dateFmt) ?: "Pick date"
+                        label = deadline?.let { relativeDate(it) } ?: "Pick date"
                     )
                 }
             }
@@ -386,7 +378,7 @@ fun PlanAddSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Nudges", style = MaterialTheme.typography.titleSmall, color = L.Ink)
-                    Switch(
+                    LSwitch(
                         checked = nudges,
                         onCheckedChange = { nudges = it },
                         modifier = Modifier.semantics { contentDescription = "Nudges" }
@@ -403,13 +395,13 @@ fun PlanAddSheet(
                             date,
                             selected = hasDate,
                             onDate = { date = it; hasDate = true },
-                            label = if (hasDate) date.format(dateFmt) else "Pick date"
+                            label = if (hasDate) relativeDate(date) else "Pick date"
                         )
                         if (hasDate) LChip("No time", selected = noTime, onClick = { noTime = !noTime })
                     }
                 } else {
                     ChipsRow {
-                        DatePickChip(date, selected = true, onDate = { date = it }, label = date.format(dateFmt))
+                        DatePickChip(date, selected = true, onDate = { date = it }, label = relativeDate(date))
                         if (hasEnd) LChip("All day", selected = allDay, onClick = { allDay = !allDay })
                     }
                 }
@@ -422,13 +414,13 @@ fun PlanAddSheet(
                                 startMin = minutesOf(t)
                                 endMin = (startMin + length) % (24 * 60)
                             },
-                            label = if (hasEnd) "From ${timeOf(startMin).format(timeFmt)}" else null
+                            label = if (hasEnd) "From ${localeTime(timeOf(startMin))}" else null
                         )
                         if (hasEnd) {
                             TimePickChip(
                                 timeOf(endMin),
                                 { endMin = minutesOf(it) },
-                                label = "To ${timeOf(endMin).format(timeFmt)}"
+                                label = "To ${localeTime(timeOf(endMin))}"
                             )
                         }
                     }
@@ -462,7 +454,7 @@ fun PlanAddSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Leave by", style = MaterialTheme.typography.titleSmall, color = L.Ink)
-                            Switch(
+                            LSwitch(
                                 checked = leaveBy,
                                 onCheckedChange = { leaveBy = it },
                                 modifier = Modifier.semantics { contentDescription = "Leave by" }
@@ -511,13 +503,13 @@ fun PlanAddSheet(
                         ChipsRow {
                             specificDates.sorted().forEach { d ->
                                 LChip(
-                                    d.format(dateFmt),
+                                    relativeDate(d),
                                     selected = true,
                                     onClick = { specificDates = specificDates - d },
-                                    modifier = Modifier.semantics { contentDescription = "Remove ${d.format(dateFmt)}" }
+                                    modifier = Modifier.semantics { contentDescription = "Remove ${relativeDate(d)}" }
                                 )
                             }
-                            DatePickChip(date, selected = false, onDate = { specificDates = specificDates + it }, label = "Add date")
+                            DatePickChip(date, selected = false, onDate = { specificDates = specificDates + it }, label = "New date")
                         }
                     }
                     if (frequency != RecurrenceFrequency.NONE) {
@@ -526,7 +518,7 @@ fun PlanAddSheet(
                                 untilDate ?: date,
                                 selected = untilDate != null,
                                 onDate = { untilDate = it },
-                                label = untilDate?.format(dateFmt)?.let { "Until $it" } ?: "No end"
+                                label = untilDate?.let { "Until ${relativeDate(it)}" } ?: "No end"
                             )
                             if (untilDate != null) LChip("Clear", selected = false, onClick = { untilDate = null })
                         }
@@ -546,18 +538,13 @@ fun PlanAddSheet(
                 }
             }
         }
-        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = ErrorInk) }
+        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
     }
 }
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = L.Ink,
-        modifier = Modifier.semantics { heading() }
-    )
+    LFieldLabel(text)
 }
 
 @Composable

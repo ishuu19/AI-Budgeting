@@ -189,6 +189,10 @@ class CaptureViewModel @Inject constructor(
 
     fun dismissAnswer() = _ui.update { it.copy(answer = null) }
 
+    fun addToShopping(names: List<String>, done: (Int) -> Unit = {}) {
+        viewModelScope.launch { done(askService.addToShopping(names)) }
+    }
+
     // Inbox actions ------------------------------------------------------------------------
 
     fun answerName(id: String, name: String) = viewModelScope.launch { engine.answerName(id, name) }

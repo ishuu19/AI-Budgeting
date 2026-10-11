@@ -36,10 +36,10 @@ fun EventDatePickerDialog(
             showModeToggle = false,
             colors = DatePickerDefaults.colors(
                 containerColor = L.Page,
-                selectedDayContainerColor = L.Box,
-                selectedDayContentColor = L.OnBox,
-                todayDateBorderColor = L.Gold,
-                todayContentColor = L.Primary
+                selectedDayContainerColor = L.Accent,
+                selectedDayContentColor = L.OnAccent,
+                todayDateBorderColor = L.Accent,
+                todayContentColor = L.Accent
             )
         )
     }

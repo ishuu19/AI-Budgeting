@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,7 +31,6 @@ import com.ledgerai.app.domain.util.PlaceLinks
 import com.ledgerai.app.service.AlarmToneHelper
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -73,9 +71,6 @@ fun CalendarEventDetailSheet(
     var scopeSheet by rememberSaveable { mutableStateOf(false) }
     val currentDate = event.instanceDate ?: event.startAt.toLocalDate()
     val context = LocalContext.current
-    val dateTimeFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d · h:mm a") }
-    val dateFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
-    val timeFmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
     val isTask = event.kind == CalendarEventKind.TASK
     val isAlarm = event.kind == CalendarEventKind.ALARM
     val point = isTask || isAlarm
@@ -84,14 +79,13 @@ fun CalendarEventDetailSheet(
     val urls = remember(event.links) { LinkRegex.findAll(event.links).map { it.value }.distinct().toList() }
 
     val body: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit = {
-        Text(event.kind.label(), style = MaterialTheme.typography.labelLarge, color = L.Primary)
+        Text(event.kind.label(), style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
         Text(
             when {
                 !event.hasDate -> "No date"
-                event.allDay && isTask -> event.startAt.format(dateFmt)
-                event.allDay -> event.startAt.format(dateFmt)
-                point -> event.startAt.format(dateTimeFmt)
-                else -> "${event.startAt.format(dateTimeFmt)} – ${event.endAt.format(timeFmt)}"
+                event.allDay -> relativeDate(event.startAt.toLocalDate())
+                point -> "${relativeDate(event.startAt.toLocalDate())} ${localeTime(event.startAt.toLocalTime())}"
+                else -> "${relativeDate(event.startAt.toLocalDate())} ${localeTime(event.startAt.toLocalTime())} – ${localeTime(event.endAt.toLocalTime())}"
             },
             style = MaterialTheme.typography.bodyLarge,
             color = L.Ink
@@ -108,7 +102,7 @@ fun CalendarEventDetailSheet(
                     color = L.Ink,
                     modifier = Modifier.weight(1f)
                 )
-                Switch(
+                LSwitch(
                     checked = event.isEnabled,
                     onCheckedChange = onToggleEnabled,
                     modifier = Modifier.semantics {
@@ -150,13 +144,13 @@ fun CalendarEventDetailSheet(
             LGhostButton("Open link", onClick = { runCatching { context.startActivity(Intent().viewUrl(url)) } })
         }
         if (!isAlarm) LGhostButton("Change date", onClick = { showDatePicker = true })
-        if (isTask) LGhostButton("Edit", onClick = onEdit)
+        if (isTask) LGhostButton("Edit task", onClick = onEdit, fill = false)
     }
 
     val primary = when {
         isTask && event.isCompleted -> "Reopen"
         isTask -> "Complete"
-        else -> "Edit"
+        else -> "Edit ${event.kind.label().lowercase()}"
     }
     val onPrimary = if (isTask) onToggleDone else onEdit
 
@@ -168,6 +162,7 @@ fun CalendarEventDetailSheet(
             onPrimary = onPrimary,
             secondary = "Delete",
             onSecondary = { scopeSheet = true },
+            secondaryDestructive = true,
             content = body
         )
         if (scopeSheet) {
@@ -208,8 +203,6 @@ fun PlanBlockSheet(
     onToggleDone: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dayFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d · h:mm a") }
-    val timeFmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
     val done = block.status == PlanBlockStatus.DONE
     LItemSheet(
         title = block.title,
@@ -222,10 +215,10 @@ fun PlanBlockSheet(
         Text(
             if (block.kind == PlanBlockKind.STUDY) "Study" else "Habit",
             style = MaterialTheme.typography.labelLarge,
-            color = L.Primary
+            color = L.InkMuted
         )
         Text(
-            "${block.startAt.format(dayFmt)} – ${block.endAt.format(timeFmt)}",
+            "${relativeDate(block.startAt.toLocalDate())} ${localeTime(block.startAt.toLocalTime())} – ${localeTime(block.endAt.toLocalTime())}",
             style = MaterialTheme.typography.bodyLarge,
             color = L.Ink
         )
@@ -248,7 +241,6 @@ fun HabitSessionSheet(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dayFmt = remember { DateTimeFormatter.ofPattern("EEE, MMM d · h:mm a") }
     LItemSheet(
         title = habit.title,
         onDismiss = onDismiss,
@@ -257,9 +249,9 @@ fun HabitSessionSheet(
         primaryEnabled = !done,
         onDelete = onDelete
     ) {
-        Text("Habit", style = MaterialTheme.typography.labelLarge, color = L.Primary)
+        Text("Habit", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
         Text(
-            "${date.atTime(habit.startTime).format(dayFmt)} · ${habit.durationMinutes} min",
+            "${relativeDate(date)} ${localeTime(habit.startTime)} · ${habit.durationMinutes} min",
             style = MaterialTheme.typography.bodyLarge,
             color = L.Ink
         )
@@ -269,7 +261,7 @@ fun HabitSessionSheet(
             color = L.InkMuted
         )
         if (!done && date == LocalDate.now()) LGhostButton("Complete", onClick = onComplete)
-        if (done) Text("Done", style = MaterialTheme.typography.bodyMedium, color = L.Primary)
-        LGhostButton("Edit", onClick = onEdit)
+        if (done) Text("Done", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        LGhostButton("Edit habit", onClick = onEdit, fill = false)
     }
 }

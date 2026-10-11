@@ -1,5 +1,9 @@
 package com.ledgerai.app.presentation.screens.money
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -11,9 +15,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LHero
+import com.ledgerai.app.presentation.components.LProgress
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.navigation.OpenItem
@@ -33,11 +41,13 @@ import com.ledgerai.app.presentation.screens.debts.isOverdue
 fun MoneyOwedScreen(
     open: OpenItem?,
     onOpened: () -> Unit,
+    onSubscriptions: () -> Unit = {},
     billsVm: BillsViewModel = hiltViewModel(),
     debtsVm: DebtsViewModel = hiltViewModel()
 ) {
     val bills by billsVm.bills.collectAsState()
-    val monthlyTotal by billsVm.monthlyTotal.collectAsState()
+    val paidThisMonth by billsVm.paidThisMonth.collectAsState()
+    val subscriptions by hiltViewModel<SubscriptionTotalViewModel>().monthly.collectAsState()
     val billMessage by billsVm.message.collectAsState()
     val debtState by debtsVm.uiState.collectAsState()
     val snackbar = remember { SnackbarHostState() }
@@ -49,7 +59,6 @@ fun MoneyOwedScreen(
     var editingDebt by rememberSaveable { mutableStateOf(NO_ID) }
     var repayingDebt by rememberSaveable { mutableStateOf(NO_ID) }
     var debtFilter by rememberSaveable { mutableStateOf(DebtFilter.ALL) }
-    var showSettled by rememberSaveable { mutableStateOf(false) }
 
     SnackEffect(billMessage, snackbar) { billsVm.clearMessage() }
     SnackEffect(debtState.snackbarMessage, snackbar) { debtsVm.clearSnackbar() }
@@ -62,8 +71,7 @@ fun MoneyOwedScreen(
                 editingBill = request.id
                 onOpened()
             }
-            OpenKind.Debt -> allDebts.firstOrNull { it.id == request.id }?.let { debt ->
-                if (debt.isPaid) showSettled = true
+            OpenKind.Debt -> allDebts.firstOrNull { it.id == request.id }?.let { _ ->
                 editingDebt = request.id
                 onOpened()
             }
@@ -74,18 +82,45 @@ fun MoneyOwedScreen(
 
     val monthEnd = today.withDayOfMonth(today.lengthOfMonth())
     val active = bills.filter { it.isActive }
-    val overdueCount = active.count { it.nextDueDate.isBefore(today) } +
-        debtState.activeDebts.count { it.isOverdue(today) }
+    val overdueBills = active.filter { it.nextDueDate.isBefore(today) }
+    val overdueDebts = debtState.activeDebts.filter { it.isOverdue(today) }
+    val overdueCount = overdueBills.size + overdueDebts.size
+    val overdueAmount = overdueBills.sumOf { it.amount } + overdueDebts.sumOf { it.amount }
     val dueThisMonth = active.filter { !it.nextDueDate.isAfter(monthEnd) }.sumOf { it.amount }
+    val paceTotal = paidThisMonth + dueThisMonth
+    val net = debtState.netPosition
+    val netSub = if (debtState.activeDebts.isNotEmpty()) {
+        "Net " + (if (net > 0) "+" else "") + money(net)
+    } else {
+        null
+    }
 
     LScreen(title = "Owed", snackbarHost = { SnackbarHost(snackbar) }) {
         item(key = "hero") {
-            LHero(
-                label = "Due this month",
-                value = money(dueThisMonth),
-                sub = "$overdueCount overdue · ${money(monthlyTotal)} per month",
-                valueColor = if (overdueCount > 0) L.Danger else L.OnBox
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LHero(
+                    label = "Due this month",
+                    value = money(dueThisMonth),
+                    sub = netSub
+                )
+                if (overdueCount > 0) {
+                    Text(
+                        "$overdueCount late · ${money(overdueAmount)}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = L.Danger
+                    )
+                }
+                if (paceTotal > 0.0) LProgress((paidThisMonth / paceTotal).toFloat())
+            }
+        }
+        item(key = "subscriptions") {
+            LGroup {
+                LGroupRow(
+                    title = "Subscriptions",
+                    trailing = subscriptionFigure(subscriptions),
+                    onClick = onSubscriptions
+                )
+            }
         }
         billItems(
             bills = bills,
@@ -98,8 +133,6 @@ fun MoneyOwedScreen(
             state = debtState,
             filter = debtFilter,
             onFilter = { debtFilter = it },
-            showSettled = showSettled,
-            onToggleSettled = { showSettled = !showSettled },
             today = today,
             onAdd = { addingDebt = true },
             onEdit = { editingDebt = it.id },
@@ -110,6 +143,7 @@ fun MoneyOwedScreen(
     if (addingBill) {
         BillSheet(
             existing = null,
+            suggest = billsVm::suggestCategory,
             onDismiss = { addingBill = false },
             onSave = { name, amount, freq, date, cat ->
                 billsVm.addBill(name, amount, freq, date, cat)
@@ -121,6 +155,7 @@ fun MoneyOwedScreen(
         key(bill.id) {
             BillSheet(
                 existing = bill,
+                suggest = billsVm::suggestCategory,
                 onDismiss = { editingBill = NO_ID },
                 onSave = { name, amount, freq, date, cat ->
                     billsVm.updateBill(bill, name, amount, freq, date, cat)
@@ -179,14 +214,6 @@ fun MoneyOwedScreen(
                 onDismiss = { editingDebt = NO_ID },
                 onSave = { name, amount, direction, due, phone, email, note ->
                     debtsVm.updateDebt(debt, name, amount, direction, due, phone, email, note)
-                    editingDebt = NO_ID
-                },
-                onPay = { payment ->
-                    debtsVm.recordPayment(debt, payment)
-                    editingDebt = NO_ID
-                },
-                onSettle = {
-                    debtsVm.markAsPaid(debt)
                     editingDebt = NO_ID
                 },
                 onDelete = {

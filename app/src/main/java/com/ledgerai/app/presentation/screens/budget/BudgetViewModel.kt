@@ -181,7 +181,7 @@ class BudgetViewModel @Inject constructor(
         val advice = BudgetAdviceRules.advise(
             own, lines.filter { it.category != budget.category }, LocalDate.now(),
             fmt = { com.ledgerai.app.presentation.components.money(it) }
-        ) + " (Rules)"
+        )
         _uiState.update { state -> state.copy(aiAdvice = state.aiAdvice + (budget.id to advice)) }
     }
 

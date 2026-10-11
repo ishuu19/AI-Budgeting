@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.domain.model.CalendarEventKind
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 /** Chip that shows a clock time and opens a time picker dialog. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,13 +36,13 @@ fun TimePickChip(
     label: String? = null
 ) {
     var open by remember { mutableStateOf(false) }
-    val fmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
-    LChip(label ?: time.format(fmt), selected, onClick = { open = true }, modifier = modifier)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LActionChip(label ?: localeTime(time), onClick = { open = true }, modifier = modifier, selected = selected)
     if (open) {
         val state = rememberTimePickerState(
             initialHour = time.hour,
             initialMinute = time.minute,
-            is24Hour = false
+            is24Hour = android.text.format.DateFormat.is24HourFormat(context)
         )
         AlertDialog(
             onDismissRequest = { open = false },
@@ -54,18 +53,18 @@ fun TimePickChip(
                         state = state,
                         colors = TimePickerDefaults.colors(
                             clockDialColor = L.Line,
-                            clockDialSelectedContentColor = L.OnBox,
+                            clockDialSelectedContentColor = L.OnAccent,
                             clockDialUnselectedContentColor = L.Ink,
-                            selectorColor = L.Box,
+                            selectorColor = L.Accent,
                             containerColor = L.Page,
-                            periodSelectorBorderColor = L.Primary,
-                            periodSelectorSelectedContainerColor = L.Box,
+                            periodSelectorBorderColor = L.Line,
+                            periodSelectorSelectedContainerColor = L.Accent,
                             periodSelectorUnselectedContainerColor = L.Page,
-                            periodSelectorSelectedContentColor = L.OnBox,
+                            periodSelectorSelectedContentColor = L.OnAccent,
                             periodSelectorUnselectedContentColor = L.Ink,
-                            timeSelectorSelectedContainerColor = L.Box,
+                            timeSelectorSelectedContainerColor = L.Accent,
                             timeSelectorUnselectedContainerColor = L.Line,
-                            timeSelectorSelectedContentColor = L.OnBox,
+                            timeSelectorSelectedContentColor = L.OnAccent,
                             timeSelectorUnselectedContentColor = L.Ink
                         )
                     )
@@ -75,7 +74,7 @@ fun TimePickChip(
                 TextButton(onClick = {
                     onTime(LocalTime.of(state.hour, state.minute))
                     open = false
-                }) { Text("Done", color = L.Primary) }
+                }) { Text("Done", color = L.Accent) }
             },
             dismissButton = {
                 TextButton(onClick = { open = false }) { Text("Cancel", color = L.InkMuted) }

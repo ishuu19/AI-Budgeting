@@ -1,6 +1,5 @@
 package com.ledgerai.app.presentation.screens.analytics
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
@@ -17,8 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -31,17 +28,23 @@ import com.ledgerai.app.presentation.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.ledgerai.app.presentation.theme.CategoryColors
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import javax.inject.Inject
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
 enum class AnalyticsPeriod(val label: String, val months: Long) {
-    MONTH("Month", 1),
+    MONTH("1M", 1),
     QUARTER("3M", 3),
-    YEAR("Year", 12)
+    YEAR("1Y", 12)
 }
+
+data class MonthBar(val label: String, val amount: Double)
 
 data class AnalyticsUiState(
     val period: AnalyticsPeriod = AnalyticsPeriod.MONTH,
@@ -53,6 +56,8 @@ data class AnalyticsUiState(
     val dailyAverageSpend: Double = 0.0,
     val topMerchant: String? = null,
     val topMerchantTotal: Double = 0.0,
+    val previousSpend: Double = 0.0,
+    val monthBars: List<MonthBar> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -87,6 +92,16 @@ class AnalyticsViewModel @Inject constructor(
                         .groupBy { it.merchant.ifBlank { it.category.displayName } }
                         .mapValues { (_, txns) -> txns.sumOf { it.amount } }
                         .maxByOrNull { it.value }
+                    val prevStart = start.minusMonths(p.months)
+                    val previousSpend = all
+                        .filter { it.type == TransactionType.EXPENSE && !it.date.isBefore(prevStart) && it.date.isBefore(start) }
+                        .sumOf { it.amount }
+                    val bars = (0 until p.months).map { index ->
+                        val month = start.plusMonths(index.toLong())
+                        val ym = YearMonth.from(month)
+                        val amount = expenses.filter { YearMonth.from(it.date) == ym }.sumOf { it.amount }
+                        MonthBar(month.month.getDisplayName(TextStyle.NARROW, Locale.getDefault()), amount)
+                    }
 
                     _uiState.update {
                         it.copy(
@@ -99,6 +114,8 @@ class AnalyticsViewModel @Inject constructor(
                             dailyAverageSpend = expenseTotal / dayCount,
                             topMerchant = topMerchant?.key,
                             topMerchantTotal = topMerchant?.value ?: 0.0,
+                            previousSpend = previousSpend,
+                            monthBars = bars,
                             isLoading = false
                         )
                     }
@@ -113,18 +130,9 @@ class AnalyticsViewModel @Inject constructor(
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-private val slicePalette = listOf(
-    L.Gold,
-    L.OnBox,
-    L.GoldSoft,
-    L.OnBox.copy(alpha = 0.55f),
-    L.Gold.copy(alpha = 0.55f),
-    L.OnBox.copy(alpha = 0.3f)
-)
-
-private fun sliceColor(index: Int): Color = slicePalette[index % slicePalette.size]
-
 private const val MAX_SLICES = 5
+
+private fun sliceColor(index: Int): Color = CategoryColors[index % CategoryColors.size]
 
 private data class Slice(val name: String, val amount: Double)
 
@@ -144,9 +152,16 @@ fun AnalyticsScreen(
     val entries = state.categoryTotals.entries.toList()
     val total = state.monthlyExpenses
 
-    LScreen(title = "Insights", onBack = onBack) {
+    val delta = if (state.previousSpend > 0.0) {
+        val pct = ((total - state.previousSpend) / state.previousSpend * 100).toInt()
+        if (pct == 0) null else Delta("${kotlin.math.abs(pct)}% vs prior", up = pct > 0, good = pct < 0)
+    } else {
+        null
+    }
+
+    LScreen(title = "Trends", onBack = onBack) {
         item(key = "period") {
-            LKindChips(AnalyticsPeriod.entries.toList(), state.period, { it.label }, viewModel::setPeriod)
+            LSegments(AnalyticsPeriod.entries.toList(), state.period, { it.label }, viewModel::setPeriod)
         }
 
         if (state.isLoading) {
@@ -154,22 +169,32 @@ fun AnalyticsScreen(
             return@LScreen
         }
 
-        item(key = "numbers") {
-            LGroup {
-                LGroupRow("Income", trailing = money(state.monthlyIncome))
-                LGroupDivider()
-                LGroupRow("Spent", trailing = money(total), trailingColor = L.OnBox)
-                state.savingsRate?.let { rate ->
-                    LGroupDivider()
-                    LGroupRow("Savings rate", trailing = "${"%.0f".format(rate)}%")
+        item(key = "hero") {
+            LHero(label = "Spent", value = money(total), delta = delta)
+        }
+        item(key = "pair") {
+            LSmallPair(
+                left = { modifier ->
+                    LSmallBlock(
+                        "Savings rate",
+                        state.savingsRate?.let { "${"%.0f".format(it)}%" } ?: "—",
+                        modifier = modifier
+                    )
+                },
+                right = { modifier ->
+                    LSmallBlock("Daily average", money(state.dailyAverageSpend), modifier = modifier)
                 }
-                LGroupDivider()
-                LGroupRow("Daily average", trailing = money(state.dailyAverageSpend))
-                state.topMerchant?.let { merchant ->
-                    LGroupDivider()
-                    LGroupRow("Top: $merchant", trailing = money(state.topMerchantTotal))
+            )
+        }
+        state.topMerchant?.let { merchant ->
+            item(key = "merchant") {
+                LGroup {
+                    LGroupRow(title = merchant, trailing = money(state.topMerchantTotal))
                 }
             }
+        }
+        if (state.monthBars.size > 1) {
+            item(key = "bars") { MonthBars(state.monthBars) }
         }
 
         if (entries.isEmpty()) {
@@ -178,38 +203,19 @@ fun AnalyticsScreen(
         }
 
         val slices = toSlices(entries)
+        val sliceColors = slices.indices.map { index ->
+            if (slices[index].name == "Other") L.InkMuted else sliceColor(index)
+        }
         item(key = "donut") {
-            val description = "Spending by category: " + slices.joinToString(", ") {
-                "${it.name} ${if (total > 0) (it.amount / total * 100).toInt() else 0} percent"
-            }
-            LCard(padding = 24.dp) {
-                Box(
-                    Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = description },
-                    contentAlignment = Alignment.Center
-                ) {
-                    SpendDonut(slices.map { it.amount }, Modifier.size(180.dp))
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Spent", style = MaterialTheme.typography.labelSmall, color = L.Gold)
-                        Text(money(total), style = MaterialTheme.typography.titleLarge, color = L.OnBox, maxLines = 1)
-                    }
-                }
-                slices.forEachIndexed { index, slice ->
-                    val pct = if (total > 0) (slice.amount / total * 100).toInt() else 0
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(Modifier.size(12.dp).clip(CircleShape).background(sliceColor(index)))
-                        Text(slice.name, style = MaterialTheme.typography.bodyMedium, color = L.OnBox, modifier = Modifier.weight(1f))
-                        Text("$pct%", style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted)
-                    }
-                }
+            val description = "Spending by category: " + slices.joinToString(", ") { it.name }
+            Box(
+                Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = description },
+                contentAlignment = Alignment.Center
+            ) {
+                LDonut(slices.map { it.amount.toFloat() }, colors = sliceColors)
             }
         }
 
-        item(key = "categories-header") { LSection("Categories") }
-        val max = entries.maxOf { it.value }.coerceAtLeast(1.0)
         item(key = "categories") {
             LGroup {
                 entries.forEachIndexed { index, (cat, amount) ->
@@ -221,10 +227,11 @@ fun AnalyticsScreen(
                             sub = "$pct%",
                             trailing = money(amount),
                             end = {
-                                LProgress(
-                                    fraction = (amount / max).toFloat(),
-                                    modifier = Modifier.width(48.dp),
-                                    color = sliceColor(index)
+                                Box(
+                                    Modifier
+                                        .size(12.dp)
+                                        .clip(CircleShape)
+                                        .background(sliceColor(index))
                                 )
                             }
                         )
@@ -236,27 +243,37 @@ fun AnalyticsScreen(
 }
 
 @Composable
-private fun SpendDonut(values: List<Double>, modifier: Modifier = Modifier) {
-    val sum = values.sum()
-    if (sum <= 0.0) return
-    Canvas(modifier) {
-        val stroke = size.minDimension * 0.14f
-        val inset = stroke / 2f
-        val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
-        val gap = if (values.size > 1) 2f else 0f
-        var start = -90f
-        values.forEachIndexed { i, v ->
-            val sweep = (v / sum * 360f).toFloat()
-            drawArc(
-                color = sliceColor(i),
-                startAngle = start + gap / 2f,
-                sweepAngle = (sweep - gap).coerceAtLeast(0.5f),
-                useCenter = false,
-                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
-                size = arcSize,
-                style = Stroke(width = stroke, cap = StrokeCap.Butt)
-            )
-            start += sweep
+private fun MonthBars(bars: List<MonthBar>) {
+    val max = bars.maxOf { it.amount }.coerceAtLeast(1.0)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().height(64.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            bars.forEach { bar ->
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight((bar.amount / max).toFloat().coerceAtLeast(0.04f))
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = L.Space.x4, topEnd = L.Space.x4))
+                            .background(L.Gold)
+                    )
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            bars.forEach { bar ->
+                Text(
+                    bar.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = L.OnBoxMuted,
+                    modifier = Modifier.weight(1f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
         }
     }
 }
+

@@ -13,6 +13,19 @@ Newest first. Add an entry for every change that touches the assistant, data mod
 - **New in-app look.** Deep blue and white with one amber highlight, light and dark (follows the system). Tokens live in `presentation/theme/Color.kt`; `L.*` getters follow the theme, `L.Primary` is the brand ink on the page. Widget colors are unchanged.
 - The center tab is now **Capture** (tap = Capture segment, hold = voice as before). The old Speak, Notes and Ask segments are still there.
 
+### Cooking ideas fixed
+- "Not possible" appeared even with a full pantry because the model writes ingredients with amounts ("Chicken Leg Piece 6") and the matcher needed an exact name, so everything counted as missing and every idea was rejected. Matching now ignores amounts, units and case, accepts partial names ("onions" is "onion"), and maps back to the pantry item. Anything the model calls missing that the pantry has is no longer missing. The prompt also asks for names only. Reproduced against the real pantry: the AI proposed a chicken and potato curry with nothing missing.
+
+### One toolbar, names, and the AI reads everything you own
+- **One toolbar on every tab** (`LSearchToolbar`): Search, Mic and the tab's own tools spread across the full width; searching turns the row into one larger search box (same size everywhere) with a mic that dictates into it. Used by Plan, Money (Spend), Pantry, Wardrobe and People. It sits above the list, so the keyboard no longer scrolls the list to the top. The second search box and mic on Spend are gone.
+- **Plan search stays on the page.** It filters the calendar (days with a match get a dot) and lists every match below it; Tasks filters the same way.
+- **Profile button on every tab** (the avatar, top right) replaces the three dots. The profile menu no longer repeats Full day, Voice log, Ask about money or Focus timer. Subscriptions moved to the top of Money > Owed (bills).
+- **Swiping tabs:** the tab highlight now follows the page as soon as it is half across, instead of after it settles.
+- **Household shows names.** Room v19 adds `household_members.displayName` (`013_households.sql` updated, still unapplied). An invite is one string, "Name::id": Copy my invite / Paste an invite fills both.
+- **AI uses all of your stuff.** Meals read the whole pantry (up to 300 items, with location, expiry and LOW flags), outfits also see today's calendar, the weather, laundry status and how long ago each piece was worn, and a new "what should I buy" question looks at low and expiring items against the current shopping list and adds the picks to the list in one tap.
+- Spacing: default list gap 16, header and tab rhythm on a 4/8/12 scale, explanatory sentences removed from Wardrobe, People and Home.
+- Wardrobe photo loader falls back to the full image, never crashes on a bad file and logs when it fails. The cause of the reported blank wardrobe photos was not reproduced.
+
 ### AI first, from anywhere (Hong Kong fix)
 - **Cause of "Looking at this…" forever:** Gemini answered "User location is not supported" and OpenRouter "model not available in your region" to calls made straight from a phone in Hong Kong. All AI calls now go through `ai-proxy`, invoked with `x-region: us-east-1`, so the server's region is what the providers see.
 - **`fast_completion` is a provider cascade on the server:** Gemini flash-lite, Gemini flash, xAI Grok, OpenRouter (fast model, then a free model), DeepSeek. The first valid JSON object wins. `XAI_API_KEY`, `XAI_MODEL` and `DEEPSEEK_API_KEY` were added as Edge secrets (never in the APK). Tested end to end with a throwaway user (deleted): three sample sentences and a photo were all answered through the US route.

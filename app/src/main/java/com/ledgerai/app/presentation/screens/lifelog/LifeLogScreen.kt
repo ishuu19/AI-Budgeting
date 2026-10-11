@@ -1,18 +1,20 @@
 package com.ledgerai.app.presentation.screens.lifelog
 
-import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,15 +22,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ledgerai.app.service.VoiceRecordingService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.local.room.ActivityEntryEntity
 import com.ledgerai.app.data.local.room.CheckinWindowEntity
 import com.ledgerai.app.data.repository.LifeLogRepository
+import com.ledgerai.app.domain.model.ActivityEntrySource
 import com.ledgerai.app.domain.model.CheckinWindowState
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LEmpty
@@ -41,12 +48,15 @@ import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LToolButton
+import com.ledgerai.app.presentation.components.rememberVoiceInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -57,7 +67,8 @@ data class LifeLogState(
     val loading: Boolean = true,
     val error: Boolean = false,
     val windows: List<CheckinWindowEntity> = emptyList(),
-    val entries: List<ActivityEntryEntity> = emptyList()
+    val entries: List<ActivityEntryEntity> = emptyList(),
+    val streak: Int = 0,
 )
 
 @HiltViewModel
@@ -81,7 +92,9 @@ class LifeLogViewModel @Inject constructor(
             }.onFailure { _state.update { s -> s.copy(loading = false, error = true) }; return@launch }
             combine(repo.observeDay(today), repo.observeEntries(today)) { w, e -> w to e }
                 .catch { _state.update { s -> s.copy(loading = false, error = true) } }
-                .collect { (w, e) -> _state.update { it.copy(loading = false, windows = w, entries = e) } }
+                .collect { (w, e) ->
+                    _state.update { it.copy(loading = false, windows = w, entries = e, streak = streakEnding(today)) }
+                }
         }
     }
 
@@ -91,54 +104,32 @@ class LifeLogViewModel @Inject constructor(
             repo.answerWindow(window.id, text.trim(), window.startAt, window.endAt, entryId, voice)
         }
     }
+
+    /** Consecutive days, ending today or yesterday, where every window was answered. */
+    private suspend fun streakEnding(today: LocalDate): Int {
+        suspend fun logged(day: LocalDate): Boolean {
+            val windows = repo.observeDay(day).first()
+            return windows.isNotEmpty() && windows.all { it.state == CheckinWindowState.ANSWERED }
+        }
+        var day = if (logged(today)) today else today.minusDays(1)
+        var n = 0
+        repeat(7) {
+            if (!logged(day)) return n
+            n++
+            day = day.minusDays(1)
+        }
+        return n
+    }
 }
 
 @Composable
 fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current
     val fmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
     var answerId by rememberSaveable { mutableStateOf<Long?>(null) }
     var entryId by rememberSaveable { mutableStateOf<Long?>(null) }
     var text by rememberSaveable { mutableStateOf("") }
     var fromVoice by rememberSaveable { mutableStateOf(false) }
-    var listening by remember { mutableStateOf(false) }
-
-    fun startVoice() {
-        listening = true
-        ContextCompat.startForegroundService(
-            context,
-            Intent(context, VoiceRecordingService::class.java).apply {
-                action = VoiceRecordingService.ACTION_START_RECORDING
-                putExtra(VoiceRecordingService.EXTRA_PROMPT, "Say what happened")
-            }
-        )
-    }
-
-    val micPermission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted -> if (granted) startVoice() }
-
-    DisposableEffect(listening) {
-        if (!listening) return@DisposableEffect onDispose { }
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(ctx: Context?, intent: Intent?) {
-                val spoken = intent?.getStringExtra(VoiceRecordingService.EXTRA_TRANSCRIPTION)?.trim().orEmpty()
-                if (spoken.isNotEmpty()) {
-                    text = spoken
-                    fromVoice = true
-                }
-                listening = false
-            }
-        }
-        val filter = IntentFilter(VoiceRecordingService.ACTION_TRANSCRIPTION_RESULT)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            context.registerReceiver(receiver, filter)
-        }
-        onDispose { runCatching { context.unregisterReceiver(receiver) } }
-    }
 
     LScreen(title = "Log") {
         when {
@@ -147,13 +138,15 @@ fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
             state.windows.isEmpty() -> item { LEmpty(Icons.Default.Timeline, "Nothing logged") }
             else -> {
                 val answered = state.windows.count { it.state == CheckinWindowState.ANSWERED }
-                val gaps = state.windows.count { it.state == CheckinWindowState.GAP }
                 item(key = "hero") {
-                    LHero(
-                        label = "Today",
-                        value = "$answered of ${state.windows.size}",
-                        sub = if (gaps > 0) "$gaps gaps" else "No gaps"
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LHero(
+                            label = "Today",
+                            value = "$answered of ${state.windows.size}",
+                            sub = if (state.streak > 0) "${state.streak}-day streak" else null
+                        )
+                        DayRibbon(state.windows, answered, state.windows.size)
+                    }
                 }
                 item(key = "timeline") {
                     LGroup {
@@ -162,23 +155,16 @@ fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
                             val entry = state.entries.firstOrNull {
                                 !it.startAt.isBefore(w.startAt) && it.startAt.isBefore(w.endAt)
                             }
-                            val gap = w.state == CheckinWindowState.GAP
                             LGroupRow(
                                 title = "${w.startAt.format(fmt)} – ${w.endAt.format(fmt)}",
-                                sub = when {
-                                    entry != null -> entry.text
-                                    gap -> "Gap"
-                                    w.state == CheckinWindowState.PENDING -> "Pending"
-                                    else -> "Answered"
-                                },
-                                trailing = if (gap) "Gap" else null,
-                                trailingColor = L.Danger,
+                                sub = entry?.text?.takeIf { it.isNotBlank() },
                                 onClick = {
                                     answerId = w.id
                                     entryId = entry?.id?.takeIf { it > 0L }
                                     text = entry?.text.orEmpty()
-                                    fromVoice = entry?.source == com.ledgerai.app.domain.model.ActivityEntrySource.VOICE
-                                }
+                                    fromVoice = entry?.source == ActivityEntrySource.VOICE
+                                },
+                                end = { StatusDot(w.state) }
                             )
                         }
                     }
@@ -192,27 +178,80 @@ fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
         if (window == null) {
             if (!state.loading) LaunchedEffect(id) { answerId = null }
         } else {
+            val voice = rememberVoiceInput { spoken ->
+                text = spoken
+                fromVoice = true
+            }
+            LaunchedEffect(window.id) { voice.toggle() }
             LSheet(
                 title = "${window.startAt.format(fmt)} – ${window.endAt.format(fmt)}",
-                onDismiss = { answerId = null; listening = false },
+                onDismiss = { answerId = null },
                 primary = "Save",
                 onPrimary = {
                     viewModel.answer(window, text, entryId, fromVoice)
                     answerId = null
-                    listening = false
                 },
-                primaryEnabled = text.isNotBlank(),
-                secondary = if (listening) "Listening…" else "Voice",
-                onSecondary = {
-                    if (listening) return@LSheet
-                    val granted = ContextCompat.checkSelfPermission(
-                        context, Manifest.permission.RECORD_AUDIO
-                    ) == PackageManager.PERMISSION_GRANTED
-                    if (granted) startVoice() else micPermission.launch(Manifest.permission.RECORD_AUDIO)
-                }
+                primaryEnabled = text.isNotBlank()
             ) {
-                LField(text, { text = it; fromVoice = false }, "What happened", singleLine = false, minLines = 2)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    LToolButton(
+                        Icons.Filled.Mic,
+                        if (voice.listening) "Stop" else "Speak",
+                        voice.toggle,
+                        active = voice.listening
+                    )
+                    LField(
+                        text,
+                        { text = it; fromVoice = false },
+                        "What happened",
+                        Modifier.weight(1f),
+                        singleLine = false,
+                        minLines = 2
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun DayRibbon(windows: List<CheckinWindowEntity>, answered: Int, total: Int) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(12.dp)
+            .clip(RoundedCornerShape(L.Radius))
+            .semantics { contentDescription = "$answered of $total answered" }
+    ) {
+        for (hour in 0..23) {
+            val state = windows.firstOrNull { hour >= it.startAt.hour && hour < it.endAt.hour }?.state
+            Box(Modifier.weight(1f).fillMaxHeight().background(ribbonColor(state)))
+        }
+    }
+}
+
+private fun ribbonColor(state: CheckinWindowState?): Color = when (state) {
+    CheckinWindowState.ANSWERED -> L.Gold
+    CheckinWindowState.PENDING -> L.Highlight
+    CheckinWindowState.GAP -> L.Danger
+    null -> L.BoxDeep
+}
+
+@Composable
+private fun StatusDot(state: CheckinWindowState) {
+    val label = when (state) {
+        CheckinWindowState.ANSWERED -> "Answered"
+        CheckinWindowState.PENDING -> "Pending"
+        CheckinWindowState.GAP -> "Gap"
+    }
+    Box(
+        Modifier
+            .size(8.dp)
+            .clip(CircleShape)
+            .background(ribbonColor(state))
+            .semantics { contentDescription = label }
+    )
 }

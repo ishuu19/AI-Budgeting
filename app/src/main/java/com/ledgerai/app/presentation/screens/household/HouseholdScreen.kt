@@ -1,23 +1,40 @@
 package com.ledgerai.app.presentation.screens.household
 
+import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,9 +47,12 @@ import com.ledgerai.app.domain.household.HouseholdRole
 import com.ledgerai.app.domain.household.MembershipDecision
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LEmpty
+import com.ledgerai.app.presentation.components.LFab
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LGhostButton
-import com.ledgerai.app.presentation.components.LRow
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.LSheet
@@ -86,10 +106,10 @@ class HouseholdViewModel(
         }
     }
 
-    fun addMember(memberUserId: String) {
+    fun addMember(memberUserId: String, displayName: String) {
         val householdId = _selectedId.value ?: return
         viewModelScope.launch {
-            _message.value = repository.addMember(householdId, userId, memberUserId).text()
+            _message.value = repository.addMember(householdId, userId, memberUserId, displayName).text()
         }
     }
 
@@ -128,6 +148,7 @@ fun HouseholdScreen(
     userId: String,
     repository: HouseholdRepository,
     onBack: (() -> Unit)? = null,
+    selfName: String = "",
 ) {
     val viewModel: HouseholdViewModel = viewModel(key = userId) {
         HouseholdViewModel(repository, userId)
@@ -142,6 +163,7 @@ fun HouseholdScreen(
         selectedId = selectedId,
         message = message,
         userId = userId,
+        selfName = selfName,
         onSelect = viewModel::select,
         onCreate = viewModel::create,
         onAddMember = viewModel::addMember,
@@ -164,9 +186,10 @@ fun HouseholdScreen(
     selectedId: String?,
     message: String?,
     userId: String,
+    selfName: String = "",
     onSelect: (String) -> Unit,
     onCreate: (name: String, onDone: (Boolean) -> Unit) -> Unit,
-    onAddMember: (memberUserId: String) -> Unit,
+    onAddMember: (memberUserId: String, displayName: String) -> Unit,
     onLeave: () -> Unit,
     onRemove: (memberUserId: String) -> Unit,
     onBack: (() -> Unit)? = null,
@@ -184,62 +207,56 @@ fun HouseholdScreen(
     var name by rememberSaveable { mutableStateOf("") }
     var nameError by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreateMessage by rememberSaveable { mutableStateOf(false) }
+    var addingMember by rememberSaveable { mutableStateOf(false) }
     var memberId by rememberSaveable { mutableStateOf("") }
+    var memberName by rememberSaveable { mutableStateOf("") }
+    var confirmLeave by rememberSaveable { mutableStateOf(false) }
+    var pendingRemove by rememberSaveable { mutableStateOf<String?>(null) }
     val banner = message
+    val context = LocalContext.current
+    val onlyOne = visible.size == 1
+
+    LaunchedEffect(visible.map { it.id }) {
+        if (visible.size == 1 && selectedId != visible.first().id) onSelect(visible.first().id)
+    }
 
     LScreen(
-        title = "Households",
+        title = "Household",
         onBack = onBack,
-        action = {
-            TextButton(onClick = {
+        fab = {
+            LFab(Icons.Filled.Add, onClick = {
                 nameError = null
                 showCreateMessage = false
                 creating = true
-            }) {
-                Text("Add", color = L.Primary, style = MaterialTheme.typography.labelLarge)
-            }
+            }, label = "New household")
         },
     ) {
-        item {
-            Text(
-                "Homes you belong to",
-                style = MaterialTheme.typography.bodyMedium,
-                color = L.InkMuted,
-            )
-        }
         if (!creating && !banner.isNullOrBlank()) {
             item {
-                Text(
-                    banner,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
+                Text(banner, style = MaterialTheme.typography.bodyMedium, color = L.Danger)
             }
         }
         if (visible.isEmpty()) {
-            item { LEmpty(Icons.Filled.Home, "No households yet") }
-        } else {
-            items(visible, key = { it.id }) { household ->
-                LRow(
-                    title = household.name,
-                    sub = if (household.id == selectedId) "Selected" else "Tap to see members",
-                    icon = Icons.Filled.Home,
-                    onClick = { onSelect(household.id) },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                )
+            item { LEmpty(Icons.Filled.Home, "No household yet") }
+        } else if (!onlyOne) {
+            item {
+                LGroup {
+                    visible.forEachIndexed { index, household ->
+                        if (index > 0) LGroupDivider()
+                        val on = household.id == selectedId
+                        LGroupRow(
+                            title = household.name,
+                            sub = if (on) memberCount(visibleMembers.size) else null,
+                            icon = if (on) Icons.Filled.Check else null,
+                            onClick = { onSelect(household.id) },
+                        )
+                    }
+                }
             }
         }
         if (selected != null) {
-            item { LSection(selected.name) }
-            if (visibleMembers.isEmpty()) {
-                item {
-                    Text(
-                        "No members yet",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = L.InkMuted,
-                    )
-                }
-            } else {
+            if (!onlyOne) item { LSection("Members") }
+            else if (visibleMembers.isNotEmpty()) {
                 item {
                     Text(
                         memberCount(visibleMembers.size),
@@ -247,65 +264,46 @@ fun HouseholdScreen(
                         color = L.InkMuted,
                     )
                 }
-                items(visibleMembers, key = { "${it.householdId}:${it.userId}" }) { member ->
-                    MemberRow(
-                        member = member,
-                        isYou = member.userId == userId,
-                        canRemove = actorIsOwner &&
-                            member.userId != userId &&
-                            member.role != HouseholdRole.OWNER,
-                        onRemove = { onRemove(member.userId) },
-                    )
-                }
             }
-            // Nobody should have to read a UUID aloud: copy yours here, paste theirs below.
-            item {
-                val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
-                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                    LGhostButton(
-                        text = "Copy my member ID",
-                        onClick = { clipboard.setText(androidx.compose.ui.text.AnnotatedString(userId)) },
-                    )
-                    if (actorIsOwner) {
-                        Text(
-                            "To add someone, ask them to copy their member ID from this screen and send it to you, then paste it below.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = L.InkMuted,
-                        )
-                        LGhostButton(
-                            text = "Paste member ID",
-                            onClick = { clipboard.getText()?.text?.trim()?.let { memberId = it } },
-                        )
+            if (visibleMembers.isEmpty()) {
+                item { LEmpty(Icons.Filled.Home, "No members yet") }
+            } else {
+                item {
+                    LGroup {
+                        visibleMembers.forEachIndexed { index, member ->
+                            if (index > 0) LGroupDivider()
+                            MemberLine(
+                                member = member,
+                                selfName = selfName,
+                                isYou = member.userId == userId,
+                                canRemove = actorIsOwner &&
+                                    member.userId != userId &&
+                                    member.role != HouseholdRole.OWNER,
+                                onRemove = { pendingRemove = member.userId },
+                            )
+                        }
                     }
                 }
             }
-            if (actorIsOwner) {
-                item {
-                    LField(memberId, { memberId = it }, "Member ID")
-                }
-                item {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     LGhostButton(
-                        text = "Add member",
-                        enabled = memberId.isNotBlank(),
-                        onClick = {
-                            onAddMember(memberId.trim())
-                            memberId = ""
-                        },
+                        text = "Invite",
+                        onClick = { shareInvite(context, selfName, userId) },
                     )
+                    if (actorIsOwner) {
+                        LGhostButton(text = "Add member", onClick = { addingMember = true })
+                    }
                 }
             }
             if (me != null) {
                 val ownerCount = visibleMembers.count { it.role == HouseholdRole.OWNER }
                 when (val decision = HouseholdMembership.leave(me, ownerCount)) {
                     MembershipDecision.Allow -> item {
-                        LGhostButton("Leave", onClick = onLeave)
+                        LGhostButton("Leave", onClick = { confirmLeave = true })
                     }
                     is MembershipDecision.Deny -> item {
-                        Text(
-                            decision.reason,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = L.InkMuted,
-                        )
+                        Text(decision.reason, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
                     }
                 }
             }
@@ -349,42 +347,190 @@ fun HouseholdScreen(
                 label = "Name",
             )
             if (!sheetError.isNullOrBlank()) {
-                Text(
-                    sheetError,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
+                Text(sheetError, style = MaterialTheme.typography.bodyMedium, color = L.Danger)
             }
+        }
+    }
+
+    if (addingMember) {
+        val clipboard = LocalClipboardManager.current
+        LSheet(
+            title = "Add member",
+            onDismiss = { addingMember = false },
+            primary = "Save",
+            onPrimary = {
+                onAddMember(memberId.trim(), memberName.trim())
+                memberId = ""
+                memberName = ""
+                addingMember = false
+            },
+            primaryEnabled = memberName.isNotBlank() && memberId.isNotBlank(),
+        ) {
+            LField(memberName, { memberName = it }, "Name")
+            LGhostButton("Paste invite", onClick = {
+                clipboard.getText()?.text?.let { raw ->
+                    val (parsedName, id) = parseInvite(raw)
+                    if (id.isNotBlank()) memberId = id
+                    if (parsedName.isNotBlank()) memberName = parsedName
+                }
+            })
+        }
+    }
+
+    if (confirmLeave) {
+        Confirm(
+            title = "Leave this household?",
+            confirm = "Leave",
+            onConfirm = {
+                confirmLeave = false
+                onLeave()
+            },
+            onDismiss = { confirmLeave = false },
+        )
+    }
+    val removing = visibleMembers.find { it.userId == pendingRemove }
+    if (removing != null && pendingRemove != null) {
+        Confirm(
+            title = "Remove ${memberLabel(removing, selfName, removing.userId == userId)}?",
+            confirm = "Remove",
+            onConfirm = {
+                val id = pendingRemove
+                pendingRemove = null
+                if (id != null) onRemove(id)
+            },
+            onDismiss = { pendingRemove = null },
+        )
+    }
+}
+
+@Composable
+private fun MemberLine(
+    member: HouseholdMember,
+    selfName: String,
+    isYou: Boolean,
+    canRemove: Boolean,
+    onRemove: () -> Unit,
+) {
+    val label = memberLabel(member, selfName, isYou)
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        InitialsAvatar(label)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                color = L.OnBox,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (isYou && label != "You") {
+                Text("You", style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+            }
+        }
+        if (member.role == HouseholdRole.OWNER) OwnerChip()
+        if (canRemove) {
+            Text(
+                "Remove",
+                color = L.Danger,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .clickable(onClick = onRemove)
+                    .padding(horizontal = 8.dp),
+            )
         }
     }
 }
 
 @Composable
-private fun MemberRow(
-    member: HouseholdMember,
-    isYou: Boolean,
-    canRemove: Boolean,
-    onRemove: () -> Unit,
-) {
-    LRow(
-        title = member.userId,
-        sub = if (isYou) "You" else null,
-        trailing = if (member.role == HouseholdRole.OWNER) "Owner" else "Member",
-        modifier = Modifier.heightIn(min = 48.dp),
-        end = if (canRemove) {
-            {
-                IconButton(onClick = onRemove) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = "Remove ${member.userId}",
-                        tint = L.OnBox,
-                    )
-                }
+private fun InitialsAvatar(name: String) {
+    Box(
+        Modifier.size(32.dp).clip(CircleShape).background(L.BoxDeep),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(initials(name), style = MaterialTheme.typography.labelLarge, color = L.OnBox)
+    }
+}
+
+@Composable
+private fun OwnerChip() {
+    Text(
+        "Owner",
+        style = MaterialTheme.typography.labelLarge,
+        color = L.Primary,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .border(1.dp, L.Line, RoundedCornerShape(50))
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+    )
+}
+
+@Composable
+private fun Confirm(title: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = L.Page,
+        title = { Text(title, color = L.Ink) },
+        confirmButton = {
+            TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(confirm, color = L.Danger)
             }
-        } else {
-            null
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text("Cancel", color = L.InkMuted)
+            }
         },
     )
 }
 
+private fun memberLabel(member: HouseholdMember, selfName: String, isYou: Boolean): String = when {
+    member.displayName.isNotBlank() -> member.displayName
+    isYou && selfName.isNotBlank() -> selfName
+    isYou -> "You"
+    else -> "Member"
+}
+
+private fun shareInvite(context: android.content.Context, name: String, userId: String) {
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, inviteText(name, userId))
+    }
+    val chooser = Intent.createChooser(send, "Invite")
+    if (context !is android.app.Activity) chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(chooser)
+}
+
+/** A shareable invite. The id stays in the link so Paste invite can still add the person. */
+private fun inviteText(name: String, userId: String): String {
+    val who = name.trim().ifBlank { "Someone" }
+    return "$who\nhttps://lifeline.app/invite/$userId"
+}
+
+private fun parseInvite(raw: String): Pair<String, String> {
+    val text = raw.trim()
+    if (text.contains("::") && !text.contains("://")) {
+        val parts = text.split("::", limit = 2)
+        if (parts.size == 2) return parts[0].trim() to parts[1].trim()
+    }
+    val id = Regex("""invite/(\S+)""").find(text)?.groupValues?.get(1).orEmpty()
+    if (id.isNotBlank()) {
+        val parsedName = text.lineSequence().firstOrNull { line ->
+            line.isNotBlank() && !line.contains("invite/")
+        }.orEmpty()
+        return parsedName to id
+    }
+    return "" to text
+}
+
 private fun memberCount(count: Int): String = if (count == 1) "1 member" else "$count members"
+
+private fun initials(name: String): String {
+    val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+    if (parts.isEmpty()) return "?"
+    if (parts.size == 1) return parts[0].take(2).uppercase()
+    return (parts[0].take(1) + parts[1].take(1)).uppercase()
+}

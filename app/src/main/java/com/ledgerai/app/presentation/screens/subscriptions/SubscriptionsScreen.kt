@@ -2,11 +2,11 @@ package com.ledgerai.app.presentation.screens.subscriptions
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EventRepeat
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -21,7 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.domain.subscriptions.NewSubscription
 import com.ledgerai.app.domain.subscriptions.Subscription
@@ -30,22 +29,25 @@ import com.ledgerai.app.domain.subscriptions.SubscriptionCharges
 import com.ledgerai.app.domain.subscriptions.SubscriptionPeriod
 import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
-import com.ledgerai.app.presentation.components.LButton
-import com.ledgerai.app.presentation.components.LCard
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LToolButton
 import com.ledgerai.app.presentation.components.money
+import com.ledgerai.app.presentation.screens.transactions.shortDate
 import com.ledgerai.app.presentation.screens.money.DecimalField
 import com.ledgerai.app.presentation.screens.money.SnackEffect
+import com.ledgerai.app.presentation.screens.money.subscriptionFigure
+import com.ledgerai.app.presentation.screens.money.subscriptionMonth
 import com.ledgerai.app.presentation.screens.transactions.DatePickChip
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
-private val chargeDate: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
 private const val CANCEL_NOTE =
     "Cancelling here only changes this list. LedgerAI does not contact the merchant."
 
@@ -78,21 +80,22 @@ fun SubscriptionsScreen(
     onBack: (() -> Unit)? = null
 ) {
     var showForm by rememberSaveable { mutableStateOf(false) }
+    var openId by rememberSaveable { mutableStateOf(-1L) }
+    var confirmId by rememberSaveable { mutableStateOf(-1L) }
     val snackbar = remember { SnackbarHostState() }
     SnackEffect(notice, snackbar, onDismissNotice)
     val soonest = subscriptions
         .map { it to SubscriptionCharges.nextChargeDate(it.nextRenewalOn, it.period, today) }
         .minWithOrNull(compareBy({ it.second }, { it.first.id }))
     val dueSoon = SubscriptionCharges.upcomingWithin(subscriptions, today, 30)
+    val month = subscriptionMonth(subscriptions)
+    val open = subscriptions.firstOrNull { it.id == openId }
+    val confirming = subscriptions.firstOrNull { it.id == confirmId }
 
     LScreen(
         title = "Subscriptions",
         onBack = onBack,
-        action = {
-            TextButton(onClick = { showForm = true }) {
-                Text("Add", color = L.Primary, style = MaterialTheme.typography.labelLarge)
-            }
-        },
+        action = { LToolButton(Icons.Filled.Add, "New subscription", onClick = { showForm = true }) },
         snackbarHost = { SnackbarHost(snackbar) }
     ) {
         subscriptionBody(
@@ -100,8 +103,44 @@ fun SubscriptionsScreen(
             today = today,
             soonest = soonest,
             dueSoonCount = dueSoon.size,
-            onAdd = { showForm = true },
-            onMarkCancelled = onMarkCancelled
+            monthly = subscriptionFigure(month),
+            onOpen = { openId = it.id }
+        )
+    }
+
+    open?.let { subscription ->
+        val chargeOn = SubscriptionCharges.nextChargeDate(subscription.nextRenewalOn, subscription.period, today)
+        LSheet(
+            title = subscription.merchant,
+            onDismiss = { openId = -1L }
+        ) {
+            Text(figure(subscription.amount), style = MaterialTheme.typography.titleLarge, color = L.Ink)
+            Text(
+                "Due ${shortDate(chargeOn)} · ${subscription.period.displayName}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = L.InkMuted
+            )
+            TextButton(onClick = { confirmId = subscription.id }) {
+                Text("Mark cancelled", color = L.Danger)
+            }
+        }
+    }
+    confirming?.let { subscription ->
+        AlertDialog(
+            onDismissRequest = { confirmId = -1L },
+            containerColor = L.Page,
+            title = { Text("Mark cancelled?", color = L.Ink) },
+            text = { Text(CANCEL_NOTE, color = L.InkMuted) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmId = -1L
+                    openId = -1L
+                    onMarkCancelled(subscription)
+                }) { Text("Mark cancelled", color = L.Danger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmId = -1L }) { Text("Cancel", color = L.InkMuted) }
+            }
         )
     }
 
@@ -121,65 +160,44 @@ private fun LazyListScope.subscriptionBody(
     today: LocalDate,
     soonest: Pair<Subscription, LocalDate>?,
     dueSoonCount: Int,
-    onAdd: () -> Unit,
-    onMarkCancelled: (Subscription) -> Unit
+    monthly: String,
+    onOpen: (Subscription) -> Unit
 ) {
     if (subscriptions.isEmpty() || soonest == null) {
-        item(key = "empty") {
-            LEmpty(Icons.Filled.EventRepeat, "No subscriptions yet")
-            LButton("Add subscription", onAdd)
-        }
+        item(key = "empty") { LEmpty(Icons.Filled.EventRepeat, "No subscriptions yet") }
         return
+    }
+    val dueBit = when (dueSoonCount) {
+        0 -> null
+        1 -> "1 in 30 days"
+        else -> "$dueSoonCount in 30 days"
     }
     item(key = "next") {
         LHero(
-            label = "Next charge",
-            value = figure(soonest.first.amount),
-            sub = "${soonest.first.merchant} · ${chargeDate.format(soonest.second)}"
+            label = "Monthly",
+            value = monthly,
+            sub = listOfNotNull(
+                "${soonest.first.merchant} · Due ${shortDate(soonest.second)}",
+                dueBit
+            ).joinToString(" · ")
         )
     }
-    item(key = "soon") {
-        Text(
-            if (dueSoonCount == 1) "1 due in the next 30 days" else "$dueSoonCount due in the next 30 days",
-            style = MaterialTheme.typography.bodyMedium,
-            color = L.InkMuted
-        )
-    }
-    item(key = "cancel-note") {
-        Text(CANCEL_NOTE, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
-    }
-    items(subscriptions.size, key = { subscriptions[it].id }) { index ->
-        val subscription = subscriptions[index]
-        val chargeOn = SubscriptionCharges.nextChargeDate(
-            subscription.nextRenewalOn,
-            subscription.period,
-            today
-        )
-        SubscriptionRow(subscription, chargeOn, onMarkCancelled)
-    }
-}
-
-@Composable
-private fun SubscriptionRow(
-    subscription: Subscription,
-    chargeOn: LocalDate,
-    onMarkCancelled: (Subscription) -> Unit
-) {
-    LCard {
-        Text(
-            figure(subscription.amount),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = L.Gold
-        )
-        Text(subscription.merchant, style = MaterialTheme.typography.titleMedium, color = L.OnBox)
-        Text(
-            "Next charge ${chargeDate.format(chargeOn)} · ${subscription.period.displayName}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = L.OnBoxMuted
-        )
-        TextButton(onClick = { onMarkCancelled(subscription) }, modifier = Modifier.fillMaxWidth()) {
-            Text("Mark cancelled here", color = L.Gold)
+    item(key = "list") {
+        LGroup {
+            subscriptions.forEachIndexed { index, subscription ->
+                if (index > 0) LGroupDivider()
+                val chargeOn = SubscriptionCharges.nextChargeDate(
+                    subscription.nextRenewalOn,
+                    subscription.period,
+                    today
+                )
+                LGroupRow(
+                    title = subscription.merchant,
+                    sub = "Due ${shortDate(chargeOn)} · ${subscription.period.displayName}",
+                    trailing = figure(subscription.amount),
+                    onClick = { onOpen(subscription) }
+                )
+            }
         }
     }
 }
@@ -194,7 +212,7 @@ private fun AddSubscriptionSheet(onDismiss: () -> Unit, onSave: (NewSubscription
     val canSave = merchant.isNotBlank() && amount != null
 
     LSheet(
-        title = "Add subscription",
+        title = "New subscription",
         onDismiss = onDismiss,
         primary = "Save",
         onPrimary = {
@@ -211,12 +229,7 @@ private fun AddSubscriptionSheet(onDismiss: () -> Unit, onSave: (NewSubscription
         primaryEnabled = canSave
     ) {
         LField(merchant, { merchant = it }, label = "Name")
-        DecimalField(amountText, { amountText = it }, "Amount")
-        Text(
-            "Leave amount blank if you don't know it. Blank is not zero.",
-            style = MaterialTheme.typography.bodySmall,
-            color = L.InkMuted
-        )
+        DecimalField(amountText, { amountText = it }, if (amountText.isEmpty()) "Unknown" else "Amount")
         ChipsRow {
             SubscriptionPeriod.entries.forEach { choice ->
                 LChip(choice.displayName, period == choice, onClick = { period = choice })
@@ -231,7 +244,7 @@ private fun AddSubscriptionSheet(onDismiss: () -> Unit, onSave: (NewSubscription
                 date = nextRenewalOn,
                 selected = true,
                 onDate = { nextRenewalOn = it },
-                label = chargeDate.format(nextRenewalOn)
+                label = shortDate(nextRenewalOn)
             )
         }
     }

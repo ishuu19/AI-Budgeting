@@ -1,5 +1,6 @@
 package com.ledgerai.app.presentation.screens.money
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,11 +28,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -47,8 +56,10 @@ import com.ledgerai.app.domain.model.DebtDirection
 import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LError
+import com.ledgerai.app.presentation.components.Delta
 import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LLoading
+import com.ledgerai.app.presentation.components.LProgress
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LGroup
 import com.ledgerai.app.presentation.components.LGroupDivider
@@ -56,6 +67,7 @@ import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LWide
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.navigation.AppLinks
+import com.ledgerai.app.presentation.theme.CategoryColors
 import com.ledgerai.app.presentation.navigation.MoneySeg
 import com.ledgerai.app.presentation.screens.forecast.ForecastViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,7 +100,13 @@ data class OverviewUiState(
     val insights: List<BehaviourInsight> = emptyList(),
     val nextPayment: NextPayment? = null,
     val monthSpent: Double = 0.0,
-    val saved: Double = 0.0
+    /** This month's income minus spending. */
+    val saved: Double = 0.0,
+    val savedRate: Int? = null,
+    val lastSavedRate: Int? = null,
+    val spendDeltaPct: Int? = null,
+    val priorWeek: Double = 0.0,
+    val topCategories: List<Pair<String, Double>> = emptyList()
 )
 
 @HiltViewModel
@@ -149,9 +167,21 @@ class MoneyOverviewViewModel @Inject constructor(
                     .map { NextPayment(it.name, it.amount, it.nextDueDate, it.nextDueDate.isBefore(today)) } +
                     s.debts.filter { it.direction == DebtDirection.I_OWE && it.dueDate != null && !it.dueDate.isAfter(horizon) }
                         .map { NextPayment(it.friendName, it.amount, it.dueDate!!, it.dueDate.isBefore(today)) }
-                val next = payments.maxByOrNull { it.amount }
+                val next = payments.minByOrNull { it.due }
                 val progress = (today.dayOfMonth * 100) / today.lengthOfMonth()
-                val score = aiRepo.calculateHealthScore(income, spent, 0.0, adherence).getOrNull()?.score
+                val owed = s.debts.filter { it.direction == DebtDirection.I_OWE }.sumOf { it.amount }
+                val score = aiRepo.calculateHealthScore(income, spent, owed, adherence).getOrNull()?.score
+                val lastAnchor = today.minusMonths(1)
+                val lastCut = lastAnchor.withDayOfMonth(minOf(today.dayOfMonth, lastAnchor.lengthOfMonth()))
+                val lastWindow = s.tx.filter { !it.date.isBefore(lastAnchor.withDayOfMonth(1)) && !it.date.isAfter(lastCut) }
+                val lastIncome = lastWindow.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
+                val lastSpent = lastWindow.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+                val priorWeek = (13 downTo 7).sumOf { back ->
+                    val day = today.minusDays(back.toLong())
+                    s.tx.filter { it.type == TransactionType.EXPENSE && it.date == day }.sumOf { it.amount }
+                }
+                val top = spentByCategory.entries.sortedByDescending { it.value }.take(3)
+                    .map { it.key.displayName to it.value }
 
                 val guideResult = runCatching { guideRepo.computeTodayGuide(today) }
                 _state.update {
@@ -165,13 +195,24 @@ class MoneyOverviewViewModel @Inject constructor(
                         insights = insights,
                         nextPayment = next,
                         monthSpent = spent,
-                        saved = s.tx.sumOf { if (it.type == TransactionType.INCOME) it.amount else -it.amount }
+                        saved = income - spent,
+                        savedRate = savingsRate(income, spent),
+                        lastSavedRate = savingsRate(lastIncome, lastSpent),
+                        spendDeltaPct = if (lastSpent > 0.0) ((spent - lastSpent) / lastSpent * 100).toInt() else null,
+                        priorWeek = priorWeek,
+                        topCategories = top
                     )
                 }
             }
         }
     }
 }
+
+private fun savingsRate(income: Double, spent: Double): Int? =
+    if (income > 0.0) ((income - spent) / income * 100).toInt() else null
+
+private fun spendDelta(pct: Int): Delta? =
+    if (pct == 0) null else Delta("${kotlin.math.abs(pct)}% vs last month", up = pct > 0, good = pct < 0)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -183,6 +224,7 @@ fun MoneyOverviewScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val forecast by forecastViewModel.uiState.collectAsState()
+    val subscriptions by hiltViewModel<SubscriptionTotalViewModel>().monthly.collectAsState()
     val today = rememberToday()
     val guide = state.guide
 
@@ -195,18 +237,37 @@ fun MoneyOverviewScreen(
             item(key = "error") { LError(state.error ?: "Could not load", onRetry = viewModel::retry) }
         }
         item(key = "safe") {
-            LHero(
-                label = "Safe to spend today",
-                value = guide?.let { money(it.guideAmount) } ?: "—",
-                sub = "Spent ${money(state.monthSpent)} this month",
-                valueColor = if (guide?.status == SpendGuideStatus.OVER) L.Danger else L.OnBox,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClickLabel = "Open safe to spend", role = Role.Button, onClick = links.spendGuide)
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LHero(
+                    label = "Safe to spend",
+                    value = guide?.let { money(it.guideAmount) } ?: "—",
+                    sub = "Spent ${money(state.monthSpent)} this month",
+                    delta = state.spendDeltaPct?.let { spendDelta(it) },
+                    valueColor = if (guide?.status == SpendGuideStatus.OVER) L.Danger else L.OnBox,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(L.Radius))
+                        .clickable(onClickLabel = "Open safe to spend", role = Role.Button, onClick = links.spendGuide)
+                )
+                LProgress(state.monthProgress / 100f)
+                state.healthScore?.let { score -> HealthRing(score) }
+            }
         }
+        item(key = "week") {
+            WeekChart(state.week, state.priorWeek, guide?.guideAmount ?: 0.0, today)
+        }
+        if (state.topCategories.isNotEmpty()) {
+            item(key = "categories") { CategoryStack(state.topCategories, onClick = links.insights) }
+        }
+        item(key = "insights") { InsightStack(state.insights, links) }
         item(key = "tiles") {
             val next = state.nextPayment
+            val savedSub = buildString {
+                append("Income minus spending")
+                state.savedRate?.let { rate ->
+                    append(" · $rate%")
+                    state.lastSavedRate?.let { append(" vs $it%") }
+                }
+            }
             LGroup {
                 OverviewRow(
                     title = "Forecast",
@@ -218,7 +279,7 @@ fun MoneyOverviewScreen(
                 LGroupDivider()
                 OverviewRow(
                     title = "Next payment",
-                    sub = next?.let { it.name + " · " + if (it.overdue) "Overdue" else dueText(it.due, today) } ?: "Nothing due",
+                    sub = next?.let { it.name + " · " + dueLabel(it.due, today) } ?: "Nothing due",
                     value = next?.let { money(it.amount) } ?: "—",
                     valueColor = if (next?.overdue == true) L.Danger else L.OnBox,
                     onClick = { links.money(MoneySeg.Owed) }
@@ -226,7 +287,7 @@ fun MoneyOverviewScreen(
                 LGroupDivider()
                 OverviewRow(
                     title = "Saved",
-                    sub = "Toward goals",
+                    sub = savedSub,
                     value = money(state.saved),
                     valueColor = L.OnBox,
                     onClick = { links.money(MoneySeg.Plan) }
@@ -234,20 +295,18 @@ fun MoneyOverviewScreen(
                 LGroupDivider()
                 OverviewRow(
                     title = "Subscriptions",
-                    sub = "Tracked from receipts",
-                    value = null,
+                    sub = null,
+                    value = subscriptionFigure(subscriptions),
                     valueColor = L.OnBox,
                     onClick = links.subscriptions
                 )
             }
         }
-        item(key = "week") { WeekChart(state.week, guide?.guideAmount ?: 0.0, today) }
-        item(key = "insights") { InsightStack(state.insights, links) }
     }
 }
 
 @Composable
-private fun OverviewRow(title: String, sub: String, value: String?, valueColor: Color, onClick: () -> Unit) {
+private fun OverviewRow(title: String, sub: String?, value: String?, valueColor: Color, onClick: () -> Unit) {
     LGroupRow(
         title = title,
         sub = sub,
@@ -258,47 +317,98 @@ private fun OverviewRow(title: String, sub: String, value: String?, valueColor: 
     )
 }
 
-private fun dueText(due: LocalDate, today: LocalDate): String {
-    val days = java.time.temporal.ChronoUnit.DAYS.between(today, due)
-    return when {
-        days == 0L -> "Today"
-        days == 1L -> "Tomorrow"
-        days <= 7 -> "In $days days"
-        else -> due.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()) + " " + due.dayOfMonth
+@Composable
+private fun HealthRing(score: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Canvas(Modifier.size(36.dp)) {
+            val stroke = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+            drawArc(L.BoxDeep, 0f, 360f, useCenter = false, style = stroke)
+            drawArc(L.Gold, -90f, 360f * (score / 100f), useCenter = false, style = stroke)
+        }
+        Text("$score", style = MaterialTheme.typography.titleSmall, color = L.OnBox)
     }
 }
 
 @Composable
 private fun InsightStack(insights: List<BehaviourInsight>, links: AppLinks) {
     val top = insights.firstOrNull() ?: return
-    LWide(label = "Insight", onClick = { links.chat(top.headline + "\n" + top.action) }) {
+    LWide(label = "Insight") {
         Text(
             top.headline,
             style = MaterialTheme.typography.bodyMedium,
             color = L.OnBox,
             maxLines = 2
         )
+        if (top.action.isNotBlank()) {
+            Row(
+                Modifier
+                    .heightIn(min = 48.dp)
+                    .clip(L.RadiusPill)
+                    .clickable(role = Role.Button, onClick = { links.chat(top.action) })
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = L.Highlight, modifier = Modifier.size(16.dp))
+                Text(
+                    top.action,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = L.Primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun WeekChart(week: List<DayBar>, guide: Double, today: LocalDate) {
+private fun CategoryStack(parts: List<Pair<String, Double>>, onClick: () -> Unit) {
+    val total = parts.sumOf { it.second }.coerceAtLeast(1.0)
+    LWide(label = "Where it went", onClick = onClick) {
+        Row(
+            Modifier.fillMaxWidth().height(L.Space.x8).clip(L.RadiusPill)
+        ) {
+            parts.forEachIndexed { index, (_, amount) ->
+                Box(
+                    Modifier
+                        .weight((amount / total).toFloat().coerceAtLeast(0.04f))
+                        .fillMaxHeight()
+                        .background(CategoryColors[index % CategoryColors.size])
+                )
+            }
+        }
+        Text(
+            parts.joinToString(" · ") { it.first },
+            style = MaterialTheme.typography.bodySmall,
+            color = L.OnBoxMuted,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun WeekChart(week: List<DayBar>, prior: Double, guide: Double, today: LocalDate) {
     val chartHeight = 80.dp
     val max = maxOf(week.maxOfOrNull { it.amount } ?: 0.0, guide, 1.0)
+    val weekTotal = week.sumOf { it.amount }
     val desc = buildString {
-        append("Spend over the last 7 days. ")
+        append("Spend over the last 7 days, ${money(weekTotal)}, versus prior 7 days ${money(prior)}. ")
         week.forEach {
             append(it.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()))
             append(' ')
             append(money(it.amount))
             append(". ")
         }
-        if (guide > 0) append("Daily guide ${money(guide)}.")
+        if (guide > 0) append("Guide ${money(guide)}.")
     }
-    LWide(label = "Last 7 days") {
+    LWide(label = "${money(weekTotal)} · vs prior ${money(prior)}") {
         Column(
             Modifier.clearAndSetSemantics { contentDescription = desc },
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(Modifier.fillMaxWidth().height(chartHeight)) {
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -310,10 +420,10 @@ private fun WeekChart(week: List<DayBar>, guide: Double, today: LocalDate) {
                                 Modifier
                                     .fillMaxWidth()
                                     .fillMaxHeight(frac)
-                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .clip(RoundedCornerShape(topStart = L.Space.x4, topEnd = L.Space.x4))
                                     .background(
                                         when {
-                                            bar.amount <= 0.0 -> L.OnBox.copy(alpha = 0.25f)
+                                            bar.amount <= 0.0 -> L.BoxDeep
                                             over -> L.Danger
                                             else -> L.Gold
                                         }
@@ -323,20 +433,29 @@ private fun WeekChart(week: List<DayBar>, guide: Double, today: LocalDate) {
                     }
                 }
                 if (guide > 0) {
-                    Box(
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxWidth()
-                            .offset(y = -(chartHeight * (guide / max).toFloat()))
-                            .height(1.dp)
-                            .background(L.OnBox.copy(alpha = 0.8f))
+                    val guideFrac = (guide / max).toFloat().coerceIn(0f, 1f)
+                    Canvas(Modifier.fillMaxSize()) {
+                        val y = size.height * (1f - guideFrac)
+                        drawLine(
+                            color = L.InkMuted,
+                            start = Offset(0f, y),
+                            end = Offset(size.width, y),
+                            strokeWidth = 2f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+                        )
+                    }
+                    Text(
+                        "guide",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = L.InkMuted,
+                        modifier = Modifier.align(Alignment.TopEnd)
                     )
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 week.forEach { bar ->
                     Text(
-                        if (bar.date == today) "•" else bar.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                        bar.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (bar.date == today) L.Gold else L.OnBoxMuted,
                         textAlign = TextAlign.Center,

@@ -9,10 +9,13 @@ import com.ledgerai.app.domain.model.PlanBlockStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-/** Kind chips on the Calendar segment. */
+/** What a calendar row is. Tasks has its own segment, so it is not a filter chip. */
 enum class PlanKind(val label: String) {
     All("All"), Events("Events"), Tasks("Tasks"), Classes("Classes"), Alarms("Alarms"), Study("Study"), Habits("Habits")
 }
+
+/** Calendar filters. Alarms and study stay under All. Show none of these when fewer than two are present. */
+val PlanKindFilters = listOf(PlanKind.All, PlanKind.Events, PlanKind.Classes, PlanKind.Habits)
 
 enum class AgendaSource { Event, Block, Habit }
 

@@ -56,4 +56,6 @@ class PhotoSaveViewModel @Inject constructor(
     }
 
     fun thumb(photoId: String?): File = File(context.filesDir, "media/${photoId.orEmpty()}_t.jpg")
+
+    fun full(photoId: String?): File = File(context.filesDir, "media/${photoId.orEmpty()}.jpg")
 }

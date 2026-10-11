@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LButton
+import com.ledgerai.app.presentation.components.LGhostButton
 import com.ledgerai.app.presentation.components.LLogo
+import com.ledgerai.app.presentation.components.LSnackbar
 
 @Composable
 fun LoginScreen(
@@ -62,17 +64,11 @@ fun LoginScreen(
             modifier = Modifier.semantics { heading() }
         )
         Spacer(Modifier.height(4.dp))
-        Text("Money. Simply.", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        Text("Your life, remembered.", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
         Spacer(Modifier.height(32.dp))
 
         state.errorMessage?.let { error ->
-            Text(
-                error,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-            )
+            LSnackbar(error, Modifier.fillMaxWidth().padding(bottom = 16.dp))
         }
 
         if (state.isLoading) {
@@ -87,12 +83,13 @@ fun LoginScreen(
                     )
                 } else {
                     Text(
-                        "Sign-in needs Google and Supabase.",
+                        "Sign-in unavailable",
                         style = MaterialTheme.typography.bodyMedium,
                         color = L.InkMuted,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    LGhostButton("Continue on this device", onClick = viewModel::continueOnDevice)
                 }
             }
         }

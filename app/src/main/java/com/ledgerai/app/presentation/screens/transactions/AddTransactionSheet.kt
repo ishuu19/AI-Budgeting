@@ -32,6 +32,7 @@ import com.ledgerai.app.presentation.components.LItemSheet
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LPlaceField
 import com.ledgerai.app.presentation.components.LGhostButton
+import com.ledgerai.app.presentation.components.LSwitchRow
 import com.ledgerai.app.presentation.components.LSheet
 import java.math.BigDecimal
 import java.time.Instant
@@ -79,7 +80,7 @@ fun AddTransactionSheet(
     }
     var showMore by rememberSaveable {
         mutableStateOf(
-            !seed?.location.isNullOrBlank() || !seed?.note.isNullOrBlank() ||
+            !seed?.location.isNullOrBlank() || !seed?.note.isNullOrBlank() || seed?.isRecurring == true ||
                 !prefilled?.location.isNullOrBlank() || !prefilled?.note.isNullOrBlank()
         )
     }
@@ -100,46 +101,30 @@ fun AddTransactionSheet(
 
     val body: @Composable ColumnScope.() -> Unit = {
         BigAmountField(amountText, onValueChange = { amountText = it })
-        if (amountText.isNotEmpty() && amount == null) {
-            Text("Enter an amount above 0", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
+        LField(merchant, { merchant = it }, label = "Name")
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (suggestion != null && !categoryTouched) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = L.Highlight, modifier = Modifier.size(16.dp))
+            }
+            LChip(category.displayName, true, onClick = { showMore = true })
+            suggestion?.merchant
+                ?.takeIf { !it.equals(merchant.trim(), ignoreCase = false) }
+                ?.let { canonical ->
+                    LChip(canonical, false, onClick = { merchant = canonical })
+                }
         }
-
         ChipsRow {
-            LChip("Expense", type == TransactionType.EXPENSE, onClick = { type = TransactionType.EXPENSE })
+            LChip("Spending", type == TransactionType.EXPENSE, onClick = { type = TransactionType.EXPENSE })
             LChip("Income", type == TransactionType.INCOME, onClick = { type = TransactionType.INCOME })
-            LChip("Repeats", isRecurring, onClick = { isRecurring = !isRecurring })
-        }
-        ChipsRow {
             LChip("Today", date == today, onClick = { date = today })
             LChip("Yesterday", date == today.minusDays(1), onClick = { date = today.minusDays(1) })
             val custom = date != today && date != today.minusDays(1)
             DatePickChip(date, selected = custom, onDate = { date = it }, label = if (custom) shortDate(date) else "Pick date")
         }
-
-        CategoryChipsRow(selected = category, onSelect = { category = it; categoryTouched = true })
-        suggestion?.let { hint ->
-            val canonical = hint.merchant?.takeIf { !it.equals(merchant.trim(), ignoreCase = false) }
-            if (canonical != null || (categoryTouched && hint.category != category)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Suggested · ${hint.reason}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = L.InkMuted
-                    )
-                    if (categoryTouched && hint.category != category) {
-                        LChip(hint.category.displayName, false, onClick = { category = hint.category; categoryTouched = true })
-                    }
-                    if (canonical != null) LChip(canonical, false, onClick = { merchant = canonical })
-                }
-            } else if (!categoryTouched) {
-                Text("Suggested · ${hint.reason}", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
-            }
-        }
-
-        LField(merchant, { merchant = it }, label = "Name")
         if (!showMore) {
-            ChipsRow { LChip("Add place or note", false, onClick = { showMore = true }) }
+            ChipsRow { LChip("More", false, onClick = { showMore = true }) }
         } else {
+            CategoryChipsRow(selected = category, onSelect = { category = it; categoryTouched = true })
             LPlaceField(
                 location = location,
                 onLocationChange = { location = it },
@@ -151,21 +136,21 @@ fun AddTransactionSheet(
                 LField(placeLinks, { placeLinks = it }, label = "Maps link", singleLine = false, minLines = 2)
             }
             LField(note, { note = it }, label = "Note")
-        }
-
-        if (canCopy) {
-            LGhostButton("Duplicate", onClick = {
-                val copyAmount = amount ?: existing?.amount
-                if (copyAmount != null) {
-                    onCopy?.invoke(copyAmount, type, category, merchant.trim(), note.trim(), location.trim(), isRecurring)
-                }
-            })
+            LSwitchRow("Repeats", isRecurring, { isRecurring = it })
+            if (canCopy) {
+                LGhostButton("Duplicate", onClick = {
+                    val copyAmount = amount ?: existing?.amount
+                    if (copyAmount != null) {
+                        onCopy?.invoke(copyAmount, type, category, merchant.trim(), note.trim(), location.trim(), isRecurring)
+                    }
+                })
+            }
         }
     }
 
     if (existing != null) {
         LItemSheet(
-            title = "Edit",
+            title = "Edit transaction",
             onDismiss = onDismiss,
             primary = "Save",
             onPrimary = save,
@@ -175,7 +160,7 @@ fun AddTransactionSheet(
         )
     } else {
         LSheet(
-            title = "New",
+            title = "New transaction",
             onDismiss = onDismiss,
             primary = "Save",
             onPrimary = save,
@@ -193,7 +178,7 @@ internal fun BigAmountField(value: String, onValueChange: (String) -> Unit, symb
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(symbol, style = MaterialTheme.typography.displaySmall, color = L.Gold)
+        Text(symbol, style = MaterialTheme.typography.displaySmall, color = L.OnBox)
         Spacer(Modifier.width(4.dp))
         BasicTextField(
             value = value,

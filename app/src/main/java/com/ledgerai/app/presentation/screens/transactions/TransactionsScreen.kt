@@ -1,21 +1,23 @@
 package com.ledgerai.app.presentation.screens.transactions
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.foundation.background
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -30,6 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -42,42 +46,47 @@ import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LFab
-import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.Delta
 import com.ledgerai.app.presentation.components.LHero
-import com.ledgerai.app.presentation.components.LIconButton
 import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LGroup
 import com.ledgerai.app.presentation.components.LGroupDivider
 import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LScreen
+import com.ledgerai.app.presentation.components.LSegments
+import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.components.money
+import com.ledgerai.app.presentation.theme.IncomeGreen
 import com.ledgerai.app.presentation.navigation.OpenItem
 import com.ledgerai.app.presentation.navigation.OpenKind
 import com.ledgerai.app.presentation.screens.money.SnackEffect
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private enum class SpendFilter(val label: String) { ALL("All"), INCOME("In"), EXPENSE("Out") }
+private enum class SpendFilter(val label: String) { ALL("All"), INCOME("Income"), EXPENSE("Spending") }
 
 @Composable
 fun TransactionsScreen(
     onNavigateToVoice: () -> Unit,
-    onBack: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
     open: OpenItem? = null,
     onOpened: () -> Unit = {},
     addSpend: Boolean = false,
     onAddSpendConsumed: () -> Unit = {},
+    query: String = "",
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var filterName by rememberSaveable { mutableStateOf(SpendFilter.ALL.name) }
-    var query by rememberSaveable { mutableStateOf("") }
     var categoryName by rememberSaveable { mutableStateOf<String?>(null) }
     var fromText by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     var toText by rememberSaveable { mutableStateOf(LocalDate.now().toString()) }
+    var showDates by rememberSaveable { mutableStateOf(false) }
+    var showCategories by rememberSaveable { mutableStateOf(false) }
 
     val filter = SpendFilter.valueOf(filterName)
     val category = categoryName?.let { name -> TransactionCategory.entries.firstOrNull { it.name == name } }
@@ -127,47 +136,68 @@ fun TransactionsScreen(
         SpendQuery.filter(state.transactions, rangeStart, rangeEnd, type, category, query)
             .sortedWith(compareByDescending<Transaction> { it.date }.thenByDescending { it.createdAt })
     }
-    val total = remember(visible, filter) {
-        visible.sumOf { tx ->
-            when (filter) {
-                SpendFilter.INCOME -> if (tx.type == TransactionType.INCOME) tx.amount else 0.0
-                else -> if (tx.type == TransactionType.EXPENSE) tx.amount else 0.0
-            }
+    fun amountOf(tx: Transaction): Double = when (filter) {
+        SpendFilter.INCOME -> if (tx.type == TransactionType.INCOME) tx.amount else 0.0
+        else -> if (tx.type == TransactionType.EXPENSE) tx.amount else 0.0
+    }
+    val total = remember(visible, filter) { visible.sumOf(::amountOf) }
+    val span = ChronoUnit.DAYS.between(rangeStart, rangeEnd) + 1
+    val prevEnd = rangeStart.minusDays(1)
+    val prevStart = prevEnd.minusDays(span - 1)
+    val prevTotal = remember(state.transactions, prevStart, prevEnd, type, category, query, filter) {
+        SpendQuery.filter(state.transactions, prevStart, prevEnd, type, category, query).sumOf(::amountOf)
+    }
+    val daily = remember(visible, rangeStart, span, filter) {
+        val daysInRange = span.coerceAtMost(42)
+        (0 until daysInRange).map { offset ->
+            val day = rangeStart.plusDays(offset.toLong())
+            visible.filter { it.date == day }.sumOf(::amountOf)
         }
     }
     val days = remember(visible) {
         visible.groupBy { it.date }.toSortedMap(Comparator.reverseOrder())
     }
+    val delta = if (prevTotal > 0.0) ((total - prevTotal) / prevTotal * 100).toInt() else null
     LScreen(
         title = "Spend",
         onBack = onBack,
-        action = { LIconButton(Icons.Filled.Mic, "Add by voice", onNavigateToVoice) },
-        fab = { LFab(Icons.Filled.Add, onClick = { viewModel.showAddSheet() }, label = "Add transaction") },
+        fab = { LFab(Icons.Filled.Add, onClick = { viewModel.showAddSheet() }, label = "New transaction") },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) {
         item(key = "total") {
-            LHero(
-                label = if (filter == SpendFilter.INCOME) "Income" else "Spent",
-                value = money(total),
-                sub = "${visible.size} entries · ${shortDate(rangeStart)} to ${shortDate(rangeEnd)}"
-            )
-        }
-        item(key = "controls") {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LField(query, { query = it }, "Search")
-                ChipsRow {
-                    DatePickChip(rangeStart, selected = false, onDate = { fromText = it.toString() }, label = "From " + shortDate(rangeStart))
-                    DatePickChip(rangeEnd, selected = false, onDate = { toText = it.toString() }, label = "To " + shortDate(rangeEnd))
-                    SpendFilter.entries.forEach { f ->
-                        LChip(f.label, filter == f, onClick = { filterName = f.name; categoryName = null })
-                    }
-                    monthCategories.forEach { cat ->
-                        LChip(
-                            cat.displayName,
-                            category == cat,
-                            onClick = { categoryName = if (category == cat) null else cat.name }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LHero(
+                    label = if (filter == SpendFilter.INCOME) "Income" else "Spent",
+                    value = money(total),
+                    sub = if (delta == null) "${shortDate(rangeStart)} – ${shortDate(rangeEnd)}" else null,
+                    delta = delta?.takeIf { it != 0 }?.let {
+                        Delta(
+                            "${kotlin.math.abs(it)}% vs prior",
+                            up = it > 0,
+                            good = if (filter == SpendFilter.INCOME) it > 0 else it < 0
                         )
                     }
+                )
+                DailyBars(daily)
+            }
+        }
+        item(key = "controls") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LSegments(SpendFilter.entries, filter, { it.label }, onSelect = { chosen ->
+                    filterName = chosen.name
+                    categoryName = null
+                })
+                ChipsRow {
+                    LChip(
+                        "${shortDate(rangeStart)} – ${shortDate(rangeEnd)}",
+                        false,
+                        onClick = { showDates = true }
+                    )
+                    LChip(
+                        category?.displayName ?: "Category",
+                        category != null,
+                        onClick = { showCategories = true }
+                    )
                 }
             }
         }
@@ -178,14 +208,14 @@ fun TransactionsScreen(
             item(key = "empty") {
                 LEmpty(
                     Icons.AutoMirrored.Filled.ReceiptLong,
-                    if (state.transactions.isEmpty()) "Say: lunch 12 at Subway" else "Nothing in this range"
+                    if (state.transactions.isEmpty()) "No spending" else "Nothing in this range"
                 )
             }
         }
 
         days.forEach { (date, list) ->
             item(key = "day-$date") {
-                val net = list.sumOf { if (it.type == TransactionType.INCOME) it.amount else -it.amount }
+                val daySpend = list.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
@@ -195,7 +225,7 @@ fun TransactionsScreen(
                             modifier = Modifier.weight(1f).semantics { heading() }
                         )
                         Text(
-                            (if (net >= 0) "+" else "-") + money(kotlin.math.abs(net)),
+                            money(daySpend),
                             style = MaterialTheme.typography.labelLarge,
                             color = L.InkMuted
                         )
@@ -210,26 +240,63 @@ fun TransactionsScreen(
                                     sub = listOf(tx.category.displayName, tx.location, tx.note)
                                         .filter { it.isNotBlank() && it != tx.merchant.ifBlank { tx.category.displayName } }
                                         .joinToString(" · ").ifBlank { null },
-                                    trailing = (if (income) "+" else "-") + money(tx.amount),
-                                    trailingColor = if (income) L.Gold else L.OnBox,
+                                    trailing = (if (income) "+" else "") + money(tx.amount),
+                                    trailingColor = if (income) IncomeGreen else L.OnBox,
                                     icon = spendIcon(tx.category),
                                     onClick = { viewModel.showEditSheet(tx) },
-                                    end = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            if (tx.isRecurring) {
-                                                Icon(Icons.Filled.Repeat, contentDescription = "Repeats", tint = L.OnBoxMuted, modifier = Modifier.size(16.dp))
-                                            }
-                                            IconButton(onClick = {
-                                                viewModel.copyToNew(tx.amount, tx.type, tx.category, tx.merchant, tx.note, tx.location, tx.isRecurring)
-                                            }) {
-                                                Icon(Icons.Filled.ContentCopy, contentDescription = "Add again today", tint = L.OnBoxMuted, modifier = Modifier.size(20.dp))
-                                            }
+                                    end = if (tx.isRecurring) {
+                                        {
+                                            Icon(
+                                                Icons.Filled.Repeat,
+                                                contentDescription = "Repeats",
+                                                tint = L.OnBoxMuted,
+                                                modifier = Modifier.size(16.dp)
+                                            )
                                         }
+                                    } else {
+                                        null
                                     }
                                 )
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    if (showDates) {
+        LSheet(
+            title = "Dates",
+            onDismiss = { showDates = false },
+            primary = "Done",
+            onPrimary = { showDates = false }
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("From", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+                DatePickChip(rangeStart, selected = true, onDate = { fromText = it.toString() }, label = shortDate(rangeStart))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("To", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+                DatePickChip(rangeEnd, selected = true, onDate = { toText = it.toString() }, label = shortDate(rangeEnd))
+            }
+        }
+    }
+    if (showCategories) {
+        LSheet(
+            title = "Category",
+            onDismiss = { showCategories = false },
+            primary = "Done",
+            onPrimary = { showCategories = false }
+        ) {
+            ChipsRow {
+                LChip("All", category == null, onClick = { categoryName = null })
+                monthCategories.forEach { cat ->
+                    LChip(
+                        cat.displayName,
+                        category == cat,
+                        onClick = { categoryName = if (category == cat) null else cat.name }
+                    )
                 }
             }
         }
@@ -264,6 +331,30 @@ fun TransactionsScreen(
                     viewModel.copyToNew(amount, type, category, merchant, note, location, isRecurring)
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun DailyBars(amounts: List<Double>) {
+    if (amounts.isEmpty()) return
+    val max = amounts.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
+    Row(
+        Modifier.fillMaxWidth().height(32.dp).horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        amounts.forEach { amount ->
+            val frac = (amount / max).toFloat().coerceIn(0.08f, 1f)
+            Box(Modifier.width(8.dp).fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(if (amount <= 0.0) 0.08f else frac)
+                        .clip(RoundedCornerShape(topStart = L.Space.x4, topEnd = L.Space.x4))
+                        .background(if (amount <= 0.0) L.BoxDeep else L.Gold)
+                )
+            }
         }
     }
 }

@@ -4,8 +4,8 @@ package com.ledgerai.app.presentation.navigation
 /** Log is reached from More; the segmented control shows Calendar, Tasks, Notes, Jobs. */
 enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Notes("Notes"), Log("Log"), Jobs("Jobs") }
 enum class VoiceSeg(val label: String) { Capture("Capture"), Speak("Speak"), Notes("Notes"), Ask("Chat") }
-enum class LifeSeg(val label: String) { Pantry("Pantry"), Wardrobe("Wardrobe"), People("People"), Home("Home") }
-enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Plan"), Owed("Owed") }
+enum class LifeSeg(val label: String) { Pantry("Pantry"), Wardrobe("Wardrobe"), People("People"), Home("Household") }
+enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Budget"), Owed("Owed") }
 
 /** Ways a tab screen can reach another place. Wired once in [AppNavigation]. */
 class AppLinks(

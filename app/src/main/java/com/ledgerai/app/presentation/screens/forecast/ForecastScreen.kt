@@ -1,22 +1,29 @@
 package com.ledgerai.app.presentation.screens.forecast
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,13 +34,10 @@ import com.ledgerai.app.data.repository.BudgetRepository
 import com.ledgerai.app.data.repository.TransactionRepository
 import com.ledgerai.app.domain.model.Bill
 import com.ledgerai.app.domain.model.FinancialForecast
-import com.ledgerai.app.domain.model.RiskLevel
 import com.ledgerai.app.domain.model.TransactionType
 import com.ledgerai.app.presentation.components.L
-import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LError
 import com.ledgerai.app.presentation.components.LSection
-import com.ledgerai.app.presentation.components.LWide
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.screens.money.todayTicker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,8 +51,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
@@ -59,6 +61,8 @@ data class ForecastUiState(
     val runwayDays: Int? = null,
     val upcomingBills: List<Bill> = emptyList(),
     val overdueCount: Int = 0,
+    val actualBalances: List<Float> = emptyList(),
+    val monthDays: Int = 30,
     val isProjectionReady: Boolean = false,
     val forecasts: List<FinancialForecast> = emptyList(),
     val isLoading: Boolean = false,
@@ -121,6 +125,15 @@ class ForecastViewModel @Inject constructor(
                     .filter { !it.nextDueDate.isAfter(now.plusDays(30)) }
                     .sortedBy { it.nextDueDate }
                     .take(6)
+                var running = input.cash ?: 0.0
+                val grouped = input.tx.groupBy { it.date }
+                val points = ArrayList<Float>(now.dayOfMonth)
+                for (day in 1..now.dayOfMonth) {
+                    grouped[now.withDayOfMonth(day)].orEmpty().forEach { tx ->
+                        running += if (tx.type == TransactionType.INCOME) tx.amount else -tx.amount
+                    }
+                    points.add(running.toFloat())
+                }
 
                 _uiState.update {
                     it.copy(
@@ -129,7 +142,9 @@ class ForecastViewModel @Inject constructor(
                         runwayDays = runwayDays,
                         upcomingBills = upcoming,
                         overdueCount = input.bills.count { b -> b.nextDueDate.isBefore(now) },
-                        isProjectionReady = true
+                        isProjectionReady = true,
+                        actualBalances = points,
+                        monthDays = now.lengthOfMonth()
                     )
                 }
             }
@@ -164,77 +179,105 @@ class ForecastViewModel @Inject constructor(
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
-private val dueFormat = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-
-/** Forecast section for the Money Plan segment: one wide block that expands. */
+/** Forecast on Money Budget: one header, a line to date, and a dashed projection. */
 fun LazyListScope.forecastItems(
     state: ForecastUiState,
     expanded: Boolean,
     onToggle: () -> Unit,
-    onPredict: () -> Unit
+    onPredict: () -> Unit,
+    onOwed: () -> Unit
 ) {
-    item(key = "forecast-header") { LSection("Forecast") }
+    item(key = "forecast-header") {
+        LSection("Forecast", action = if (expanded) "Show less" else "See all", onAction = onToggle)
+    }
     item(key = "forecast-block") {
-        LWide(label = "Month end", onClick = onToggle) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                if (state.isProjectionReady) money(state.projectedBalance) else "—",
+                style = MaterialTheme.typography.titleLarge,
+                color = if (state.projectedBalance < 0) L.Danger else L.OnBox
+            )
+            if (state.isProjectionReady) {
                 Text(
-                    if (state.isProjectionReady) money(state.projectedBalance) else "—",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (state.projectedBalance < 0) L.Danger else L.OnBox,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) "Collapse forecast" else "Expand forecast",
-                    tint = L.Gold
+                    "${money(state.projectedSpend)} projected spend",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = L.OnBoxMuted
                 )
             }
-            if (state.isProjectionReady) {
-                Text("${money(state.projectedSpend)} projected spend", style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+            if (state.actualBalances.size >= 2) {
+                BalanceLine(state.actualBalances, state.projectedBalance.toFloat(), state.monthDays)
             }
             if (expanded) {
-                state.runwayDays?.let { days ->
-                    ForecastLine("Runway", "$days days")
-                }
-                if (state.overdueCount > 0) ForecastLine("Overdue bills", state.overdueCount.toString(), L.Danger)
-                if (state.upcomingBills.isEmpty()) {
-                    Text("Nothing due", style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted)
-                } else {
-                    Text("DUE SOON", style = MaterialTheme.typography.labelSmall, color = L.Gold)
-                    val today = LocalDate.now()
-                    state.upcomingBills.forEach { bill ->
-                        val late = bill.nextDueDate.isBefore(today)
-                        ForecastLine(
-                            bill.name + " · " + (if (late) "Overdue" else bill.nextDueDate.format(dueFormat)),
-                            money(bill.amount),
-                            if (late) L.Danger else L.Gold
-                        )
-                    }
-                }
-                state.forecasts.forEach { forecast ->
-                    ForecastLine(
-                        "${forecast.month} · ${forecast.riskLevel.label}",
-                        money(forecast.predictedSpend),
-                        if (forecast.riskLevel == RiskLevel.HIGH) L.Danger else L.Gold
+                state.runwayDays?.let { days -> ForecastLine("Runway", "$days days") }
+                if (state.overdueCount > 0 || state.upcomingBills.isNotEmpty()) {
+                    val label = if (state.overdueCount > 0) "${state.overdueCount} late" else "Bills"
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (state.overdueCount > 0) L.Danger else L.Primary,
+                        modifier = Modifier.clickable(onClick = onOwed).heightIn(min = 48.dp)
                     )
-                    Text(forecast.insight, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
                 }
-                if (state.forecasts.isNotEmpty()) {
-                    Text("Rules", style = MaterialTheme.typography.labelSmall, color = L.Gold)
+                state.forecasts.firstOrNull()?.let { forecast ->
+                    Text(
+                        forecast.insight,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = L.OnBox,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        color = L.Gold,
+                        color = L.Primary,
                         modifier = Modifier.size(24.dp).semantics { contentDescription = "Loading forecast" }
                     )
                 } else {
-                    LButton(if (state.forecasts.isEmpty()) "Predict months" else "Refresh prediction", onPredict)
+                    Row(
+                        Modifier.clickable(onClick = onPredict).heightIn(min = 48.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = L.Highlight, modifier = Modifier.size(16.dp))
+                        Text(
+                            if (state.forecasts.isEmpty()) "Predict" else "Refresh",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = L.Primary
+                        )
+                    }
                 }
             }
         }
     }
     if (state.error != null && !state.isLoading) {
         item(key = "forecast-error") { LError("Forecast unavailable", onRetry = onPredict) }
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun BalanceLine(actual: List<Float>, projected: Float, monthDays: Int) {
+    Canvas(Modifier.fillMaxWidth().height(80.dp)) {
+        val last = actual.last()
+        val values = actual + projected
+        val min = values.min()
+        val max = values.max().let { if (it - min < 1f) min + 1f else it }
+        fun x(index: Int) = size.width * index / (monthDays - 1).coerceAtLeast(1).toFloat()
+        fun y(value: Float) = size.height - (value - min) / (max - min) * size.height
+        val solid = Path()
+        actual.forEachIndexed { index, value ->
+            val px = x(index)
+            val py = y(value)
+            if (index == 0) solid.moveTo(px, py) else solid.lineTo(px, py)
+        }
+        drawPath(solid, L.Gold, style = Stroke(width = 3f))
+        val dash = Path()
+        dash.moveTo(x(actual.lastIndex), y(last))
+        dash.lineTo(x(monthDays - 1), y(projected))
+        drawPath(
+            dash,
+            L.InkMuted,
+            style = Stroke(width = 3f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
+        )
     }
 }
 

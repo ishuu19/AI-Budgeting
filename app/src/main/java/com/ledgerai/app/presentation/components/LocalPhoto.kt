@@ -24,13 +24,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** Shows a small local JPEG. Thumbnails are at most 360 px, so decoding is cheap. Placeholder if missing. */
+/**
+ * Shows a small local JPEG. If [fallback] is given it is tried when [file] is missing or cannot be read
+ * (the full-size photo instead of its thumbnail). A broken file never crashes the screen; it shows the placeholder.
+ */
 @Composable
-fun LocalPhoto(file: File, modifier: Modifier = Modifier, scale: ContentScale = ContentScale.Crop) {
+fun LocalPhoto(
+    file: File,
+    modifier: Modifier = Modifier,
+    scale: ContentScale = ContentScale.Crop,
+    fallback: File? = null,
+) {
     var bitmap by remember(file.path) { mutableStateOf<ImageBitmap?>(null) }
-    LaunchedEffect(file.path) {
+    LaunchedEffect(file.path, fallback?.path) {
         bitmap = withContext(Dispatchers.IO) {
-            file.takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
+            listOfNotNull(file, fallback).firstNotNullOfOrNull { f ->
+                runCatching {
+                    if (!f.exists()) return@runCatching null
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeFile(f.path, bounds)
+                    var sample = 1
+                    while (bounds.outWidth / sample > 1200 || bounds.outHeight / sample > 1200) sample *= 2
+                    BitmapFactory.decodeFile(f.path, BitmapFactory.Options().apply { inSampleSize = sample })?.asImageBitmap()
+                }.onFailure { android.util.Log.w("LocalPhoto", "could not read ${f.name}: ${it.message}") }.getOrNull()
+            }
         }
     }
     val loaded = bitmap

@@ -1,28 +1,40 @@
 package com.ledgerai.app.presentation.screens.voice
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.data.ai.VoiceResultKind
 import com.ledgerai.app.data.repository.VoiceHistoryItem
+import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LConfirmDelete
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LField
-import com.ledgerai.app.presentation.components.LGhostButton
 import com.ledgerai.app.presentation.components.LGroup
 import com.ledgerai.app.presentation.components.LGroupDivider
 import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LItemSheet
 import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LToolButton
 import com.ledgerai.app.presentation.navigation.OpenKind
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -54,10 +66,10 @@ internal fun HistoryGroup(
                 shown.forEachIndexed { index, item ->
                     if (index > 0) LGroupDivider()
                     LGroupRow(
-                        title = item.transcript,
-                        sub = historyTime(item.createdAt),
+                        title = "Capture · ${historyTime(item.createdAt)}",
+                        sub = item.transcript,
                         onClick = { onTap(item) },
-                        end = { KindPill(item.kind) }
+                        end = { KindPill(item.kind, muted = true) }
                     )
                 }
                 if (history.size > COLLAPSED_ROWS) {
@@ -101,30 +113,62 @@ internal fun HistoryItemSheet(
     var transcript by rememberSaveable(item.id) { mutableStateOf(item.transcript) }
     var kind by rememberSaveable(item.id) { mutableStateOf<VoiceResultKind?>(item.kind.takeIf { it != VoiceResultKind.Unsorted }) }
     var withItem by rememberSaveable(item.id) { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
+    var confirm by rememberSaveable(item.id) { mutableStateOf(false) }
     val linked = item.linkedItemId != null && item.kind != VoiceResultKind.Unsorted
     val openKind = item.kind.openKind()
+    val title = "Capture · ${historyTime(item.createdAt)}"
 
     LItemSheet(
-        title = historyTime(item.createdAt),
+        title = title,
         onDismiss = onDismiss,
         primary = "Save",
         onPrimary = { onSave(transcript, kind ?: VoiceResultKind.Unsorted) },
         primaryEnabled = transcript.isNotBlank(),
-        onDelete = { onDelete(withItem && linked) }
     ) {
-        LField(transcript, { transcript = it }, "Words", singleLine = false, minLines = 2)
+        LField(transcript, { transcript = it }, "Transcript", singleLine = false, minLines = 2)
         KindChips(kind, auto = false) { kind = it }
         if (linked) {
             LChip("Also remove saved item", selected = withItem, onClick = { withItem = !withItem })
-            if (onOpen != null && openKind != null) {
-                LGhostButton("Open", onClick = { onOpen(openKind, item.linkedItemId!!) })
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+            Box {
+                LToolButton(Icons.Filled.MoreVert, "More", onClick = { menu = true })
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (linked && onOpen != null && openKind != null) {
+                        DropdownMenuItem(
+                            text = { Text("Open") },
+                            onClick = {
+                                menu = false
+                                onOpen(openKind, item.linkedItemId!!)
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text("Re-record") },
+                        onClick = { menu = false; onVoice() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Read again") },
+                        onClick = {
+                            menu = false
+                            if (transcript.isNotBlank()) onRedo(transcript, kind, withItem && linked)
+                        },
+                        enabled = transcript.isNotBlank(),
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Delete", color = L.Danger) },
+                        onClick = { menu = false; confirm = true }
+                    )
+                }
             }
         }
-        LGhostButton("Voice", onClick = onVoice)
-        LGhostButton(
-            "Redo",
-            onClick = { onRedo(transcript, kind, withItem && linked) },
-            enabled = transcript.isNotBlank()
+    }
+    if (confirm) {
+        LConfirmDelete(
+            title = "Delete this capture?",
+            onConfirm = { confirm = false; onDelete(withItem && linked) },
+            onDismiss = { confirm = false },
         )
     }
 }
@@ -140,13 +184,13 @@ internal fun RedoSheet(
     var transcript by rememberSaveable { mutableStateOf(initialTranscript) }
     var kind by rememberSaveable { mutableStateOf(initialKind) }
     LSheet(
-        title = "Edit",
+        title = "Edit capture",
         onDismiss = onDismiss,
         primary = "Read again",
         onPrimary = { onApply(transcript.trim(), kind) },
         primaryEnabled = transcript.isNotBlank()
     ) {
-        LField(transcript, { transcript = it }, "Words", singleLine = false, minLines = 2)
+        LField(transcript, { transcript = it }, "Transcript", singleLine = false, minLines = 2)
         KindChips(kind, auto = true) { kind = it }
     }
 }

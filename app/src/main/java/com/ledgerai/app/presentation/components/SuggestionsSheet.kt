@@ -1,12 +1,14 @@
 package com.ledgerai.app.presentation.components
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.ledgerai.app.data.ai.ScheduleDraftDto
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun SuggestionsSheet(
@@ -17,24 +19,37 @@ fun SuggestionsSheet(
     onDismissDraft: (ScheduleDraftDto) -> Unit
 ) {
     LSheet(
-        title = "Suggest",
+        title = "Suggestions",
         onDismiss = onDismiss,
-        primary = "Close",
-        onPrimary = onDismiss
+        primary = null,
     ) {
         if (loading) {
             LLoading()
         } else if (drafts.isEmpty()) {
-            Text("Nothing to add", color = L.InkMuted)
+            LEmpty(Icons.Filled.Lightbulb, "No suggestions")
         } else {
-            drafts.forEach { draft ->
-                LRow(
-                    title = draft.title.orEmpty(),
-                    sub = draft.reason ?: draft.startAt,
-                    trailing = "Add",
-                    onClick = { onAccept(draft) }
-                )
+            LGroup {
+                drafts.forEachIndexed { index, draft ->
+                    if (index > 0) LGroupDivider()
+                    LGroupRow(
+                        title = draft.title.orEmpty().ifBlank { "Suggestion" },
+                        sub = draftWhen(draft.startAt),
+                        onClick = { onAccept(draft) },
+                        end = { LToolButton(Icons.Filled.Add, "Add", { onAccept(draft) }) },
+                    )
+                }
             }
         }
     }
+}
+
+private fun draftWhen(iso: String?): String? {
+    if (iso.isNullOrBlank()) return null
+    val parsed = runCatching { LocalDateTime.parse(iso) }.getOrNull()
+        ?: runCatching {
+            LocalDateTime.parse(iso, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+        }.getOrNull()
+        ?: return null
+    val day = parsed.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+    return "$day ${localeTime(parsed.toLocalTime())}"
 }

@@ -1,10 +1,14 @@
 package com.ledgerai.app.presentation.screens.plan
 
+import com.ledgerai.app.presentation.components.LAiBar
+import com.ledgerai.app.presentation.components.LSearchToolbar
+import com.ledgerai.app.presentation.components.LToolButton
+import com.ledgerai.app.presentation.components.LocalLinks
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,10 +25,13 @@ import com.ledgerai.app.domain.model.RecurrenceDeleteScope
 import com.ledgerai.app.presentation.components.AddKind
 import com.ledgerai.app.presentation.components.CalendarEventDetailSheet
 import com.ledgerai.app.presentation.components.HabitSessionSheet
-import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LConfirmDelete
 import com.ledgerai.app.presentation.components.LSegments
+import com.ledgerai.app.presentation.components.LSwipePages
 import com.ledgerai.app.presentation.components.LTabPage
+import com.ledgerai.app.presentation.screens.calendar.CalendarTools
+import com.ledgerai.app.presentation.screens.calendar.DayFollowUp
+import com.ledgerai.app.presentation.screens.jobs.JobsViewModel
 import com.ledgerai.app.presentation.components.PlanAddSheet
 import com.ledgerai.app.presentation.components.PlanBlockSheet
 import com.ledgerai.app.presentation.components.RecurrenceDeleteSheet
@@ -48,6 +55,8 @@ fun PlanTabScreen(
     onOpened: () -> Unit = {}
 ) {
     val vm: PlanViewModel = hiltViewModel()
+    val jobsVm: JobsViewModel = hiltViewModel()
+    val jobsState by jobsVm.state.collectAsState()
     var adding by rememberSaveable { mutableStateOf(false) }
     var addKind by rememberSaveable { mutableStateOf(AddKind.Event) }
     var addDay by rememberSaveable { mutableLongStateOf(LocalDate.now().toEpochDay()) }
@@ -59,6 +68,11 @@ fun PlanTabScreen(
     var jobId by rememberSaveable { mutableStateOf<Long?>(null) }
     val study by vm.study.collectAsState()
     val agenda by vm.agenda.collectAsState()
+    val calendarTools = remember { CalendarTools() }
+    var query by rememberSaveable { mutableStateOf("") }
+    var jobUtterance by rememberSaveable { mutableStateOf("") }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    val pages = PlanSeg.entries.filter { it != PlanSeg.Log }
 
     LaunchedEffect(open?.nonce) {
         val o = open ?: return@LaunchedEffect
@@ -80,34 +94,76 @@ fun PlanTabScreen(
 
     LTabPage(
         title = "Plan",
-        action = {
-            IconButton(onClick = links.search) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = L.Primary)
+        compact = true,
+        tools = {
+            LSearchToolbar(
+                query = query,
+                onQuery = { text -> if (seg == PlanSeg.Jobs) jobUtterance = text else query = text },
+                searching = searching,
+                onSearching = { searching = it },
+                hint = when (seg) {
+                    PlanSeg.Tasks -> "Search tasks"
+                    PlanSeg.Notes -> "Search notes"
+                    else -> "Search your calendar"
+                },
+                showSearch = seg == PlanSeg.Calendar || seg == PlanSeg.Tasks || seg == PlanSeg.Notes,
+            ) {
+                if (seg == PlanSeg.Calendar) {
+                    LToolButton(Icons.Filled.AutoAwesome, "Suggest", calendarTools.suggest)
+                    LToolButton(Icons.Filled.Upload, "Import", calendarTools.import)
+                }
             }
         },
-        segments = { LSegments(PlanSeg.entries.filter { it != PlanSeg.Log }, seg, { it.label }, onSeg) },
+        segments = { LSegments(pages, seg, { it.label }, onSeg) },
         aiBar = {
-            com.ledgerai.app.presentation.components.LAiBar(
+            val links = LocalLinks.current
+            LAiBar(
                 hint = when (seg) {
-                    PlanSeg.Calendar -> "Dentist Friday at 3"
-                    PlanSeg.Tasks -> "Remind me to pay rent tomorrow"
-                    PlanSeg.Notes -> "Note: idea for the project"
-                    else -> "Applied to Google, follow up Friday"
+                    PlanSeg.Tasks -> "Remind me to call the bank"
+                    PlanSeg.Notes -> "Note an idea"
+                    PlanSeg.Jobs -> "Applied to Google, follow up Friday"
+                    else -> "Dentist Friday at 3"
                 },
-                onSend = links.speak,
+                onSend = { links.speak(it) },
                 onMic = links.listen,
             )
-        }
+        },
     ) {
-        when (seg) {
-            PlanSeg.Calendar -> CalendarScreen(vm, onOpen = { itemKey = it }, onAdd = { startAdd(AddKind.Event, it) })
-            PlanSeg.Tasks -> TasksScreen(vm, onOpen = { itemKey = it }, onAdd = { startAdd(AddKind.Task, it) })
-            PlanSeg.Notes -> com.ledgerai.app.presentation.screens.notes.NotesScreen(
-                open = open?.takeIf { it.kind == OpenKind.Note },
-                onOpened = onOpened
-            )
-            PlanSeg.Log -> LifeLogScreen()
-            PlanSeg.Jobs -> JobsScreen(openId = jobId, onOpened = { jobId = null; onOpened() })
+        if (seg == PlanSeg.Log) {
+            LifeLogScreen()
+        } else {
+            LSwipePages(pages, seg, onSeg) { page ->
+                when (page) {
+                    PlanSeg.Calendar -> CalendarScreen(
+                        vm,
+                        onOpen = { itemKey = it },
+                        onAdd = { startAdd(AddKind.Event, it) },
+                        tools = calendarTools,
+                        query = query,
+                        followUps = jobsState.jobs.mapNotNull { job ->
+                            val day = job.followUpOn ?: return@mapNotNull null
+                            DayFollowUp(job.id, job.company.ifBlank { job.title }, day)
+                        },
+                        onOpenJob = {
+                            jobId = it
+                            onSeg(PlanSeg.Jobs)
+                        },
+                    )
+                    PlanSeg.Tasks -> TasksScreen(vm, onOpen = { itemKey = it }, query = query)
+                    PlanSeg.Notes -> com.ledgerai.app.presentation.screens.notes.NotesScreen(
+                        open = open?.takeIf { it.kind == OpenKind.Note },
+                        onOpened = onOpened,
+                        query = query,
+                    )
+                    PlanSeg.Jobs -> JobsScreen(
+                        openId = jobId,
+                        onOpened = { jobId = null; onOpened() },
+                        utterance = jobUtterance,
+                        onUtteranceConsumed = { jobUtterance = "" },
+                    )
+                    PlanSeg.Log -> Unit
+                }
+            }
         }
     }
 
@@ -131,7 +187,7 @@ fun PlanTabScreen(
 
     // Study proposals
     study?.let { s ->
-        StudyTimesSheet(study = s, onDismiss = vm::clearStudy, onConfirm = vm::confirmStudy)
+        StudyTimesSheet(study = s, onDismiss = vm::clearStudy, onConfirm = vm::confirmStudy, busy = agenda.items)
     }
 
     // Item sheet

@@ -18,20 +18,24 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -63,6 +70,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -75,11 +83,13 @@ import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LCard
 import com.ledgerai.app.presentation.components.LError
-import com.ledgerai.app.presentation.components.LField
-import com.ledgerai.app.presentation.components.LGhostButton
+import com.ledgerai.app.presentation.components.LMicButton
 import com.ledgerai.app.presentation.components.LProgress
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
+import com.ledgerai.app.presentation.components.LSnackbar
+import com.ledgerai.app.presentation.components.LTextLink
+import com.ledgerai.app.presentation.components.rememberVoiceInput
 import com.ledgerai.app.presentation.navigation.AppLinks
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -176,28 +186,28 @@ fun VoiceRecorderScreen(
     LScreen(
         title = "Voice",
         onBack = back,
-        action = { EngineLabel(state.engineLabel) },
         listState = listState,
         snackbarHost = {
-            if (notice != null) {
-                SavedBar(
-                    message = notice.message,
-                    canOpen = notice.open != null,
-                    onUndo = viewModel::undoNotice,
-                    onOpen = {
-                        notice.open?.let { (kind, id) -> links.open(kind, id) }
-                        viewModel.dismissNotice()
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (notice != null) {
+                    SavedBar(
+                        message = notice.message,
+                        canOpen = notice.open != null,
+                        onUndo = viewModel::undoNotice,
+                        onOpen = {
+                            notice.open?.let { (kind, id) -> links.open(kind, id) }
+                            viewModel.dismissNotice()
+                        }
+                    )
+                }
+                if (state.recorderState == VoiceRecorderState.RESULT && state.cards.size > 1) {
+                    Box(Modifier.padding(horizontal = L.Gutter, vertical = 8.dp)) {
+                        LButton("Save all", onClick = viewModel::saveAll)
                     }
-                )
+                }
             }
         }
     ) {
-        item(key = "lang") {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LChip("English", selected = state.speechLang != "bn", onClick = { viewModel.setSpeechLanguage("en") })
-                LChip("বাংলা", selected = state.speechLang == "bn", onClick = { viewModel.setSpeechLanguage("bn") })
-            }
-        }
         item(key = "mic") {
             MicButton(
                 recording = recording,
@@ -212,8 +222,16 @@ fun VoiceRecorderScreen(
                 }
             )
         }
+        item(key = "lang") {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LChip("English", selected = state.speechLang != "bn", onClick = { viewModel.setSpeechLanguage("en") })
+                LChip("বাংলা", selected = state.speechLang == "bn", onClick = { viewModel.setSpeechLanguage("bn") })
+            }
+        }
 
-        item(key = "status") { StatusLine(statusWord(state), live = true) }
+        if (state.recorderState != VoiceRecorderState.IDLE) {
+            item(key = "status") { StatusLine(statusWord(state), live = true) }
+        }
 
         state.modelDownloadProgress?.let { progress ->
             item(key = "download") { DownloadProgress(progress) }
@@ -254,23 +272,15 @@ fun VoiceRecorderScreen(
                     onDiscard = { viewModel.discardCard(card.key) }
                 )
             }
-            if (state.cards.size > 1) {
-                item(key = "save-all") { LButton("Save all", onClick = viewModel::saveAll) }
-                item(key = "discard-all") { LGhostButton("Discard all", onClick = viewModel::discardAll) }
-            }
         }
 
         if (state.recorderState == VoiceRecorderState.IDLE || state.recorderState == VoiceRecorderState.ERROR) {
             item(key = "type") {
-                LField(
-                    value = state.typedInput,
-                    onValueChange = viewModel::updateTypedInput,
-                    label = "Type",
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                TypeComposer(
+                    text = state.typedInput,
+                    onText = viewModel::updateTypedInput,
+                    onSend = viewModel::parseTypedInput,
                 )
-            }
-            if (state.typedInput.isNotBlank()) {
-                item(key = "send") { LGhostButton("Send", onClick = viewModel::parseTypedInput) }
             }
         }
 
@@ -323,21 +333,6 @@ private fun statusWord(state: VoiceUiState): String = when (state.recorderState)
 }
 
 @Composable
-private fun EngineLabel(label: String) {
-    Text(
-        label,
-        style = MaterialTheme.typography.labelMedium,
-        color = L.Gold,
-        maxLines = 1,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(L.Box)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .semantics { contentDescription = "Voice engine $label" }
-    )
-}
-
-@Composable
 private fun MicButton(recording: Boolean, busy: Boolean, amplitude: Float, onClick: () -> Unit) {
     val description = if (recording) "Stop recording" else "Start recording"
     Box(
@@ -350,7 +345,7 @@ private fun MicButton(recording: Boolean, busy: Boolean, amplitude: Float, onCli
                 Modifier
                     .size(MicSize)
                     .clip(CircleShape)
-                    .background(L.Gold)
+                    .background(L.Highlight)
                     .semantics {
                         contentDescription = description
                         role = Role.Button
@@ -362,7 +357,7 @@ private fun MicButton(recording: Boolean, busy: Boolean, amplitude: Float, onCli
                 Icon(
                     if (recording) Icons.Filled.Stop else Icons.Filled.Mic,
                     contentDescription = null,
-                    tint = L.BoxDeep,
+                    tint = L.OnHighlight,
                     modifier = Modifier.size(48.dp).alpha(if (busy) 0.4f else 1f)
                 )
             }
@@ -394,6 +389,57 @@ private fun PulseRings(amplitude: Float) {
                 .clip(CircleShape)
                 .background(L.Box)
         )
+    }
+}
+
+/** Pill field under the mic. Mic fills it; send parses the words. */
+@Composable
+private fun TypeComposer(text: String, onText: (String) -> Unit, onSend: () -> Unit) {
+    val voice = rememberVoiceInput(onText)
+    val listening = voice.listening
+    val canSend = text.isNotBlank()
+    val sendMode = canSend && !listening
+    val shape = RoundedCornerShape(L.Radius)
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            Modifier
+                .weight(1f)
+                .clip(shape)
+                .background(L.Box)
+                .border(1.dp, L.Line, shape)
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.weight(1f).padding(vertical = 16.dp)) {
+                if (text.isEmpty()) {
+                    Text(
+                        if (listening) "Listening…" else "Ask or say…",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = L.InkMuted,
+                        maxLines = 1,
+                    )
+                }
+                BasicTextField(
+                    value = text,
+                    onValueChange = onText,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = L.Ink),
+                    cursorBrush = SolidColor(L.Accent),
+                    maxLines = 4,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        when {
+            sendMode -> ComposerAction(Icons.Filled.Send, "Send", L.Accent, L.OnAccent, onSend)
+            listening -> ComposerAction(Icons.Filled.Stop, "Stop listening", L.Danger, L.OnAccent, voice.toggle)
+            else -> LMicButton(onClick = voice.toggle, label = "Speak")
+        }
     }
 }
 
@@ -460,40 +506,55 @@ private fun ErrorBlock(
     }
 }
 
-/** Result of a save: what happened, Undo, and Open when the item has a home screen. */
+/** Undo fits [LSnackbar]. Open plus Undo does not: that bar has one action slot. */
 @Composable
 private fun SavedBar(message: String, canOpen: Boolean, onUndo: () -> Unit, onOpen: () -> Unit) {
-    Row(
-        Modifier
-            .padding(horizontal = L.Gutter, vertical = 12.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(L.Radius))
-            .background(L.Box)
-            .padding(start = 16.dp, end = 8.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = L.OnBox,
-            modifier = Modifier.weight(1f)
-        )
-        BarAction("Undo", onUndo)
-        if (canOpen) BarAction("Open", onOpen)
+    val pad = Modifier
+        .padding(horizontal = L.Gutter, vertical = 12.dp)
+        .semantics { liveRegion = LiveRegionMode.Polite }
+    if (!canOpen) {
+        LSnackbar(message, pad, action = "Undo", onAction = onUndo)
+    } else {
+        Row(
+            pad
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(L.Radius))
+                .background(L.Box)
+                .border(1.dp, L.Line, RoundedCornerShape(L.Radius))
+                .padding(horizontal = L.Space.x8),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = L.Ink,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            LTextLink("Undo", onUndo)
+            LTextLink("Open", onOpen)
+        }
     }
 }
 
 @Composable
-private fun BarAction(text: String, onClick: () -> Unit) {
+private fun ComposerAction(
+    icon: ImageVector,
+    label: String,
+    fill: Color,
+    tint: Color,
+    onClick: () -> Unit,
+) {
     Box(
         Modifier
-            .heightIn(min = 48.dp)
-            .clip(RoundedCornerShape(L.RadiusSm))
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center
+            .size(L.Mic)
+            .clip(CircleShape)
+            .background(fill)
+            .semantics { role = Role.Button; contentDescription = label }
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = L.Gold)
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
     }
 }

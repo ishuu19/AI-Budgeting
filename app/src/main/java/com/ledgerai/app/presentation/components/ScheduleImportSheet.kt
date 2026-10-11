@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,18 +27,24 @@ fun ScheduleImportSheet(
     var replace by rememberSaveable { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+    var failed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     fun runImport(block: suspend () -> Result<Int>) {
         scope.launch {
             busy = true
             message = null
+            failed = false
             block()
                 .onSuccess { n ->
-                    message = "Added $n classes"
+                    failed = false
+                    message = "Added $n"
                     if (n > 0) paste = ""
                 }
-                .onFailure { message = it.message ?: "Import failed" }
+                .onFailure {
+                    failed = true
+                    message = "Import failed"
+                }
             busy = false
         }
     }
@@ -53,26 +62,23 @@ fun ScheduleImportSheet(
         primary = if (busy) "Working" else "Import",
         onPrimary = {
             if (paste.isBlank()) {
-                message = "Add a schedule"
+                failed = true
+                message = "Paste a schedule"
             } else {
                 runImport { onImportText(paste, replace) }
             }
         },
         primaryEnabled = !busy && paste.isNotBlank()
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LChip("Photo", selected = false, onClick = { imagePicker.launch("image/*") })
-            LChip("CSV", selected = false, onClick = { csvPicker.launch(arrayOf("text/*", "text/csv")) })
-            LChip(
-                if (replace) "Replace" else "Add",
-                selected = replace,
-                onClick = { replace = !replace }
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(L.Space.x8)) {
+            LToolButton(Icons.Filled.PhotoCamera, "Photo", { imagePicker.launch("image/*") })
+            LToolButton(Icons.Filled.Description, "CSV", { csvPicker.launch(arrayOf("text/*", "text/csv")) })
         }
+        LSwitchRow("Replace existing", replace, { replace = it })
         LField(paste, { paste = it }, "Schedule text", singleLine = false, minLines = 6)
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         message?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Primary)
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = if (failed) L.Danger else L.InkMuted)
         }
     }
 }
