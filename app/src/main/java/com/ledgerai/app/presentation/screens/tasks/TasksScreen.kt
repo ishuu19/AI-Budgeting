@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,24 +26,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ledgerai.app.domain.model.CalendarEvent
+import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LError
 import com.ledgerai.app.presentation.components.LFab
 import com.ledgerai.app.presentation.components.LGroup
 import com.ledgerai.app.presentation.components.LGroupDivider
 import com.ledgerai.app.presentation.components.LGroupRow
-import com.ledgerai.app.presentation.components.LHero
+import com.ledgerai.app.presentation.components.LHeroCard
 import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LScreen
+import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.screens.plan.AgendaKeys
 import com.ledgerai.app.presentation.screens.plan.PlanViewModel
+import com.ledgerai.app.presentation.screens.transactions.DatePickChip
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -80,6 +84,10 @@ private fun dueLabel(task: CalendarEvent): String {
     return if (task.allDay) day else "$day ${task.startAt.format(TimeFmt)}"
 }
 
+/**
+ * Tasks segment. The top card is the one task that needs you most (overdue, else today, else next);
+ * below it the rest are grouped Late / Today / Soon / Done.
+ */
 @Composable
 fun TasksScreen(vm: PlanViewModel, onOpen: (String) -> Unit, onAdd: (LocalDate) -> Unit) {
     val state by vm.tasks.collectAsState()
@@ -89,6 +97,8 @@ fun TasksScreen(vm: PlanViewModel, onOpen: (String) -> Unit, onAdd: (LocalDate) 
     val grouped = state.tasks.groupBy { it.group(today, now) }
     val open = state.tasks.count { !it.isCompleted }
     val late = grouped[TaskGroup.Late]?.size ?: 0
+    val focusGroup = listOf(TaskGroup.Late, TaskGroup.Today, TaskGroup.Soon).firstOrNull { !grouped[it].isNullOrEmpty() }
+    val focus: CalendarEvent? = focusGroup?.let { grouped[it]?.firstOrNull() }
 
     LScreen(
         title = "Tasks",
@@ -97,24 +107,45 @@ fun TasksScreen(vm: PlanViewModel, onOpen: (String) -> Unit, onAdd: (LocalDate) 
         when {
             state.loading -> item { LLoading() }
             state.error -> item { LError("Could not load", onRetry = vm::retry) }
-            state.tasks.isEmpty() -> item { LEmpty(Icons.Filled.CheckCircle, "No tasks") }
+            state.tasks.isEmpty() -> item { LEmpty(Icons.Filled.CheckCircle, "No tasks. Say: remind me to pay rent tomorrow") }
             else -> {
-                item(key = "open") {
-                    LHero(label = "Open", value = open.toString(), sub = if (late > 0) "$late late" else null)
+                if (focus != null && focusGroup != null) {
+                    item(key = "focus") {
+                        val actions: @Composable RowScope.() -> Unit = {
+                            ChipsRow {
+                                LChip("Done", selected = true, onClick = { vm.setDone(focus, true) })
+                                LChip("Tomorrow", selected = false, onClick = { vm.reschedule(focus, today.plusDays(1)) })
+                                DatePickChip(
+                                    date = today.plusDays(1),
+                                    selected = false,
+                                    onDate = { vm.reschedule(focus, it) },
+                                    label = "Pick day"
+                                )
+                            }
+                        }
+                        LHeroCard(
+                            label = when (focusGroup) {
+                                TaskGroup.Late -> "Overdue"
+                                TaskGroup.Today -> "Due today"
+                                else -> "Up next"
+                            },
+                            title = focus.title,
+                            sub = dueLabel(focus) + " · $open open" + if (late > 0) ", $late late" else "",
+                            onClick = { onOpen(AgendaKeys.event(focus.id, null)) },
+                            actions = actions
+                        )
+                    }
+                } else {
+                    item(key = "clear") { LEmpty(Icons.Filled.CheckCircle, "All clear. Say: remind me to pay rent tomorrow") }
                 }
                 TaskGroup.entries.forEach { group ->
-                    val rows = grouped[group].orEmpty()
+                    val rows = grouped[group].orEmpty().filter { it !== focus }
                     if (rows.isEmpty()) return@forEach
                     val all = expanded.split("|").contains(group.label)
                     val shown = if (all) rows else rows.take(GROUP_CAP)
                     item(key = "g-${group.name}") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "${group.label} · ${rows.size}",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = L.Ink,
-                                modifier = Modifier.padding(top = 4.dp).semantics { heading() }
-                            )
+                            LSection("${group.label} · ${rows.size}")
                             LGroup {
                                 shown.forEachIndexed { i, task ->
                                     if (i > 0) LGroupDivider()
@@ -122,7 +153,8 @@ fun TasksScreen(vm: PlanViewModel, onOpen: (String) -> Unit, onAdd: (LocalDate) 
                                         task = task,
                                         late = group == TaskGroup.Late,
                                         onOpen = { onOpen(AgendaKeys.event(task.id, null)) },
-                                        onToggle = { vm.setDone(task, !task.isCompleted) }
+                                        onToggle = { vm.setDone(task, !task.isCompleted) },
+                                        onMoveToday = if (group == TaskGroup.Late) ({ vm.reschedule(task, today) }) else null
                                     )
                                 }
                                 if (rows.size > shown.size) {
@@ -142,14 +174,20 @@ fun TasksScreen(vm: PlanViewModel, onOpen: (String) -> Unit, onAdd: (LocalDate) 
 }
 
 @Composable
-private fun TaskRow(task: CalendarEvent, late: Boolean, onOpen: () -> Unit, onToggle: () -> Unit) {
+private fun TaskRow(
+    task: CalendarEvent,
+    late: Boolean,
+    onOpen: () -> Unit,
+    onToggle: () -> Unit,
+    onMoveToday: (() -> Unit)?
+) {
     val ink: Color = if (task.isCompleted) L.OnBoxMuted else L.OnBox
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clickable(onClick = onOpen)
-            .padding(start = 4.dp, end = 16.dp),
+            .padding(start = 4.dp, end = if (onMoveToday != null) 4.dp else 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -175,6 +213,11 @@ private fun TaskRow(task: CalendarEvent, late: Boolean, onOpen: () -> Unit, onTo
                 color = if (late) L.Danger else L.OnBoxMuted,
                 maxLines = 1
             )
+        }
+        if (onMoveToday != null) {
+            IconButton(onClick = onMoveToday) {
+                Icon(Icons.Filled.Schedule, contentDescription = "Move " + task.title + " to today", tint = L.Primary)
+            }
         }
     }
 }

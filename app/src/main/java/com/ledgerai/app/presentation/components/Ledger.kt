@@ -41,24 +41,30 @@ import com.ledgerai.app.presentation.theme.*
 
 /*
  * LedgerAI design system.
- * Page: white. Boxes: royal green. Accent: gold. Text on boxes: white.
+ * Deep blue and white, light and dark. Every colour is a token that follows the system theme.
+ * Box = card surface, OnBox = text on it, Gold = accent (kept name; it is blue now),
+ * Primary = brand ink on the page, Highlight = the one warm amber.
  * Spacing scale: 4 · 8 · 12 · 16 · 20 · 24 · 32.
  */
 
 object L {
-    val Page = Color.White
-    val Box = BrandEmerald
-    val BoxDeep = BrandEmeraldDark
-    val Gold = BrandGold
-    val GoldSoft = BrandGoldLight
-    val OnBox = Color.White
-    val OnBoxMuted = Color.White.copy(alpha = 0.72f)
-    val Ink = com.ledgerai.app.presentation.theme.Ink
-    val InkMuted = com.ledgerai.app.presentation.theme.InkMuted
-    val Line = Color(0xFFE9ECEA)
-    val Danger = Color(0xFFFFB4A9)
-    val Radius = 20.dp
-    val RadiusSm = 14.dp
+    val Page: Color get() = PageColor
+    val Box: Color get() = CardColor
+    val BoxDeep: Color get() = CardDeepColor
+    /** Accent. Name kept so every screen follows the new palette without edits. */
+    val Gold: Color get() = AccentColor
+    val GoldSoft: Color get() = SoftColor
+    val Primary: Color get() = PrimaryColor
+    val OnPrimary: Color get() = OnPrimaryColor
+    val Highlight: Color get() = AmberHighlight
+    val OnBox: Color get() = Ink
+    val OnBoxMuted: Color get() = InkMuted
+    val Ink: Color get() = com.ledgerai.app.presentation.theme.Ink
+    val InkMuted: Color get() = com.ledgerai.app.presentation.theme.InkMuted
+    val Line: Color get() = LineColor
+    val Danger: Color get() = DangerColor
+    val Radius = 22.dp
+    val RadiusSm = 16.dp
     val Gutter = 20.dp
 }
 
@@ -150,7 +156,12 @@ fun LScreen(
 /** Primary number. One per screen. */
 @Composable
 fun LHero(label: String, value: String, sub: String? = null, modifier: Modifier = Modifier, valueColor: Color = L.OnBox) {
-    Surface(modifier = modifier.fillMaxWidth(), color = L.Box, shape = RoundedCornerShape(24.dp)) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = L.Box,
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, L.Line),
+    ) {
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = L.Gold)
             Text(value, style = MaterialTheme.typography.displaySmall, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -166,10 +177,12 @@ fun LCard(
     padding: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val base = modifier.fillMaxWidth().clip(RoundedCornerShape(L.Radius))
+    val shape = RoundedCornerShape(L.Radius)
+    val base = modifier.fillMaxWidth().clip(shape)
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
             .background(L.Box)
+            .border(1.dp, L.Line, shape)
             .padding(padding),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         content = content
@@ -179,7 +192,8 @@ fun LCard(
 @Composable
 fun LStat(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = L.OnBox) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(L.RadiusSm)).background(L.Box).padding(14.dp),
+        modifier = modifier.clip(RoundedCornerShape(L.RadiusSm)).background(L.Box)
+            .border(1.dp, L.Line, RoundedCornerShape(L.RadiusSm)).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = L.Gold, maxLines = 1)
@@ -199,10 +213,12 @@ fun LRow(
     onClick: (() -> Unit)? = null,
     end: (@Composable () -> Unit)? = null
 ) {
-    val base = modifier.fillMaxWidth().clip(RoundedCornerShape(L.RadiusSm))
+    val shape = RoundedCornerShape(L.RadiusSm)
+    val base = modifier.fillMaxWidth().clip(shape)
     Row(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
             .background(L.Box)
+            .border(1.dp, L.Line, shape)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -233,7 +249,7 @@ fun LSection(text: String, action: String? = null, onAction: () -> Unit = {}) {
             Text(
                 action,
                 style = MaterialTheme.typography.labelLarge,
-                color = L.Box,
+                color = L.Primary,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onAction)
                     .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 12.dp)
             )
@@ -274,8 +290,8 @@ fun LGhostButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifie
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(52.dp),
         shape = RoundedCornerShape(L.RadiusSm),
-        border = BorderStroke(1.5.dp, L.Box),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = L.Box)
+        border = BorderStroke(1.5.dp, L.Primary),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = L.Primary)
     ) { Text(text, style = MaterialTheme.typography.labelLarge) }
 }
 
@@ -308,10 +324,10 @@ fun LField(
         keyboardOptions = keyboardOptions,
         shape = RoundedCornerShape(L.RadiusSm),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = L.Box,
+            focusedBorderColor = L.Primary,
             unfocusedBorderColor = L.Line,
-            focusedLabelColor = L.Box,
-            cursorColor = L.Box,
+            focusedLabelColor = L.Primary,
+            cursorColor = L.Primary,
             focusedTextColor = L.Ink,
             unfocusedTextColor = L.Ink
         ),
@@ -330,11 +346,11 @@ fun LChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifi
         Text(
             text,
             style = MaterialTheme.typography.labelLarge,
-            color = if (selected) L.OnBox else L.Box,
+            color = if (selected) L.OnPrimary else L.Primary,
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(if (selected) L.Box else Color.Transparent)
-                .border(1.dp, if (selected) L.Box else L.Box.copy(alpha = 0.35f), RoundedCornerShape(50))
+                .background(if (selected) L.Primary else Color.Transparent)
+                .border(1.dp, if (selected) L.Primary else L.Primary.copy(alpha = 0.35f), RoundedCornerShape(50))
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
@@ -383,7 +399,7 @@ fun LProgress(fraction: Float, modifier: Modifier = Modifier, color: Color = L.G
 
 @Composable
 fun LIconButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    IconButton(onClick = onClick) { Icon(icon, contentDescription = label, tint = L.Box) }
+    IconButton(onClick = onClick) { Icon(icon, contentDescription = label, tint = L.Primary) }
 }
 
 fun money(amount: Double, symbol: String = LCurrency.symbol): String {

@@ -1,14 +1,18 @@
 package com.ledgerai.app.presentation.screens.bills
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EventRepeat
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +22,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -174,7 +183,7 @@ private fun rollDueDate(from: LocalDate, frequency: BillFrequency): LocalDate = 
     BillFrequency.YEARLY -> from.plusYears(1)
 }
 
-/** Bills section for the Money Owed segment. */
+/** Bills section for the Money Owed segment: overdue first (red), then coming up, then paused. One tap marks paid. */
 fun LazyListScope.billItems(
     bills: List<Bill>,
     today: LocalDate,
@@ -182,14 +191,49 @@ fun LazyListScope.billItems(
     onEdit: (Bill) -> Unit,
     onPaid: (Bill) -> Unit
 ) {
+    val overdue = bills.filter { it.isActive && it.nextDueDate.isBefore(today) }
+    val upcoming = bills.filter { it.isActive && !it.nextDueDate.isBefore(today) }
+    val paused = bills.filter { !it.isActive }
+    val labelled = overdue.isNotEmpty() || paused.isNotEmpty()
+
     item(key = "bills-header") { LSection("Bills", action = "Add", onAction = onAdd) }
     if (bills.isEmpty()) {
-        item(key = "bills-empty") { LEmpty(Icons.Filled.EventRepeat, "No bills") }
-    } else {
-        item(key = "bills-group") {
-            LimitedGroup(bills, id = { it.id }, expandKey = "bills") { bill ->
-                BillRow(bill, today, onClick = { onEdit(bill) }, onPaid = { onPaid(bill) })
-            }
+        item(key = "bills-empty") { LEmpty(Icons.Filled.EventRepeat, "Say: rent 1200 due on the 1st") }
+        return
+    }
+    if (overdue.isNotEmpty()) {
+        item(key = "bills-overdue") {
+            BillGroup("Overdue", L.Danger, overdue, "bills-overdue", today, onEdit, onPaid)
+        }
+    }
+    if (upcoming.isNotEmpty()) {
+        item(key = "bills-upcoming") {
+            BillGroup(if (labelled) "Coming up" else null, L.InkMuted, upcoming, "bills-upcoming", today, onEdit, onPaid)
+        }
+    }
+    if (paused.isNotEmpty()) {
+        item(key = "bills-paused") {
+            BillGroup("Paused", L.InkMuted, paused, "bills-paused", today, onEdit, onPaid)
+        }
+    }
+}
+
+@Composable
+private fun BillGroup(
+    label: String?,
+    labelColor: Color,
+    bills: List<Bill>,
+    expandKey: String,
+    today: LocalDate,
+    onEdit: (Bill) -> Unit,
+    onPaid: (Bill) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (label != null) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = labelColor, modifier = Modifier.padding(horizontal = 4.dp))
+        }
+        LimitedGroup(bills, id = { it.id }, expandKey = expandKey) { bill ->
+            BillRow(bill, today, onClick = { onEdit(bill) }, onPaid = { onPaid(bill) })
         }
     }
 }
@@ -202,17 +246,36 @@ private fun BillRow(bill: Bill, today: LocalDate, onClick: () -> Unit, onPaid: (
         title = bill.name,
         sub = (if (bill.isActive) dueLabel(days, bill.nextDueDate) else "Paused") + " · " + bill.frequency.displayName,
         trailing = money(bill.amount),
-        trailingColor = if (late) L.Danger else L.Gold,
+        trailingColor = if (late) L.Danger else if (bill.isActive) L.OnBox else L.OnBoxMuted,
         icon = spendIcon(bill.category),
         onClick = onClick,
         end = if (bill.isActive) {
-            {
-                IconButton(onClick = onPaid) {
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = "Mark ${bill.name} paid", tint = L.Gold)
-                }
-            }
+            { PaidPill("Mark ${bill.name} paid", late, onPaid) }
         } else null
     )
+}
+
+/** One-tap "Paid" action, at least 48dp tall. */
+@Composable
+private fun PaidPill(description: String, danger: Boolean, onClick: () -> Unit) {
+    val tint = if (danger) L.Danger else L.Primary
+    Box(
+        Modifier
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(50))
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "Paid",
+            style = MaterialTheme.typography.labelLarge,
+            color = tint,
+            modifier = Modifier
+                .border(1.dp, tint.copy(alpha = 0.5f), RoundedCornerShape(50))
+                .padding(horizontal = 14.dp, vertical = 8.dp)
+        )
+    }
 }
 
 private fun dueLabel(days: Long, date: LocalDate): String = when {
@@ -246,6 +309,11 @@ fun BillSheet(
         LField(name, { name = it }, label = "Name")
         DecimalField(amountText, { amountText = it }, "Amount")
 
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Due", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            DatePickChip(dueDate, selected = true, onDate = { dueDate = it })
+        }
+
         ChipsRow {
             BillFrequency.entries.forEach { f ->
                 LChip(f.displayName, frequency == f, onClick = { frequency = f })
@@ -254,14 +322,13 @@ fun BillSheet(
 
         CategoryChipsRow(selected = category, onSelect = { category = it })
 
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Due", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
-            DatePickChip(dueDate, selected = true, onDate = { dueDate = it })
-        }
-
         if (existing != null) {
-            if (onPaid != null && existing.isActive) LGhostButton("Paid", onClick = onPaid)
-            if (onSkip != null && existing.isActive) LGhostButton("Skip", onClick = onSkip)
+            if (existing.isActive && (onPaid != null || onSkip != null)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (onPaid != null) LGhostButton("Paid", onClick = onPaid, modifier = Modifier.weight(1f))
+                    if (onSkip != null) LGhostButton("Skip", onClick = onSkip, modifier = Modifier.weight(1f))
+                }
+            }
             if (onToggleActive != null) {
                 LGhostButton(if (existing.isActive) "Pause" else "Resume", onClick = onToggleActive)
             }

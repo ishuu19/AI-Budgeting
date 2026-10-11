@@ -90,7 +90,7 @@ fun SubscriptionsScreen(
         onBack = onBack,
         action = {
             TextButton(onClick = { showForm = true }) {
-                Text("Add", color = L.Box, style = MaterialTheme.typography.labelLarge)
+                Text("Add", color = L.Primary, style = MaterialTheme.typography.labelLarge)
             }
         },
         snackbarHost = { SnackbarHost(snackbar) }

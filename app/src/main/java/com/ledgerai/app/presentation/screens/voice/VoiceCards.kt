@@ -197,7 +197,7 @@ private fun CardAction(text: String, onClick: () -> Unit, modifier: Modifier = M
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge, color = L.Box)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = L.Primary)
     }
 }
 
@@ -223,7 +223,7 @@ internal fun ConfirmCard(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(L.Radius))
-            .border(1.5.dp, L.Box, RoundedCornerShape(L.Radius))
+            .border(1.5.dp, L.Primary, RoundedCornerShape(L.Radius))
             .semantics(mergeDescendants = false) {}
     ) {
         Column(

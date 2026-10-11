@@ -25,7 +25,18 @@ fun MoneyTabScreen(
 
     LTabPage(
         title = "Money",
-        segments = { LSegments(MoneySeg.values().toList(), seg, { it.label }, onSeg) }
+        segments = { LSegments(MoneySeg.values().toList(), seg, { it.label }, onSeg) },
+        aiBar = {
+            com.ledgerai.app.presentation.components.LAiBar(
+                hint = when (seg) {
+                    MoneySeg.Overview, MoneySeg.Spend -> "Lunch 12 at Subway"
+                    MoneySeg.Plan -> "Budget 300 for food this month"
+                    MoneySeg.Owed -> "Rent 1200 due on the 1st"
+                },
+                onSend = links.speak,
+                onMic = links.listen,
+            )
+        }
     ) {
         when (seg) {
             MoneySeg.Overview -> MoneyOverviewScreen(links)

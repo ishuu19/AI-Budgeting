@@ -1,5 +1,6 @@
 package com.ledgerai.app.presentation.screens.household
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -195,7 +196,7 @@ fun HouseholdScreen(
                 showCreateMessage = false
                 creating = true
             }) {
-                Text("Add", color = L.Box, style = MaterialTheme.typography.labelLarge)
+                Text("Add", color = L.Primary, style = MaterialTheme.typography.labelLarge)
             }
         },
     ) {
@@ -257,9 +258,30 @@ fun HouseholdScreen(
                     )
                 }
             }
+            // Nobody should have to read a UUID aloud: copy yours here, paste theirs below.
+            item {
+                val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    LGhostButton(
+                        text = "Copy my member ID",
+                        onClick = { clipboard.setText(androidx.compose.ui.text.AnnotatedString(userId)) },
+                    )
+                    if (actorIsOwner) {
+                        Text(
+                            "To add someone, ask them to copy their member ID from this screen and send it to you, then paste it below.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = L.InkMuted,
+                        )
+                        LGhostButton(
+                            text = "Paste member ID",
+                            onClick = { clipboard.getText()?.text?.trim()?.let { memberId = it } },
+                        )
+                    }
+                }
+            }
             if (actorIsOwner) {
                 item {
-                    LField(memberId, { memberId = it }, "Member user id")
+                    LField(memberId, { memberId = it }, "Member ID")
                 }
                 item {
                     LGhostButton(

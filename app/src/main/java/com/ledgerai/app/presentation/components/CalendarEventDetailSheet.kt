@@ -84,7 +84,7 @@ fun CalendarEventDetailSheet(
     val urls = remember(event.links) { LinkRegex.findAll(event.links).map { it.value }.distinct().toList() }
 
     val body: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit = {
-        Text(event.kind.label(), style = MaterialTheme.typography.labelLarge, color = L.Box)
+        Text(event.kind.label(), style = MaterialTheme.typography.labelLarge, color = L.Primary)
         Text(
             when {
                 !event.hasDate -> "No date"
@@ -222,7 +222,7 @@ fun PlanBlockSheet(
         Text(
             if (block.kind == PlanBlockKind.STUDY) "Study" else "Habit",
             style = MaterialTheme.typography.labelLarge,
-            color = L.Box
+            color = L.Primary
         )
         Text(
             "${block.startAt.format(dayFmt)} – ${block.endAt.format(timeFmt)}",
@@ -257,7 +257,7 @@ fun HabitSessionSheet(
         primaryEnabled = !done,
         onDelete = onDelete
     ) {
-        Text("Habit", style = MaterialTheme.typography.labelLarge, color = L.Box)
+        Text("Habit", style = MaterialTheme.typography.labelLarge, color = L.Primary)
         Text(
             "${date.atTime(habit.startTime).format(dayFmt)} · ${habit.durationMinutes} min",
             style = MaterialTheme.typography.bodyLarge,
@@ -269,7 +269,7 @@ fun HabitSessionSheet(
             color = L.InkMuted
         )
         if (!done && date == LocalDate.now()) LGhostButton("Complete", onClick = onComplete)
-        if (done) Text("Done", style = MaterialTheme.typography.bodyMedium, color = L.Box)
+        if (done) Text("Done", style = MaterialTheme.typography.bodyMedium, color = L.Primary)
         LGhostButton("Edit", onClick = onEdit)
     }
 }

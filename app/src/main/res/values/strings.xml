@@ -35,4 +35,11 @@
     <string name="permission_microphone_rationale">Microphone access is needed to record voice transactions via the widget.</string>
     <string name="permission_contacts_rationale">Contacts access is optional — used to auto-fill friend names in the debt tracker.</string>
     <string name="permission_notification_rationale">Notification access is needed for budget alerts and debt reminders.</string>
+
+    <!-- Quick capture -->
+    <string name="shortcut_voice_short">Speak</string>
+    <string name="shortcut_voice_long">Say or ask anything</string>
+    <string name="shortcut_photo_short">Snap</string>
+    <string name="shortcut_photo_long">Photograph a receipt, food, clothes or a person</string>
+    <string name="tile_capture_label">Capture</string>
 </resources>

@@ -72,7 +72,7 @@ fun ScheduleImportSheet(
         LField(paste, { paste = it }, "Schedule text", singleLine = false, minLines = 6)
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         message?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Box)
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Primary)
         }
     }
 }

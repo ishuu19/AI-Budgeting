@@ -3,8 +3,8 @@ package com.ledgerai.app.presentation.screens.notes
 import android.widget.Toast
 import kotlinx.coroutines.delay
 import com.ledgerai.app.presentation.navigation.OpenItem
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,9 +32,14 @@ import com.ledgerai.app.data.repository.NoteRepository
 import com.ledgerai.app.data.repository.NudgeProposalRepository
 import com.ledgerai.app.domain.model.NoteItem
 import com.ledgerai.app.presentation.components.*
+import com.ledgerai.app.presentation.screens.money.LimitedGroup
+import com.ledgerai.app.presentation.screens.money.MutedLine
+import com.ledgerai.app.presentation.screens.money.rememberToday
+import com.ledgerai.app.presentation.screens.transactions.shortDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 private val SUGGESTED_TAGS = listOf("finance", "ideas", "goals", "shopping", "work", "personal")
@@ -286,23 +291,25 @@ fun NotesScreen(
     val visible = remember(notes, query, selectedTag) {
         notesMatching(notes, query, selectedTag)
     }
+    val today = rememberToday()
 
     LScreen(
         title = "Notes",
         onBack = onBack,
         fab = { LFab(Icons.Filled.Add, onClick = { editorId = EDITOR_NEW }, label = "Add note") }
     ) {
-        item(key = "hero") {
-            LHero(label = "Notes", value = visible.size.toString())
-        }
-        item(key = "search") {
-            LField(query, { query = it }, "Search")
-        }
-        item(key = "tags") {
-            ChipsRow {
-                LChip("All", selected = selectedTag == null, onClick = { selectedTag = null })
-                filterTags.forEach { tag ->
-                    LChip(tag, selected = selectedTag == tag, onClick = { selectedTag = tag })
+        if (notes.isNotEmpty()) {
+            item(key = "search") {
+                LField(query, { query = it }, "Search notes")
+            }
+            if (filterTags.isNotEmpty()) {
+                item(key = "tags") {
+                    ChipsRow {
+                        LChip("All", selected = selectedTag == null, onClick = { selectedTag = null })
+                        filterTags.forEach { tag ->
+                            LChip(tag, selected = selectedTag == tag, onClick = { selectedTag = tag })
+                        }
+                    }
                 }
             }
         }
@@ -310,17 +317,17 @@ fun NotesScreen(
             item(key = "empty") {
                 LEmpty(
                     Icons.Filled.Description,
-                    if (notes.isEmpty()) "No notes" else "No matches"
+                    if (notes.isEmpty()) "Say: note, idea for the project" else "No matches"
                 )
             }
         } else {
-            items(visible, key = { it.id }) { note ->
-                LRow(
-                    title = note.title,
-                    sub = note.body.ifBlank { null },
-                    trailing = note.tags.firstOrNull()?.let { "#$it" },
-                    onClick = { editorId = note.id }
-                )
+            item(key = "count") {
+                MutedLine(if (visible.size == 1) "1 note · newest first" else "${visible.size} notes · newest first")
+            }
+            item(key = "list") {
+                LimitedGroup(visible, id = { it.id }, expandKey = "notes", limit = 30) { note ->
+                    NoteRow(note, today, onClick = { editorId = note.id })
+                }
             }
         }
     }
@@ -361,6 +368,49 @@ fun NotesScreen(
             onTasks = { title, body -> viewModel.tasksFromNote(title, body) },
         )
     }
+}
+
+/** One note in the list: title and age, a two line preview, and up to three tags. */
+@Composable
+private fun NoteRow(note: NoteItem, today: LocalDate, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                note.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = L.OnBox,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Text(noteAge(note.updatedAt.toLocalDate(), today), style = MaterialTheme.typography.labelSmall, color = L.OnBoxMuted)
+        }
+        if (note.body.isNotBlank()) {
+            Text(note.body, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        if (note.tags.isNotEmpty()) {
+            Text(
+                note.tags.take(3).joinToString("  ") { "#$it" },
+                style = MaterialTheme.typography.labelSmall,
+                color = L.Gold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+private fun noteAge(date: LocalDate, today: LocalDate): String = when {
+    date == today -> "Today"
+    date == today.minusDays(1) -> "Yesterday"
+    else -> shortDate(date)
 }
 
 @Composable

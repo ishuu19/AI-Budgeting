@@ -1,8 +1,5 @@
 package com.ledgerai.app.presentation.screens.money
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.MaterialTheme
@@ -11,8 +8,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +17,7 @@ import com.ledgerai.app.data.repository.SpendGuideRepository
 import com.ledgerai.app.domain.model.SpeculationConfidence
 import com.ledgerai.app.domain.model.SpeculationDirection
 import com.ledgerai.app.domain.model.SpendSpeculation
+import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LEmpty
@@ -35,7 +31,6 @@ import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.LSheet
-import com.ledgerai.app.presentation.components.LStat
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.screens.transactions.DatePickChip
 import com.ledgerai.app.presentation.screens.transactions.shortDate
@@ -136,7 +131,7 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
     LScreen(
         title = "Safe today",
         onBack = onBack,
-        action = { TextButton(onClick = viewModel::openSpeculate) { Text("Plan spend", color = L.Box) } }
+        action = { TextButton(onClick = viewModel::openSpeculate) { Text("Plan spend", color = L.Primary) } }
     ) {
         when {
             guide != null -> {
@@ -148,7 +143,18 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
                         valueColor = if (guide.status == SpendGuideStatus.OVER) L.Danger else L.OnBox
                     )
                 }
+                item(key = "limit") {
+                    LGroup {
+                        LGroupRow(
+                            title = "Hard limit",
+                            sub = "Do not go past this today",
+                            trailing = money(guide.hardLimit),
+                            trailingColor = statusColor
+                        )
+                    }
+                }
                 if (guide.reasons.isNotEmpty()) {
+                    item(key = "reasons-header") { LSection("Why this number") }
                     item(key = "reasons") {
                         LGroup {
                             guide.reasons.forEachIndexed { index, reason ->
@@ -157,14 +163,6 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
                             }
                         }
                     }
-                }
-                item(key = "limit") {
-                    LStat(
-                        label = "Hard limit",
-                        value = money(guide.hardLimit),
-                        modifier = Modifier.fillMaxWidth(),
-                        valueColor = statusColor
-                    )
                 }
             }
             state.isLoading -> item(key = "loading") { LLoading() }
@@ -188,7 +186,7 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
                 }
             }
         } else if (guide != null) {
-            item(key = "planned-empty") { LEmpty(Icons.AutoMirrored.Filled.TrendingUp, "Nothing planned") }
+            item(key = "planned-empty") { LEmpty(Icons.AutoMirrored.Filled.TrendingUp, "Say: plan 80 for a concert on Friday") }
         }
     }
 
@@ -199,7 +197,9 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
             primary = "Save",
             onPrimary = viewModel::saveSpeculation
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DecimalField(state.specAmount, viewModel::setSpecAmount, "Amount")
+            LField(state.specLabel, viewModel::setSpecLabel, "What for")
+            ChipsRow {
                 LChip(
                     "Expense",
                     state.specDirection == SpeculationDirection.EXPENSE,
@@ -217,13 +217,9 @@ fun SpendTodayScreen(onBack: () -> Unit, viewModel: SpendTodayViewModel = hiltVi
                     label = shortDate(state.specDate)
                 )
             }
-            LField(state.specLabel, viewModel::setSpecLabel, "Label")
-            DecimalField(state.specAmount, viewModel::setSpecAmount, "Amount")
             state.specError?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
             }
         }
     }
 }
-
-private fun Modifier.fillMaxWidth(): Modifier = this.then(Modifier.fillMaxWidth())

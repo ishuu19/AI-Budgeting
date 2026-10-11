@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -46,8 +50,9 @@ import com.ledgerai.app.presentation.components.LError
 import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LLoading
 import com.ledgerai.app.presentation.components.LScreen
-import com.ledgerai.app.presentation.components.LSmallBlock
-import com.ledgerai.app.presentation.components.LSmallPair
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LWide
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.navigation.AppLinks
@@ -189,63 +194,68 @@ fun MoneyOverviewScreen(
         if (state.error != null && guide == null) {
             item(key = "error") { LError(state.error ?: "Could not load", onRetry = viewModel::retry) }
         }
-        item(key = "spent") {
-            LHero(
-                label = "Spent",
-                value = money(state.monthSpent),
-                sub = "This month",
-                modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClickLabel = "Open spend", role = Role.Button, onClick = { links.money(MoneySeg.Spend) })
-            )
-        }
         item(key = "safe") {
             LHero(
-                label = "Safe today",
+                label = "Safe to spend today",
                 value = guide?.let { money(it.guideAmount) } ?: "—",
+                sub = "Spent ${money(state.monthSpent)} this month",
                 valueColor = if (guide?.status == SpendGuideStatus.OVER) L.Danger else L.OnBox,
                 modifier = Modifier
                     .clip(RoundedCornerShape(24.dp))
                     .clickable(onClickLabel = "Open safe to spend", role = Role.Button, onClick = links.spendGuide)
             )
         }
-        item(key = "saved") {
-            LHero(
-                label = "Saved",
-                value = money(state.saved),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClickLabel = "Open plan", role = Role.Button, onClick = { links.money(MoneySeg.Plan) })
-            )
+        item(key = "tiles") {
+            val next = state.nextPayment
+            LGroup {
+                OverviewRow(
+                    title = "Forecast",
+                    sub = "End of month",
+                    value = if (forecast.isProjectionReady) money(forecast.projectedBalance) else "—",
+                    valueColor = if (forecast.isProjectionReady && forecast.projectedBalance < 0) L.Danger else L.OnBox,
+                    onClick = { links.money(MoneySeg.Plan) }
+                )
+                LGroupDivider()
+                OverviewRow(
+                    title = "Next payment",
+                    sub = next?.let { it.name + " · " + if (it.overdue) "Overdue" else dueText(it.due, today) } ?: "Nothing due",
+                    value = next?.let { money(it.amount) } ?: "—",
+                    valueColor = if (next?.overdue == true) L.Danger else L.OnBox,
+                    onClick = { links.money(MoneySeg.Owed) }
+                )
+                LGroupDivider()
+                OverviewRow(
+                    title = "Saved",
+                    sub = "Toward goals",
+                    value = money(state.saved),
+                    valueColor = L.OnBox,
+                    onClick = { links.money(MoneySeg.Plan) }
+                )
+                LGroupDivider()
+                OverviewRow(
+                    title = "Subscriptions",
+                    sub = "Tracked from receipts",
+                    value = null,
+                    valueColor = L.OnBox,
+                    onClick = links.subscriptions
+                )
+            }
         }
         item(key = "week") { WeekChart(state.week, guide?.guideAmount ?: 0.0, today) }
         item(key = "insights") { InsightStack(state.insights, links) }
-        item(key = "pair") {
-            val next = state.nextPayment
-            LSmallPair(
-                left = { m ->
-                    LSmallBlock(
-                        label = "Forecast",
-                        value = if (forecast.isProjectionReady) money(forecast.projectedBalance) else "—",
-                        sub = "End of month",
-                        valueColor = if (forecast.projectedBalance < 0) L.Danger else L.OnBox,
-                        modifier = m,
-                        onClick = { links.money(MoneySeg.Plan) }
-                    )
-                },
-                right = { m ->
-                    LSmallBlock(
-                        label = "Next payment",
-                        value = next?.let { money(it.amount) } ?: "—",
-                        sub = next?.let { it.name + " · " + if (it.overdue) "Overdue" else dueText(it.due, today) } ?: "Nothing due",
-                        valueColor = if (next?.overdue == true) L.Danger else L.OnBox,
-                        modifier = m,
-                        onClick = { links.money(MoneySeg.Owed) }
-                    )
-                }
-            )
-        }
     }
+}
+
+@Composable
+private fun OverviewRow(title: String, sub: String, value: String?, valueColor: Color, onClick: () -> Unit) {
+    LGroupRow(
+        title = title,
+        sub = sub,
+        trailing = value,
+        trailingColor = valueColor,
+        onClick = onClick,
+        end = { Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = L.OnBoxMuted) }
+    )
 }
 
 private fun dueText(due: LocalDate, today: LocalDate): String {
@@ -285,7 +295,7 @@ private fun WeekChart(week: List<DayBar>, guide: Double, today: LocalDate) {
         }
         if (guide > 0) append("Daily guide ${money(guide)}.")
     }
-    LWide(label = "Week") {
+    LWide(label = "Last 7 days") {
         Column(
             Modifier.clearAndSetSemantics { contentDescription = desc },
             verticalArrangement = Arrangement.spacedBy(4.dp)

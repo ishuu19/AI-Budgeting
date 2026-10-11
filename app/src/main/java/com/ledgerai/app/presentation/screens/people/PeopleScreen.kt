@@ -26,6 +26,17 @@ import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LButton
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LRow
+import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.PhotoField
+import com.ledgerai.app.presentation.components.PhotoSaveViewModel
+import kotlinx.coroutines.launch
 import com.ledgerai.app.presentation.components.LScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -129,28 +140,25 @@ fun PeopleScreen(
     onBack: (() -> Unit)? = null,
     message: String? = null,
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var org by rememberSaveable { mutableStateOf("") }
-    var role by rememberSaveable { mutableStateOf("") }
-    var notes by rememberSaveable { mutableStateOf("") }
+    val photos: PhotoSaveViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    var adding by rememberSaveable { mutableStateOf(false) }
     val visible = people.filter { it.deletedAt == null }
 
     LScreen(title = "People", onBack = onBack) {
         item {
-            Text(
-                "Private to you",
-                style = MaterialTheme.typography.bodyMedium,
-                color = L.InkMuted,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Add someone with a photo and one line about them. I will file the photo on today's date and remember what you said.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = L.InkMuted,
+                )
+                LButton("Add a person", onClick = { adding = true })
+                Text("Private to you", style = MaterialTheme.typography.labelMedium, color = L.InkMuted)
+            }
         }
         if (!message.isNullOrBlank()) {
-            item {
-                Text(
-                    message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
+            item { Text(message, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
         }
         if (visible.isEmpty()) {
             item { LEmpty(Icons.Default.Person, "No people yet") }
@@ -166,67 +174,41 @@ fun PeopleScreen(
                 )
             }
         }
-        item {
-            PersonField(value = name, onValueChange = { name = it }, label = "Name")
-        }
-        item {
-            PersonField(value = org, onValueChange = { org = it }, label = "Organization")
-        }
-        item {
-            PersonField(value = role, onValueChange = { role = it }, label = "Role")
-        }
-        item {
-            PersonField(value = notes, onValueChange = { notes = it }, label = "Notes", singleLine = false)
-        }
-        item {
-            LButton(
-                text = "Add person",
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onAddPerson(
-                        name.trim(),
-                        org.trim().ifBlank { null },
-                        role.trim().ifBlank { null },
-                        notes.trim(),
-                    ) { saved ->
-                        if (saved) {
-                            name = ""
-                            org = ""
-                            role = ""
-                            notes = ""
+    }
+
+    if (adding) {
+        var photo by remember { mutableStateOf<Uri?>(null) }
+        var name by rememberSaveable { mutableStateOf("") }
+        var notes by rememberSaveable { mutableStateOf("") }
+        var org by rememberSaveable { mutableStateOf("") }
+        var role by rememberSaveable { mutableStateOf("") }
+        var busy by remember { mutableStateOf(false) }
+        LSheet(
+            title = "Add a person",
+            onDismiss = { adding = false },
+            primary = if (busy) "Saving…" else "Save",
+            onPrimary = {
+                busy = true
+                onAddPerson(name.trim(), org.trim().ifBlank { null }, role.trim().ifBlank { null }, notes.trim()) { saved ->
+                    if (saved) {
+                        scope.launch {
+                            // The AI files the photo under this name, with what was said as the memory.
+                            photo?.let { photos.fileWithAi(listOf(it), "This is ${name.trim()}. ${notes.trim()}") }
+                            busy = false
+                            adding = false
                         }
+                    } else {
+                        busy = false
                     }
-                },
-            )
+                }
+            },
+            primaryEnabled = name.isNotBlank() && !busy,
+        ) {
+            PhotoField(photo, { photo = it })
+            LField(name, { name = it }, "Name")
+            LField(notes, { notes = it }, "Anything to remember (optional)", singleLine = false, minLines = 2)
+            LField(org, { org = it }, "Where they work or study (optional)")
+            LField(role, { role = it }, "Role (optional)")
         }
     }
 }
-
-@Composable
-private fun PersonField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    singleLine: Boolean = true,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = singleLine,
-        minLines = if (singleLine) 1 else 2,
-        modifier = Modifier.fillMaxWidth(),
-        colors = personFieldColors(),
-    )
-}
-
-@Composable
-private fun personFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = L.Ink,
-    unfocusedTextColor = L.Ink,
-    focusedBorderColor = L.Box,
-    unfocusedBorderColor = L.Line,
-    cursorColor = L.Box,
-    focusedLabelColor = L.InkMuted,
-    unfocusedLabelColor = L.InkMuted,
-)

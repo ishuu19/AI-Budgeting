@@ -92,7 +92,7 @@ fun LPlaceField(
                 onClick = { openMapsSearch(query) },
                 enabled = query.trim().length >= 2
             ) {
-                Icon(Icons.Default.OpenInNew, contentDescription = "Search in Google Maps", tint = L.Box)
+                Icon(Icons.Default.OpenInNew, contentDescription = "Search in Google Maps", tint = L.Primary)
             }
         }
         if (searching) {
@@ -119,7 +119,7 @@ fun LPlaceField(
                                 .padding(horizontal = 12.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Default.Map, contentDescription = null, tint = L.Box, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Map, contentDescription = null, tint = L.Primary, modifier = Modifier.size(20.dp))
                             Text(
                                 place.displayName,
                                 style = MaterialTheme.typography.bodyMedium,

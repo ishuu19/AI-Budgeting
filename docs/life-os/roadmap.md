@@ -15,6 +15,21 @@ Goal: AI understands input and the pipeline applies it safely. See [CHANGELOG.md
 - [ ] Golden-set test harness for intents
 - Exit: "add toothpaste to the list" via voice produces a validated plan, applies, logs, and can be undone.
 
+## Capture engine (cross-stage, in progress)
+Photo and voice input that the AI files for the user. Feeds Stage 1 (receipts, pantry), Stage 3 (people, memories) and Stage 4 (wardrobe, subscriptions).
+- [x] Private photo storage (Cloudflare R2 via presigned URLs), offline queue, WorkManager upload
+- [x] One AI pass per photo: name, describe, file (clothing, food, receipt, person)
+- [x] Meal and outfit suggestions from names and stock only (no photos sent)
+- [x] Assistant gesture, tile, shortcuts, share-to-app
+- [x] R2 bucket created, `media-sign` and `ai-proxy` deployed
+- [x] `019_media.sql` applied
+- [ ] Verify upload from a signed-in device
+- [x] Route vision through `ai-proxy` so release builds can read photos (deploy pending)
+- [x] Sync handler for `media_assets`
+- [x] Capture actions registered; filing goes through `Executor`
+- [x] Weather for outfit suggestions (needs a stored location)
+- Exit: photograph a shirt, a receipt and a friend with a note; each is named, filed and backed up; ask "what can I cook" and "I have a party" and get answers from stock and wardrobe names.
+
 ## Stage 1: Buy Never Twice
 - [ ] `items`, `shopping_lists`, `shopping_items`
 - [ ] Receipt scan → `receipts`/`receipt_lines` → inventory + transaction (one confirm)

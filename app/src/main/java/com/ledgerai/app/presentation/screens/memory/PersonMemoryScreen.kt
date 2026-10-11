@@ -48,6 +48,28 @@ import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
+import android.net.Uri
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.ledgerai.app.presentation.components.ChipsRow
+import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LGhostButton
+import com.ledgerai.app.presentation.components.LRow
+import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LocalPhoto
+import com.ledgerai.app.presentation.components.PhotoField
+import com.ledgerai.app.presentation.components.PhotoSaveViewModel
+import com.ledgerai.app.presentation.screens.money.OptionalDateField
+import com.ledgerai.app.presentation.screens.transactions.DatePickChip
+import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -249,13 +271,9 @@ fun PersonMemoryScreen(
 }
 
 /**
- * Memories, interactions, and commitments the caller already loaded for [person].
- *
- * The memory draft is [MemoryStatus.CONFIRMED] with source type "manual" and [person]'s id.
- * [onAddMemory], [onAddInteraction], and [onAddCommitment] should call the matching
- * repository and invoke `onDone(true)` only after the row is stored. `onDone(false)` keeps
- * the form. Put the reason in [message], [interactionMessage], or [commitmentMessage].
- * Pass null [personId] to [onAddCommitment] to leave the commitment unattached.
+ * Memories, moments (with photos) and promises the caller already loaded for [person].
+ * Moments are the photo-first way in: add a photo, pick the day, say what happened. Dates come from a
+ * date picker and status from chips, so nothing is typed in a special format and no file path is asked for.
  */
 @Composable
 fun PersonMemoryScreen(
@@ -284,330 +302,172 @@ fun PersonMemoryScreen(
     interactionMessage: String? = null,
     commitmentMessage: String? = null,
 ) {
-    var text by rememberSaveable { mutableStateOf("") }
-    var kindName by rememberSaveable { mutableStateOf(MemoryKind.FACT.name) }
+    val photos: PhotoSaveViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var sheet by rememberSaveable { mutableStateOf("") }
     var localError by rememberSaveable { mutableStateOf<String?>(null) }
-    var interactionDate by rememberSaveable { mutableStateOf("") }
-    var interactionWhere by rememberSaveable { mutableStateOf("") }
-    var interactionSummary by rememberSaveable { mutableStateOf("") }
-    var interactionSource by rememberSaveable { mutableStateOf("") }
-    var interactionError by rememberSaveable { mutableStateOf<String?>(null) }
-    var commitmentText by rememberSaveable { mutableStateOf("") }
-    var commitmentStatus by rememberSaveable { mutableStateOf("") }
-    var commitmentDue by rememberSaveable { mutableStateOf("") }
-    var commitmentEvent by rememberSaveable { mutableStateOf("") }
-    var commitmentError by rememberSaveable { mutableStateOf<String?>(null) }
-    val kind = MemoryKind.entries.find { it.name == kindName } ?: MemoryKind.FACT
+
     val subtitle = listOfNotNull(person.org, person.role).joinToString(" · ").ifBlank { null }
     val visible = memories.filter { it.personId == person.id && it.deletedAt == null }
-    val visibleInteractions = interactions.filter { it.personId == person.id && it.deletedAt == null }
-    val visibleCommitments = commitments.filter { it.personId == person.id && it.deletedAt == null }
-    val banner = localError ?: message
-    val interactionBanner = interactionError ?: interactionMessage
-    val commitmentBanner = commitmentError ?: commitmentMessage
+    val moments = interactions.filter { it.personId == person.id && it.deletedAt == null }
+    val promises = commitments.filter { it.personId == person.id && it.deletedAt == null }
+    fun photoOf(moment: Interaction): File? =
+        moment.sourceId?.let { File(context.filesDir, "media/${it}_t.jpg") }?.takeIf { it.exists() }
 
     LScreen(title = person.name, onBack = onBack) {
-        item {
-            LHero(
-                label = "Person",
-                value = person.name,
-                sub = subtitle,
-            )
-        }
-        item {
-            Text(
-                visibilityLabel(person.visibility),
-                style = MaterialTheme.typography.bodyMedium,
-                color = L.InkMuted,
-            )
-        }
+        item { LHero(label = "Person", value = person.name, sub = subtitle) }
         if (person.notes.isNotBlank()) {
-            item {
-                Text(
-                    person.notes,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = L.Ink,
-                )
+            item { Text(person.notes, style = MaterialTheme.typography.bodyLarge, color = L.Ink) }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LButton("Add photo or moment", onClick = { sheet = "moment" })
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LGhostButton("Memory", onClick = { sheet = "memory" }, modifier = Modifier.weight(1f))
+                    LGhostButton("Promise", onClick = { sheet = "promise" }, modifier = Modifier.weight(1f))
+                }
             }
         }
+
+        item { LSection("Moments") }
+        if (moments.isEmpty()) {
+            item { LEmpty(Icons.Filled.Place, "No moments yet. Add a photo from when you met.") }
+        } else {
+            items(moments, key = { "moment-${it.id}" }) { moment ->
+                LCard(padding = 12.dp) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        photoOf(moment)?.let { LocalPhoto(it, Modifier.size(84.dp).clip(RoundedCornerShape(L.RadiusSm))) }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(moment.summary, style = MaterialTheme.typography.bodyLarge, color = L.OnBox)
+                            Text(momentLine(moment), style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+                        }
+                    }
+                }
+            }
+        }
+
         item { LSection("Memories") }
         if (visible.isEmpty()) {
-            item { LEmpty(Icons.Default.Lightbulb, "No memories yet") }
+            item { LEmpty(Icons.Default.Lightbulb, "Nothing remembered yet") }
         } else {
             items(visible, key = { it.id }) { memory ->
                 LCard {
-                    Text(
-                        memory.text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = L.OnBox,
-                    )
-                    Text(
-                        memoryLine(memory),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = L.OnBoxMuted,
-                    )
+                    Text(memory.text, style = MaterialTheme.typography.bodyLarge, color = L.OnBox)
+                    Text(memoryLine(memory), style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
                 }
             }
         }
-        item { LSection("Add a memory") }
-        item {
-            OutlinedTextField(
-                value = text,
-                onValueChange = {
-                    text = it
-                    localError = null
-                },
-                label = { Text("What you remember") },
-                minLines = 2,
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = L.Ink,
-                    unfocusedTextColor = L.Ink,
-                    focusedBorderColor = L.Box,
-                    unfocusedBorderColor = L.Line,
-                    cursorColor = L.Box,
-                    focusedLabelColor = L.InkMuted,
-                    unfocusedLabelColor = L.InkMuted,
-                ),
-            )
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MemoryKind.entries.forEach { option ->
-                    FilterChip(
-                        selected = option == kind,
-                        onClick = { kindName = option.name },
-                        label = { Text(option.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    )
-                }
-            }
-        }
-        if (!banner.isNullOrBlank()) {
-            item {
-                Text(
-                    banner,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-        item {
-            LButton(
-                text = "Save memory",
-                enabled = text.isNotBlank(),
-                onClick = {
-                    val draft = MemoryDraft(
-                        personId = person.id,
-                        text = text.trim(),
-                        kind = kind,
-                        status = MemoryStatus.CONFIRMED,
-                        sourceType = MANUAL_SOURCE,
-                        sourceId = null,
-                    )
-                    when (val check = MemoryRules.validate(draft)) {
-                        is MemoryCheck.Rejected -> localError = check.reason
-                        MemoryCheck.Accepted -> onAddMemory(draft) { saved ->
-                            if (saved) {
-                                text = ""
-                                localError = null
-                            }
-                        }
-                    }
-                },
-            )
-        }
-        item { LSection("Interactions") }
-        if (visibleInteractions.isEmpty()) {
-            item { LEmpty(Icons.Filled.Place, "No interactions yet") }
+
+        item { LSection("Promises") }
+        if (promises.isEmpty()) {
+            item { LEmpty(Icons.Filled.Place, "No promises. Add one to be reminded.") }
         } else {
-            items(visibleInteractions, key = { "interaction-${it.id}" }) { interaction ->
-                LCard {
-                    Text(
-                        interaction.summary,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = L.OnBox,
-                    )
-                    Text(
-                        interactionLine(interaction),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = L.OnBoxMuted,
-                    )
+            items(promises, key = { "promise-${it.id}" }) { c ->
+                LRow(title = c.text, sub = commitmentLine(c))
+            }
+        }
+    }
+
+    when (sheet) {
+        "moment" -> MomentSheet(
+            error = interactionMessage,
+            onDismiss = { sheet = "" },
+            onSave = { photo, day, place, what, done ->
+                scope.launch {
+                    val id = photo?.let { photos.attachToPerson(it, person.id, person.name) }
+                    onAddInteraction(day, place, what.ifBlank { "Photo together" }, id) { saved -> done(saved); if (saved) sheet = "" }
                 }
-            }
-        }
-        item { LSection("Add an interaction") }
-        item {
-            DetailField(
-                value = interactionDate,
-                onValueChange = {
-                    interactionDate = it
-                    interactionError = null
-                },
-                label = "Date",
-            )
-        }
-        item {
-            DetailField(
-                value = interactionWhere,
-                onValueChange = { interactionWhere = it },
-                label = "Where",
-            )
-        }
-        item {
-            DetailField(
-                value = interactionSummary,
-                onValueChange = {
-                    interactionSummary = it
-                    interactionError = null
-                },
-                label = "Summary",
-            )
-        }
-        item {
-            DetailField(
-                value = interactionSource,
-                onValueChange = { interactionSource = it },
-                label = "Source",
-            )
-        }
-        if (!interactionBanner.isNullOrBlank()) {
-            item {
-                Text(
-                    interactionBanner,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-        item {
-            LButton(
-                text = "Save interaction",
-                enabled = interactionSummary.isNotBlank() && interactionDate.isNotBlank(),
-                onClick = {
-                    val occurredOn = typedDate(interactionDate)
-                    if (occurredOn == null) {
-                        interactionError = "Enter the date as yyyy-MM-dd"
-                    } else {
-                        onAddInteraction(
-                            occurredOn,
-                            interactionWhere.trim().ifBlank { null },
-                            interactionSummary.trim(),
-                            interactionSource.trim().ifBlank { null },
-                        ) { saved ->
-                            if (saved) {
-                                interactionDate = ""
-                                interactionWhere = ""
-                                interactionSummary = ""
-                                interactionSource = ""
-                                interactionError = null
-                            }
-                        }
-                    }
-                },
-            )
-        }
-        item { LSection("Commitments") }
-        if (visibleCommitments.isEmpty()) {
-            item { LEmpty(Icons.Filled.Event, "No commitments yet") }
-        } else {
-            items(visibleCommitments, key = { "commitment-${it.id}" }) { commitment ->
-                val line = commitmentLine(commitment)
-                LCard {
-                    Text(
-                        commitment.text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = L.OnBox,
-                    )
-                    if (line.isNotBlank()) {
-                        Text(
-                            line,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = L.OnBoxMuted,
-                        )
-                    }
+            },
+        )
+        "memory" -> MemorySheet(
+            error = localError ?: message,
+            onDismiss = { sheet = ""; localError = null },
+            onSave = { text, kind ->
+                val draft = MemoryDraft(person.id, text.trim(), kind, MemoryStatus.CONFIRMED, MANUAL_SOURCE, null)
+                when (val check = MemoryRules.validate(draft)) {
+                    is MemoryCheck.Rejected -> localError = check.reason
+                    MemoryCheck.Accepted -> onAddMemory(draft) { saved -> if (saved) { sheet = ""; localError = null } }
                 }
-            }
+            },
+        )
+        "promise" -> PromiseSheet(
+            error = commitmentMessage,
+            onDismiss = { sheet = "" },
+            onSave = { text, due, status ->
+                onAddCommitment(null, text.trim(), due, status, person.id) { saved -> if (saved) sheet = "" }
+            },
+        )
+    }
+}
+
+@Composable
+private fun MomentSheet(
+    error: String?,
+    onDismiss: () -> Unit,
+    onSave: (Uri?, LocalDate, String?, String, done: (Boolean) -> Unit) -> Unit,
+) {
+    var photo by remember { mutableStateOf<Uri?>(null) }
+    var day by remember { mutableStateOf(LocalDate.now()) }
+    var place by rememberSaveable { mutableStateOf("") }
+    var what by rememberSaveable { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    LSheet(
+        title = "Add photo or moment",
+        onDismiss = onDismiss,
+        primary = if (busy) "Saving…" else "Save",
+        onPrimary = {
+            busy = true
+            onSave(photo, day, place.trim().ifBlank { null }, what.trim()) { busy = false }
+        },
+        primaryEnabled = !busy && (photo != null || what.isNotBlank()),
+    ) {
+        PhotoField(photo, { photo = it })
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("When", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            DatePickChip(date = day, selected = true, onDate = { day = it })
         }
-        item { LSection("Add a commitment") }
-        item {
-            DetailField(
-                value = commitmentText,
-                onValueChange = {
-                    commitmentText = it
-                    commitmentError = null
-                },
-                label = "Commitment",
-            )
+        LField(what, { what = it }, "What happened (optional)")
+        LField(place, { place = it }, "Where (optional)")
+        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
+    }
+}
+
+@Composable
+private fun MemorySheet(error: String?, onDismiss: () -> Unit, onSave: (String, MemoryKind) -> Unit) {
+    var text by rememberSaveable { mutableStateOf("") }
+    var kind by rememberSaveable { mutableStateOf(MemoryKind.FACT.name) }
+    LSheet(
+        title = "Add a memory",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { onSave(text, MemoryKind.valueOf(kind)) },
+        primaryEnabled = text.isNotBlank(),
+    ) {
+        LField(text, { text = it }, "What you remember", singleLine = false, minLines = 3)
+        ChipsRow {
+            MemoryKind.entries.forEach { LChip(it.name.lowercase().replaceFirstChar { c -> c.uppercase() }, kind == it.name, onClick = { kind = it.name }) }
         }
-        item {
-            DetailField(
-                value = commitmentStatus,
-                onValueChange = {
-                    commitmentStatus = it
-                    commitmentError = null
-                },
-                label = "Status",
-            )
-        }
-        item {
-            DetailField(
-                value = commitmentDue,
-                onValueChange = {
-                    commitmentDue = it
-                    commitmentError = null
-                },
-                label = "Due date",
-            )
-        }
-        item {
-            DetailField(
-                value = commitmentEvent,
-                onValueChange = { commitmentEvent = it },
-                label = "Event",
-            )
-        }
-        if (!commitmentBanner.isNullOrBlank()) {
-            item {
-                Text(
-                    commitmentBanner,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-        item {
-            LButton(
-                text = "Save commitment",
-                enabled = commitmentText.isNotBlank() && commitmentStatus.isNotBlank(),
-                onClick = {
-                    val dueOn = if (commitmentDue.isBlank()) {
-                        null
-                    } else {
-                        typedDate(commitmentDue)
-                    }
-                    if (commitmentDue.isNotBlank() && dueOn == null) {
-                        commitmentError = "Enter the due date as yyyy-MM-dd"
-                    } else {
-                        onAddCommitment(
-                            commitmentEvent.trim().ifBlank { null },
-                            commitmentText.trim(),
-                            dueOn,
-                            commitmentStatus.trim(),
-                            person.id,
-                        ) { saved ->
-                            if (saved) {
-                                commitmentText = ""
-                                commitmentStatus = ""
-                                commitmentDue = ""
-                                commitmentEvent = ""
-                                commitmentError = null
-                            }
-                        }
-                    }
-                },
-            )
-        }
+        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
+    }
+}
+
+@Composable
+private fun PromiseSheet(error: String?, onDismiss: () -> Unit, onSave: (String, LocalDate?, String) -> Unit) {
+    var text by rememberSaveable { mutableStateOf("") }
+    var due by remember { mutableStateOf<LocalDate?>(null) }
+    var status by rememberSaveable { mutableStateOf("Open") }
+    LSheet(
+        title = "Add a promise",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { onSave(text, due, status) },
+        primaryEnabled = text.isNotBlank(),
+    ) {
+        LField(text, { text = it }, "What did you promise?")
+        OptionalDateField("Due", due) { due = it }
+        ChipsRow { listOf("Open", "Done").forEach { LChip(it, status == it, onClick = { status = it }) } }
+        error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Danger) }
     }
 }
 
@@ -630,42 +490,10 @@ private fun memoryLine(memory: Memory): String {
     return "$kind · $status · $source"
 }
 
-@Composable
-private fun DetailField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = L.Ink,
-            unfocusedTextColor = L.Ink,
-            focusedBorderColor = L.Box,
-            unfocusedBorderColor = L.Line,
-            cursorColor = L.Box,
-            focusedLabelColor = L.InkMuted,
-            unfocusedLabelColor = L.InkMuted,
-        ),
-    )
-}
-
-private fun typedDate(raw: String): LocalDate? {
-    val trimmed = raw.trim()
-    if (trimmed.isEmpty()) return null
-    return runCatching { LocalDate.parse(trimmed) }.getOrNull()
-}
-
-private fun interactionLine(interaction: Interaction): String {
-    val parts = mutableListOf(interaction.occurredOn.toString())
+private fun momentLine(interaction: Interaction): String {
+    val parts = mutableListOf(interaction.occurredOn.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy")))
     val place = interaction.where?.trim().orEmpty()
     if (place.isNotEmpty()) parts.add(place)
-    val source = interaction.sourceId?.trim().orEmpty()
-    if (source.isNotEmpty()) parts.add(source)
     return parts.joinToString(" · ")
 }
 
@@ -673,8 +501,6 @@ private fun commitmentLine(commitment: Commitment): String {
     val parts = mutableListOf<String>()
     val status = commitment.status.trim()
     if (status.isNotEmpty()) parts.add(status)
-    commitment.dueOn?.let { parts.add(it.toString()) }
-    val event = commitment.eventId?.trim().orEmpty()
-    if (event.isNotEmpty()) parts.add(event)
+    commitment.dueOn?.let { parts.add("due " + it.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"))) }
     return parts.joinToString(" · ")
 }

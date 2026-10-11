@@ -140,13 +140,13 @@ fun LIconTextChip(
         Row(
             Modifier
                 .clip(RoundedCornerShape(50))
-                .border(1.dp, L.Box.copy(alpha = 0.35f), RoundedCornerShape(50))
+                .border(1.dp, L.Primary.copy(alpha = 0.35f), RoundedCornerShape(50))
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = L.Box, modifier = Modifier.size(20.dp))
-            Text(text, style = MaterialTheme.typography.labelLarge, color = L.Box)
+            Icon(icon, contentDescription = null, tint = L.Primary, modifier = Modifier.size(20.dp))
+            Text(text, style = MaterialTheme.typography.labelLarge, color = L.Primary)
         }
     }
 }

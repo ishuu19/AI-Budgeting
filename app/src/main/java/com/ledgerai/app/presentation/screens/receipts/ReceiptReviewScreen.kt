@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -135,6 +137,18 @@ fun ReceiptReviewScreen(
                 }
             }
 
+            // The photo this receipt was read from, so every figure can be checked against the source.
+            receipt.documentId?.let { photoId ->
+                val file = java.io.File(androidx.compose.ui.platform.LocalContext.current.filesDir, "media/$photoId.jpg")
+                if (file.exists()) {
+                    com.ledgerai.app.presentation.components.LocalPhoto(
+                        file,
+                        Modifier.fillMaxWidth().height(240.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(L.Radius)),
+                        androidx.compose.ui.layout.ContentScale.Fit,
+                    )
+                }
+            }
+
             TotalCard(receipt)
             HeaderField(
                 label = "Merchant",
@@ -227,7 +241,7 @@ private fun HeaderField(label: String, value: String?, confidence: ValueConfiden
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(shown, style = MaterialTheme.typography.titleLarge, color = L.Ink)
             if (mark != null) {
-                Text(mark, style = MaterialTheme.typography.labelLarge, color = L.Box)
+                Text(mark, style = MaterialTheme.typography.labelLarge, color = L.Primary)
             }
         }
     }
@@ -259,7 +273,7 @@ private fun LineRow(line: ReceiptLine, onEdit: (() -> Unit)?) {
                     onClick = onEdit,
                     modifier = Modifier.semantics { contentDescription = "Edit ${line.rawText}" },
                 ) {
-                    Text("Edit", color = L.Box, style = MaterialTheme.typography.labelLarge)
+                    Text("Edit", color = L.Primary, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -294,7 +308,7 @@ private fun LineEditor(
                 Text("Cancel", color = L.InkMuted, style = MaterialTheme.typography.labelLarge)
             }
             TextButton(onClick = onDone) {
-                Text("Done", color = L.Box, style = MaterialTheme.typography.labelLarge)
+                Text("Done", color = L.Primary, style = MaterialTheme.typography.labelLarge)
             }
         }
     }

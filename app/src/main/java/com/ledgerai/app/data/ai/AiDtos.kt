@@ -322,6 +322,8 @@ data class AiProxyRequest(
     val user: String? = null,
     val modelTier: String? = null,
     val audio: AudioPayload? = null,
+    /** Photo for `vision_capture` (base64, no wrapping). */
+    val image: AudioPayload? = null,
 )
 
 data class AiProxyResponse(

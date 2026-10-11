@@ -38,7 +38,7 @@ import com.ledgerai.app.presentation.screens.lifelog.LifeLogScreen
 import com.ledgerai.app.presentation.screens.tasks.TasksScreen
 import java.time.LocalDate
 
-/** Plan tab: Calendar, Tasks, Log, Jobs. Owns the Add sheet and every item sheet for Calendar and Tasks. */
+/** Plan tab: Calendar, Tasks, Notes, Jobs (Log lives under More). Owns the Add sheet and every item sheet for Calendar and Tasks. */
 @Composable
 fun PlanTabScreen(
     seg: PlanSeg,
@@ -82,14 +82,30 @@ fun PlanTabScreen(
         title = "Plan",
         action = {
             IconButton(onClick = links.search) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = L.Box)
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = L.Primary)
             }
         },
-        segments = { LSegments(PlanSeg.entries, seg, { it.label }, onSeg) }
+        segments = { LSegments(PlanSeg.entries.filter { it != PlanSeg.Log }, seg, { it.label }, onSeg) },
+        aiBar = {
+            com.ledgerai.app.presentation.components.LAiBar(
+                hint = when (seg) {
+                    PlanSeg.Calendar -> "Dentist Friday at 3"
+                    PlanSeg.Tasks -> "Remind me to pay rent tomorrow"
+                    PlanSeg.Notes -> "Note: idea for the project"
+                    else -> "Applied to Google, follow up Friday"
+                },
+                onSend = links.speak,
+                onMic = links.listen,
+            )
+        }
     ) {
         when (seg) {
             PlanSeg.Calendar -> CalendarScreen(vm, onOpen = { itemKey = it }, onAdd = { startAdd(AddKind.Event, it) })
             PlanSeg.Tasks -> TasksScreen(vm, onOpen = { itemKey = it }, onAdd = { startAdd(AddKind.Task, it) })
+            PlanSeg.Notes -> com.ledgerai.app.presentation.screens.notes.NotesScreen(
+                open = open?.takeIf { it.kind == OpenKind.Note },
+                onOpened = onOpened
+            )
             PlanSeg.Log -> LifeLogScreen()
             PlanSeg.Jobs -> JobsScreen(openId = jobId, onOpened = { jobId = null; onOpened() })
         }

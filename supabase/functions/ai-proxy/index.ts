@@ -32,10 +32,11 @@ type AiType =
   | "note_summary"
   | "chat"
   | "voice_intent"
-  | "fast_completion";
+  | "fast_completion"
+  | "vision_capture";
 
 /** Types that use the fixed response schemas. fast_completion does not. */
-type SchemaType = Exclude<AiType, "fast_completion">;
+type SchemaType = Exclude<AiType, "fast_completion" | "vision_capture">;
 
 interface ProxyRequest {
   type: AiType;
@@ -43,6 +44,8 @@ interface ProxyRequest {
   user?: string;
   /** Optional recorded audio (base64) for type=voice_intent. */
   audio?: { mimeType: string; data: string };
+  /** One photo (base64 JPEG/PNG) for type=vision_capture. */
+  image?: { mimeType: string; data: string };
   /** Prefer flash-lite for parse; flash for chat/insights. */
   modelTier?: "flash" | "flash-lite";
 }
@@ -229,6 +232,8 @@ function defaultSystem(type: AiType): string {
       return "You are LedgerAI, a concise personal finance assistant. Do not invent balances.";
     case "voice_intent":
       return VOICE_SYSTEM;
+    case "vision_capture":
+      return "Describe and classify the photo. Reply with one JSON object. Never guess unreadable values; use null.";
     case "fast_completion":
       return "Reply with one JSON object. Leave unknown amount, merchant, and start_at null. Do not invent items.";
   }
@@ -294,6 +299,103 @@ async function callGemini(
     await new Promise((r) => setTimeout(r, 1500));
     return await callGeminiOnce(apiKey, system, user, schema, model, audio);
   }
+}
+
+/** One OpenAI-compatible chat call (xAI Grok, DeepSeek, OpenRouter). Returns the JSON text. */
+async function callChatCompat(
+  label: string,
+  url: string,
+  apiKey: string,
+  model: string,
+  system: string,
+  user: string,
+  extra: Record<string, unknown> = {},
+): Promise<string> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(12_000),
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      max_tokens: 1800,
+      response_format: { type: "json_object" },
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+      ...extra,
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.error) {
+    throw new Error(`${label} ${res.status}: ${JSON.stringify(data?.error ?? data).slice(0, 160)}`);
+  }
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error(`${label} returned empty content`);
+  return text;
+}
+
+/** Gemini in JSON mode for plain text. */
+async function callGeminiJson(apiKey: string, model: string, system: string, user: string): Promise<string> {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    signal: AbortSignal.timeout(12_000),
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: user }] }],
+      generationConfig: { temperature: 0, maxOutputTokens: 2400, responseMimeType: "application/json" },
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  const text = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("").trim();
+  if (!res.ok || !text) throw new Error(`Gemini ${res.status}: ${JSON.stringify(data?.error ?? "").slice(0, 160)}`);
+  return text;
+}
+
+/**
+ * fast_completion: try providers in order until one returns a JSON object. The function runs from a
+ * region the providers accept (the app sends x-region), so the phone's own region does not matter.
+ * Order: Gemini, xAI Grok, OpenRouter (fast model, then a free model), DeepSeek. Only providers whose
+ * key is set as an Edge secret are tried.
+ */
+async function fastCascade(system: string, user: string): Promise<{ text: string; provider: string }> {
+  const env = (k: string) => Deno.env.get(k)?.trim() ?? "";
+  const attempts: Array<[string, () => Promise<string>]> = [];
+  const gemini = env("GEMINI_API_KEY");
+  if (gemini) {
+    attempts.push(["gemini", () => callGeminiJson(gemini, env("GEMINI_MODEL_LITE") || "gemini-flash-lite-latest", system, user)]);
+    attempts.push(["gemini-flash", () => callGeminiJson(gemini, env("GEMINI_MODEL") || "gemini-flash-latest", system, user)]);
+  }
+  const xai = env("XAI_API_KEY");
+  if (xai) {
+    attempts.push(["xai", () => callChatCompat("xAI", "https://api.x.ai/v1/chat/completions", xai, env("XAI_MODEL") || "grok-4", system, user)]);
+  }
+  const openRouter = env("OPENROUTER_API_KEY");
+  if (openRouter) {
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    attempts.push(["openrouter", () =>
+      callChatCompat("OpenRouter", url, openRouter, env("AI_MODEL_FAST") || "google/gemini-3.1-flash-lite", system, user, { provider: { sort: "latency" } })]);
+    attempts.push(["openrouter-free", () =>
+      callChatCompat("OpenRouter free", url, openRouter, env("OPENROUTER_MODEL") || "deepseek/deepseek-chat-v3-0324:free", system, user)]);
+  }
+  const deepseek = env("DEEPSEEK_API_KEY");
+  if (deepseek) {
+    attempts.push(["deepseek", () => callChatCompat("DeepSeek", "https://api.deepseek.com/chat/completions", deepseek, env("DEEPSEEK_MODEL") || "deepseek-chat", system, user)]);
+  }
+  if (attempts.length === 0) throw new Error("No AI provider keys configured on Edge");
+
+  const errors: string[] = [];
+  for (const [name, run] of attempts) {
+    try {
+      const text = await run();
+      let parsed: unknown = JSON.parse(text);
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
+      if (parsed !== null && typeof parsed === "object") return { text, provider: name };
+      errors.push(`${name}: not an object`);
+    } catch (e) {
+      errors.push(`${name}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  }
+  throw new Error(errors.join(" | ").slice(0, 700));
 }
 
 async function callOpenRouter(
@@ -385,9 +487,98 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as ProxyRequest;
     if (!body?.type) return json(400, { error: "Body requires type" });
-    if (body.type !== "fast_completion" && !(body.type in SCHEMAS)) {
+    if (body.type !== "fast_completion" && body.type !== "vision_capture" && !(body.type in SCHEMAS)) {
       return json(400, { error: `Unsupported type: ${body.type}` });
     }
+    if (body.type === "vision_capture") {
+      const geminiKey = Deno.env.get("GEMINI_API_KEY")?.trim();
+      const xaiKey = Deno.env.get("XAI_API_KEY")?.trim();
+      if (!geminiKey && !xaiKey) return json(503, { error: "No AI provider keys configured on Edge" });
+      const img = body.image;
+      if (!img?.data || !/^image\/(jpeg|png|webp)$/.test(img.mimeType ?? "") || img.data.length > 4_000_000) {
+        return json(400, { error: "image invalid or too large (max ~3 MB)" });
+      }
+      const visionSystem = (body.system?.trim() || defaultSystem(body.type)).slice(0, 4000);
+      const visionUser = (body.user ?? "Classify this photo.").slice(0, 2000);
+      const errors: string[] = [];
+      const parse = (text: string): unknown | null => {
+        try {
+          const v = JSON.parse(text);
+          return v !== null && typeof v === "object" ? v : null;
+        } catch {
+          return null;
+        }
+      };
+
+      // Gemini first (two models), then xAI Grok as a fallback. Each failure is kept so the app can show it.
+      if (geminiKey) {
+        const models = [
+          Deno.env.get("GEMINI_MODEL_VISION")?.trim() || "gemini-flash-latest",
+          Deno.env.get("GEMINI_MODEL_LITE")?.trim() || "gemini-flash-lite-latest",
+        ];
+        for (const model of models) {
+          try {
+            const res = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+                signal: AbortSignal.timeout(25_000),
+                body: JSON.stringify({
+                  systemInstruction: { parts: [{ text: visionSystem }] },
+                  contents: [{
+                    role: "user",
+                    parts: [{ text: visionUser }, { inlineData: { mimeType: img.mimeType, data: img.data } }],
+                  }],
+                  generationConfig: { temperature: 0.1, maxOutputTokens: 2048, responseMimeType: "application/json" },
+                }),
+              },
+            );
+            const out = await res.json().catch(() => null);
+            const text = out?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("").trim();
+            const data = text ? parse(text) : null;
+            if (res.ok && data) return json(200, { type: body.type, data, provider: `gemini-vision:${model}` });
+            errors.push(`${model} ${res.status}: ${JSON.stringify(out?.error ?? out?.promptFeedback ?? "no text").slice(0, 160)}`);
+          } catch (e) {
+            errors.push(`${model}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+          }
+        }
+      }
+      if (xaiKey) {
+        try {
+          const res = await fetch("https://api.x.ai/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${xaiKey}` },
+            signal: AbortSignal.timeout(25_000),
+            body: JSON.stringify({
+              model: Deno.env.get("XAI_VISION_MODEL")?.trim() || Deno.env.get("XAI_MODEL")?.trim() || "grok-4",
+              temperature: 0.1,
+              max_tokens: 2048,
+              response_format: { type: "json_object" },
+              messages: [
+                { role: "system", content: visionSystem },
+                {
+                  role: "user",
+                  content: [
+                    { type: "text", text: visionUser },
+                    { type: "image_url", image_url: { url: `data:${img.mimeType};base64,${img.data}` } },
+                  ],
+                },
+              ],
+            }),
+          });
+          const out = await res.json().catch(() => null);
+          const text = out?.choices?.[0]?.message?.content?.trim();
+          const data = text ? parse(text) : null;
+          if (res.ok && data) return json(200, { type: body.type, data, provider: "xai-vision" });
+          errors.push(`xai ${res.status}: ${JSON.stringify(out?.error ?? "no text").slice(0, 160)}`);
+        } catch (e) {
+          errors.push(`xai: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+        }
+      }
+      return json(502, { error: errors.join(" | ").slice(0, 700) });
+    }
+
     const audio = body.type === "voice_intent" ? body.audio : undefined;
     if (body.audio && (!audio || !audio.data || audio.data.length > 8_000_000)) {
       return json(400, { error: "audio invalid or too large (max ~6 MB)" });
@@ -400,34 +591,15 @@ Deno.serve(async (req) => {
     // One OpenRouter JSON completion. Client temperature, max tokens, model, and
     // response format are ignored. Provider key comes only from Edge secrets.
     if (body.type === "fast_completion") {
-      const openRouterKey = Deno.env.get("OPENROUTER_API_KEY")?.trim();
-      if (!openRouterKey) {
-        return json(503, { error: "No AI provider keys configured on Edge" });
-      }
-      const model = Deno.env.get("AI_MODEL_FAST")?.trim() || "google/gemini-3.1-flash-lite";
-      let rawJson: string;
       try {
-        rawJson = await callOpenRouter(openRouterKey, system, userText, {}, model, {
-          temperature: 0,
-          maxTokens: 600,
-          providerSort: "latency",
-          appendSchema: false,
-        });
+        const { text, provider } = await fastCascade(system, userText);
+        let data: unknown = JSON.parse(text);
+        if (typeof data === "string") data = JSON.parse(data);
+        return json(200, { type: body.type, data, provider });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        return json(502, { error: message.slice(0, 600) || "All providers failed" });
+        return json(502, { error: message.slice(0, 700) || "All providers failed" });
       }
-      let data: unknown;
-      try {
-        data = JSON.parse(rawJson);
-        if (typeof data === "string") data = JSON.parse(data);
-      } catch {
-        return json(502, { error: "Provider returned non-JSON", raw: rawJson.slice(0, 500) });
-      }
-      if (data === null || typeof data !== "object") {
-        return json(502, { error: "Provider returned non-JSON", raw: rawJson.slice(0, 500) });
-      }
-      return json(200, { type: body.type, data, provider: "openrouter" });
     }
 
     const schema = SCHEMAS[body.type];

@@ -322,9 +322,9 @@ private fun InputBar(text: String, onTextChange: (String) -> Unit, canSend: Bool
             maxLines = 4,
             shape = RoundedCornerShape(L.RadiusSm),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = L.Box,
+                focusedBorderColor = L.Primary,
                 unfocusedBorderColor = L.Line,
-                cursorColor = L.Box,
+                cursorColor = L.Primary,
                 focusedTextColor = L.Ink,
                 unfocusedTextColor = L.Ink
             ),

@@ -51,11 +51,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestNotificationPermission()
+        // Pick up photos captured while offline or before an update.
+        com.ledgerai.app.worker.CaptureWorker.kick(this)
         // A restored activity keeps its old intent; only a fresh launch is a request.
         if (savedInstanceState == null) request = parse(intent)
 
         setContent {
-            LedgerAITheme {
+            val themeMode by userPreferences.themeMode.collectAsStateWithLifecycle(initialValue = "system")
+            LedgerAITheme(
+                darkTheme = when (themeMode) {
+                    "light" -> false
+                    "dark" -> true
+                    else -> androidx.compose.foundation.isSystemInDarkTheme()
+                }
+            ) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val userInfo by userSession.userInfo.collectAsStateWithLifecycle(
                         initialValue = com.ledgerai.app.data.preferences.UserInfo()

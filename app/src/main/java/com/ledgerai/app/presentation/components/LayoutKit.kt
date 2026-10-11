@@ -241,7 +241,7 @@ fun LConfirmDelete(onConfirm: () -> Unit, onDismiss: () -> Unit, title: String =
         onDismissRequest = onDismiss,
         containerColor = L.Page,
         title = { Text(title, color = L.Ink) },
-        confirmButton = { TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = 48.dp)) { Text("Delete", color = L.Box) } },
+        confirmButton = { TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = 48.dp)) { Text("Delete", color = L.Primary) } },
         dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) { Text("Cancel", color = L.InkMuted) } }
     )
 }
@@ -282,7 +282,7 @@ fun LLoading(modifier: Modifier = Modifier) {
     Box(
         modifier.fillMaxWidth().padding(vertical = 48.dp).semantics { contentDescription = "Loading" },
         contentAlignment = Alignment.Center
-    ) { CircularProgressIndicator(color = L.Box, modifier = Modifier.size(32.dp)) }
+    ) { CircularProgressIndicator(color = L.Primary, modifier = Modifier.size(32.dp)) }
 }
 
 /** Error state: icon, short text, Retry. */
@@ -293,7 +293,7 @@ fun LError(text: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? =
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = L.Box, modifier = Modifier.size(32.dp))
+        Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = L.Primary, modifier = Modifier.size(32.dp))
         Text(text, style = MaterialTheme.typography.bodyLarge, color = L.InkMuted)
         if (onRetry != null) LGhostButton("Retry", onRetry, Modifier.width(160.dp))
     }
@@ -309,6 +309,8 @@ fun LTabPage(
     modifier: Modifier = Modifier,
     action: (@Composable RowScope.() -> Unit)? = null,
     segments: (@Composable () -> Unit)? = null,
+    /** Shown under the segments: the AI-first way to add something on this tab. */
+    aiBar: (@Composable () -> Unit)? = null,
     body: @Composable () -> Unit
 ) {
     Column(modifier.fillMaxSize().background(L.Page)) {
@@ -325,6 +327,7 @@ fun LTabPage(
             action?.invoke(this)
         }
         if (segments != null) Box(Modifier.padding(start = L.Gutter, end = L.Gutter, top = 16.dp, bottom = 8.dp)) { segments() }
+        if (aiBar != null) Box(Modifier.padding(start = L.Gutter, end = L.Gutter, bottom = 8.dp)) { aiBar() }
         Box(Modifier.weight(1f).fillMaxWidth()) { LEmbedded(body) }
     }
 }

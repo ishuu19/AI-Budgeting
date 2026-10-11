@@ -58,7 +58,7 @@ fun TimePickChip(
                             clockDialUnselectedContentColor = L.Ink,
                             selectorColor = L.Box,
                             containerColor = L.Page,
-                            periodSelectorBorderColor = L.Box,
+                            periodSelectorBorderColor = L.Primary,
                             periodSelectorSelectedContainerColor = L.Box,
                             periodSelectorUnselectedContainerColor = L.Page,
                             periodSelectorSelectedContentColor = L.OnBox,
@@ -75,7 +75,7 @@ fun TimePickChip(
                 TextButton(onClick = {
                     onTime(LocalTime.of(state.hour, state.minute))
                     open = false
-                }) { Text("Done", color = L.Box) }
+                }) { Text("Done", color = L.Primary) }
             },
             dismissButton = {
                 TextButton(onClick = { open = false }) { Text("Cancel", color = L.InkMuted) }

@@ -228,6 +228,9 @@ interface LocationPointDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LocationPointEntity): Long
 
+    @Query("SELECT * FROM location_points ORDER BY ts DESC LIMIT 1")
+    suspend fun latest(): LocationPointEntity?
+
     @Query("DELETE FROM location_points WHERE ts < :before")
     suspend fun pruneBefore(before: LocalDateTime)
 }

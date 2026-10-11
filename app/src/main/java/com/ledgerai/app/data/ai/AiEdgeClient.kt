@@ -176,6 +176,39 @@ class AiEdgeClient @Inject constructor(
             }
         }
 
+    /** Photo classification through the `vision_capture` edge type. Returns the model JSON text. */
+    suspend fun visionCapture(system: String, user: String, mimeType: String, base64: String): Result<String> =
+        withContext(Dispatchers.IO) {
+            if (!isConfigured()) return@withContext Result.failure(IllegalStateException("Edge AI not configured"))
+            if (!sessionGuard.ensureFreshSession()) {
+                return@withContext Result.failure(java.io.IOException("Session expired - sign in again"))
+            }
+            val jwt = session.userInfo.first().accessToken.trim()
+            if (jwt.isBlank()) return@withContext Result.failure(IllegalStateException("No auth JWT - sign in required"))
+            try {
+                val response = api.complete(
+                    authorization = "Bearer $jwt",
+                    apiKey = BuildConfig.SUPABASE_ANON_KEY.trim(),
+                    body = AiProxyRequest(
+                        type = "vision_capture",
+                        system = system,
+                        user = user,
+                        image = AudioPayload(mimeType, base64),
+                    ),
+                )
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(
+                        java.io.IOException("Edge AI HTTP ${response.code()}: ${response.errorBody()?.string()?.take(300).orEmpty()}")
+                    )
+                }
+                val text = response.body()?.let { fastCompletionJson(it) }
+                    ?: return@withContext Result.failure(java.io.IOException("Empty Edge AI data"))
+                Result.success(text)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
     companion object {
         private const val TAG = "AiEdgeClient"
     }

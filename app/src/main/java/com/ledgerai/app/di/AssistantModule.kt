@@ -39,6 +39,12 @@ object AssistantModule {
         specs: Set<@JvmSuppressWildcards ActionSpec>,
     ): ActionRegistry = ActionRegistry(specs.toList())
 
+    /** Capture actions: filing a photo into wardrobe, pantry, receipts, people. */
+    @Provides
+    @dagger.multibindings.ElementsIntoSet
+    fun provideCaptureSpecs(actions: com.ledgerai.app.data.capture.CaptureActions): Set<ActionSpec> =
+        actions.specs().toSet()
+
     @Provides
     @Singleton
     fun providePlanModel(router: AiProviderRouter): PlanModel = router.asPlanModel()

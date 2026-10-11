@@ -24,9 +24,11 @@ import com.ledgerai.app.presentation.screens.bills.billItems
 import com.ledgerai.app.presentation.screens.debts.DebtFilter
 import com.ledgerai.app.presentation.screens.debts.DebtSheet
 import com.ledgerai.app.presentation.screens.debts.DebtsViewModel
+import com.ledgerai.app.presentation.screens.debts.RepaySheet
 import com.ledgerai.app.presentation.screens.debts.debtItems
+import com.ledgerai.app.presentation.screens.debts.isOverdue
 
-/** Money > Owed: one hero (due this month), then Bills and Debts sections. */
+/** Money > Owed: one hero (due this month, overdue in red), then Bills and Debts, each with a one-tap Paid / Pay action. */
 @Composable
 fun MoneyOwedScreen(
     open: OpenItem?,
@@ -45,6 +47,7 @@ fun MoneyOwedScreen(
     var editingBill by rememberSaveable { mutableStateOf(NO_ID) }
     var addingDebt by rememberSaveable { mutableStateOf(false) }
     var editingDebt by rememberSaveable { mutableStateOf(NO_ID) }
+    var repayingDebt by rememberSaveable { mutableStateOf(NO_ID) }
     var debtFilter by rememberSaveable { mutableStateOf(DebtFilter.ALL) }
     var showSettled by rememberSaveable { mutableStateOf(false) }
 
@@ -71,7 +74,8 @@ fun MoneyOwedScreen(
 
     val monthEnd = today.withDayOfMonth(today.lengthOfMonth())
     val active = bills.filter { it.isActive }
-    val overdueCount = active.count { it.nextDueDate.isBefore(today) }
+    val overdueCount = active.count { it.nextDueDate.isBefore(today) } +
+        debtState.activeDebts.count { it.isOverdue(today) }
     val dueThisMonth = active.filter { !it.nextDueDate.isAfter(monthEnd) }.sumOf { it.amount }
 
     LScreen(title = "Owed", snackbarHost = { SnackbarHost(snackbar) }) {
@@ -98,7 +102,8 @@ fun MoneyOwedScreen(
             onToggleSettled = { showSettled = !showSettled },
             today = today,
             onAdd = { addingDebt = true },
-            onEdit = { editingDebt = it.id }
+            onEdit = { editingDebt = it.id },
+            onRepay = { repayingDebt = it.id }
         )
     }
 
@@ -150,6 +155,22 @@ fun MoneyOwedScreen(
                 addingDebt = false
             }
         )
+    }
+    debtState.activeDebts.firstOrNull { it.id == repayingDebt }?.let { debt ->
+        key(debt.id) {
+            RepaySheet(
+                debt = debt,
+                onDismiss = { repayingDebt = NO_ID },
+                onPay = { payment ->
+                    debtsVm.recordPayment(debt, payment)
+                    repayingDebt = NO_ID
+                },
+                onSettle = {
+                    debtsVm.markAsPaid(debt)
+                    repayingDebt = NO_ID
+                }
+            )
+        }
     }
     allDebts.firstOrNull { it.id == editingDebt }?.let { debt ->
         key(debt.id) {

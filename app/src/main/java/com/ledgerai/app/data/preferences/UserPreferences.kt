@@ -31,6 +31,7 @@ class UserPreferences @Inject constructor(
         val VOICE_ONLY_WIDGET = booleanPreferencesKey("voice_only_widget")
         val VOICE_ENGINE = stringPreferencesKey("voice_engine")
         val VOICE_LANGUAGE = stringPreferencesKey("voice_language")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
         val CLOUD_FALLBACK = booleanPreferencesKey("cloud_fallback")
         val LEARNED_RULES = stringPreferencesKey("learned_voice_rules")
         val LEARNED_AT = stringPreferencesKey("learned_voice_at")
@@ -119,6 +120,15 @@ class UserPreferences @Inject constructor(
 
     suspend fun setVoiceEngine(id: String) {
         context.dataStore.edit { it[Keys.VOICE_ENGINE] = id }
+    }
+
+    /** "system" (default), "light" or "dark". Applies to the app, not to the widgets. */
+    val themeMode: Flow<String> = context.dataStore.data.map {
+        when (it[Keys.THEME_MODE]) { "light" -> "light"; "dark" -> "dark"; else -> "system" }
+    }
+
+    suspend fun setThemeMode(mode: String) {
+        context.dataStore.edit { it[Keys.THEME_MODE] = if (mode == "light" || mode == "dark") mode else "system" }
     }
 
     /** "en" or "bn". The mic listens to one language at a time. */

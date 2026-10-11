@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Check
@@ -128,6 +129,8 @@ class SettingsViewModel @Inject constructor(
     private val _statusTick = MutableStateFlow(0)
     val statusTick: StateFlow<Int> = _statusTick.asStateFlow()
 
+    val themeMode = prefs.themeMode
+    fun setThemeMode(mode: String) = viewModelScope.launch { prefs.setThemeMode(mode) }
     fun setNotifications(enabled: Boolean) = viewModelScope.launch { prefs.setNotificationsEnabled(enabled) }
     fun setAlertThreshold(threshold: Int) = viewModelScope.launch { prefs.setBudgetAlertThreshold(threshold) }
 
@@ -157,19 +160,11 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-private enum class YouSheet { None, Profile, Voice, Money, Alerts, About }
+private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, About }
 
 @Composable
 fun SettingsScreen(
-    /** Kept for the nav graph. Ask AI now lives in the Voice tab only. */
-    onOpenAi: () -> Unit = {},
-    onOpenHousehold: () -> Unit = {},
-    onOpenInventory: () -> Unit = {},
-    onOpenReceipt: () -> Unit = {},
-    onOpenPeople: () -> Unit = {},
-    onOpenSubscriptions: () -> Unit = {},
-    onOpenWardrobe: () -> Unit = {},
-    onOpenHome: () -> Unit = {},
+    links: com.ledgerai.app.presentation.navigation.AppLinks = com.ledgerai.app.presentation.navigation.AppLinks(),
     onBack: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
@@ -178,6 +173,7 @@ fun SettingsScreen(
     val state by viewModel.uiState.collectAsState()
     val trackMode by viewModel.trackMode.collectAsState(initial = "both")
     val cashOnHand by viewModel.cashOnHand.collectAsState(initial = "")
+    val themeMode by viewModel.themeMode.collectAsState(initial = "system")
 
     var sheet by rememberSaveable { mutableStateOf(YouSheet.None) }
     val close = { sheet = YouSheet.None }
@@ -185,7 +181,24 @@ fun SettingsScreen(
     val isLocal = user.userId.isBlank() || user.userId.startsWith("local-")
     val engineLabel = OfflineVoiceEngine.entries.firstOrNull { it.id == state.voiceEngine }?.label ?: "Default"
 
-    LScreen(title = "You", onBack = onBack) {
+    LScreen(title = "More", onBack = onBack) {
+        item {
+            LGroup {
+                LGroupRow(title = "Full day", sub = "Schedule, tasks, habits", icon = Icons.Filled.Today, onClick = links.today, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Voice log", sub = "Everything you said, fix or redo", icon = Icons.Filled.Mic, onClick = links.voiceLog, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Life log", sub = "What you did today", icon = Icons.Filled.Info, onClick = { links.plan(com.ledgerai.app.presentation.navigation.PlanSeg.Log) }, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Ask about my money", sub = "Chat with the finance assistant", icon = Icons.Filled.Person, onClick = { links.voice(com.ledgerai.app.presentation.navigation.VoiceSeg.Ask) }, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Insights", sub = "Trends and patterns", icon = Icons.Filled.CurrencyExchange, onClick = links.insights, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Subscriptions", sub = "Renewals", icon = Icons.Filled.Notifications, onClick = links.subscriptions, end = { Chevron() })
+                LGroupDivider()
+                LGroupRow(title = "Focus timer", sub = "Start a focus block", icon = Icons.Filled.Today, onClick = { links.focus(0L, "Focus") }, end = { Chevron() })
+            }
+        }
         item {
             LGroup {
                 LGroupRow(
@@ -198,58 +211,10 @@ fun SettingsScreen(
                 )
                 LGroupDivider()
                 LGroupRow(
-                    title = "Households",
-                    sub = "People who share a home",
-                    icon = Icons.Filled.Home,
-                    onClick = onOpenHousehold,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "Pantry",
-                    sub = "Stock and shopping",
-                    icon = Icons.Filled.Kitchen,
-                    onClick = onOpenInventory,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "Receipt",
-                    sub = "Review a saved receipt",
-                    icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                    onClick = onOpenReceipt,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "People",
-                    sub = "Memories and commitments",
-                    icon = Icons.Filled.Groups,
-                    onClick = onOpenPeople,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "Subscriptions",
-                    sub = "Renewals on this phone",
-                    icon = Icons.Filled.Subscriptions,
-                    onClick = onOpenSubscriptions,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "Wardrobe",
-                    sub = "Clothes and wear log",
-                    icon = Icons.Filled.Checkroom,
-                    onClick = onOpenWardrobe,
-                    end = { Chevron() }
-                )
-                LGroupDivider()
-                LGroupRow(
-                    title = "Home",
-                    sub = "Spent today",
-                    icon = Icons.Filled.Today,
-                    onClick = onOpenHome,
+                    title = "Appearance",
+                    sub = when (themeMode) { "light" -> "Light"; "dark" -> "Dark"; else -> "Follow system" },
+                    icon = Icons.Filled.Palette,
+                    onClick = { sheet = YouSheet.Look },
                     end = { Chevron() }
                 )
                 LGroupDivider()
@@ -291,6 +256,13 @@ fun SettingsScreen(
     when (sheet) {
         YouSheet.None -> Unit
         YouSheet.Profile -> ProfileSheet(user = user, isLocal = isLocal, authViewModel = authViewModel, onDismiss = close)
+        YouSheet.Look -> LSheet(title = "Appearance", onDismiss = close, primary = "Done", onPrimary = close) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("system" to "System", "light" to "Light", "dark" to "Dark").forEach { (id, label) ->
+                    LChip(label, themeMode == id, onClick = { viewModel.setThemeMode(id) })
+                }
+            }
+        }
         YouSheet.Voice -> VoiceSheet(viewModel = viewModel, selected = state.voiceEngine, onDismiss = close)
         YouSheet.Money -> MoneySheet(
             viewModel = viewModel,
@@ -366,7 +338,7 @@ private fun ProfileSheet(
                 TextButton(
                     onClick = { confirmOut = false; onDismiss(); authViewModel.signOut() },
                     modifier = Modifier.heightIn(min = 48.dp)
-                ) { Text("Sign out", color = L.Box) }
+                ) { Text("Sign out", color = L.Primary) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmOut = false }, modifier = Modifier.heightIn(min = 48.dp)) {
@@ -615,8 +587,8 @@ private fun AlertsSheet(
             onValueChange = { value = it },
             valueRange = 50f..95f,
             colors = SliderDefaults.colors(
-                thumbColor = L.Box,
-                activeTrackColor = L.Box,
+                thumbColor = L.Primary,
+                activeTrackColor = L.Primary,
                 inactiveTrackColor = L.Line
             ),
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Budget alert threshold" }

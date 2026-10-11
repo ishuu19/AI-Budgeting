@@ -4,13 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Icon
@@ -45,9 +46,10 @@ import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LHero
 import com.ledgerai.app.presentation.components.LIconButton
 import com.ledgerai.app.presentation.components.LLoading
-import com.ledgerai.app.presentation.components.LRow
+import com.ledgerai.app.presentation.components.LGroup
+import com.ledgerai.app.presentation.components.LGroupDivider
+import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LScreen
-import com.ledgerai.app.presentation.components.LSection
 import com.ledgerai.app.presentation.components.money
 import com.ledgerai.app.presentation.navigation.OpenItem
 import com.ledgerai.app.presentation.navigation.OpenKind
@@ -144,16 +146,18 @@ fun TransactionsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) {
         item(key = "total") {
-            LHero(label = "Total", value = money(total))
+            LHero(
+                label = if (filter == SpendFilter.INCOME) "Income" else "Spent",
+                value = money(total),
+                sub = "${visible.size} entries · ${shortDate(rangeStart)} to ${shortDate(rangeEnd)}"
+            )
         }
         item(key = "controls") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DatePickChip(rangeStart, selected = false, onDate = { fromText = it.toString() }, label = "From " + shortDate(rangeStart))
-                    DatePickChip(rangeEnd, selected = false, onDate = { toText = it.toString() }, label = "To " + shortDate(rangeEnd))
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 LField(query, { query = it }, "Search")
                 ChipsRow {
+                    DatePickChip(rangeStart, selected = false, onDate = { fromText = it.toString() }, label = "From " + shortDate(rangeStart))
+                    DatePickChip(rangeEnd, selected = false, onDate = { toText = it.toString() }, label = "To " + shortDate(rangeEnd))
                     SpendFilter.entries.forEach { f ->
                         LChip(f.label, filter == f, onClick = { filterName = f.name; categoryName = null })
                     }
@@ -171,24 +175,62 @@ fun TransactionsScreen(
         if (state.isLoading) {
             item(key = "loading") { LLoading() }
         } else if (days.isEmpty()) {
-            item(key = "empty") { LEmpty(Icons.AutoMirrored.Filled.ReceiptLong, "No spending") }
+            item(key = "empty") {
+                LEmpty(
+                    Icons.AutoMirrored.Filled.ReceiptLong,
+                    if (state.transactions.isEmpty()) "Say: lunch 12 at Subway" else "Nothing in this range"
+                )
+            }
         }
 
         days.forEach { (date, list) ->
-            item(key = "day-$date") { LSection(dayLabel(date)) }
-            items(list, key = { it.id }) { tx ->
-                val income = tx.type == TransactionType.INCOME
-                LRow(
-                    title = tx.merchant.ifBlank { tx.category.displayName },
-                    sub = listOf(tx.location, tx.note).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { null },
-                    trailing = (if (income) "+" else "-") + money(tx.amount),
-                    trailingColor = if (income) L.Gold else L.OnBox,
-                    icon = spendIcon(tx.category),
-                    onClick = { viewModel.showEditSheet(tx) },
-                    end = if (tx.isRecurring) {
-                        { Icon(Icons.Filled.Repeat, contentDescription = "Repeats", tint = L.OnBoxMuted, modifier = Modifier.size(16.dp)) }
-                    } else null
-                )
+            item(key = "day-$date") {
+                val net = list.sumOf { if (it.type == TransactionType.INCOME) it.amount else -it.amount }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            dayLabel(date),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = L.Ink,
+                            modifier = Modifier.weight(1f).semantics { heading() }
+                        )
+                        Text(
+                            (if (net >= 0) "+" else "-") + money(kotlin.math.abs(net)),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = L.InkMuted
+                        )
+                    }
+                    LGroup {
+                        list.forEachIndexed { index, tx ->
+                            androidx.compose.runtime.key(tx.id) {
+                                if (index > 0) LGroupDivider()
+                                val income = tx.type == TransactionType.INCOME
+                                LGroupRow(
+                                    title = tx.merchant.ifBlank { tx.category.displayName },
+                                    sub = listOf(tx.category.displayName, tx.location, tx.note)
+                                        .filter { it.isNotBlank() && it != tx.merchant.ifBlank { tx.category.displayName } }
+                                        .joinToString(" · ").ifBlank { null },
+                                    trailing = (if (income) "+" else "-") + money(tx.amount),
+                                    trailingColor = if (income) L.Gold else L.OnBox,
+                                    icon = spendIcon(tx.category),
+                                    onClick = { viewModel.showEditSheet(tx) },
+                                    end = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (tx.isRecurring) {
+                                                Icon(Icons.Filled.Repeat, contentDescription = "Repeats", tint = L.OnBoxMuted, modifier = Modifier.size(16.dp))
+                                            }
+                                            IconButton(onClick = {
+                                                viewModel.copyToNew(tx.amount, tx.type, tx.category, tx.merchant, tx.note, tx.location, tx.isRecurring)
+                                            }) {
+                                                Icon(Icons.Filled.ContentCopy, contentDescription = "Add again today", tint = L.OnBoxMuted, modifier = Modifier.size(20.dp))
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

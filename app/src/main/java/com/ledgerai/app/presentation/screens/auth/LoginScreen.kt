@@ -76,7 +76,7 @@ fun LoginScreen(
         }
 
         if (state.isLoading) {
-            CircularProgressIndicator(color = L.Box, modifier = Modifier.padding(vertical = 24.dp))
+            CircularProgressIndicator(color = L.Primary, modifier = Modifier.padding(vertical = 24.dp))
         } else {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (state.googleSignInAvailable) {

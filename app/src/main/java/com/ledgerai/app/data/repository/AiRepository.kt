@@ -26,6 +26,7 @@ import com.ledgerai.app.data.ai.LocalParseModel
 import com.ledgerai.app.data.ai.LocalParsePrompt
 import com.ledgerai.app.data.ai.ParsedIntent
 import com.ledgerai.app.data.ai.PlaceMatch
+import com.ledgerai.app.data.ai.resultKind
 import com.ledgerai.app.data.ai.ParsedTransactionDto
 import com.ledgerai.app.data.ai.ParsedVoiceIntentDto
 import com.ledgerai.app.data.ai.QuickParse
@@ -45,7 +46,14 @@ import java.io.ByteArrayOutputStream
 import java.util.Base64
 import com.ledgerai.app.data.ai.ValidatedAiResponse
 import com.ledgerai.app.domain.ai.FastChannel
+import com.ledgerai.app.domain.ai.VoiceParseReport
+import com.ledgerai.app.domain.ai.VoiceParseSession
 import com.ledgerai.app.domain.ai.chooseFastChannel
+import com.ledgerai.app.domain.ai.observeVoiceParse
+import com.ledgerai.app.domain.assistant.knownMerchants
+import com.ledgerai.app.domain.assistant.openDebtFacts
+import com.ledgerai.app.domain.assistant.renderContext
+import com.ledgerai.app.domain.assistant.selectContext
 import com.ledgerai.app.domain.model.BillFrequency
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.DebtDirection
@@ -68,11 +76,12 @@ import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** How long the AI-first parse may take before the on-device path answers instead. */
-private const val FAST_TIMEOUT_MS = 6_000L
+private const val FAST_TIMEOUT_MS = 14_000L
 
 /**
  * AI entry point.
@@ -95,11 +104,18 @@ class AiRepository @Inject constructor(
     private val prefs: UserPreferences,
     private val localModel: LocalParseModel,
     lexicon: RuleLexicon,
+    private val transactions: TransactionRepository,
+    private val debts: DebtRepository,
 ) {
 
     init {
         QuickParse.lexicon = lexicon
     }
+
+    /** Process-local. Not written to Room, history, or the network. */
+    private val voiceParseSession = VoiceParseSession()
+
+    fun voiceParseReport(): VoiceParseReport = voiceParseSession.snapshot()
 
     suspend fun parseVoiceTransaction(transcript: String): Result<ParsedTransaction> {
         if (canCallCloud()) {
@@ -145,10 +161,11 @@ class AiRepository @Inject constructor(
         val cloudEnabled = runCatching { prefs.cloudFallback.first() }.getOrDefault(true)
         // AI first: one fast general model understands the whole message. Anything that fails or times out
         // falls through to the on-device model, rules and the older cloud path below.
-        if (cloudEnabled) {
-            fastVoiceItems(trimmed, cloudEnabled)?.let {
-                return Result.success(RoutedIntents(it, IntentSource.AI, cloudCalled = true))
-            }
+        val fast = fastVoiceItems(trimmed, cloudEnabled)
+        val fastItems = fast.items
+        if (fastItems != null) {
+            recordVoiceParse(fast, fastItems)
+            return Result.success(RoutedIntents(fastItems, IntentSource.AI, cloudCalled = true))
         }
         val routed = VoiceIntentRouter.route(
             trimmed,
@@ -164,11 +181,27 @@ class AiRepository @Inject constructor(
         )
         val needsPlaces = routed.items.any { it is ParsedIntent.Job && it.location.isNotBlank() }
         val items = if (needsPlaces) snapPlaces(routed.items, knownPlaces()) else routed.items
+        recordVoiceParse(fast, items)
         return Result.success(RoutedIntents(items, routed.source, routed.cloudCalled))
     }
 
-    /** Fast model, bounded so a slow reply never blocks the on-device path. Null means "use the next layer". */
-    private suspend fun fastVoiceItems(trimmed: String, cloudEnabled: Boolean): List<ParsedIntent>? {
+    private fun recordVoiceParse(fast: FastVoiceAttempt, kept: List<ParsedIntent>) {
+        voiceParseSession.record(
+            observeVoiceParse(
+                attempted = fast.attempted,
+                latencyMs = fast.latencyMs,
+                proposedKinds = fast.proposedKinds,
+                keptKinds = kept.map { it.resultKind().name },
+            )
+        )
+    }
+
+    /**
+     * Fast model, bounded so a slow reply never blocks the on-device path.
+     * Null [FastVoiceAttempt.items] means "use the next layer".
+     * Latency covers only this attempt, not the fallback chain.
+     */
+    private suspend fun fastVoiceItems(trimmed: String, cloudEnabled: Boolean): FastVoiceAttempt {
         val channel = chooseFastChannel(
             cloudEnabled = cloudEnabled,
             online = network.isOnline(),
@@ -176,32 +209,60 @@ class AiRepository @Inject constructor(
             hasClientOpenRouterKey = config.hasFastModelKey,
             edgeConfigured = edgeClient.isConfigured(),
         )
-        if (channel == FastChannel.SKIP) return null
-        val places = knownPlaces()
-        val system = voiceSystemPrompt(places)
-        val user = nowHint() + "\nUser said: " + trimmed
-        val raw = when (channel) {
-            FastChannel.DIRECT -> withTimeoutOrNull(FAST_TIMEOUT_MS) {
-                router.completeFast(system, user).getOrNull()
-            } ?: return null
-            FastChannel.PROXY -> {
-                val response = withTimeoutOrNull(FAST_TIMEOUT_MS) {
-                    edgeClient.fastCompletion(system, user).getOrNull()
-                } ?: return null
-                fastCompletionJson(response) ?: return null
-            }
-            FastChannel.SKIP -> return null
+        if (channel == FastChannel.SKIP) {
+            return FastVoiceAttempt(items = null, attempted = false, latencyMs = null, proposedKinds = emptyList())
         }
-        val items = mapVoiceItemsJson(raw, trimmed).filter { it !is ParsedIntent.Unmatched }
-        return preferLocalKinds(items, trimmed).takeIf { it.isNotEmpty() }
+        val places = knownPlaces()
+        val system = voiceSystemPrompt(places, trimmed)
+        val user = nowHint() + "\nUser said: " + trimmed
+        var raw: String? = null
+        val elapsed = measureTimeMillis {
+            // The proxy runs from a region the providers accept and tries several of them, so it goes first.
+            // A key on the phone is only a fallback: some providers refuse the phone's own region.
+            raw = withTimeoutOrNull(FAST_TIMEOUT_MS) {
+                val viaProxy = if (edgeClient.isConfigured()) {
+                    edgeClient.fastCompletion(system, user).getOrNull()?.let { fastCompletionJson(it) }
+                } else null
+                viaProxy ?: if (BuildConfig.DEBUG && config.hasFastModelKey) router.completeFast(system, user).getOrNull() else null
+            }
+        }
+        val proposed = raw
+            ?.let { mapVoiceItemsJson(it, trimmed).filter { item -> item !is ParsedIntent.Unmatched } }
+            .orEmpty()
+        val kept = proposed
+            .takeIf { it.isNotEmpty() }
+            ?.let { preferLocalKinds(it, trimmed).takeIf { items -> items.isNotEmpty() } }
+        return FastVoiceAttempt(
+            items = kept,
+            attempted = true,
+            latencyMs = elapsed,
+            proposedKinds = if (kept == null) emptyList() else proposed.map { it.resultKind().name },
+        )
     }
 
-    private fun voiceSystemPrompt(places: List<String>): String = """
+    private data class FastVoiceAttempt(
+        val items: List<ParsedIntent>?,
+        val attempted: Boolean,
+        val latencyMs: Long?,
+        val proposedKinds: List<String>,
+    )
+
+    private suspend fun voiceSystemPrompt(places: List<String>, utterance: String): String {
+        val base = """
         EN/BN. JSON only {"items":[{"intent":"TRANSACTION|EVENT|TASK|EXAM|REMINDER|ALARM|ROUTINE|NOTE|BILL|DEBT|GOAL|BUDGET|JOB|DELETE|EDIT","amount":n|null,"category":"FOOD|TRANSPORT|SUBSCRIPTIONS|ENTERTAINMENT|SHOPPING|HEALTH|UTILITIES|RENT|SALARY|OTHER","merchant":"","note":"","type":"INCOME|EXPENSE","title":"","name":"","body":"","start_at":"local ISO|null","due_at":null,"label":"","repeat_rule":"","direction":"I_OWE|THEY_OWE"}]}.
         Dates named by the user stay that date. Money is TRANSACTION. JOB name=company title=role merchant=site note=place body=labeled dates. DELETE/EDIT do not create a new item. Empty if unknown.
         One message can hold several items: return one item for each. Never invent an amount, date or name the user did not say; use null.
         ${placeHint(places)}
-    """.trimIndent()
+        """.trimIndent()
+        val selected = renderContext(
+            selectContext(
+                utterance,
+                knownMerchants(transactions.getAllTransactions().first()),
+                openDebtFacts(debts.getActiveDebts().first()),
+            ),
+        )
+        return if (selected.isEmpty()) base else "$base\n$selected"
+    }
 
     /** Edge function first, then the direct provider. Empty when offline, unconfigured or nothing maps. */
     private suspend fun cloudVoiceItems(trimmed: String): List<ParsedIntent> {
@@ -250,28 +311,14 @@ class AiRepository @Inject constructor(
         }
 
     /**
-     * The edge function and some models only know a transaction or a note. When the words clearly name a
-     * bill, debt, goal or budget, the offline parse wins for those.
+     * The AI answer is used as it is. Rules are a fallback for when the AI cannot answer (offline or all
+     * providers failed), not an override.
      */
     private fun preferLocalKinds(cloud: List<ParsedIntent>, transcript: String): List<ParsedIntent> {
+        // The AI understands the message. The only thing it cannot express is a stock adjustment, which the
+        // rules recognise, so that one case still comes from them.
         val local = QuickParse.parseVoiceIntents(transcript)
-        if (local.any { it is ParsedIntent.Adjust }) return local
-        if (local.any { it is ParsedIntent.Job }) {
-            val cloudJob = cloud.filterIsInstance<ParsedIntent.Job>().firstOrNull()
-            return local.map { item ->
-                if (item !is ParsedIntent.Job || cloudJob == null) item
-                else item.copy(
-                    company = item.company.takeUnless { it.equals("Company", true) } ?: cloudJob.company,
-                    title = pickJobRole(cloudJob.title, item.title),
-                    location = item.location.ifBlank { cloudJob.location }
-                )
-            }
-        }
-        if (cloud.none { it is ParsedIntent.Transaction || it is ParsedIntent.Note }) return cloud
-        val special = local.any {
-            it is ParsedIntent.Bill || it is ParsedIntent.Debt || it is ParsedIntent.Goal || it is ParsedIntent.Budget
-        }
-        return if (special) local else cloud
+        return if (local.any { it is ParsedIntent.Adjust }) local else cloud
     }
 
     /** All items in a cloud reply, checked by [AiResponseValidator]. Empty when nothing maps. */

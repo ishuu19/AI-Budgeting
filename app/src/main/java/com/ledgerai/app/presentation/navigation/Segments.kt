@@ -1,8 +1,10 @@
 package com.ledgerai.app.presentation.navigation
 
 /** Segments inside each tab. Saved with rememberSaveable in the shell, so rotation keeps them. */
-enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Log("Log"), Jobs("Jobs") }
-enum class VoiceSeg(val label: String) { Speak("Speak"), Notes("Notes"), Ask("Ask") }
+/** Log is reached from More; the segmented control shows Calendar, Tasks, Notes, Jobs. */
+enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Notes("Notes"), Log("Log"), Jobs("Jobs") }
+enum class VoiceSeg(val label: String) { Capture("Capture"), Speak("Speak"), Notes("Notes"), Ask("Chat") }
+enum class LifeSeg(val label: String) { Pantry("Pantry"), Wardrobe("Wardrobe"), People("People"), Home("Home") }
 enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Plan"), Owed("Owed") }
 
 /** Ways a tab screen can reach another place. Wired once in [AppNavigation]. */
@@ -13,7 +15,22 @@ class AppLinks(
     val plan: (PlanSeg) -> Unit = {},
     val money: (MoneySeg) -> Unit = {},
     val voice: (VoiceSeg) -> Unit = {},
+    /** Opens Settings (profile, voice, money rules, alerts). */
     val you: () -> Unit = {},
+    val life: (LifeSeg) -> Unit = {},
+    /** Opens the manual expense form. */
+    val addExpense: () -> Unit = {},
+    val subscriptions: () -> Unit = {},
+    /** The full-day view (schedule, tasks, habits). */
+    val today: () -> Unit = {},
+    val voiceLog: () -> Unit = {},
+    /** Opens Home and starts listening. One tap on the mic anywhere in the app. */
+    val listen: () -> Unit = {},
+    /** Hands typed or spoken words to the voice flow, which turns them into cards. */
+    val speak: (String) -> Unit = {},
+    val receipt: (Long) -> Unit = {},
+    val person: (String) -> Unit = {},
+
     val insights: () -> Unit = {},
     val spendGuide: () -> Unit = {},
     /** Opens the full-screen assistant seeded with an insight. */

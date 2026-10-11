@@ -30,7 +30,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ledgerai.app.data.repository.GoalRepository
 import com.ledgerai.app.domain.model.Goal
+import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
+import com.ledgerai.app.presentation.components.LChip
+import com.ledgerai.app.presentation.components.LCurrency
 import com.ledgerai.app.presentation.components.LEmpty
 import com.ledgerai.app.presentation.components.LField
 import com.ledgerai.app.presentation.components.LItemSheet
@@ -138,7 +141,7 @@ private fun goalSubline(goal: Goal, today: LocalDate): String? {
     }
 }
 
-/** Goals section for the Money Plan segment. */
+/** Goals section for the Money Plan segment: soonest deadline first, one-tap add on every row. */
 fun LazyListScope.goalItems(
     goals: List<Goal>,
     filter: GoalFilter,
@@ -162,7 +165,12 @@ fun LazyListScope.goalItems(
         }
     }
     if (visible.isEmpty()) {
-        item(key = "goals-empty") { LEmpty(Icons.Filled.Flag, "No goals") }
+        item(key = "goals-empty") {
+            LEmpty(
+                Icons.Filled.Flag,
+                if (filter == GoalFilter.DONE && goals.isNotEmpty()) "No finished goals yet" else "Say: save 2000 for a trip by June"
+            )
+        }
     } else {
         item(key = "goals-group") {
             LimitedGroup(visible, id = { it.id }, expandKey = "goals-${filter.name}") { goal ->
@@ -187,26 +195,33 @@ private fun GoalRow(goal: Goal, today: LocalDate, onEdit: () -> Unit, onContribu
     ) {
         Icon(Icons.Filled.Flag, contentDescription = null, tint = L.Gold, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    goal.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = L.OnBox,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "${goal.progressPercent}%",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = L.Gold,
+                    maxLines = 1
+                )
+            }
+            LProgress(goal.progressPercent / 100f, color = if (late) L.Danger else L.Gold)
             Text(
-                goal.name,
-                style = MaterialTheme.typography.titleSmall,
-                color = L.OnBox,
+                "${money(goal.savedAmount)} of ${money(goal.targetAmount)}" + if (sub.isNullOrBlank()) "" else " · $sub",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (late) L.Danger else L.OnBoxMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                "${money(goal.savedAmount)} / ${money(goal.targetAmount)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = L.Gold,
-                maxLines = 1
-            )
-            LProgress(goal.progressPercent / 100f)
-            if (!sub.isNullOrBlank()) {
-                Text(sub, style = MaterialTheme.typography.bodySmall, color = if (late) L.Danger else L.OnBoxMuted)
-            }
         }
         IconButton(onClick = onContribute) {
-            Icon(Icons.Filled.Add, contentDescription = "Add to ${goal.name}", tint = L.Gold)
+            Icon(Icons.Filled.Add, contentDescription = "Add to ${goal.name}", tint = L.Primary)
         }
     }
 }
@@ -230,8 +245,8 @@ fun GoalSheet(
     val body: @Composable ColumnScope.() -> Unit = {
         LField(name, { name = it }, "Name")
         DecimalField(targetText, { targetText = it }, "Target")
-        LField(place, { place = it }, "Place")
         OptionalDateField("Deadline", date) { date = it }
+        LField(place, { place = it }, "Place")
     }
     if (existing != null) {
         LItemSheet(
@@ -275,6 +290,19 @@ fun ContributeSheet(
         secondary = "Remove",
         onSecondary = { if (canApply) onRemove(amount!!) }
     ) {
+        ChipsRow {
+            listOf(10.0, 25.0, 50.0, 100.0).forEach { preset ->
+                LChip(
+                    "+" + LCurrency.symbol + amountInput(preset),
+                    amountText == amountInput(preset),
+                    onClick = { amountText = amountInput(preset) }
+                )
+            }
+            if (goal.remaining > 0.0) {
+                val rest = kotlin.math.ceil(goal.remaining * 100) / 100
+                LChip("Finish it", amountText == amountInput(rest), onClick = { amountText = amountInput(rest) })
+            }
+        }
         DecimalField(amountText, { amountText = it }, "Amount")
     }
 }

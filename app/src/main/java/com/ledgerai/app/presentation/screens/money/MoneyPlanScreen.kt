@@ -32,7 +32,7 @@ import com.ledgerai.app.presentation.screens.goals.GoalSheet
 import com.ledgerai.app.presentation.screens.goals.GoalsViewModel
 import com.ledgerai.app.presentation.screens.goals.goalItems
 
-/** Money > Plan: one hero (budget left), then Budgets, Goals and Forecast sections. */
+/** Money > Plan: one hero (budget left), then Budgets (most urgent first), Goals and Forecast. Adding is voice first; sheets are the manual path. */
 @Composable
 fun MoneyPlanScreen(
     links: AppLinks,
@@ -81,12 +81,15 @@ fun MoneyPlanScreen(
         else -> "${budgetState.daysLeft} days left"
     }
 
+    val overCount = budgetState.budgets.count { it.isOverBudget }
+    val heroSub = if (overCount > 0) "$daysSub · $overCount over budget" else daysSub
+
     LScreen(title = "Plan", snackbarHost = { SnackbarHost(snackbar) }) {
         item(key = "hero") {
             LHero(
                 label = "Budget left",
                 value = money(budgetState.totalRemaining),
-                sub = daysSub,
+                sub = heroSub,
                 valueColor = if (budgetState.totalRemaining < 0) L.Danger else L.OnBox
             )
         }

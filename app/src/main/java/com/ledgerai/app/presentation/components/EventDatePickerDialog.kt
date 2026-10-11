@@ -24,7 +24,7 @@ fun EventDatePickerDialog(
                     onConfirm(Instant.ofEpochMilli(ms).atZone(ZoneOffset.UTC).toLocalDate())
                 }
                 onDismiss()
-            }) { Text("Done", color = L.Box) }
+            }) { Text("Done", color = L.Primary) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel", color = L.InkMuted) }
@@ -39,7 +39,7 @@ fun EventDatePickerDialog(
                 selectedDayContainerColor = L.Box,
                 selectedDayContentColor = L.OnBox,
                 todayDateBorderColor = L.Gold,
-                todayContentColor = L.Box
+                todayContentColor = L.Primary
             )
         )
     }

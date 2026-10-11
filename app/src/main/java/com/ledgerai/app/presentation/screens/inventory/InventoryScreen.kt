@@ -1,5 +1,6 @@
 package com.ledgerai.app.presentation.screens.inventory
 
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -218,6 +219,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.pantry(
     onOpen: (Long) -> Unit,
     onAddLow: (Long) -> Unit,
 ) {
+    item(key = "scan") { PantryScan() }
     item(key = "have-name") {
         LField(haveName, onHaveName, "Do I have")
     }
@@ -407,4 +409,29 @@ private fun stockSub(item: StockItem): String? {
         }
     }
     return bits.joinToString(" · ").ifBlank { null }
+}
+
+/** The fast way to fill the pantry: photograph the fridge, a shelf, groceries or a receipt. The AI does the rest. */
+@Composable
+private fun PantryScan() {
+    val photos: com.ledgerai.app.presentation.components.PhotoSaveViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var notice by rememberSaveable { mutableStateOf<String?>(null) }
+    var forReceipt by rememberSaveable { mutableStateOf(false) }
+    val actions = com.ledgerai.app.presentation.components.rememberPhotoActions(max = 6) { uris ->
+        scope.launch {
+            val note = if (forReceipt) "This is a receipt." else "These are food items at home. List each one."
+            val n = photos.fileWithAi(uris, note)
+            notice = if (n > 0) "Got it. The AI is adding what it sees." else "I couldn't read that photo."
+        }
+    }
+    androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+        Text("Photograph your fridge, groceries or a receipt. I will fill the pantry for you.", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+            com.ledgerai.app.presentation.components.PhotoButton(Icons.Filled.Kitchen, "Scan food") { forReceipt = false; actions.shoot() }
+            com.ledgerai.app.presentation.components.PhotoButton(Icons.Filled.ShoppingCart, "Scan receipt") { forReceipt = true; actions.shoot() }
+            com.ledgerai.app.presentation.components.PhotoButton(Icons.Filled.Kitchen, "From gallery") { forReceipt = false; actions.pick() }
+        }
+        notice?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = L.Ink) }
+    }
 }

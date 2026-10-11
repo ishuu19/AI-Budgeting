@@ -43,7 +43,7 @@ import com.ledgerai.app.presentation.screens.transactions.spendIcon
 
 private val AlertSteps = listOf(50, 70, 80, 90)
 
-/** Budgets section for the Money Plan segment: header, summary line, actions, progress rows. */
+/** Budgets section for the Money Plan segment: most urgent (over, then fullest) first, with progress on every row. */
 fun LazyListScope.budgetItems(
     state: BudgetUiState,
     onAdd: () -> Unit,
@@ -51,21 +51,24 @@ fun LazyListScope.budgetItems(
     onAsk: () -> Unit,
     onCopyLastMonth: () -> Unit
 ) {
+    val ordered = state.budgets.sortedWith(
+        compareByDescending<Budget> { it.isOverBudget }.thenByDescending { it.usagePercent }
+    )
     item(key = "budgets-header") { LSection("Budgets", action = "Add", onAction = onAdd) }
     item(key = "budgets-summary") {
         MutedLine("Daily ${money(state.dailyAllowance)} · Unbudgeted ${money(state.unbudgetedSpend)}")
     }
     item(key = "budgets-actions") {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            LGhostButton("Ask AI", onAsk, Modifier.weight(1f))
-            if (state.canCopyLastMonth) LGhostButton("Copy last month", onCopyLastMonth, Modifier.weight(1f))
+        ChipsRow {
+            LChip("Ask AI", false, onClick = onAsk)
+            if (state.canCopyLastMonth) LChip("Copy last month", false, onClick = onCopyLastMonth)
         }
     }
-    if (!state.isLoading && state.budgets.isEmpty()) {
-        item(key = "budgets-empty") { LEmpty(Icons.Filled.PieChart, "No budgets") }
-    } else if (state.budgets.isNotEmpty()) {
+    if (!state.isLoading && ordered.isEmpty()) {
+        item(key = "budgets-empty") { LEmpty(Icons.Filled.PieChart, "Say: budget 300 for food") }
+    } else if (ordered.isNotEmpty()) {
         item(key = "budgets-group") {
-            LimitedGroup(state.budgets, id = { it.id }, expandKey = "budgets") { budget ->
+            LimitedGroup(ordered, id = { it.id }, expandKey = "budgets") { budget ->
                 BudgetRow(budget, state.daysLeft, onClick = { onEdit(budget) })
             }
         }
@@ -75,6 +78,12 @@ fun LazyListScope.budgetItems(
 @Composable
 private fun BudgetRow(budget: Budget, daysLeft: Int, onClick: () -> Unit) {
     val perDay = budget.remaining / daysLeft.coerceAtLeast(1)
+    val over = budget.isOverBudget
+    val tint = when {
+        over -> L.Danger
+        budget.isNearLimit -> L.Highlight
+        else -> L.Gold
+    }
     Column(
         Modifier
             .fillMaxWidth()
@@ -92,19 +101,19 @@ private fun BudgetRow(budget: Budget, daysLeft: Int, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             Text(
-                "${money(budget.spent)} / ${money(budget.monthlyLimit)}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (budget.isOverBudget) L.Danger else L.OnBoxMuted
+                if (over) "Over by ${money(-budget.remaining)}" else "${money(budget.remaining)} left",
+                style = MaterialTheme.typography.titleSmall,
+                color = if (over) L.Danger else L.OnBox
             )
         }
         LProgress(
             fraction = if (budget.monthlyLimit > 0) (budget.spent / budget.monthlyLimit).toFloat() else 0f,
-            color = if (budget.isOverBudget) L.Danger else L.Gold
+            color = tint
         )
         Text(
-            if (budget.isOverBudget) "Over by ${money(-budget.remaining)}" else "${money(perDay)}/day left",
+            "${money(budget.spent)} of ${money(budget.monthlyLimit)}" + if (over) "" else " · ${money(perDay)}/day",
             style = MaterialTheme.typography.bodySmall,
-            color = if (budget.isOverBudget) L.Danger else L.OnBoxMuted
+            color = L.OnBoxMuted
         )
     }
 }

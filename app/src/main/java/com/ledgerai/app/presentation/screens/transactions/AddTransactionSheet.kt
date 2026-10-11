@@ -23,6 +23,7 @@ import com.ledgerai.app.domain.model.ParsedTransaction
 import com.ledgerai.app.domain.model.Transaction
 import com.ledgerai.app.domain.model.TransactionCategory
 import com.ledgerai.app.domain.model.TransactionType
+import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.L
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LConfirmDelete
@@ -38,6 +39,9 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+/** Last expense category the user saved; the next new entry starts there. */
+private var lastUsedCategory: TransactionCategory? = null
 
 @Composable
 fun AddTransactionSheet(
@@ -60,7 +64,7 @@ fun AddTransactionSheet(
     var placeLinks by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableStateOf(seed?.type ?: prefilled?.type ?: TransactionType.EXPENSE) }
     var category by rememberSaveable {
-        mutableStateOf(seed?.category ?: prefilled?.category ?: TransactionCategory.OTHER)
+        mutableStateOf(seed?.category ?: prefilled?.category ?: lastUsedCategory ?: TransactionCategory.OTHER)
     }
     var date by rememberSaveable { mutableStateOf(seed?.date ?: prefilled?.date ?: LocalDate.now()) }
     // Rules suggest a category while the user types a name, until they pick one themselves.
@@ -73,6 +77,12 @@ fun AddTransactionSheet(
         suggestion = found
         if (!categoryTouched && found != null && type == TransactionType.EXPENSE) category = found.category
     }
+    var showMore by rememberSaveable {
+        mutableStateOf(
+            !seed?.location.isNullOrBlank() || !seed?.note.isNullOrBlank() ||
+                !prefilled?.location.isNullOrBlank() || !prefilled?.note.isNullOrBlank()
+        )
+    }
     var isRecurring by rememberSaveable { mutableStateOf(seed?.isRecurring ?: false) }
     val amount = amountText.toDoubleOrNull()?.takeIf { it > 0 }
     val today = LocalDate.now()
@@ -83,6 +93,7 @@ fun AddTransactionSheet(
             val url = placeLinks.lines().firstOrNull { it.contains("google.com/maps") } ?: placeLinks.trim()
             listOf(note.trim(), url).filter { it.isNotEmpty() }.joinToString("\n")
         } else note.trim()
+        if (type == TransactionType.EXPENSE && category != TransactionCategory.OTHER) lastUsedCategory = category
         amount?.let { onConfirm(it, type, category, merchant.trim(), noteOut, date, location.trim(), isRecurring) }
         Unit
     }
@@ -93,10 +104,16 @@ fun AddTransactionSheet(
             Text("Enter an amount above 0", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ChipsRow {
             LChip("Expense", type == TransactionType.EXPENSE, onClick = { type = TransactionType.EXPENSE })
             LChip("Income", type == TransactionType.INCOME, onClick = { type = TransactionType.INCOME })
-            LChip("Repeat", isRecurring, onClick = { isRecurring = !isRecurring })
+            LChip("Repeats", isRecurring, onClick = { isRecurring = !isRecurring })
+        }
+        ChipsRow {
+            LChip("Today", date == today, onClick = { date = today })
+            LChip("Yesterday", date == today.minusDays(1), onClick = { date = today.minusDays(1) })
+            val custom = date != today && date != today.minusDays(1)
+            DatePickChip(date, selected = custom, onDate = { date = it }, label = if (custom) shortDate(date) else "Pick date")
         }
 
         CategoryChipsRow(selected = category, onSelect = { category = it; categoryTouched = true })
@@ -120,23 +137,20 @@ fun AddTransactionSheet(
         }
 
         LField(merchant, { merchant = it }, label = "Name")
-        LPlaceField(
-            location = location,
-            onLocationChange = { location = it },
-            links = placeLinks,
-            onLinksChange = { placeLinks = it },
-            label = "Place"
-        )
-        if (placeLinks.isNotBlank()) {
-            LField(placeLinks, { placeLinks = it }, label = "Maps link", singleLine = false, minLines = 2)
-        }
-        LField(note, { note = it }, label = "Note")
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            LChip("Today", date == today, onClick = { date = today })
-            LChip("Yesterday", date == today.minusDays(1), onClick = { date = today.minusDays(1) })
-            val custom = date != today && date != today.minusDays(1)
-            DatePickChip(date, selected = custom, onDate = { date = it }, label = if (custom) shortDate(date) else "Date")
+        if (!showMore) {
+            ChipsRow { LChip("Add place or note", false, onClick = { showMore = true }) }
+        } else {
+            LPlaceField(
+                location = location,
+                onLocationChange = { location = it },
+                links = placeLinks,
+                onLinksChange = { placeLinks = it },
+                label = "Place"
+            )
+            if (placeLinks.isNotBlank()) {
+                LField(placeLinks, { placeLinks = it }, label = "Maps link", singleLine = false, minLines = 2)
+            }
+            LField(note, { note = it }, label = "Note")
         }
 
         if (canCopy) {
@@ -189,7 +203,7 @@ internal fun BigAmountField(value: String, onValueChange: (String) -> Unit, symb
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.displaySmall.copy(color = L.Ink),
-            cursorBrush = SolidColor(L.Box),
+            cursorBrush = SolidColor(L.Primary),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.widthIn(min = 48.dp).width(IntrinsicSize.Min).semantics { contentDescription = "Amount" },
             decorationBox = { inner ->
@@ -238,7 +252,7 @@ internal fun DatePickChip(
                         onDate(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
                     }
                     open = false
-                }) { Text("Done", color = L.Box) }
+                }) { Text("Done", color = L.Primary) }
             },
             dismissButton = {
                 TextButton(onClick = { open = false }) { Text("Cancel", color = L.InkMuted) }
