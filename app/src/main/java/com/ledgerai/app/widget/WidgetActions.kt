@@ -15,6 +15,12 @@ object WidgetActions {
     const val EXTRA_OPEN_TASKS = "open_tasks"
     const val EXTRA_OPEN_NOTES = "open_notes"
     const val EXTRA_OPEN_BILLS = "open_bills"
+    const val EXTRA_OPEN_SEARCH = "open_search"
+    const val EXTRA_OPEN_DAY = "open_today"
+    const val EXTRA_OPEN_SPEND_LIST = "open_spend_list"
+    const val EXTRA_OPEN_MONEY = "open_money"
+    const val EXTRA_EVENT_ID = "open_event_id"
+    const val EXTRA_PLAN_BLOCK_ID = "open_plan_block_id"
     const val EXTRA_LIFE_TAB = "open_life_tab"
     const val LIFE_TAB_LOG = "log"
     const val LIFE_TAB_JOBS = "jobs"
@@ -38,6 +44,29 @@ object WidgetActions {
 
     fun openCalendar(context: Context) =
         main(context) { putExtra(EXTRA_OPEN_CALENDAR, true) }
+
+    /** The full-day screen. */
+    fun openToday(context: Context) =
+        main(context) { putExtra(EXTRA_OPEN_DAY, true) }
+
+    fun openSearch(context: Context) =
+        main(context) { putExtra(EXTRA_OPEN_SEARCH, true) }
+
+    /** Money → Spend, the list behind "spent today". */
+    fun openSpendList(context: Context) =
+        main(context) { putExtra(EXTRA_OPEN_SPEND_LIST, true) }
+
+    /** Money overview, the month total. */
+    fun openMoney(context: Context) =
+        main(context) { putExtra(EXTRA_OPEN_MONEY, true) }
+
+    /** Opens that calendar item. */
+    fun openEvent(context: Context, masterId: Long) =
+        main(context) { putExtra(EXTRA_EVENT_ID, masterId) }
+
+    /** Opens that plan block on the calendar. */
+    fun openPlanBlock(context: Context, blockId: Long) =
+        main(context) { putExtra(EXTRA_PLAN_BLOCK_ID, blockId) }
 
     fun openSpendToday(context: Context) =
         main(context) { putExtra(EXTRA_OPEN_TODAY, true) }

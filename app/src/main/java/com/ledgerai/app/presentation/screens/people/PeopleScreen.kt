@@ -215,7 +215,7 @@ fun PeopleScreen(
             hint = "Search people",
         ) {
             LToolButton(Icons.Filled.PhotoCamera, "Camera", camera.shoot)
-            LToolButton(Icons.Filled.PhotoLibrary, "Gallery", camera.pick)
+            LToolButton(Icons.Filled.PhotoLibrary, "Photo", camera.pick)
         }
         LScreen(
             title = "People",

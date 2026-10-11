@@ -206,69 +206,22 @@ fun InventoryScreen(
         viewModel.consumeNotice()
     }
 
+    val shopLines = if (page == InventoryPage.Shopping && haveName.isNotBlank()) {
+        lines.filter { it.itemName.contains(haveName.trim(), ignoreCase = true) }
+    } else {
+        lines
+    }
     Column(Modifier.fillMaxSize()) {
-        if (page == InventoryPage.Pantry) {
-            LSearchToolbar(
-                query = haveName,
-                onQuery = { haveName = it },
-                searching = searching,
-                onSearching = { searching = it },
-                hint = "Do I have…",
-                submitLabel = "Check",
-                onSubmit = { viewModel.findByName(haveName) },
-            ) {
-                LToolButton(Icons.Filled.PhotoCamera, "Camera", photosIn.shoot)
-                LToolButton(Icons.Filled.PhotoLibrary, "Gallery", photosIn.pick)
-            }
-        }
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = L.Gutter),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        LSearchToolbar(
+            query = haveName,
+            onQuery = { haveName = it },
+            searching = searching,
+            onSearching = { searching = it },
+            hint = if (page == InventoryPage.Pantry) "Do I have…" else "Search the list",
+            onSubmit = { if (page == InventoryPage.Pantry) viewModel.findByName(haveName) },
         ) {
-            LSegments(
-                options = listOf(InventoryPage.Pantry, InventoryPage.Shopping),
-                selected = page,
-                label = { if (it == InventoryPage.Pantry) "Pantry" else "To buy" },
-                onSelect = { page = it },
-            )
-            if (page == InventoryPage.Pantry) {
-                val today = LocalDate.now()
-                val lowCount = items.count { StockQuantity.isLowOrOut(it.quantity) }
-                val weekCount = items.count { item ->
-                    val days = item.expiresOn?.let { daysUntil(it, today) } ?: return@count false
-                    days in 0..7
-                }
-                LSmallPair(
-                    left = { modifier ->
-                        LSmallBlock(
-                            label = "Low",
-                            value = lowCount.toString(),
-                            modifier = modifier,
-                            valueColor = if (lowCount > 0) L.Highlight else L.OnBox,
-                            onClick = { filterName = if (filter == PantryFilter.Low) PantryFilter.All.name else PantryFilter.Low.name },
-                        )
-                    },
-                    right = { modifier ->
-                        LSmallBlock(
-                            label = "Expiring this week",
-                            value = weekCount.toString(),
-                            modifier = modifier,
-                            valueColor = if (weekCount > 0) L.Highlight else L.OnBox,
-                            onClick = {
-                                filterName = if (filter == PantryFilter.Expiring) PantryFilter.All.name else PantryFilter.Expiring.name
-                            },
-                        )
-                    },
-                )
-            }
-            if (availability != null && searching && page == InventoryPage.Pantry) {
-                HaveAnswer(
-                    result = availability!!,
-                    query = haveName,
-                    onAddItem = viewModel::addLowOrOut,
-                    onAddMissing = { viewModel.addLine(haveName, null) },
-                )
-            }
+            LToolButton(Icons.Filled.PhotoCamera, "Camera", photosIn.shoot)
+            LToolButton(Icons.Filled.PhotoLibrary, "Photo", photosIn.pick)
         }
         LScreen(
             title = if (page == InventoryPage.Pantry) "Pantry" else "To buy",
@@ -290,7 +243,55 @@ fun InventoryScreen(
                 }
             },
         ) {
+            item(key = "pantry-switch") {
+                LSegments(
+                    options = listOf(InventoryPage.Pantry, InventoryPage.Shopping),
+                    selected = page,
+                    label = { if (it == InventoryPage.Pantry) "Pantry" else "To buy" },
+                    onSelect = { page = it },
+                )
+            }
             if (page == InventoryPage.Pantry) {
+                item(key = "pantry-counts") {
+                    val today = LocalDate.now()
+                    val lowCount = items.count { StockQuantity.isLowOrOut(it.quantity) }
+                    val weekCount = items.count { item ->
+                        val days = item.expiresOn?.let { daysUntil(it, today) } ?: return@count false
+                        days in 0..7
+                    }
+                    LSmallPair(
+                        left = { modifier ->
+                            LSmallBlock(
+                                label = "Low",
+                                value = lowCount.toString(),
+                                modifier = modifier,
+                                valueColor = if (lowCount > 0) L.Highlight else L.OnBox,
+                                onClick = { filterName = if (filter == PantryFilter.Low) PantryFilter.All.name else PantryFilter.Low.name },
+                            )
+                        },
+                        right = { modifier ->
+                            LSmallBlock(
+                                label = "Expiring this week",
+                                value = weekCount.toString(),
+                                modifier = modifier,
+                                valueColor = if (weekCount > 0) L.Highlight else L.OnBox,
+                                onClick = {
+                                    filterName = if (filter == PantryFilter.Expiring) PantryFilter.All.name else PantryFilter.Expiring.name
+                                },
+                            )
+                        },
+                    )
+                }
+                if (availability != null && haveName.isNotBlank()) {
+                    item(key = "have-answer") {
+                        HaveAnswer(
+                            result = availability!!,
+                            query = haveName,
+                            onAddItem = viewModel::addLowOrOut,
+                            onAddMissing = { viewModel.addLine(haveName, null) },
+                        )
+                    }
+                }
                 pantry(
                     items = items,
                     filter = filter,
@@ -299,7 +300,7 @@ fun InventoryScreen(
                 )
             } else {
                 shopping(
-                    lines = lines,
+                    lines = shopLines,
                     showBought = showBought,
                     onToggleBought = { showBought = !showBought },
                     onCheckOff = viewModel::checkOff,

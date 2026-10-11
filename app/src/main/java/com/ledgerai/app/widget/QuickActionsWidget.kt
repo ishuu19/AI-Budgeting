@@ -48,7 +48,7 @@ private fun QuickActionsContent(hasLogGap: Boolean) {
             WidgetRoundAction(
                 android.R.drawable.ic_input_add,
                 palette,
-                actionStartActivity(WidgetActions.openSpendToday(context))
+                actionStartActivity(WidgetActions.openAddTransaction(context))
             )
             Spacer(GlanceModifier.width(8.dp))
             WidgetRoundAction(

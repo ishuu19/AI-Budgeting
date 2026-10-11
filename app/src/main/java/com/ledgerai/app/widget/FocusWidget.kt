@@ -40,7 +40,11 @@ private fun FocusContent(payload: WidgetPayload) {
             modifier = GlanceModifier.fillMaxSize(),
             raised = true,
             onClick = actionStartActivity(
-                WidgetActions.openFocusScreen(context, 0L, payload.focusTitle)
+                WidgetActions.openFocusScreen(
+                    context,
+                    payload.focusBlockId,
+                    if (payload.privateMode) "Focus" else payload.focusTitle
+                )
             )
         ) {
             Text(
@@ -69,7 +73,11 @@ private fun FocusContent(payload: WidgetPayload) {
                     .fillMaxWidth()
                     .clickable(
                         actionStartActivity(
-                            WidgetActions.openFocusScreen(context, 0L, payload.focusTitle)
+                            WidgetActions.openFocusScreen(
+                                context,
+                                payload.focusBlockId,
+                                if (payload.privateMode) "Focus" else payload.focusTitle
+                            )
                         )
                     ),
                 style = TextStyle(color = palette.onTileMuted, fontSize = WidgetTheme.labelSize)

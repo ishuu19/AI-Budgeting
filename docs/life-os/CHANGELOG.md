@@ -4,6 +4,8 @@ Newest first. Add an entry for every change that touches the assistant, data mod
 
 ## 2026-10-11
 
+- **Widget taps open the matching screen.** The date opens Today, search opens Search, today's spend opens Spend, the month total opens Money, and a schedule row opens that item. The add button adds a transaction. Focus opens the next block, or a free session when there isn't one.
+
 ### Added
 - **Capture engine.** One input for everything (Capture tab, floating sheet). Photos are saved on the phone first, then a background `CaptureWorker` (network required, backoff retry) has the AI look at each photo once, name it, describe it and file it; afterwards it uploads the photo to a private **Cloudflare R2** bucket (`{userId}/{assetId}.jpg`). Text data stays in Supabase; files live in R2. Offline capture just waits in the queue. Local-only accounts keep photos on the phone and never retry uploads.
 - Room v18: `media_assets` (`Migration17To18` only). Each filed record keeps the photo id as its source (`photoPath`, `sourceId`). `019_media.sql` (table + owner RLS) stays in `supabase/planned/`. The `media-sign` Edge Function is in `supabase/functions/`; the private R2 bucket `ledgerai-media` exists and the secrets are in the gitignored `supabase/.env`. R2 secrets are set on Supabase and `media-sign` (v1) and `ai-proxy` (v8, adds `vision_capture`) are deployed. A signed PUT, GET and DELETE against the bucket returned 200/200/204. `media-sign` itself has not been called with a real user JWT yet. The APK never holds R2 keys: `media-sign` checks the user's JWT and returns a 5-minute presigned URL for `{user.id}/{id}.jpg`, and the app sends or fetches the bytes directly. No sync handler for `media_assets` yet.

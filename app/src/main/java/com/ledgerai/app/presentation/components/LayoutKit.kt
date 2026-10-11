@@ -34,12 +34,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -195,8 +202,10 @@ fun LGroupRow(
 }
 
 /**
- * Swipe between [options]. Tapping a segment still calls [onSelect]; a horizontal swipe does the same
- * once the page settles. [selected] from outside moves the pager to that page.
+ * Swipe between [options]. A tap scrolls to that page. A swipe moves the segment highlight with the
+ * page, including when you swipe back, because the collector always reads the latest selection.
+ * A tap-driven scroll does not report the pages it passes through, so the highlight stays on the
+ * page you chose.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -209,15 +218,30 @@ fun <T> LSwipePages(
 ) {
     val initial = options.indexOf(selected).coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initial, pageCount = { options.size })
-    LaunchedEffect(selected, options) {
-        val index = options.indexOf(selected)
-        if (index >= 0 && index != pagerState.currentPage && !pagerState.isScrollInProgress) pagerState.animateScrollToPage(index)
+    val latestOptions by rememberUpdatedState(options)
+    val latestSelected by rememberUpdatedState(selected)
+    val latestOnSelect by rememberUpdatedState(onSelect)
+    // True while a tap (not a finger swipe) is moving the pager, so passing pages are not reported.
+    val scrollFromTap = remember { mutableStateOf(false) }
+    LaunchedEffect(selected) {
+        val index = latestOptions.indexOf(selected)
+        if (index >= 0 && index != pagerState.currentPage && !pagerState.isScrollInProgress) {
+            scrollFromTap.value = true
+            try {
+                pagerState.animateScrollToPage(index)
+            } finally {
+                scrollFromTap.value = false
+                val landed = latestOptions.getOrNull(pagerState.currentPage)
+                if (landed != null && landed != latestSelected) latestOnSelect(landed)
+            }
+        }
     }
-    // The tab bar follows the page as soon as it is more than half across, not after it settles.
-    LaunchedEffect(pagerState, options) {
-        androidx.compose.runtime.snapshotFlow { pagerState.currentPage }.collect { page ->
-            val item = options.getOrNull(page) ?: return@collect
-            if (item != selected) onSelect(item)
+    // currentPage flips once the swipe is more than half across, so the highlight does not wait.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            if (scrollFromTap.value) return@collect
+            val item = latestOptions.getOrNull(page) ?: return@collect
+            if (item != latestSelected) latestOnSelect(item)
         }
     }
     HorizontalPager(state = pagerState, modifier = modifier.fillMaxSize()) { index ->
@@ -432,9 +456,20 @@ fun LTabPage(
     segments: (@Composable () -> Unit)? = null,
     /** Shown under the segments: the AI-first way to add something on this tab. */
     aiBar: (@Composable () -> Unit)? = null,
+    /** Life hides this. That tab already has one search row. */
+    assistant: Boolean = true,
     body: @Composable () -> Unit
 ) {
-    Column(modifier.fillMaxSize().background(L.Page)) {
+    val searchDismiss = remember { SearchDismissState() }
+    val pageCoords = remember { mutableStateOf<LayoutCoordinates?>(null) }
+    CompositionLocalProvider(LocalSearchDismiss provides searchDismiss) {
+    Column(
+        modifier
+            .fillMaxSize()
+            .background(L.Page)
+            .onGloballyPositioned { pageCoords.value = it }
+            .dismissSearchOnOutsideTap(searchDismiss, pageCoords),
+    ) {
         Box(
             Modifier.padding(
                 start = L.Gutter,
@@ -456,19 +491,22 @@ fun LTabPage(
                 )
             ) { segments() }
         }
-        val bar = aiBar
-        val hint = when (title) {
-            "Money" -> "Coffee 4.50"
-            "Life" -> "Buy milk"
-            else -> "Dentist Friday at 3"
-        }
-        Box(Modifier.padding(start = L.Gutter, end = L.Gutter, bottom = L.Space.x8)) {
-            if (bar != null) bar()
-            else {
-                val links = LocalLinks.current
-                LAiBar(hint, onSend = { links.speak(it) }, onMic = links.listen)
+        if (assistant) {
+            val bar = aiBar
+            val hint = when (title) {
+                "Money" -> "Coffee 4.50"
+                "Life" -> "Buy milk"
+                else -> "Dentist Friday at 3"
+            }
+            Box(Modifier.padding(start = L.Gutter, end = L.Gutter, bottom = L.Space.x8)) {
+                if (bar != null) bar()
+                else {
+                    val links = LocalLinks.current
+                    LAiBar(hint, onSend = { links.speak(it) }, onMic = links.listen)
+                }
             }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) { LEmbedded(body) }
+    }
     }
 }

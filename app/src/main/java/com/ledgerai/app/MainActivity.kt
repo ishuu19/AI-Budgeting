@@ -101,8 +101,10 @@ class MainActivity : ComponentActivity() {
                 else -> null
             }
         }
-        val hasFocus = intent.hasExtra(EXTRA_OPEN_FOCUS_BLOCK_ID) && intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L) != 0L
+        val hasFocus = intent.hasExtra(EXTRA_OPEN_FOCUS_BLOCK_ID)
         val voiceSeed = intent.getStringExtra(WidgetActions.EXTRA_VOICE_TEXT)?.trim()?.takeIf { it.isNotEmpty() }
+        val eventId = intent.getLongExtra(WidgetActions.EXTRA_EVENT_ID, 0L)
+        val planBlockId = intent.getLongExtra(WidgetActions.EXTRA_PLAN_BLOCK_ID, 0L)
         val req = LaunchRequest(
             id = id,
             voice = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_VOICE, false) || voiceSeed != null,
@@ -110,13 +112,21 @@ class MainActivity : ComponentActivity() {
             notes = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_NOTES, false),
             plan = planSeg,
             spendGuide = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_TODAY, false),
+            spendList = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_SPEND_LIST, false),
+            moneyOverview = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_MONEY, false),
+            search = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_SEARCH, false),
+            openToday = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_DAY, false),
+            eventId = eventId,
+            planBlockId = planBlockId,
             addTransaction = intent.getBooleanExtra(WidgetActions.EXTRA_ADD_TRANSACTION, false),
             bills = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_BILLS, false),
             focusBlockId = intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L),
             focusTopic = intent.getStringExtra(EXTRA_FOCUS_TOPIC),
             hasFocus = hasFocus
         )
-        val any = req.voice || req.notes || req.plan != null || req.spendGuide || req.addTransaction || req.bills || req.hasFocus
+        val any = req.voice || req.notes || req.plan != null || req.spendGuide || req.spendList ||
+            req.moneyOverview || req.search || req.openToday || req.eventId > 0L || req.planBlockId > 0L ||
+            req.addTransaction || req.bills || req.hasFocus
         return if (any) req else null
     }
 

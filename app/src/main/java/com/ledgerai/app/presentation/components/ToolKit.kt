@@ -3,13 +3,23 @@ package com.ledgerai.app.presentation.components
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.KeyboardVoice
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.border
 import android.Manifest
 import android.content.pm.PackageManager
@@ -149,9 +159,10 @@ fun LSearchBox(
 }
 
 /**
- * Resting: Search, a small gap, the mic, then that tab's own tools, packed to the start.
- * Searching: the row becomes the search box with a mic (and an optional action such as Check).
- * The mic dictates into the box. It lives above the scrolling list so the keyboard never makes the list jump.
+ * One search row. Resting icons sit on the right: Search, then the mic, then [actions]
+ * (camera and photo on Life). Searching replaces that row with the box and the mic.
+ * There is no close or confirm icon: a tap anywhere else on the page closes it and clears the text.
+ * The keyboard Search key still runs [onSubmit]. The mic dictates into the box.
  */
 @Composable
 fun LSearchToolbar(
@@ -162,32 +173,50 @@ fun LSearchToolbar(
     hint: String,
     modifier: Modifier = Modifier,
     showSearch: Boolean = true,
-    submitLabel: String? = null,
     onSubmit: () -> Unit = {},
     actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
 ) {
     val voice = rememberVoiceInput { onQuery(it) }
     val focus = remember { androidx.compose.ui.focus.FocusRequester() }
-    androidx.compose.runtime.LaunchedEffect(searching) { if (searching) runCatching { focus.requestFocus() } }
+    val dismiss = LocalSearchDismiss.current
+    val focusManager = LocalFocusManager.current
+    val owner = remember { Any() }
+    val expanded = searching && showSearch
+    androidx.compose.runtime.LaunchedEffect(expanded) { if (expanded) runCatching { focus.requestFocus() } }
+    SideEffect {
+        if (expanded) {
+            dismiss.owner = owner
+            dismiss.open = true
+            dismiss.dismiss = {
+                focusManager.clearFocus(force = true)
+                onSearching(false)
+                onQuery("")
+            }
+        } else if (dismiss.owner == owner) {
+            dismiss.open = false
+        }
+    }
+    androidx.compose.runtime.DisposableEffect(owner) {
+        onDispose { if (dismiss.owner == owner) dismiss.open = false }
+    }
 
     androidx.compose.foundation.layout.Row(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = L.Gutter, vertical = 8.dp),
+            .padding(horizontal = L.Gutter, vertical = 8.dp)
+            .onGloballyPositioned {
+                if (expanded && dismiss.owner == owner) dismiss.bounds = it.boundsInWindow()
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
     ) {
-        if (searching && showSearch) {
-            LToolButton(androidx.compose.material.icons.Icons.Filled.Close, "Close search", { onSearching(false); onQuery("") })
+        if (expanded) {
             LSearchBox(query, onQuery, hint, Modifier.weight(1f).focusRequester(focus), onDone = onSubmit)
-            if (submitLabel != null) {
-                LToolButton(Icons.Filled.Check, submitLabel, onSubmit, enabled = query.isNotBlank())
-            }
             LToolButton(Icons.Filled.KeyboardVoice, if (voice.listening) "Stop" else "Dictate", voice.toggle, active = voice.listening)
         } else {
+            Spacer(Modifier.weight(1f))
             if (showSearch) {
-                LToolButton(androidx.compose.material.icons.Icons.Filled.Search, "Search", { onSearching(true) })
-                androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                LToolButton(Icons.Filled.Search, "Search", { onSearching(true) })
             }
             LToolButton(
                 Icons.Filled.KeyboardVoice,
@@ -196,6 +225,45 @@ fun LSearchToolbar(
                 active = voice.listening,
             )
             actions()
+        }
+    }
+}
+
+/** Shared with [LTabPage] so a tap outside the open search box closes it. */
+class SearchDismissState {
+    var bounds by mutableStateOf(Rect.Zero)
+    var open by mutableStateOf(false)
+    var dismiss: () -> Unit = {}
+    var owner: Any? = null
+}
+
+private val AbsentSearchDismiss = SearchDismissState()
+
+val LocalSearchDismiss = staticCompositionLocalOf { AbsentSearchDismiss }
+
+/**
+ * Sees taps on this page without taking them from the list or the pager.
+ * The close runs after the tap, so a button under the finger still receives the click.
+ */
+fun Modifier.dismissSearchOnOutsideTap(
+    state: SearchDismissState,
+    coordinates: State<LayoutCoordinates?>,
+): Modifier = pointerInput(state) {
+    awaitEachGesture {
+        val down = awaitFirstDown(
+            pass = PointerEventPass.Initial,
+            requireUnconsumed = false,
+        )
+        val coords = coordinates.value
+        val bounds = state.bounds
+        val outside = coords != null && coords.isAttached && state.open && !bounds.isEmpty &&
+            !bounds.contains(coords.localToWindow(down.position))
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Final)
+            if (event.changes.all { !it.pressed }) {
+                if (outside && state.open) state.dismiss()
+                break
+            }
         }
     }
 }

@@ -54,7 +54,7 @@ private val Line = ColorProvider(Color(0x73203228))
 private fun HomeContent(payload: WidgetPayload) {
     val context = LocalContext.current
     val palette = WidgetTheme.palette(context, true)
-    val openDay = actionStartActivity(WidgetActions.openCalendar(context))
+    val openDay = actionStartActivity(WidgetActions.openToday(context))
     WidgetCanvas(modifier = GlanceModifier.fillMaxSize()) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
             Row(
@@ -82,7 +82,7 @@ private fun HomeContent(payload: WidgetPayload) {
                         WidgetRoundAction(
                             R.drawable.widget_ic_search,
                             palette,
-                            actionStartActivity(WidgetActions.openNoteComposer(context)),
+                            actionStartActivity(WidgetActions.openSearch(context)),
                             iconSize = 26.dp,
                             backgroundRes = R.drawable.widget_btn_mic
                         )
@@ -106,31 +106,42 @@ private fun HomeContent(payload: WidgetPayload) {
                 Box(
                     modifier = GlanceModifier
                         .background(ImageProvider(R.drawable.widget_spent_bg))
-                        .clickable(actionStartActivity(WidgetActions.openSpendToday(context)))
                         .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
                     Column {
-                        Text(
-                            text = "Today",
-                            maxLines = 1,
-                            style = TextStyle(color = Muted, fontSize = 11.sp)
-                        )
-                        Text(
-                            text = payload.spentTodayAmount,
-                            maxLines = 1,
-                            style = TextStyle(color = Mint, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        )
+                        Column(
+                            modifier = GlanceModifier.clickable(
+                                actionStartActivity(WidgetActions.openSpendList(context))
+                            )
+                        ) {
+                            Text(
+                                text = "Today",
+                                maxLines = 1,
+                                style = TextStyle(color = Muted, fontSize = 11.sp)
+                            )
+                            Text(
+                                text = payload.spentTodayAmount,
+                                maxLines = 1,
+                                style = TextStyle(color = Mint, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            )
+                        }
                         Spacer(GlanceModifier.height(6.dp))
-                        Text(
-                            text = "This month",
-                            maxLines = 1,
-                            style = TextStyle(color = Muted, fontSize = 11.sp)
-                        )
-                        Text(
-                            text = payload.spentMonthAmount,
-                            maxLines = 1,
-                            style = TextStyle(color = Ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        )
+                        Column(
+                            modifier = GlanceModifier.clickable(
+                                actionStartActivity(WidgetActions.openMoney(context))
+                            )
+                        ) {
+                            Text(
+                                text = "This month",
+                                maxLines = 1,
+                                style = TextStyle(color = Muted, fontSize = 11.sp)
+                            )
+                            Text(
+                                text = payload.spentMonthAmount,
+                                maxLines = 1,
+                                style = TextStyle(color = Ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            )
+                        }
                     }
                 }
             }
@@ -152,9 +163,16 @@ private fun HomeContent(payload: WidgetPayload) {
                     )
                 } else {
                     LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-                        items(payload.nextUp, itemId = { it.id }) { item ->
-                            Column(modifier = GlanceModifier.fillMaxWidth().clickable(openDay)) {
-                                if (item.id > 0L) {
+                        items(payload.nextUp, itemId = { it.row.toLong() }) { item ->
+                            val openItem = actionStartActivity(
+                                when {
+                                    item.id <= 0L -> WidgetActions.openToday(context)
+                                    item.block -> WidgetActions.openPlanBlock(context, item.id)
+                                    else -> WidgetActions.openEvent(context, item.id)
+                                }
+                            )
+                            Column(modifier = GlanceModifier.fillMaxWidth().clickable(openItem)) {
+                                if (item.divider) {
                                     Box(
                                         modifier = GlanceModifier
                                             .fillMaxWidth()

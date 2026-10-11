@@ -201,7 +201,7 @@ fun WardrobeScreen(
             hint = "Search your clothes",
         ) {
             LToolButton(Icons.Filled.PhotoCamera, "Camera", aiPhotos.shoot)
-            LToolButton(Icons.Filled.PhotoLibrary, "Gallery", aiPhotos.pick)
+            LToolButton(Icons.Filled.PhotoLibrary, "Photo", aiPhotos.pick)
         }
         LScreen(
             title = "Wardrobe",

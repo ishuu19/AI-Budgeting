@@ -68,6 +68,7 @@ import com.ledgerai.app.presentation.screens.analytics.AnalyticsScreen
 import com.ledgerai.app.presentation.screens.focus.FocusScreen
 import com.ledgerai.app.presentation.screens.money.MoneyTabScreen
 import com.ledgerai.app.presentation.screens.money.SpendTodayScreen
+import com.ledgerai.app.presentation.screens.plan.AgendaKeys
 import com.ledgerai.app.presentation.screens.plan.PlanTabScreen
 import com.ledgerai.app.presentation.screens.search.SearchScreen
 import com.ledgerai.app.presentation.screens.settings.SettingsScreen
@@ -136,6 +137,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
     var holdMic by remember { mutableStateOf(false) }
     var voiceSeed by remember { mutableStateOf<String?>(null) }
     var addSpend by remember { mutableStateOf(false) }
+    var pendingAgenda by remember { mutableStateOf<Pair<String, Long>?>(null) }
 
     fun focusRoute(id: Long, topic: String) = "${Screen.Focus.route}/$id?topic=${Uri.encode(topic)}"
 
@@ -199,8 +201,22 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 addSpend = true
                 nav.tab(Screen.Money.route)
             }
+            r.spendList -> { moneySeg = MoneySeg.Spend; nav.tab(Screen.Money.route) }
             r.spendGuide -> { moneySeg = MoneySeg.Overview; nav.tab(Screen.Money.route); nav.go(Screen.SpendGuide.route) }
+            r.moneyOverview -> { moneySeg = MoneySeg.Overview; nav.tab(Screen.Money.route) }
             r.bills -> { moneySeg = MoneySeg.Owed; nav.tab(Screen.Money.route) }
+            r.search -> nav.go(Screen.Search.route)
+            r.openToday -> nav.go(Screen.Today.route)
+            r.eventId > 0L -> {
+                pendingOpen = OpenItem(OpenKind.Event, r.eventId, System.nanoTime())
+                planSeg = PlanSeg.Calendar
+                nav.tab(Screen.Plan.route)
+            }
+            r.planBlockId > 0L -> {
+                pendingAgenda = AgendaKeys.block(r.planBlockId) to System.nanoTime()
+                planSeg = PlanSeg.Calendar
+                nav.tab(Screen.Plan.route)
+            }
             r.plan != null -> { planSeg = r.plan; nav.tab(Screen.Plan.route) }
         }
     }
@@ -269,7 +285,12 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 )
             }
             composable(Screen.Plan.route) {
-                PlanTabScreen(planSeg, { planSeg = it }, links, openFor(OpenKind.Event, OpenKind.Job), opened)
+                PlanTabScreen(
+                    planSeg, { planSeg = it }, links, openFor(OpenKind.Event, OpenKind.Job), opened,
+                    agendaKey = pendingAgenda?.first,
+                    agendaNonce = pendingAgenda?.second ?: 0L,
+                    onAgendaOpened = { pendingAgenda = null },
+                )
             }
             composable(Screen.Money.route) {
                 MoneyTabScreen(

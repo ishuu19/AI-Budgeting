@@ -34,7 +34,8 @@ fun LifeTab(
 
     LTabPage(
         title = "Life",
-        segments = { LSegments(LifeSeg.values().toList(), seg, { it.label }, onSeg) }
+        assistant = false,
+        segments = { LSegments(LifeSeg.entries, seg, { it.label }, onSeg) },
     ) {
         com.ledgerai.app.presentation.components.LSwipePages(LifeSeg.entries, seg, onSeg) { page ->
         when (page) {

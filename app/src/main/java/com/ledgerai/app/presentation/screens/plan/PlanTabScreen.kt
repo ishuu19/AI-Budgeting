@@ -52,7 +52,10 @@ fun PlanTabScreen(
     onSeg: (PlanSeg) -> Unit,
     links: AppLinks,
     open: OpenItem? = null,
-    onOpened: () -> Unit = {}
+    onOpened: () -> Unit = {},
+    agendaKey: String? = null,
+    agendaNonce: Long = 0L,
+    onAgendaOpened: () -> Unit = {},
 ) {
     val vm: PlanViewModel = hiltViewModel()
     val jobsVm: JobsViewModel = hiltViewModel()
@@ -72,7 +75,7 @@ fun PlanTabScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var jobUtterance by rememberSaveable { mutableStateOf("") }
     var searching by rememberSaveable { mutableStateOf(false) }
-    val pages = PlanSeg.entries.filter { it != PlanSeg.Log }
+    val pages = remember { PlanSeg.entries.filter { it != PlanSeg.Log } }
 
     LaunchedEffect(open?.nonce) {
         val o = open ?: return@LaunchedEffect
@@ -84,6 +87,13 @@ fun PlanTabScreen(
             OpenKind.Job -> jobId = o.id
             else -> onOpened()
         }
+    }
+
+    LaunchedEffect(agendaNonce) {
+        val key = agendaKey ?: return@LaunchedEffect
+        if (agendaNonce == 0L) return@LaunchedEffect
+        itemKey = key
+        onAgendaOpened()
     }
 
     val startAdd: (AddKind, LocalDate) -> Unit = { kind, day ->

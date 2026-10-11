@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,8 +30,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +60,11 @@ import com.ledgerai.app.presentation.components.LGroupDivider
 import com.ledgerai.app.presentation.components.LGroupRow
 import com.ledgerai.app.presentation.components.LScreen
 import com.ledgerai.app.presentation.components.LSection
+import com.ledgerai.app.presentation.components.LSearchToolbar
 import com.ledgerai.app.presentation.components.LSheet
+import com.ledgerai.app.presentation.components.LToolButton
+import com.ledgerai.app.presentation.components.PhotoSaveViewModel
+import com.ledgerai.app.presentation.components.rememberPhotoActions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -215,13 +224,43 @@ fun HouseholdScreen(
     val banner = message
     val context = LocalContext.current
     val onlyOne = visible.size == 1
+    var query by rememberSaveable { mutableStateOf("") }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var photoNotice by rememberSaveable { mutableStateOf<String?>(null) }
+    val photos: PhotoSaveViewModel = hiltViewModel()
+    val scope = rememberCoroutineScope()
+    val photosIn = rememberPhotoActions(max = 6) { uris ->
+        scope.launch {
+            val n = photos.fileWithAi(uris, "This is a photo of a home or the people in it.")
+            photoNotice = if (n > 0) "Adding from photo…" else "Couldn't read that photo."
+        }
+    }
+    val q = query.trim()
+    val listed = if (q.isEmpty()) visible else visible.filter { it.name.contains(q, ignoreCase = true) }
+    val listedMembers = if (q.isEmpty()) {
+        visibleMembers
+    } else {
+        visibleMembers.filter { memberLabel(it, selfName, it.userId == userId).contains(q, ignoreCase = true) }
+    }
 
     LaunchedEffect(visible.map { it.id }) {
         if (visible.size == 1 && selectedId != visible.first().id) onSelect(visible.first().id)
     }
 
+    Column(Modifier.fillMaxSize()) {
+    LSearchToolbar(
+        query = query,
+        onQuery = { query = it },
+        searching = searching,
+        onSearching = { searching = it },
+        hint = "Search household",
+    ) {
+        LToolButton(Icons.Filled.PhotoCamera, "Camera", photosIn.shoot)
+        LToolButton(Icons.Filled.PhotoLibrary, "Photo", photosIn.pick)
+    }
     LScreen(
         title = "Household",
+        modifier = Modifier.weight(1f),
         onBack = onBack,
         fab = {
             LFab(Icons.Filled.Add, onClick = {
@@ -231,6 +270,9 @@ fun HouseholdScreen(
             }, label = "New household")
         },
     ) {
+        if (!photoNotice.isNullOrBlank()) {
+            item { Text(photoNotice!!, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted) }
+        }
         if (!creating && !banner.isNullOrBlank()) {
             item {
                 Text(banner, style = MaterialTheme.typography.bodyMedium, color = L.Danger)
@@ -240,8 +282,10 @@ fun HouseholdScreen(
             item { LEmpty(Icons.Filled.Home, "No household yet") }
         } else if (!onlyOne) {
             item {
-                LGroup {
-                    visible.forEachIndexed { index, household ->
+                if (listed.isEmpty()) {
+                    LEmpty(Icons.Filled.Home, "No matches")
+                } else LGroup {
+                    listed.forEachIndexed { index, household ->
                         if (index > 0) LGroupDivider()
                         val on = household.id == selectedId
                         LGroupRow(
@@ -265,12 +309,12 @@ fun HouseholdScreen(
                     )
                 }
             }
-            if (visibleMembers.isEmpty()) {
-                item { LEmpty(Icons.Filled.Home, "No members yet") }
+            if (listedMembers.isEmpty()) {
+                item { LEmpty(Icons.Filled.Home, if (q.isEmpty()) "No members yet" else "No matches") }
             } else {
                 item {
                     LGroup {
-                        visibleMembers.forEachIndexed { index, member ->
+                        listedMembers.forEachIndexed { index, member ->
                             if (index > 0) LGroupDivider()
                             MemberLine(
                                 member = member,
@@ -308,6 +352,7 @@ fun HouseholdScreen(
                 }
             }
         }
+    }
     }
 
     if (creating) {

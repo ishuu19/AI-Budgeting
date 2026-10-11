@@ -4,7 +4,11 @@ data class WidgetNextItem(
     val time: String,
     val title: String,
     val mark: String = "",
+    /** Calendar master id, or plan-block id when [block] is true. */
     val id: Long = 0,
+    val block: Boolean = false,
+    val divider: Boolean = false,
+    val row: Int = 0,
 )
 
 data class WidgetTaskLine(
@@ -41,6 +45,7 @@ data class WidgetPayload(
     val habitsToday: List<WidgetHabitDot>,
     val habitStreak: Int,
     val focusTitle: String,
+    val focusBlockId: Long = 0,
     val focusCountdown: String?,
     val privateMode: Boolean,
     val builtAtMillis: Long,

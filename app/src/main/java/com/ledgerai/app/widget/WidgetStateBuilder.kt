@@ -16,6 +16,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
+private data class ScheduleSlot(
+    val at: java.time.LocalDateTime,
+    val title: String,
+    val mark: String,
+    val id: Long,
+    val block: Boolean,
+)
+
 object WidgetStateBuilder {
 
     private fun scheduleMark(title: String, kind: CalendarEventKind?): String {
@@ -72,25 +80,35 @@ object WidgetStateBuilder {
         } catch (_: Exception) {
         }
 
-        val nextItems = mutableListOf<Triple<LocalDateTime, String, String>>()
+        val nextItems = mutableListOf<ScheduleSlot>()
         try {
             ep.calendarRepository().listRange(today, today)
                 .filter { !(it.kind == CalendarEventKind.TASK && it.isCompleted) && it.isEnabled }
-                .forEach { e -> nextItems += Triple(e.startAt, e.title, scheduleMark(e.title, e.kind)) }
+                .forEach { e -> nextItems += ScheduleSlot(e.startAt, e.title, scheduleMark(e.title, e.kind), e.masterId, false) }
             ep.planRepository().observeBlocks().first()
                 .filter {
                     it.status == PlanBlockStatus.SCHEDULED &&
                         it.startAt.toLocalDate() == today &&
                         !it.startAt.isBefore(now.minusMinutes(30))
                 }
-                .forEach { b -> nextItems += Triple(b.startAt, b.title, scheduleMark(b.title, null)) }
+                .forEach { b -> nextItems += ScheduleSlot(b.startAt, b.title, scheduleMark(b.title, null), b.id, true) }
         } catch (_: Exception) {
         }
 
         val sortedNext = nextItems
-            .distinct()
-            .sortedBy { it.first }
-            .mapIndexed { index, item -> WidgetNextItem(timeFmt.format(item.first), item.second, "", index.toLong()) }
+            .distinctBy { "${it.block}:${it.id}:${it.at}" }
+            .sortedBy { it.at }
+            .mapIndexed { index, item ->
+                WidgetNextItem(
+                    time = timeFmt.format(item.at),
+                    title = item.title,
+                    mark = item.mark,
+                    id = item.id,
+                    block = item.block,
+                    divider = index > 0,
+                    row = index,
+                )
+            }
 
         val nextLine = sortedNext.firstOrNull()?.let { "${it.time}  ${it.title}" }
             ?: "Clear day"
@@ -145,6 +163,7 @@ object WidgetStateBuilder {
         }
 
         var focusTitle = "Focus"
+        var focusBlockId = 0L
         var focusCountdown: String? = null
         try {
             val blocks = ep.planRepository().observeBlocks().first()
@@ -153,6 +172,7 @@ object WidgetStateBuilder {
                 .minByOrNull { it.startAt }
             if (next != null) {
                 focusTitle = next.title
+                focusBlockId = next.id
                 val mins = java.time.Duration.between(now, next.startAt).toMinutes()
                 if (mins in 0..240) focusCountdown = "${mins}m"
             }
@@ -190,6 +210,7 @@ object WidgetStateBuilder {
             },
             habitStreak = 0,
             focusTitle = if (privateMode) "•••" else focusTitle,
+            focusBlockId = focusBlockId,
             focusCountdown = focusCountdown,
             privateMode = privateMode,
             builtAtMillis = System.currentTimeMillis()
