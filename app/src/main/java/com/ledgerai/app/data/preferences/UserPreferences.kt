@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.ledgerai.app.BuildConfig
@@ -39,6 +40,18 @@ class UserPreferences @Inject constructor(
         val CASH_ON_HAND = stringPreferencesKey("cash_on_hand")
         /** One-time local Room wipe (removed demo seed data). */
         val FRESH_LOCAL_RESET_DONE = booleanPreferencesKey("fresh_local_reset_oct_2026_done")
+        val CLIP_MENU = booleanPreferencesKey("clip_menu_on")
+        val CLIP_FAST = booleanPreferencesKey("clip_fast")
+        val CLIP_OFFER = booleanPreferencesKey("clip_offer_copied")
+        val CLIP_AI = stringPreferencesKey("clip_ai_mode")
+        val CLIP_PIN = booleanPreferencesKey("clip_pin")
+        val CLIP_KEEP = stringPreferencesKey("clip_keep")
+        val CLIP_COLLECTING = longPreferencesKey("clip_collecting_note")
+        val CLIP_STAMP = longPreferencesKey("clip_clipboard_stamp")
+        val CLIP_LAST_NOTE = longPreferencesKey("clip_last_note")
+        val CLIP_BUBBLE = booleanPreferencesKey("clip_bubble")
+        val CLIP_AI_DAY = stringPreferencesKey("clip_ai_day")
+        val CLIP_AI_COUNT = stringPreferencesKey("clip_ai_count")
     }
 
     val currency: Flow<String> = context.dataStore.data.map {
@@ -164,6 +177,73 @@ class UserPreferences @Inject constructor(
 
     suspend fun setLearnedCursor(createdAt: Long) {
         context.dataStore.edit { it[Keys.LEARNED_AT] = createdAt.toString() }
+    }
+
+    val clipMenuOn: Flow<Boolean> = context.dataStore.data.map { it[Keys.CLIP_MENU] ?: true }
+    val clipFastMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.CLIP_FAST] ?: false }
+    val clipOfferCopied: Flow<Boolean> = context.dataStore.data.map { it[Keys.CLIP_OFFER] ?: true }
+    val clipAiMode: Flow<String> = context.dataStore.data.map { clipMode(it[Keys.CLIP_AI]) }
+    val clipPinNotification: Flow<Boolean> = context.dataStore.data.map { it[Keys.CLIP_PIN] ?: false }
+    val clipRetention: Flow<String> = context.dataStore.data.map { clipKeep(it[Keys.CLIP_KEEP]) }
+    val clipCollectingNoteId: Flow<Long?> = context.dataStore.data.map { it[Keys.CLIP_COLLECTING]?.takeIf { id -> id > 0L } }
+    val clipClipboardStamp: Flow<Long> = context.dataStore.data.map { it[Keys.CLIP_STAMP] ?: 0L }
+    val clipBubble: Flow<Boolean> = context.dataStore.data.map { it[Keys.CLIP_BUBBLE] ?: false }
+
+    suspend fun setClipMenu(on: Boolean) { context.dataStore.edit { it[Keys.CLIP_MENU] = on } }
+    suspend fun setClipFast(on: Boolean) { context.dataStore.edit { it[Keys.CLIP_FAST] = on } }
+    suspend fun setClipOfferCopied(on: Boolean) { context.dataStore.edit { it[Keys.CLIP_OFFER] = on } }
+    suspend fun setClipAiMode(mode: String) { context.dataStore.edit { it[Keys.CLIP_AI] = clipMode(mode) } }
+    suspend fun setClipPin(on: Boolean) { context.dataStore.edit { it[Keys.CLIP_PIN] = on } }
+    suspend fun setClipRetention(value: String) { context.dataStore.edit { it[Keys.CLIP_KEEP] = clipKeep(value) } }
+    suspend fun setClipCollecting(noteId: Long?) {
+        context.dataStore.edit { if (noteId == null || noteId <= 0L) it.remove(Keys.CLIP_COLLECTING) else it[Keys.CLIP_COLLECTING] = noteId }
+    }
+    suspend fun setClipClipboardStamp(stamp: Long) { context.dataStore.edit { it[Keys.CLIP_STAMP] = stamp } }
+    suspend fun setClipLastNote(noteId: Long) { context.dataStore.edit { it[Keys.CLIP_LAST_NOTE] = noteId } }
+    suspend fun setClipBubble(on: Boolean) { context.dataStore.edit { it[Keys.CLIP_BUBBLE] = on } }
+
+    suspend fun clipAiModeNow(): String = clipMode(context.dataStore.data.first()[Keys.CLIP_AI])
+    suspend fun clipFastNow(): Boolean = context.dataStore.data.first()[Keys.CLIP_FAST] ?: false
+    suspend fun clipMenuNow(): Boolean = context.dataStore.data.first()[Keys.CLIP_MENU] ?: true
+    suspend fun clipCollectingNow(): Long? = context.dataStore.data.first()[Keys.CLIP_COLLECTING]?.takeIf { it > 0L }
+    suspend fun clipLastNoteNow(): Long? = context.dataStore.data.first()[Keys.CLIP_LAST_NOTE]?.takeIf { it > 0L }
+    suspend fun clipRetentionNow(): String = clipKeep(context.dataStore.data.first()[Keys.CLIP_KEEP])
+    suspend fun clipPinNow(): Boolean = context.dataStore.data.first()[Keys.CLIP_PIN] ?: false
+
+    /** Counts one model call. Returns false when today's 100-call cap is already used. */
+    suspend fun tryConsumeClipAiCall(): Boolean {
+        val today = java.time.LocalDate.now().toString()
+        var allowed = false
+        context.dataStore.edit { prefs ->
+            val count = if (prefs[Keys.CLIP_AI_DAY] == today) prefs[Keys.CLIP_AI_COUNT]?.toIntOrNull() ?: 0 else 0
+            if (count >= com.ledgerai.app.domain.clips.ClipFiling.DAILY_CAP) {
+                allowed = false
+            } else {
+                prefs[Keys.CLIP_AI_DAY] = today
+                prefs[Keys.CLIP_AI_COUNT] = (count + 1).toString()
+                allowed = true
+            }
+        }
+        return allowed
+    }
+
+    suspend fun clipAiCallsLeft(): Int {
+        val today = java.time.LocalDate.now().toString()
+        val prefs = context.dataStore.data.first()
+        val count = if (prefs[Keys.CLIP_AI_DAY] == today) prefs[Keys.CLIP_AI_COUNT]?.toIntOrNull() ?: 0 else 0
+        return (com.ledgerai.app.domain.clips.ClipFiling.DAILY_CAP - count).coerceAtLeast(0)
+    }
+
+    private fun clipMode(raw: String?): String = when (raw) {
+        "off" -> "off"
+        "auto" -> "auto"
+        else -> "suggest"
+    }
+
+    private fun clipKeep(raw: String?): String = when (raw) {
+        "30" -> "30"
+        "forever" -> "forever"
+        else -> "365"
     }
 
     /** Clears all Room tables once per device (see [DatabaseSeeder]). */

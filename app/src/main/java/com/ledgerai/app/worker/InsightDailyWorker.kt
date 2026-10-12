@@ -20,22 +20,12 @@ import java.util.concurrent.TimeUnit
 class InsightDailyWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val aiRepository: AiRepository,
-    private val notifications: NotificationService,
+    private val due: DueChecks,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        return try {
-            val insight = aiRepository.generateDailyInsight(forceRefresh = true).getOrThrow()
-            val title = insight.title?.takeIf { it.isNotBlank() } ?: "LedgerAI insight"
-            val body = insight.body.orEmpty()
-            if (body.isNotBlank()) {
-                notifications.showAiInsight(title, body)
-            }
-            Result.success()
-        } catch (_: Exception) {
-            Result.retry()
-        }
+        due.insight()
+        return Result.success()
     }
 
     companion object {

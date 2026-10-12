@@ -475,6 +475,12 @@ class AiRepository @Inject constructor(
                 appendLine()
                 appendLine(contextBlock)
             }
+            val copied = contextBuilder.clipContext(userMessage)
+            if (copied.isNotBlank()) {
+                appendLine()
+                appendLine("Copied text the user saved:")
+                appendLine(copied)
+            }
         }.trim()
 
         val user = buildString {

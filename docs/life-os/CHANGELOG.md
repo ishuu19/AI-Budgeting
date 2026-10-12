@@ -2,6 +2,23 @@
 
 Newest first. Add an entry for every change that touches the assistant, data model or roadmap. Keep each line to what changed and why.
 
+## 2026-10-12
+
+- **Add to Notes, phase 1.** Text selected in another app, or shared as text, lands as a clip. Several clips can collect into one note. Profile has an Add to Notes screen. Room v20 adds `clips` (`Migration19To20`).
+- **Add to Notes, phase 2.** Each clip can be filed by the AI through the executor. Suggest is the default, so nothing is written until a tap. Auto applies only low-risk actions. Money stays a draft until an explicit confirm. A Quick Settings tile and an optional pinned notification save copied text. `020_clips.sql` is in `supabase/planned/` with the other unapplied migrations.
+- **Add to Notes, phase 3.** An experimental floating button does the same as the tile and does not watch the clipboard. Asking in chat can search saved clips with SQL. A daily digest counts clips, tasks and events. Vector recall waits until `memory_chunks` exists.
+
+## 2026-10-12
+
+- **Notifications fire while the app is closed.** Reminders and debt alerts use exact alarms. Bills, check-in, budget, the morning spend figure and the daily insight run from a 15-minute alarm instead of waiting for the next time the app is opened. Opening the app re-arms those alarms.
+- **The home widget refreshes on its own.** The same alarm reloads it, and a change to the calendar, plan or spending reloads it while the app is open.
+- **The widget uses the same assistant as Home.** The mic and the quick note answer cook, outfit and shopping questions, and still log spend, reminders, notes, bills and jobs.
+
+## 2026-10-12
+
+- **Reminders fire with the app closed.** Event and debt reminders were WorkManager delays, which Android holds until the next time you open the app. They are exact alarms now. Bills, check-in, budget, morning spend and the daily insight run from the same 15-minute alarm that reloads the home widget, so the widget updates without opening the app.
+- **Widget mic uses the Home assistant.** A question about cooking, clothes or shopping is answered there. Spending, reminders, notes and the rest still go through the voice pipeline.
+
 ## 2026-10-11
 
 - **Widget taps open the matching screen.** The date opens Today, search opens Search, today's spend opens Spend, the month total opens Money, and a schedule row opens that item. The add button adds a transaction. Focus opens the next block, or a free session when there isn't one.

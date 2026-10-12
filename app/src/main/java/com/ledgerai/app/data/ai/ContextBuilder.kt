@@ -1,10 +1,12 @@
 package com.ledgerai.app.data.ai
 
+import com.ledgerai.app.data.clips.ClipDao
 import com.ledgerai.app.data.repository.BillRepository
 import com.ledgerai.app.data.repository.BudgetRepository
 import com.ledgerai.app.data.repository.CalendarRepository
 import com.ledgerai.app.data.repository.PlanRepository
 import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.domain.clips.ClipRecall
 import com.ledgerai.app.domain.model.CalendarEvent
 import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.domain.model.TransactionType
@@ -27,6 +29,7 @@ class ContextBuilder @Inject constructor(
     private val calendarRepo: CalendarRepository,
     private val billRepo: BillRepository,
     private val planRepo: PlanRepository,
+    private val clips: ClipDao,
 ) {
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
@@ -96,6 +99,19 @@ class ContextBuilder @Inject constructor(
             upcoming = upcoming,
             recent = recentLines,
         )
+    }
+
+    /**
+     * Clips that match the question. SQL first.
+     * [ClipRecall.vectorQuery] is null until memory_chunks exists, so fuzzy vector recall is not run.
+     */
+    suspend fun clipContext(question: String): String {
+        if (ClipRecall.vectorQuery(question) != null) return ""
+        val terms = ClipRecall.terms(question)
+        if (terms.isEmpty()) return ""
+        val hits = terms.flatMap { clips.search(it, 3) }.distinctBy { it.id }.take(5)
+        if (hits.isEmpty()) return ""
+        return hits.joinToString("\n") { "clip: ${it.text.take(160)}" }
     }
 
     /** Local data for the rule-based daily insight. */

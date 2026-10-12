@@ -30,6 +30,7 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <queries>
         <intent>
@@ -190,8 +191,44 @@
             android:exported="false" />
 
         <activity
+            android:name=".service.ClipCaptureActivity"
+            android:exported="true"
+            android:label="@string/add_to_notes"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter android:label="@string/add_to_notes">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".service.ClipTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_capture"
+            android:label="@string/tile_add_copied"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.ClipBubbleService"
+            android:exported="false" />
+
+        <activity
             android:name=".service.JobShareActivity"
             android:exported="true"
+            android:label="@string/save_as_job"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true">
             <intent-filter>
@@ -200,6 +237,30 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".service.EventReminderFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.EVENT_REMINDER_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.DebtReminderFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.DEBT_REMINDER_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.AppPulseReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.APP_PULSE" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".service.BootReceiver"

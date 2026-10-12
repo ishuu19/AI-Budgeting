@@ -20,19 +20,11 @@ import java.util.concurrent.TimeUnit
 class CheckinWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val lifeLogRepo: LifeLogRepository,
-    private val notificationService: NotificationService
+    private val due: DueChecks
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val now = LocalDateTime.now()
-        if (now.hour < 7 || now.hour >= 23) return Result.success()
-        lifeLogRepo.markExpiredGaps(now)
-        lifeLogRepo.ensureWindowsForDay(LocalDate.now())
-        val fmt = DateTimeFormatter.ofPattern("HH:mm")
-        val start = now.minusHours(3)
-        val label = "${fmt.format(start)}–${fmt.format(now)}"
-        notificationService.showCheckinPrompt(now.toEpochSecond(java.time.ZoneOffset.UTC), label)
+        due.checkin()
         return Result.success()
     }
 

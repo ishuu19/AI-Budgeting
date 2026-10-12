@@ -1,31 +1,35 @@
 package com.ledgerai.app.worker
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
+import android.content.Intent
+import android.os.Build
+import android.util.Log
 import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.ledgerai.app.data.local.room.CalendarEventDao
 import com.ledgerai.app.data.local.room.toDomain
 import com.ledgerai.app.domain.model.CalendarEvent
 import com.ledgerai.app.domain.model.EventReminder
 import com.ledgerai.app.domain.schedule.EventReminderRules
+import com.ledgerai.app.service.EventReminderFireReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * One-shot WorkManager jobs, one per [EventReminder]. Unique work name `event_reminder_{id}` keeps
- * boot, edits and sync pulls idempotent. Repeating events re-arm themselves from the worker.
+ * One exact alarm per [EventReminder]. WorkManager delays only run when the app is opened,
+ * so a reminder set for 6pm never arrived until the next launch. The alarm fires with the
+ * app closed. Repeating events re-arm themselves from the receiver.
  */
 @Singleton
 class EventReminderScheduler @Inject constructor(
     @ApplicationContext private val context: Context,
     private val eventDao: CalendarEventDao
 ) {
+    private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     /** Arms or cancels every reminder of [event] according to its current state. */
     fun scheduleEvent(event: CalendarEvent, now: LocalDateTime = LocalDateTime.now()) {
@@ -43,25 +47,42 @@ class EventReminderScheduler @Inject constructor(
             cancel(reminder.id)
             return
         }
-        val delay = fireAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - System.currentTimeMillis()
-        if (delay <= 0L) {
+        val triggerAt = fireAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        if (triggerAt <= System.currentTimeMillis()) {
             cancel(reminder.id)
             return
         }
-        val request = OneTimeWorkRequestBuilder<EventReminderWorker>()
-            .setInputData(workDataOf(EventReminderWorker.KEY_REMINDER_ID to reminder.id))
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .addTag(uniqueName(reminder.id))
-            .build()
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            uniqueName(reminder.id),
-            ExistingWorkPolicy.REPLACE,
-            request
-        )
+        // Drop any deferred WorkManager job so the same reminder cannot fire twice.
+        WorkManager.getInstance(context).cancelUniqueWork(uniqueName(reminder.id))
+        val pending = pendingIntent(reminder.id)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, pending), pending)
+            } else {
+                @Suppress("DEPRECATION")
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+            }
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Exact alarm permission missing; reminder ${reminder.id} skipped", e)
+        }
     }
 
     fun cancel(reminderId: Long) {
+        alarmManager.cancel(pendingIntent(reminderId))
         WorkManager.getInstance(context).cancelUniqueWork(uniqueName(reminderId))
+    }
+
+    private fun pendingIntent(reminderId: Long): PendingIntent {
+        val intent = Intent(context, EventReminderFireReceiver::class.java).apply {
+            action = ACTION_FIRE
+            putExtra(EXTRA_REMINDER_ID, reminderId)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            reminderId.toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     fun cancelAll(reminderIds: Collection<Long>) {
@@ -80,4 +101,10 @@ class EventReminderScheduler @Inject constructor(
     }
 
     private fun uniqueName(reminderId: Long) = "event_reminder_$reminderId"
+
+    companion object {
+        private const val TAG = "EventReminderScheduler"
+        const val ACTION_FIRE = "com.ledgerai.app.action.EVENT_REMINDER_FIRE"
+        const val EXTRA_REMINDER_ID = "reminder_id"
+    }
 }

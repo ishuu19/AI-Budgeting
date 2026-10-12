@@ -252,15 +252,22 @@ fun NotesScreen(
     open: OpenItem? = null,
     onOpened: () -> Unit = {},
     query: String = "",
-    viewModel: NotesViewModel = hiltViewModel()
+    viewModel: NotesViewModel = hiltViewModel(),
+    clipsViewModel: com.ledgerai.app.presentation.screens.clips.AddToNotesViewModel = hiltViewModel(),
 ) {
+    val links = com.ledgerai.app.presentation.components.LocalLinks.current
     val notes by viewModel.notes.collectAsState()
+    val clipRows by clipsViewModel.all.collectAsState()
+    val offerCopied by clipsViewModel.offerCopied.collectAsState()
+    val clipStamp by clipsViewModel.stamp.collectAsState()
+    val pendingClip by clipsViewModel.pendingText.collectAsState()
     val aiBusy by viewModel.aiBusy.collectAsState()
     val aiMessage by viewModel.aiMessage.collectAsState()
     var editorId by rememberSaveable { mutableLongStateOf(EDITOR_CLOSED) }
     var voiceSeed by rememberSaveable { mutableStateOf("") }
     var selectedTag by rememberSaveable { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
+    var openClipId by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(aiMessage) {
         val msg = aiMessage ?: return@LaunchedEffect
@@ -308,6 +315,14 @@ fun NotesScreen(
         },
         fab = { LFab(Icons.Filled.Add, onClick = { voiceSeed = ""; editorId = EDITOR_NEW }, label = "New note") }
     ) {
+        item(key = "copied") {
+            com.ledgerai.app.presentation.screens.clips.CopiedTextChip(
+                enabled = offerCopied,
+                lastStamp = clipStamp,
+                onStamp = clipsViewModel::rememberStamp,
+                onText = clipsViewModel::onCopied,
+            )
+        }
         if (filterTags.isNotEmpty()) {
             item(key = "tags") {
                 ChipsRow {
@@ -396,6 +411,39 @@ fun NotesScreen(
                 viewModel.askAboutNote(title, body, question, onAnswer)
             },
             onTasks = { title, body -> viewModel.tasksFromNote(title, body) },
+            clips = if (existing == null) emptyList() else clipRows.filter { it.noteId == existing.id && it.deletedAt == null },
+            onCollect = { existing?.let { clipsViewModel.startCollecting(it.id, null); notice = "Collecting into ${it.title}" } },
+            onSort = { existing?.let { clipsViewModel.ask(clipRows.filter { c -> c.noteId == it.id }.map { c -> c.id }); notice = "AI will suggest where each clip goes" } },
+            onAskAbout = {
+                val text = listOf(existing?.title.orEmpty(), existing?.body.orEmpty()).filter { it.isNotBlank() }.joinToString("\n")
+                if (text.isNotBlank()) links.chat(text.take(500))
+            },
+            onOpenClip = { openClipId = it },
+        )
+    }
+    clipRows.firstOrNull { it.id == openClipId }?.let { clip ->
+        LSheet(title = "Clip", onDismiss = { openClipId = null }, primary = "Close", onPrimary = { openClipId = null }) {
+            Text(clip.text, color = L.Ink)
+        }
+    }
+    pendingClip?.let { text ->
+        val choices by androidx.compose.runtime.produceState(
+            initialValue = emptyList<com.ledgerai.app.data.clips.ClipChoice>(),
+            text,
+        ) { value = clipsViewModel.choices() }
+        var selectedChoice by remember(text) { mutableStateOf(choices.firstOrNull()?.id ?: "inbox") }
+        com.ledgerai.app.presentation.screens.clips.ClipSheet(
+            text = text,
+            sourceLabel = "Clipboard",
+            read = com.ledgerai.app.domain.clips.ClipRules.read(text),
+            choices = choices,
+            selectedId = selectedChoice.ifBlank { "inbox" },
+            sensitive = com.ledgerai.app.domain.clips.ClipRules.isSensitiveText(text),
+            onSelect = { selectedChoice = it },
+            onSave = { clipsViewModel.savePending(selectedChoice, askAi = false, saveAnyway = false) },
+            onAsk = { clipsViewModel.savePending(selectedChoice, askAi = true, saveAnyway = false) },
+            onTrackJob = { clipsViewModel.savePending(selectedChoice, askAi = false, saveAnyway = false) },
+            onDismiss = { clipsViewModel.dismissPending() },
         )
     }
 }
@@ -430,6 +478,11 @@ private fun NoteEditorSheet(
     onSummarize: (title: String, body: String, apply: (NoteSummaryDto) -> Unit) -> Unit,
     onAsk: (title: String, body: String, question: String, onAnswer: (String) -> Unit) -> Unit,
     onTasks: (title: String, body: String) -> Unit,
+    clips: List<com.ledgerai.app.data.clips.ClipEntity> = emptyList(),
+    onCollect: () -> Unit = {},
+    onSort: () -> Unit = {},
+    onAskAbout: () -> Unit = {},
+    onOpenClip: (String) -> Unit = {},
 ) {
     var title by rememberSaveable(existing?.id) { mutableStateOf(existing?.title.orEmpty()) }
     var body by rememberSaveable(existing?.id ?: seed) { mutableStateOf(existing?.body ?: seed) }
@@ -460,6 +513,28 @@ private fun NoteEditorSheet(
         onDelete = if (existing != null) onDelete else null
     ) {
         LField(title, { title = it }, "Title")
+        val clipContext = androidx.compose.ui.platform.LocalContext.current
+        clips.forEach { clip ->
+            val whenLabel = java.time.format.DateTimeFormatter.ofPattern("HH:mm").format(
+                java.time.Instant.ofEpochMilli(clip.capturedAt).atZone(java.time.ZoneId.systemDefault()).toLocalTime()
+            )
+            val app = clip.sourceApp?.let { pkg ->
+                runCatching {
+                    clipContext.packageManager.getApplicationLabel(clipContext.packageManager.getApplicationInfo(pkg, 0)).toString()
+                }.getOrNull()
+            } ?: "Unknown app"
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(clip.text, color = L.Ink, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                LChip("$app · $whenLabel", selected = false, onClick = { onOpenClip(clip.id) })
+            }
+        }
+        if (existing != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LGhostButton("Collect into this note", onCollect, fill = false)
+                LGhostButton("Ask AI to sort this note", onSort, fill = false)
+                LGhostButton("Ask about this", onAskAbout, fill = false)
+            }
+        }
         if (hasText) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 LToolButton(Icons.Filled.AutoAwesome, "Summarize", {

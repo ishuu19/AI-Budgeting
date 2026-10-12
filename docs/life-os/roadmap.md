@@ -27,6 +27,7 @@ Photo and voice input that the AI files for the user. Feeds Stage 1 (receipts, p
 - [x] Route vision through `ai-proxy` so release builds can read photos (deploy pending)
 - [x] Sync handler for `media_assets`
 - [x] Capture actions registered; filing goes through `Executor`
+- [x] Text capture (Add to Notes): selection menu, share, clips in notes, AI filing, tile, pinned notification
 - [x] Weather for outfit suggestions (needs a stored location)
 - Exit: photograph a shirt, a receipt and a friend with a note; each is named, filed and backed up; ask "what can I cook" and "I have a party" and get answers from stock and wardrobe names.
 

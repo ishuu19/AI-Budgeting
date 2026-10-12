@@ -26,6 +26,7 @@ RLS pattern: `user_id = auth.uid()` for private; for shared, `household_id in (s
 - Secrets stay in `secrets.properties` / Supabase secrets. Never in the client for production (use `ai-proxy`).
 - Encrypt especially sensitive fields (ID numbers in `form_profile`) with a per-user key; plan the key handling before Stage 3.
 - Local DB: evaluate SQLCipher for Room before storing form profiles or documents.
+- Clips are private to `user_id`. A password-manager flag (`IS_SENSITIVE`) is not saved. A card number, one-time code, IBAN or private-key header is saved only if the user taps Save anyway, is marked sensitive, is never sent to the model, and is not synced. Clip text is never put in the pinned notification. Inbox clips follow the retention setting; clips inside notes or already filed are kept.
 
 ## Memory controls
 - A "What I remember" screen lists `memories` with source, confidence and visibility. Edit, confirm, delete.

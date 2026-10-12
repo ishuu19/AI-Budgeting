@@ -8,11 +8,17 @@ import androidx.work.Configuration
 import com.ledgerai.app.data.ai.LocalParseModel
 import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.data.repository.CalendarRepository
+import com.ledgerai.app.data.repository.HabitRepository
+import com.ledgerai.app.data.repository.LeaveByRepository
+import com.ledgerai.app.data.repository.PlanRepository
 import com.ledgerai.app.data.repository.QuoteRepository
 import com.ledgerai.app.data.repository.TransactionRepository
+import com.ledgerai.app.service.AppPulse
 import com.ledgerai.app.widget.WidgetRefresh
 import com.ledgerai.app.di.DatabaseSeeder
 import com.ledgerai.app.worker.BillReminderWorker
+import com.ledgerai.app.worker.ClipCleanupWorker
+import com.ledgerai.app.worker.ClipDigestWorker
 import com.ledgerai.app.worker.BudgetCheckWorker
 import com.ledgerai.app.worker.CheckinWorker
 import com.ledgerai.app.worker.InsightDailyWorker
@@ -25,7 +31,6 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -41,6 +46,9 @@ class LedgerApp : Application(), Configuration.Provider {
     @Inject lateinit var userSession: UserSession
     @Inject lateinit var calendarRepository: CalendarRepository
     @Inject lateinit var transactionRepository: TransactionRepository
+    @Inject lateinit var leaveByRepository: LeaveByRepository
+    @Inject lateinit var planRepository: PlanRepository
+    @Inject lateinit var habitRepository: HabitRepository
     @Inject lateinit var localParseModel: LocalParseModel
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -61,7 +69,11 @@ class LedgerApp : Application(), Configuration.Provider {
         CheckinWorker.schedule(this)
         SpendGuideMorningWorker.schedule(this)
         NoteScanWorker.schedule(this)
+        ClipCleanupWorker.schedule(this)
+        ClipDigestWorker.schedule(this)
         WidgetRefreshWorker.schedule(this)
+        AppPulse.schedule(this)
+        armAlarms()
         watchWidgetData()
         appScope.launch { localParseModel.prepare() }
         appScope.launch {
@@ -81,7 +93,19 @@ class LedgerApp : Application(), Configuration.Provider {
         }
     }
 
-    /** Reloads the home widget whenever today's events or spending change. */
+    /** Exact alarms survive the app being closed. Re-arm them whenever the process starts. */
+    private fun armAlarms() {
+        appScope.launch(Dispatchers.IO) {
+            runCatching { calendarRepository.rescheduleAllAlarms() }
+            runCatching { calendarRepository.rescheduleAllReminders() }
+            runCatching { leaveByRepository.rescheduleAllEnabled() }
+            runCatching { planRepository.rescheduleAllBlockAlarms() }
+            runCatching { habitRepository.rescheduleAllNudges() }
+            runCatching { WidgetRefresh.refreshAll(this@LedgerApp) }
+        }
+    }
+
+    /** Reloads the home widget whenever today's events, plan or spending change. */
     private fun watchWidgetData() {
         appScope.launch(Dispatchers.IO) {
             launch {
@@ -89,14 +113,21 @@ class LedgerApp : Application(), Configuration.Provider {
                     .map { rows -> rows.joinToString { "${it.id}|${it.title}|${it.startAt}|${it.isCompleted}|${it.isEnabled}" } }
                     .distinctUntilChanged()
                     .debounce(400)
-                    .collectLatest { WidgetRefresh.refreshAll(this@LedgerApp) }
+                    .collect { runCatching { WidgetRefresh.refreshAll(this@LedgerApp) } }
+            }
+            launch {
+                planRepository.observeBlocks()
+                    .map { rows -> rows.joinToString { "${it.id}|${it.title}|${it.startAt}|${it.status}" } }
+                    .distinctUntilChanged()
+                    .debounce(400)
+                    .collect { runCatching { WidgetRefresh.refreshAll(this@LedgerApp) } }
             }
             launch {
                 transactionRepository.getAllTransactions()
                     .map { rows -> rows.joinToString { "${it.id}|${it.amount}|${it.date}|${it.type}" } }
                     .distinctUntilChanged()
                     .debounce(400)
-                    .collectLatest { WidgetRefresh.refreshAll(this@LedgerApp) }
+                    .collect { runCatching { WidgetRefresh.refreshAll(this@LedgerApp) } }
             }
         }
     }

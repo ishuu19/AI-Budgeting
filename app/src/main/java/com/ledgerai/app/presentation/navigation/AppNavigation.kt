@@ -89,6 +89,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Money        : Screen("money",        "Money",    Icons.Filled.AccountBalanceWallet)
     object Life         : Screen("life",         "Life",     Icons.Filled.Category)
     object Settings     : Screen("settings",     "Settings", Icons.Filled.Settings)
+    object AddToNotes   : Screen("add_to_notes",  "Add to Notes", Icons.Filled.Description)
 
     object Insights     : Screen("insights",     "Insights", Icons.Filled.Insights)
     object SpendGuide   : Screen("spend_guide",  "Safe to spend", Icons.AutoMirrored.Filled.TrendingUp)
@@ -309,7 +310,10 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 )
             }
             composable(Screen.Settings.route) {
-                SettingsScreen(links = links, onBack = back)
+                SettingsScreen(links = links, onBack = back, onAddToNotes = { nav.go(Screen.AddToNotes.route) })
+            }
+            composable(Screen.AddToNotes.route) {
+                com.ledgerai.app.presentation.screens.clips.AddToNotesScreen(onBack = back)
             }
             composable(
                 route = Screen.Receipt.route,

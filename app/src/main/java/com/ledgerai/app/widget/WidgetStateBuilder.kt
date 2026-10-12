@@ -12,9 +12,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 
 private data class ScheduleSlot(
     val at: java.time.LocalDateTime,
@@ -39,9 +37,9 @@ object WidgetStateBuilder {
         }
     }
 
-    fun load(context: Context): WidgetPayload = runBlocking(Dispatchers.IO) {
+    suspend fun load(context: Context): WidgetPayload {
         val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
-        build(context, ep)
+        return build(context, ep)
     }
 
     private suspend fun build(context: Context, ep: WidgetEntryPoint): WidgetPayload {

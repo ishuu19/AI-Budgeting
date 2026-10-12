@@ -20,9 +20,7 @@ import java.util.concurrent.TimeUnit
 class BudgetCheckWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val budgetRepo: BudgetRepository,
-    private val transactionRepo: TransactionRepository,
-    private val notificationService: NotificationService
+    private val due: DueChecks
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -42,22 +40,7 @@ class BudgetCheckWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val now = LocalDate.now()
-        val budgets = budgetRepo.getBudgetsForMonth(now.monthValue, now.year).first()
-
-        budgets.forEach { budget ->
-            val spent = transactionRepo.getSpendingForCategoryMonth(budget.category, now.year, now.monthValue)
-            val enriched = budget.copy(spent = spent)
-
-            if (enriched.isNearLimit || enriched.isOverBudget) {
-                notificationService.showBudgetAlert(
-                    categoryName = budget.category.displayName,
-                    usagePercent = enriched.usagePercent,
-                    notificationId = budget.id.toInt()
-                )
-            }
-        }
-
+        due.budget()
         return Result.success()
     }
 }

@@ -5,8 +5,8 @@ import androidx.glance.appwidget.updateAll
 
 object WidgetRefresh {
     suspend fun refreshAll(context: Context) {
-        HomeWidget().updateAll(context)
-        QuickActionsWidget().updateAll(context)
-        FocusWidget().updateAll(context)
+        listOf(HomeWidget(), QuickActionsWidget(), FocusWidget()).forEach { widget ->
+            runCatching { widget.updateAll(context) }
+        }
     }
 }

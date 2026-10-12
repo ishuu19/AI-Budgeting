@@ -17,13 +17,11 @@ import java.util.concurrent.TimeUnit
 class SpendGuideMorningWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val spendGuideRepo: SpendGuideRepository,
-    private val notificationService: NotificationService
+    private val due: DueChecks
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val guide = spendGuideRepo.computeTodayGuide()
-        notificationService.showSpendGuideMorning(guide.guideAmount)
+        due.spendMorning()
         return Result.success()
     }
 

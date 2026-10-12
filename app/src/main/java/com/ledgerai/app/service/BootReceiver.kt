@@ -52,6 +52,7 @@ class BootReceiver : BroadcastReceiver() {
             InsightDailyWorker.schedule(context)
             QuoteDailyWorker.schedule(context)
             WidgetRefreshWorker.schedule(context)
+            AppPulse.schedule(context)
         }
 
         val pending = goAsync()

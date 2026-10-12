@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.Today
@@ -171,14 +172,17 @@ private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, About, 
 fun SettingsScreen(
     links: com.ledgerai.app.presentation.navigation.AppLinks = com.ledgerai.app.presentation.navigation.AppLinks(),
     onBack: (() -> Unit)? = null,
+    onAddToNotes: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    clipsViewModel: com.ledgerai.app.presentation.screens.clips.AddToNotesViewModel = hiltViewModel(),
 ) {
     val user by authViewModel.uiState.collectAsState()
     val state by viewModel.uiState.collectAsState()
     val trackMode by viewModel.trackMode.collectAsState(initial = "both")
     val cashOnHand by viewModel.cashOnHand.collectAsState(initial = "")
     val themeMode by viewModel.themeMode.collectAsState(initial = "system")
+    val captureSubtitle by clipsViewModel.subtitle.collectAsState()
 
     var sheet by rememberSaveable { mutableStateOf(YouSheet.None) }
     val close = { sheet = YouSheet.None }
@@ -233,6 +237,18 @@ fun SettingsScreen(
                     sub = if (state.notificationsEnabled) "On · ${state.budgetAlertThreshold}%" else "Off",
                     icon = Icons.Filled.Notifications,
                     onClick = { sheet = YouSheet.Alerts },
+                    end = { Chevron() }
+                )
+            }
+        }
+        item { LSection("Capture") }
+        item {
+            LGroup {
+                LGroupRow(
+                    title = "Add to Notes",
+                    sub = captureSubtitle,
+                    icon = Icons.Filled.ContentPaste,
+                    onClick = onAddToNotes,
                     end = { Chevron() }
                 )
             }

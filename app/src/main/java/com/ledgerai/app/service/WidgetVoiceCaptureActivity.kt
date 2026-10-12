@@ -11,12 +11,14 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import android.widget.LinearLayout
 import com.ledgerai.app.R
+import com.ledgerai.app.data.capture.AskService
 import com.ledgerai.app.data.preferences.UserPreferences
+import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.VoiceCaptureRepository
 import com.ledgerai.app.data.voice.AndroidOnDeviceStt
 import com.ledgerai.app.widget.WidgetActions
-import com.ledgerai.app.widget.showWidgetSuggestions
+import com.ledgerai.app.widget.runWidgetAi
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -27,6 +29,8 @@ import kotlinx.coroutines.launch
 class WidgetVoiceCaptureActivity : ComponentActivity() {
 
     @Inject lateinit var prefs: UserPreferences
+    @Inject lateinit var session: UserSession
+    @Inject lateinit var ask: AskService
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
 
@@ -82,14 +86,13 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
             heard?.text = spoken
             stt.destroy()
             lifecycleScope.launch {
-                capture.recordHeard(spoken)
-                val items = ai.parseVoiceIntents(spoken).getOrElse { emptyList() }
                 val host = findViewById<LinearLayout>(R.id.widget_suggestions)
-                if (items.isEmpty() || host == null) {
+                if (host == null) {
                     heard?.text = "Didn't catch that. Try again, or open the mic."
                     return@launch
                 }
-                showWidgetSuggestions(this@WidgetVoiceCaptureActivity, host, items, spoken, capture)
+                val userId = runCatching { session.userInfo.first().userId }.getOrDefault("")
+                runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ask, ai, capture, userId)
             }
         }
 

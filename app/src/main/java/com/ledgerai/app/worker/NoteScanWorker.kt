@@ -18,15 +18,11 @@ import java.util.concurrent.TimeUnit
 class NoteScanWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val noteRepo: NoteRepository,
-    private val nudgeRepo: NudgeProposalRepository
+    private val due: DueChecks
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val notes = noteRepo.observeNotes().first()
-        notes.filter { note ->
-            note.body.contains("[nudge]", true) || note.body.contains("#nudge", true)
-        }.forEach { nudgeRepo.scanNote(it.id, it.body) }
+        due.notes()
         return Result.success()
     }
 

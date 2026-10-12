@@ -45,6 +45,12 @@ object AssistantModule {
     fun provideCaptureSpecs(actions: com.ledgerai.app.data.capture.CaptureActions): Set<ActionSpec> =
         actions.specs().toSet()
 
+    /** Clip filing. Risk lives on the spec, and money actions stay high. */
+    @Provides
+    @dagger.multibindings.ElementsIntoSet
+    fun provideClipSpecs(actions: com.ledgerai.app.data.clips.ClipActions): Set<ActionSpec> =
+        actions.specs().toSet()
+
     @Provides
     @Singleton
     fun providePlanModel(router: AiProviderRouter): PlanModel = router.asPlanModel()

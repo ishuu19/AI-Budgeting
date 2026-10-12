@@ -42,4 +42,7 @@
     <string name="shortcut_photo_short">Snap</string>
     <string name="shortcut_photo_long">Photograph a receipt, food, clothes or a person</string>
     <string name="tile_capture_label">Capture</string>
+    <string name="add_to_notes">Add to Notes</string>
+    <string name="save_as_job">Save as job</string>
+    <string name="tile_add_copied">Add copied text</string>
 </resources>
