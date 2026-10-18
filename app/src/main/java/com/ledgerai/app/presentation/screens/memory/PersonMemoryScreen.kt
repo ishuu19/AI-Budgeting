@@ -67,6 +67,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ledgerai.app.presentation.components.ChipsRow
 import com.ledgerai.app.presentation.components.LChip
 import com.ledgerai.app.presentation.components.LField
+import com.ledgerai.app.presentation.components.LGhostButton
 import com.ledgerai.app.presentation.components.LSheet
 import com.ledgerai.app.presentation.components.LocalPhoto
 import com.ledgerai.app.presentation.components.PhotoField
@@ -210,6 +211,58 @@ class PersonMemoryViewModel(
         }
     }
 
+    fun editPerson(name: String, org: String?, role: String?, notes: String, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val saved = people.updatePerson(userId, personId, name, org, role, notes)
+            if (saved) reload() else _message.value = "Name is required"
+            onDone(saved)
+        }
+    }
+
+    fun deletePerson(onDone: () -> Unit) {
+        viewModelScope.launch {
+            people.deletePerson(userId, personId)
+            onDone()
+        }
+    }
+
+    fun editMemory(id: String, text: String, kind: MemoryKind) {
+        viewModelScope.launch {
+            if (!memories.updateMemory(userId, id, text, kind)) _message.value = "Could not save that memory"
+            reload()
+        }
+    }
+
+    fun deleteMemory(id: String) {
+        viewModelScope.launch { memories.softDelete(userId, id); reload() }
+    }
+
+    fun editInteraction(id: String, day: LocalDate, where: String?, summary: String, sourceId: String?) {
+        viewModelScope.launch {
+            if (!interactions.updateInteraction(userId, id, day, where, summary, sourceId)) {
+                _interactionMessage.value = "Could not save that moment"
+            }
+            reload()
+        }
+    }
+
+    fun deleteInteraction(id: String) {
+        viewModelScope.launch { interactions.deleteInteraction(userId, id); reload() }
+    }
+
+    fun editCommitment(id: String, text: String, dueOn: LocalDate?, status: String) {
+        viewModelScope.launch {
+            if (!commitments.updateCommitment(userId, id, text, dueOn, status)) {
+                _commitmentMessage.value = "Could not save that promise"
+            }
+            reload()
+        }
+    }
+
+    fun deleteCommitment(id: String) {
+        viewModelScope.launch { commitments.deleteCommitment(userId, id); reload() }
+    }
+
     private suspend fun reload() {
         val active = people.findActive(userId, personId)
         _person.value = active
@@ -266,6 +319,16 @@ fun PersonMemoryScreen(
             onAddMemory = viewModel::addMemory,
             onAddInteraction = viewModel::addInteraction,
             onAddCommitment = viewModel::addCommitment,
+            edits = PersonEdits(
+                person = viewModel::editPerson,
+                deletePerson = { viewModel.deletePerson(onBack) },
+                memory = viewModel::editMemory,
+                deleteMemory = viewModel::deleteMemory,
+                moment = viewModel::editInteraction,
+                deleteMoment = viewModel::deleteInteraction,
+                promise = viewModel::editCommitment,
+                deletePromise = viewModel::deleteCommitment,
+            ),
             onBack = onBack,
             message = message,
             interactionMessage = interactionMessage,
@@ -277,6 +340,18 @@ fun PersonMemoryScreen(
         }
     }
 }
+
+/** Edit and remove callbacks for one person and everything filed under them. */
+class PersonEdits(
+    val person: (name: String, org: String?, role: String?, notes: String, onDone: (Boolean) -> Unit) -> Unit,
+    val deletePerson: () -> Unit,
+    val memory: (id: String, text: String, kind: MemoryKind) -> Unit,
+    val deleteMemory: (id: String) -> Unit,
+    val moment: (id: String, day: LocalDate, where: String?, summary: String, sourceId: String?) -> Unit,
+    val deleteMoment: (id: String) -> Unit,
+    val promise: (id: String, text: String, dueOn: LocalDate?, status: String) -> Unit,
+    val deletePromise: (id: String) -> Unit,
+)
 
 /**
  * Memories, moments (with photos) and promises the caller already loaded for [person].
@@ -304,12 +379,15 @@ fun PersonMemoryScreen(
         personId: String?,
         onDone: (Boolean) -> Unit,
     ) -> Unit,
+    edits: PersonEdits,
     onBack: () -> Unit,
     message: String? = null,
     interactionMessage: String? = null,
     commitmentMessage: String? = null,
 ) {
     val photos: PhotoSaveViewModel = hiltViewModel()
+    var editing by remember { mutableStateOf<Line?>(null) }
+    var editingPerson by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var sheet by rememberSaveable { mutableStateOf("") }
@@ -387,6 +465,7 @@ fun PersonMemoryScreen(
                 if (subtitle != null) {
                     Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
                 }
+                LGhostButton("Edit person", { editingPerson = true }, fill = false)
             }
         }
         if (person.notes.isNotBlank()) {
@@ -440,14 +519,14 @@ fun PersonMemoryScreen(
                     var index = 0
                     openPromises.forEach { promise ->
                         if (index++ > 0) LGroupDivider()
-                        PromiseRow(promise)
+                        PromiseRow(promise) { editing = Line.Promise(promise) }
                     }
                     rest.forEach { line ->
                         if (index++ > 0) LGroupDivider()
                         when (line) {
-                            is Line.Moment -> MomentRow(line.item, photoOf(line.item))
-                            is Line.Remembered -> MemoryRow(line.item)
-                            is Line.Promise -> PromiseRow(line.item)
+                            is Line.Moment -> MomentRow(line.item, photoOf(line.item)) { editing = line }
+                            is Line.Remembered -> MemoryRow(line.item) { editing = line }
+                            is Line.Promise -> PromiseRow(line.item) { editing = line }
                         }
                     }
                 }
@@ -455,6 +534,57 @@ fun PersonMemoryScreen(
         }
     }
 
+    if (editingPerson) {
+        EditPersonSheet(
+            person = person,
+            onDismiss = { editingPerson = false },
+            onSave = { name, org, role, notes, photo, done ->
+                scope.launch {
+                    val id = photo?.let { photos.attachToPerson(it, person.id, name) }
+                    edits.person(name, org, role, notes) { saved ->
+                        if (saved && id != null) {
+                            onAddInteraction(LocalDate.now(), null, "Photo of $first", id) { }
+                        }
+                        done(saved)
+                        if (saved) editingPerson = false
+                    }
+                }
+            },
+            onDelete = { editingPerson = false; edits.deletePerson() },
+        )
+    }
+    when (val line = editing) {
+        is Line.Remembered -> EditMemorySheet(
+            memory = line.item,
+            onDismiss = { editing = null },
+            onSave = { text, kind -> edits.memory(line.item.id, text, kind); editing = null },
+            onDelete = { edits.deleteMemory(line.item.id); editing = null },
+        )
+        is Line.Moment -> EditMomentSheet(
+            moment = line.item,
+            photo = photoOf(line.item),
+            onDismiss = { editing = null },
+            onSave = { day, place, what, newPhoto, removePhoto ->
+                scope.launch {
+                    val sourceId = when {
+                        newPhoto != null -> photos.attachToPerson(newPhoto, person.id, person.name)
+                        removePhoto -> null
+                        else -> line.item.sourceId
+                    }
+                    edits.moment(line.item.id, day, place, what, sourceId)
+                    editing = null
+                }
+            },
+            onDelete = { edits.deleteMoment(line.item.id); editing = null },
+        )
+        is Line.Promise -> EditPromiseSheet(
+            promise = line.item,
+            onDismiss = { editing = null },
+            onSave = { text, due, status -> edits.promise(line.item.id, text, due, status); editing = null },
+            onDelete = { edits.deletePromise(line.item.id); editing = null },
+        )
+        null -> Unit
+    }
     when (sheet) {
         "moment" -> MomentSheet(
             error = interactionMessage,
@@ -576,12 +706,137 @@ private sealed class Line {
 }
 
 @Composable
-private fun MomentRow(moment: Interaction, photo: File?) {
+private fun EditPersonSheet(
+    person: Person,
+    onDismiss: () -> Unit,
+    onSave: (String, String?, String?, String, Uri?, done: (Boolean) -> Unit) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var name by rememberSaveable { mutableStateOf(person.name) }
+    var org by rememberSaveable { mutableStateOf(person.org.orEmpty()) }
+    var role by rememberSaveable { mutableStateOf(person.role.orEmpty()) }
+    var notes by rememberSaveable { mutableStateOf(person.notes) }
+    var photo by remember { mutableStateOf<Uri?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    com.ledgerai.app.presentation.components.LItemSheet(
+        title = "Edit person",
+        onDismiss = onDismiss,
+        primary = if (busy) "Saving…" else "Save",
+        onPrimary = {
+            busy = true
+            onSave(name, org.ifBlank { null }, role.ifBlank { null }, notes, photo) { busy = false }
+        },
+        primaryEnabled = name.isNotBlank() && !busy,
+        onDelete = onDelete,
+    ) {
+        PhotoField(photo, { photo = it })
+        LField(name, { name = it }, "Name")
+        LField(org, { org = it }, "Organisation")
+        LField(role, { role = it }, "Role")
+        LField(notes, { notes = it }, "Note", singleLine = false, minLines = 2)
+    }
+}
+
+@Composable
+private fun EditMemorySheet(
+    memory: Memory,
+    onDismiss: () -> Unit,
+    onSave: (String, MemoryKind) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var text by rememberSaveable { mutableStateOf(memory.text) }
+    var kind by rememberSaveable { mutableStateOf(memory.kind.name) }
+    com.ledgerai.app.presentation.components.LItemSheet(
+        title = "Edit memory",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { onSave(text, MemoryKind.valueOf(kind)) },
+        primaryEnabled = text.isNotBlank(),
+        onDelete = onDelete,
+    ) {
+        LField(text, { text = it }, "What you remember", singleLine = false, minLines = 3)
+        ChipsRow {
+            MemoryKind.entries.forEach { option ->
+                LChip(kindLabel(option), kind == option.name, onClick = { kind = option.name })
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditMomentSheet(
+    moment: Interaction,
+    photo: File?,
+    onDismiss: () -> Unit,
+    onSave: (LocalDate, String?, String, Uri?, removePhoto: Boolean) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var newPhoto by remember { mutableStateOf<Uri?>(null) }
+    var removed by remember { mutableStateOf(false) }
+    var day by remember { mutableStateOf(moment.occurredOn) }
+    var place by rememberSaveable { mutableStateOf(moment.where.orEmpty()) }
+    var what by rememberSaveable { mutableStateOf(moment.summary) }
+    com.ledgerai.app.presentation.components.LItemSheet(
+        title = "Edit moment",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { onSave(day, place.ifBlank { null }, what, newPhoto, removed) },
+        primaryEnabled = what.isNotBlank(),
+        onDelete = onDelete,
+    ) {
+        if (photo != null && newPhoto == null && !removed) {
+            Box(Modifier.size(96.dp)) {
+                LocalPhoto(photo, Modifier.size(96.dp).clip(RoundedCornerShape(L.Radius)))
+                com.ledgerai.app.presentation.components.LRemoveBadge(
+                    { removed = true }, Modifier.align(Alignment.TopEnd), "Remove photo",
+                )
+            }
+        }
+        PhotoField(newPhoto, { newPhoto = it })
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("When", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
+            DatePickChip(date = day, selected = true, onDate = { day = it })
+        }
+        LField(what, { what = it }, "What happened")
+        LField(place, { place = it }, "Where")
+    }
+}
+
+@Composable
+private fun EditPromiseSheet(
+    promise: Commitment,
+    onDismiss: () -> Unit,
+    onSave: (String, LocalDate?, String) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var text by rememberSaveable { mutableStateOf(promise.text) }
+    var due by remember { mutableStateOf(promise.dueOn) }
+    var done by remember { mutableStateOf(!isOpen(promise.status)) }
+    com.ledgerai.app.presentation.components.LItemSheet(
+        title = "Edit promise",
+        onDismiss = onDismiss,
+        primary = "Save",
+        onPrimary = { onSave(text, due, if (done) "Done" else "Open") },
+        primaryEnabled = text.isNotBlank(),
+        onDelete = onDelete,
+    ) {
+        LField(text, { text = it }, "What did you promise?")
+        OptionalDateField("Due", due) { due = it }
+        ChipsRow {
+            LChip("Open", !done, onClick = { done = false })
+            LChip("Done", done, onClick = { done = true })
+        }
+    }
+}
+
+@Composable
+private fun MomentRow(moment: Interaction, photo: File?, onClick: () -> Unit) {
     val file = photo
     LGroupRow(
         title = moment.summary,
         sub = momentSub(moment),
         icon = Icons.Filled.PhotoCamera,
+        onClick = onClick,
         end = if (file != null) {
             { LocalPhoto(file, Modifier.size(64.dp).clip(RoundedCornerShape(L.RadiusSm))) }
         } else {
@@ -591,8 +846,9 @@ private fun MomentRow(moment: Interaction, photo: File?) {
 }
 
 @Composable
-private fun MemoryRow(memory: Memory) {
+private fun MemoryRow(memory: Memory, onClick: () -> Unit) {
     LGroupRow(
+        onClick = onClick,
         title = memory.text,
         sub = if (memory.updatedAt > 0) relativeDay(memoryDay(memory.updatedAt)) else null,
         icon = Icons.Filled.Lightbulb,
@@ -602,8 +858,9 @@ private fun MemoryRow(memory: Memory) {
 }
 
 @Composable
-private fun PromiseRow(promise: Commitment) {
+private fun PromiseRow(promise: Commitment, onClick: () -> Unit) {
     LGroupRow(
+        onClick = onClick,
         title = promise.text,
         sub = promise.dueOn?.let { dueLabel(it) },
         icon = Icons.Filled.Handshake,

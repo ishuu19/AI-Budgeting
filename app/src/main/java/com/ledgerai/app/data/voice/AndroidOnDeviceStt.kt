@@ -29,13 +29,13 @@ class AndroidOnDeviceStt(private val context: Context) {
 
     val isActive: Boolean get() = recognizer != null && !finished
 
-    fun start(listener: Listener, languageTag: String = "en-US") {
+    fun start(listener: Listener, languageTag: String = "en-US", silenceMs: Long? = null) {
         destroy()
         val bangla = languageTag.startsWith("bn")
         activeLanguage = if (bangla) "bn-BD" else "en-US"
         val onDevice = !bangla && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
-        begin(listener, activeLanguage, onDevice)
+        begin(listener, activeLanguage, onDevice, silenceMs)
     }
 
     fun stop() {
@@ -51,7 +51,7 @@ class AndroidOnDeviceStt(private val context: Context) {
         finished = true
     }
 
-    private fun begin(listener: Listener, languageTag: String, onDevice: Boolean) {
+    private fun begin(listener: Listener, languageTag: String, onDevice: Boolean, silenceMs: Long?) {
         val r = try {
             if (onDevice && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
@@ -65,11 +65,11 @@ class AndroidOnDeviceStt(private val context: Context) {
         recognizer = r
         usingOnDevice = onDevice
         finished = false
-        r.setRecognitionListener(Callbacks(listener, languageTag))
-        r.startListening(buildIntent(languageTag))
+        r.setRecognitionListener(Callbacks(listener, languageTag, silenceMs))
+        r.startListening(buildIntent(languageTag, silenceMs))
     }
 
-    private fun buildIntent(languageTag: String) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+    private fun buildIntent(languageTag: String, silenceMs: Long?) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         putExtra(RecognizerIntent.EXTRA_LANGUAGE, languageTag)
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, languageTag)
@@ -77,11 +77,16 @@ class AndroidOnDeviceStt(private val context: Context) {
         putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, usingOnDevice)
         putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+        if (silenceMs != null) {
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, silenceMs)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, silenceMs)
+        }
     }
 
     private inner class Callbacks(
         private val listener: Listener,
-        private val languageTag: String
+        private val languageTag: String,
+        private val silenceMs: Long?,
     ) : RecognitionListener {
         private var lastPartial = ""
 
@@ -116,7 +121,7 @@ class AndroidOnDeviceStt(private val context: Context) {
             if (finished) return
             if (usingOnDevice && error in FALLBACK_ERRORS) {
                 releaseRecognizer()
-                begin(listener, languageTag, onDevice = false)
+                begin(listener, languageTag, onDevice = false, silenceMs)
                 return
             }
             finished = true

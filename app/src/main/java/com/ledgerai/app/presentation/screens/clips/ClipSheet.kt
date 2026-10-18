@@ -59,7 +59,7 @@ fun ClipSheet(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.32f))
                 .clickable(onClick = onDismiss)
-                .semantics { contentDescription = "Close Add to Notes" }
+                .semantics { contentDescription = "Close Add to Notebook" }
         )
         Column(
             Modifier
@@ -74,7 +74,7 @@ fun ClipSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Add to Notes", style = MaterialTheme.typography.titleLarge, color = L.Ink)
+                Text("Add to Notebook", style = MaterialTheme.typography.titleLarge, color = L.Ink)
                 Text(
                     "from $sourceLabel",
                     style = MaterialTheme.typography.bodySmall,

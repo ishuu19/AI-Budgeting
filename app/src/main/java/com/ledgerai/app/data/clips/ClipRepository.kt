@@ -199,18 +199,89 @@ class ClipRepository @Inject constructor(
         dao.upsert(clip.copy(status = status, updatedAt = System.currentTimeMillis()))
     }
 
+    /** Your edit lives in [ClipEntity.editedText]. The captured text stays. */
     suspend fun editText(id: String, raw: String) {
         val clip = dao.get(id) ?: return
         val (text, _) = ClipRules.limit(ClipRules.plain(raw))
         if (text.isBlank()) return
-        dao.upsert(
-            clip.copy(
-                text = text,
-                textHash = ClipRules.sha256(text.trim()),
-                url = ClipRules.firstUrl(text, null) ?: clip.url,
-                updatedAt = System.currentTimeMillis(),
+        dao.upsert(clip.copy(editedText = text, updatedAt = System.currentTimeMillis()))
+    }
+
+    suspend fun saveEntry(
+        raw: String,
+        sourceKind: String,
+        sourceApp: String?,
+        windowTitle: String?,
+        prompt: String?,
+        threadId: String? = null,
+        messageId: String? = null,
+        saveAnyway: Boolean = false,
+    ): CaptureResult {
+        val plain = ClipRules.plain(raw)
+        if (plain.isBlank()) return CaptureResult.Empty
+        when (ClipRules.gate(plain, descriptionSensitive = false)) {
+            ClipGate.Password -> return CaptureResult.Password
+            ClipGate.ConfirmSensitive -> if (!saveAnyway) return CaptureResult.NeedsConfirm
+            ClipGate.Ok -> Unit
+        }
+        val (text, trimmed) = ClipRules.limit(plain)
+        val sensitive = ClipRules.isSensitiveText(text)
+        val read = ClipRules.read(text)
+        val hash = ClipRules.sha256(text.trim())
+        val now = System.currentTimeMillis()
+        val bumped = dao.recentHash(hash, now - ClipRules.DEDUPE_MS)
+        if (bumped != null) {
+            dao.upsert(
+                bumped.copy(
+                    capturedAt = now,
+                    updatedAt = now,
+                    prompt = prompt?.take(2_000) ?: bumped.prompt,
+                    windowTitle = windowTitle?.take(200) ?: bumped.windowTitle,
+                    threadId = threadId ?: bumped.threadId,
+                    messageId = messageId ?: bumped.messageId,
+                )
             )
+            return CaptureResult.Saved(bumped.id, "Saved", trimmed, false, null, read)
+        }
+        val id = UUID.randomUUID().toString()
+        val row = ClipEntity(
+            id = id,
+            userId = session.userInfo.first().userId.ifBlank { null },
+            text = text,
+            textHash = hash,
+            sourceKind = sourceKind,
+            sourceApp = sourceApp?.take(200),
+            windowTitle = windowTitle?.take(200),
+            prompt = prompt?.take(2_000),
+            threadId = threadId,
+            messageId = messageId,
+            status = "inbox",
+            sensitive = sensitive,
+            aiState = "none",
+            capturedAt = now,
+            updatedAt = now,
         )
+        dao.upsert(row)
+        return CaptureResult.Saved(id, "Saved", trimmed, false, null, read)
+    }
+
+    suspend fun setPinned(id: String, pinned: Boolean) {
+        val clip = dao.get(id) ?: return
+        val order = if (pinned) (dao.maxPinOrder() ?: -1) + 1 else null
+        dao.upsert(clip.copy(pinned = pinned, pinOrder = order, updatedAt = System.currentTimeMillis()))
+    }
+
+    suspend fun reorderPins(ids: List<String>) {
+        val now = System.currentTimeMillis()
+        ids.forEachIndexed { index, id ->
+            val clip = dao.get(id) ?: return@forEachIndexed
+            dao.upsert(clip.copy(pinned = true, pinOrder = index, updatedAt = now))
+        }
+    }
+
+    suspend fun attachThread(id: String, threadId: String) {
+        val clip = dao.get(id) ?: return
+        dao.upsert(clip.copy(threadId = threadId, updatedAt = System.currentTimeMillis()))
     }
 
     suspend fun deleteClip(id: String) {

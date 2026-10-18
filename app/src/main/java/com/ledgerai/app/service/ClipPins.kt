@@ -18,11 +18,11 @@ object ClipPins {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         if (Build.VERSION.SDK_INT >= 26) {
             manager.createNotificationChannel(
-                NotificationChannel(ClipDigestWorker.CHANNEL, "Add to Notes", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(ClipDigestWorker.CHANNEL, "Add to Notebook", NotificationManager.IMPORTANCE_LOW)
             )
         }
         val text = if (collectingTitle.isNullOrBlank()) {
-            "Add to Notes · Tap to save what you copied"
+            "Add to Notebook · Tap to save what you copied"
         } else {
             "Collecting into $collectingTitle"
         }
@@ -33,7 +33,7 @@ object ClipPins {
         )
         val notification = NotificationCompat.Builder(context, ClipDigestWorker.CHANNEL)
             .setSmallIcon(R.drawable.ic_tile_capture)
-            .setContentTitle("Add to Notes")
+            .setContentTitle("Add to Notebook")
             .setContentText(text)
             .setContentIntent(pending)
             .setOngoing(true)

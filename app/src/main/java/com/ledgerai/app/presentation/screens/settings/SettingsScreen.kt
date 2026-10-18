@@ -245,7 +245,7 @@ fun SettingsScreen(
         item {
             LGroup {
                 LGroupRow(
-                    title = "Add to Notes",
+                    title = "Add to Notebook",
                     sub = captureSubtitle,
                     icon = Icons.Filled.ContentPaste,
                     onClick = onAddToNotes,

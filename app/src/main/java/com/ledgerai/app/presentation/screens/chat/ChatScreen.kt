@@ -23,7 +23,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -101,6 +105,23 @@ fun ChatScreen(
     val voice by vvm.uiState.collectAsStateWithLifecycle()
     val day by today.state.collectAsStateWithLifecycle()
     var manual by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
+    val history by cvm.history.collectAsStateWithLifecycle()
+
+    // Going out of the app files this chat under History and opens a fresh one. Camera and gallery
+    // cover the app too, but that is not leaving.
+    val activity = context as? androidx.activity.ComponentActivity
+    DisposableEffect(activity) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_STOP -> cvm.onAppStopped(activity?.isChangingConfigurations == true)
+                androidx.lifecycle.Lifecycle.Event.ON_START -> cvm.onAppStarted()
+                else -> Unit
+            }
+        }
+        activity?.lifecycle?.addObserver(observer)
+        onDispose { activity?.lifecycle?.removeObserver(observer) }
+    }
 
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { cvm.onCameraResult(it) }
     val gallery = rememberLauncherForActivityResult(
@@ -124,6 +145,7 @@ fun ChatScreen(
     }
 
     fun openCamera() {
+        cvm.holdArchive()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             camera.launch(cvm.newCameraUri())
         } else {
@@ -161,7 +183,7 @@ fun ChatScreen(
     }
 
     Column(Modifier.fillMaxSize().background(L.Page)) {
-        Header(links)
+        Header(links, onHistory = { showHistory = true }, onNew = cvm::newChat, hasMessages = messages.isNotEmpty())
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -230,7 +252,7 @@ fun ChatScreen(
             onMic = ::toggleMic,
             onSend = cvm::submit,
             onCamera = ::openCamera,
-            onGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onGallery = { cvm.holdArchive(); gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
             onRemoveImage = cvm::removeImage,
             onStarter = cvm::quickAsk,
             onManual = { manual = true },
@@ -244,15 +266,65 @@ fun ChatScreen(
         )
     }
     if (manual) ManualAddSheet(links, onDismiss = { manual = false })
+    if (showHistory) {
+        ChatHistorySheet(
+            threads = history,
+            onOpen = { cvm.continueChat(it); showHistory = false },
+            onDelete = cvm::deleteChat,
+            onDismiss = { showHistory = false },
+        )
+    }
 }
 
 @Composable
-private fun Header(links: AppLinks) {
+private fun Header(links: AppLinks, onHistory: () -> Unit, onNew: () -> Unit, hasMessages: Boolean) {
     LHeader(
         title = LocalDate.now().format(dayFmt),
         modifier = Modifier.padding(horizontal = L.Gutter, vertical = 8.dp),
-        actions = { LToolButton(Icons.Filled.Search, "Search", links.search) },
+        actions = {
+            if (hasMessages) LToolButton(Icons.Filled.Add, "New chat", onNew)
+            LToolButton(Icons.Filled.History, "Chat history", onHistory)
+            LToolButton(Icons.Filled.Search, "Search", links.search)
+        },
     )
+}
+
+/** Past home chats, newest first. Tap one to continue it; delete removes it. */
+@Composable
+private fun ChatHistorySheet(
+    threads: List<com.ledgerai.app.data.chat.ChatThreadEntity>,
+    onOpen: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var deleting by remember { mutableStateOf<String?>(null) }
+    val stamp = DateTimeFormatter.ofPattern("EEE d MMM · HH:mm", Locale.US)
+    com.ledgerai.app.presentation.components.LSheet(title = "Chat history", onDismiss = onDismiss) {
+        if (threads.isEmpty()) {
+            Text("Past chats show up here after you leave the app.", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        } else {
+            com.ledgerai.app.presentation.components.LGroup {
+                threads.forEachIndexed { index, thread ->
+                    if (index > 0) com.ledgerai.app.presentation.components.LGroupDivider()
+                    com.ledgerai.app.presentation.components.LGroupRow(
+                        title = thread.title,
+                        sub = java.time.Instant.ofEpochMilli(thread.updatedAt)
+                            .atZone(java.time.ZoneId.systemDefault()).format(stamp),
+                        onClick = { onOpen(thread.id) },
+                        end = { LToolButton(Icons.Filled.Delete, "Delete chat", { deleting = thread.id }) },
+                    )
+                }
+            }
+            Text("Tap a chat to continue it.", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
+        }
+    }
+    deleting?.let { id ->
+        com.ledgerai.app.presentation.components.LConfirm(
+            title = "Delete this chat?",
+            onConfirm = { onDelete(id); deleting = null },
+            onDismiss = { deleting = null },
+        )
+    }
 }
 
 /** A glance at the day. Time and title, safe to spend, then late and bill counts. Tap for the full day. */

@@ -6,7 +6,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.ReceiptLong
 import com.ledgerai.app.presentation.components.LSegments
+import com.ledgerai.app.presentation.components.LToolButton
 import com.ledgerai.app.presentation.components.LSwipePages
 import com.ledgerai.app.presentation.components.LTabPage
 import com.ledgerai.app.presentation.navigation.AppLinks
@@ -42,9 +44,16 @@ fun MoneyTabScreen(
                 onSearching = { searching = it },
                 hint = "Search spending",
                 showSearch = seg == MoneySeg.Spend,
-            )
+            ) {
+                // The control holds four options; Receipts is reached from here.
+                LToolButton(
+                    androidx.compose.material.icons.Icons.Filled.ReceiptLong,
+                    "Receipts",
+                    { onSeg(MoneySeg.Receipts) },
+                )
+            }
         },
-        segments = { LSegments(MoneySeg.values().toList(), seg, { it.label }, onSeg) },
+        segments = { LSegments(MoneySeg.entries.filter { it != MoneySeg.Receipts }, seg, { it.label }, onSeg) },
     ) {
         LSwipePages(MoneySeg.entries, seg, onSeg) { page ->
             when (page) {
@@ -59,6 +68,7 @@ fun MoneyTabScreen(
                 )
                 MoneySeg.Plan -> MoneyPlanScreen(links, forSeg(OpenKind.Budget, OpenKind.Goal), onOpened)
                 MoneySeg.Owed -> MoneyOwedScreen(forSeg(OpenKind.Bill, OpenKind.Debt), onOpened, onSubscriptions = links.subscriptions)
+                MoneySeg.Receipts -> com.ledgerai.app.presentation.screens.receipts.ReceiptsScreen(onOpen = links.receipt)
             }
         }
     }

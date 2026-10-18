@@ -171,7 +171,7 @@ fun WidgetActionRow(palette: WidgetPalette, includeTask: Boolean = true) {
         WidgetRoundAction(
             android.R.drawable.ic_input_add,
             palette,
-            actionStartActivity(WidgetActions.openAddTransaction(context))
+            actionStartActivity(WidgetActions.addPhoto(context))
         )
         if (includeTask) {
             Spacer(GlanceModifier.width(6.dp))

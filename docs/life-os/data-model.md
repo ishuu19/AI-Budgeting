@@ -9,7 +9,7 @@ Principles: one table per concept, owned by a user or a household, with provenan
 | Money | `transactions` (001), budgets, debts, goals, bills | `receipts`, `receipt_lines`, `subscriptions`, `expense_splits` |
 | Events & commitments | `calendar_events` (004), `plans`, `habits` | `commitments` (link event ↔ person) |
 | Work | `job_applications` (007) | `documents` link, `form_profile` |
-| Notes & log | `notes`, `life_log` (008), `voice_history` (009), `clips` (020, planned) | `memories` (extracted facts) |
+| Notes & log | `notes`, `life_log` (008), `voice_history` (009), `clips` (020, planned), `chat_threads` and `chat_messages` (021, planned) | `memories` (extracted facts) |
 | Home | none | `items`, `item_locations`, `shopping_lists`, `shopping_items` |
 | Households | none | `households`, `household_members` |
 | People | none | `people`, `interactions` |
@@ -55,7 +55,7 @@ event_log(id, user_id, type, payload, source_action_id, created_at)
 
 ## Provenance
 
-Every derived row carries `source_type` and `source_id` (receipt, voice_history, document, manual, clip). Corrections edit the derived row, never the source. "Confirmed" means the user saw and accepted it, or entered it by hand. "Inferred" means the AI produced it. A clip is a source record: filed rows use `source_type = 'clip'` where the table has those columns, and otherwise `clips.filed_type` / `clips.filed_id`.
+Every derived row carries `source_type` and `source_id` (receipt, voice_history, document, manual, clip). Corrections edit the derived row, never the source. "Confirmed" means the user saw and accepted it, or entered it by hand. "Inferred" means the AI produced it. A clip is a source record: filed rows use `source_type = 'clip'` where the table has those columns, and otherwise `clips.filed_type` / `clips.filed_id`. A notebook edit is stored in `clips.edited_text`; `clips.text` stays the captured original. `chat_threads` and `chat_messages` store Ask sessions (ordered turns, not a second copy of people, items, money, or events). They are private to the user.
 
 ## Visibility
 

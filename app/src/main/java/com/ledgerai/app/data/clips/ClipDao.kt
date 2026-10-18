@@ -48,10 +48,26 @@ interface ClipDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: ClipEntity)
 
+    @Query("SELECT id FROM clips WHERE sensitive = 1")
+    suspend fun sensitiveIds(): List<String>
+
+    @Query("SELECT MAX(pinOrder) FROM clips WHERE pinned = 1 AND deletedAt IS NULL")
+    suspend fun maxPinOrder(): Int?
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM clips WHERE deletedAt IS NULL AND pinned = 1 AND (
+            threadId = :threadId OR messageId IN (SELECT id FROM chat_messages WHERE threadId = :threadId)
+        )
+        """
+    )
+    suspend fun pinnedCountForThread(threadId: String): Int
+
     @Query(
         """
         UPDATE clips SET deletedAt = :now, updatedAt = :now
-        WHERE status = 'inbox' AND deletedAt IS NULL AND noteId IS NULL AND filedId IS NULL AND capturedAt < :before
+        WHERE status = 'inbox' AND deletedAt IS NULL AND noteId IS NULL AND filedId IS NULL
+        AND pinned = 0 AND capturedAt < :before
         """
     )
     suspend fun softDeleteInboxOlder(before: Long, now: Long)

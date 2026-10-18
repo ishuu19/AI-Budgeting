@@ -1,6 +1,6 @@
 # UI design
 
-Visual language (colors, type, components) stays with the existing system: see [../ui-brief.md](../ui-brief.md), [../ui-redesign.md](../ui-redesign.md) and mockups in `docs/screens/`. This doc defines structure, not styling.
+Visual language stays with the existing Compose theme. This doc defines structure, not styling.
 
 ## Principle
 One home screen organized around what the person needs today, not ten dashboards. Everything is reachable from one assistant input.

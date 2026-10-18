@@ -4,7 +4,7 @@ Guidance for Claude Code in this repo. Start with the project rules, then the be
 
 ## Project
 
-LedgerAI is a voice-first Android app (Kotlin, Compose, Room, Hilt, Supabase). It is growing into **Lifeline**, a personal "Life OS": one shared data layer plus one universal assistant. The plan lives in `docs/life-os/` and the original brief in `docs/full-plan.md`. Existing product docs: `PLAN.md`, `README.md`, `docs/ui-brief.md`.
+LedgerAI is a voice-first Android app (Kotlin, Compose, Room, Hilt, Supabase). It is growing into **Lifeline**, a personal "Life OS": one shared data layer plus one universal assistant. The plan lives in `docs/life-os/`. Existing product docs: `PLAN.md`, `README.md`.
 
 Decision: **evolve the existing Android app**. Do not rewrite it and do not introduce a second stack. See `docs/life-os/adr/0001-evolve-existing-android.md`.
 

@@ -309,6 +309,11 @@ fun NotesScreen(
     LScreen(
         title = "Notes",
         onBack = onBack,
+        action = {
+            androidx.compose.material3.TextButton(onClick = links.notebook) {
+                androidx.compose.material3.Text("Notebook")
+            }
+        },
         snackbarHost = {
             val text = notice
             if (text != null) LSnackbar(text)

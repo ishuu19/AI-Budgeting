@@ -33,6 +33,26 @@ class MediaRepository @Inject constructor(
     fun observeRecent(userId: String, limit: Int = 60): Flow<List<MediaAssetEntity>> =
         dao.observeRecent(userId, limit)
 
+    fun observeLinked(type: String, id: String): Flow<List<MediaAssetEntity>> = dao.observeLinked(type, id)
+
+    /**
+     * Keeps a screenshot with the notebook entry it came from. It is not analysed and never uploaded:
+     * a screenshot can show anything that was on screen.
+     */
+    suspend fun addLinked(userId: String, uri: Uri, linkedType: String, linkedId: String): MediaAssetEntity? {
+        val row = addImage(userId, uri, "") ?: return null
+        val linked = row.copy(
+            kind = MediaKind.OTHER,
+            title = "Screenshot",
+            uploadState = UploadState.LOCAL,
+            analysisState = AnalysisState.DONE,
+            linkedType = linkedType,
+            linkedId = linkedId,
+        )
+        save(linked)
+        return linked
+    }
+
     suspend fun get(id: String): MediaAssetEntity? = dao.get(id)
     suspend fun save(row: MediaAssetEntity) = dao.upsert(row.copy(updatedAt = System.currentTimeMillis()))
     suspend fun pendingAnalysis(): List<MediaAssetEntity> = dao.listPendingAnalysis()

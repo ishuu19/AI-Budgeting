@@ -29,6 +29,7 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
@@ -187,8 +188,35 @@
         </service>
 
         <service
+            android:name=".service.ScreenGrabService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <service
             android:name=".service.NotificationService"
             android:exported="false" />
+
+        <activity
+            android:name=".service.NotebookPanelActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- "Ledger AI" in the text-selection menu: opens the chat panel with the selected text. -->
+        <activity-alias
+            android:name=".service.LedgerAiSelectionAlias"
+            android:targetActivity=".service.NotebookPanelActivity"
+            android:exported="true"
+            android:label="@string/ledger_ai_menu">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".service.ClipCaptureActivity"

@@ -26,4 +26,17 @@
             <extra android:name="capture_mode" android:value="camera" />
         </intent>
     </shortcut>
+    <shortcut
+        android:shortcutId="notebook"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_notebook_short"
+        android:shortcutLongLabel="@string/shortcut_notebook_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.ledgerai.app"
+            android:targetClass="com.ledgerai.app.service.NotebookPanelActivity">
+            <extra android:name="notebook_listen" android:value="true" />
+        </intent>
+    </shortcut>
 </shortcuts>

@@ -54,6 +54,29 @@ class PeopleRepository(
     suspend fun findActive(userId: String, personId: String): Person? =
         listPeople(userId).find { it.id == personId }
 
+    suspend fun updatePerson(
+        userId: String,
+        personId: String,
+        name: String,
+        org: String?,
+        role: String?,
+        notes: String,
+    ): Boolean {
+        val cleaned = name.trim()
+        if (cleaned.isEmpty()) return false
+        val existing = findActive(userId, personId) ?: return false
+        store.upsert(
+            existing.copy(
+                name = cleaned,
+                org = org?.trim()?.ifBlank { null },
+                role = role?.trim()?.ifBlank { null },
+                notes = notes.trim(),
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
+        return true
+    }
+
     suspend fun deletePerson(userId: String, personId: String) {
         val existing = store.all().find {
             it.id == personId && it.userId == userId && it.deletedAt == null

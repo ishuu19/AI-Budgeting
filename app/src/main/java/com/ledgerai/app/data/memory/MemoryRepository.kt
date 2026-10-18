@@ -80,6 +80,24 @@ class MemoryRepository(
         }
     }
 
+    /** An edit by hand makes the memory confirmed. */
+    suspend fun updateMemory(userId: String, memoryId: String, text: String, kind: MemoryKind): Boolean {
+        val existing = store.all().find {
+            it.id == memoryId && it.userId == userId && it.deletedAt == null
+        } ?: return false
+        val cleaned = text.trim()
+        if (cleaned.isEmpty()) return false
+        store.upsert(
+            existing.copy(
+                text = cleaned,
+                kind = kind,
+                status = MemoryStatus.CONFIRMED,
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
+        return true
+    }
+
     suspend fun softDelete(userId: String, memoryId: String) {
         val existing = store.all().find {
             it.id == memoryId && it.userId == userId && it.deletedAt == null

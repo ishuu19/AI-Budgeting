@@ -122,11 +122,12 @@ class MainActivity : ComponentActivity() {
             bills = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_BILLS, false),
             focusBlockId = intent.getLongExtra(EXTRA_OPEN_FOCUS_BLOCK_ID, 0L),
             focusTopic = intent.getStringExtra(EXTRA_FOCUS_TOPIC),
-            hasFocus = hasFocus
+            hasFocus = hasFocus,
+            notebook = intent.getBooleanExtra(WidgetActions.EXTRA_OPEN_NOTEBOOK, false),
         )
         val any = req.voice || req.notes || req.plan != null || req.spendGuide || req.spendList ||
             req.moneyOverview || req.search || req.openToday || req.eventId > 0L || req.planBlockId > 0L ||
-            req.addTransaction || req.bills || req.hasFocus
+            req.addTransaction || req.bills || req.hasFocus || req.notebook
         return if (any) req else null
     }
 

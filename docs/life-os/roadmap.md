@@ -28,6 +28,7 @@ Photo and voice input that the AI files for the user. Feeds Stage 1 (receipts, p
 - [x] Sync handler for `media_assets`
 - [x] Capture actions registered; filing goes through `Executor`
 - [x] Text capture (Add to Notes): selection menu, share, clips in notes, AI filing, tile, pinned notification
+- [x] Notebook: screen read on call, board, stored chats
 - [x] Weather for outfit suggestions (needs a stored location)
 - Exit: photograph a shirt, a receipt and a friend with a note; each is named, filed and backed up; ask "what can I cook" and "I have a party" and get answers from stock and wardrobe names.
 
@@ -71,6 +72,6 @@ Migration promoted from `supabase/planned/` · RLS test · Room entity + sync ha
 | OCR/vision errors corrupt inventory | Review step, confidence flags, keep source |
 | Edge Function time limits | Chunk work; keep heavy parsing to single-document calls |
 | Sync conflicts with multi-user data | `updated_at` cursor + soft delete; server-wins on shared rows, test with two devices |
-| Platform limits on screen access | Share-to-app first; no background screen reading |
+| Platform limits on screen access | Share-to-app, plus screen text only when the user calls Notebook. No background screen reading |
 | AI cost | Rules first, small context bundles, cache, cheap extraction model |
 | iOS/web demand | Revisit ADR 0001 after Stage 2 |

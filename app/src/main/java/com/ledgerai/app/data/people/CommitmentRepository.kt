@@ -79,6 +79,29 @@ class CommitmentRepository(
         }
     }
 
+    suspend fun updateCommitment(
+        userId: String,
+        commitmentId: String,
+        text: String,
+        dueOn: LocalDate?,
+        status: String,
+    ): Boolean {
+        val cleaned = text.trim()
+        if (cleaned.isEmpty() || status.isBlank()) return false
+        val existing = store.all().find {
+            it.id == commitmentId && it.userId == userId && it.deletedAt == null
+        } ?: return false
+        store.upsert(
+            existing.copy(
+                text = cleaned,
+                dueOn = dueOn,
+                status = status.trim(),
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
+        return true
+    }
+
     suspend fun deleteCommitment(userId: String, commitmentId: String) {
         val existing = store.all().find {
             it.id == commitmentId && it.userId == userId && it.deletedAt == null

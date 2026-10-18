@@ -69,6 +69,31 @@ class InteractionRepository(
         }
     }
 
+    suspend fun updateInteraction(
+        userId: String,
+        interactionId: String,
+        occurredOn: LocalDate,
+        where: String?,
+        summary: String,
+        sourceId: String?,
+    ): Boolean {
+        val cleaned = summary.trim()
+        if (cleaned.isEmpty()) return false
+        val existing = store.all().find {
+            it.id == interactionId && it.userId == userId && it.deletedAt == null
+        } ?: return false
+        store.upsert(
+            existing.copy(
+                occurredOn = occurredOn,
+                where = where?.trim()?.ifBlank { null },
+                summary = cleaned,
+                sourceId = sourceId?.trim()?.ifBlank { null },
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
+        return true
+    }
+
     suspend fun deleteInteraction(userId: String, interactionId: String) {
         val existing = store.all().find {
             it.id == interactionId && it.userId == userId && it.deletedAt == null

@@ -9,7 +9,7 @@ import android.service.quicksettings.TileService
 class ClipTileService : TileService() {
     override fun onClick() {
         super.onClick()
-        val intent = ClipCaptureActivity.intent(this, ClipCaptureActivity.MODE_CLIPBOARD, "tile")
+        val intent = NotebookPanelActivity.intent(this, listen = false, clipboard = true, gesture = false)
         if (Build.VERSION.SDK_INT >= 34) {
             val pending = PendingIntent.getActivity(
                 this, 8, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,

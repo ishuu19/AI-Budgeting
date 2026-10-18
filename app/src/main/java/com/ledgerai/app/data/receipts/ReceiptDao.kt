@@ -21,6 +21,17 @@ abstract class ReceiptDao {
     @Query("DELETE FROM receipt_lines WHERE receiptId = :receiptId")
     abstract suspend fun deleteLines(receiptId: Long)
 
+    @Query(
+        """
+        SELECT * FROM receipts WHERE deletedAt IS NULL
+        ORDER BY COALESCE(purchasedOn, '') DESC, updatedAt DESC
+        """
+    )
+    abstract fun observeAll(): kotlinx.coroutines.flow.Flow<List<ReceiptEntity>>
+
+    @Query("UPDATE receipts SET deletedAt = :at, updatedAt = :at WHERE id = :id")
+    abstract suspend fun softDelete(id: Long, at: Long)
+
     @Query("SELECT * FROM receipts WHERE id = :id AND deletedAt IS NULL")
     abstract suspend fun getReceipt(id: Long): ReceiptEntity?
 

@@ -3,7 +3,7 @@
 Status: accepted (2026-10-11)
 
 ## Context
-`docs/full-plan.md` suggests React Native/Expo, Next.js, NestJS, Postgres+pgvector, Redis/BullMQ. The repo already contains a working native Android app with Room, Hilt, Compose, Glance, WorkManager, Vosk, Supabase Auth/PostgREST, an `ai-proxy` Edge Function and 11 migrations.
+An earlier stack proposal used React Native/Expo, Next.js, NestJS, Postgres+pgvector, Redis/BullMQ. The repo already contains a working native Android app with Room, Hilt, Compose, Glance, WorkManager, Vosk, Supabase Auth/PostgREST, an `ai-proxy` Edge Function and 11 migrations.
 
 ## Decision
 Keep Kotlin + Supabase. Map the plan's stack onto what exists:

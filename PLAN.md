@@ -1,6 +1,6 @@
 # LedgerAI — Product & Engineering Plan
 
-Status: **Phases 1–9 implemented in code; tasks, routines, reminders, classes and alarms merged into calendar events (see docs/audit.md section F).** Wire Supabase project secrets, deploy Edge Function, and run build/QA before release.
+Status: **Phases 1–9 implemented in code; tasks, routines, reminders, classes and alarms are merged into calendar events.** Wire Supabase project secrets, deploy Edge Function, and run build/QA before release.
 
 ---
 

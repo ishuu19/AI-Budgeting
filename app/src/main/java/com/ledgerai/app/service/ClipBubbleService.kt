@@ -31,7 +31,7 @@ class ClipBubbleService : Service() {
         val size = (48 * resources.displayMetrics.density).toInt()
         val view = FrameLayout(this)
         view.setBackgroundColor(0xFF17306F.toInt())
-        view.contentDescription = "Add copied text"
+        view.contentDescription = "Notebook"
         val params = WindowManager.LayoutParams(
             size, size,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -44,6 +44,7 @@ class ClipBubbleService : Service() {
         var startX = 0
         var startY = 0
         var moved = false
+        var downAt = 0L
         view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -52,6 +53,7 @@ class ClipBubbleService : Service() {
                     startX = params.x
                     startY = params.y
                     moved = false
+                    downAt = android.os.SystemClock.uptimeMillis()
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -65,7 +67,10 @@ class ClipBubbleService : Service() {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (!moved) {
-                        startActivity(ClipCaptureActivity.intent(this, ClipCaptureActivity.MODE_CLIPBOARD, "bubble"))
+                        val hold = android.os.SystemClock.uptimeMillis() - downAt > 400
+                        val open = NotebookPanelActivity.intent(this, listen = hold, clipboard = true, gesture = false)
+                        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(open)
                     }
                     true
                 }

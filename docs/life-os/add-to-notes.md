@@ -2,6 +2,8 @@
 
 Status: **design, not built** · Author date: 2026-10-12 · Stage: Capture engine (cross-stage), text half
 
+v2 design (screen reading on call, editable board, stored chats): [notebook.md](notebook.md).
+
 ## 1. Summary
 
 Select or copy text in any app, tap **Add to Notes**, and the text lands in Lifeline as a *clip*. Clips can be gathered into one note, kept as plain notes, or handed to the AI, which suggests where each clip belongs (task, event, job, shopping item, memory, bill). Profile gets an **Add to Notes** screen that holds the clip list, the "collecting into" note and the settings.

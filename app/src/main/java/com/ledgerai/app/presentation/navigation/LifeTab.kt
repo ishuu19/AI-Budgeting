@@ -50,25 +50,34 @@ fun LifeTab(
                 val repository = remember(appContext) {
                     EntryPointAccessors.fromApplication(appContext, WardrobeEntryPoint::class.java).wardrobeRepository()
                 }
-                WardrobeScreen(userId = user.userId, repository = repository, onBack = {})
+                // The id is blank for a moment after launch; a list built from "" stays empty.
+                if (user.userId.isNotBlank()) {
+                    WardrobeScreen(userId = user.userId, repository = repository, onBack = {})
+                } else {
+                    com.ledgerai.app.presentation.components.LLoading()
+                }
             }
             LifeSeg.People -> {
                 val entry = remember(appContext) {
                     EntryPointAccessors.fromApplication(appContext, PeopleEntryPoint::class.java)
                 }
-                PeopleScreen(
-                    userId = user.userId,
-                    repository = entry.peopleRepository(),
-                    interactions = entry.interactionRepository(),
-                    onOpenPerson = { person -> onOpenPerson(person.id) },
-                    onBack = {},
-                )
+                if (user.userId.isNotBlank()) {
+                    PeopleScreen(
+                        userId = user.userId,
+                        repository = entry.peopleRepository(),
+                        interactions = entry.interactionRepository(),
+                        onOpenPerson = { person -> onOpenPerson(person.id) },
+                        onBack = {},
+                    )
+                }
             }
             LifeSeg.Home -> {
                 val repository = remember(appContext) {
                     EntryPointAccessors.fromApplication(appContext, HouseholdEntryPoint::class.java).householdRepository()
                 }
-                HouseholdScreen(userId = user.userId, repository = repository, onBack = {}, selfName = user.displayName)
+                if (user.userId.isNotBlank()) {
+                    HouseholdScreen(userId = user.userId, repository = repository, onBack = {}, selfName = user.displayName)
+                }
             }
         }
         }

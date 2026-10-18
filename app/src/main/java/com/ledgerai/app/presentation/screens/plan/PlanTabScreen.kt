@@ -160,7 +160,7 @@ fun PlanTabScreen(
                         },
                     )
                     PlanSeg.Tasks -> TasksScreen(vm, onOpen = { itemKey = it }, query = query)
-                    PlanSeg.Notes -> com.ledgerai.app.presentation.screens.notes.NotesScreen(
+                    PlanSeg.Notes -> com.ledgerai.app.presentation.screens.notebook.NotebookScreen(
                         open = open?.takeIf { it.kind == OpenKind.Note },
                         onOpened = onOpened,
                         query = query,

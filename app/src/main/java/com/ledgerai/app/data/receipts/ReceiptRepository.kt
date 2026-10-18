@@ -4,10 +4,18 @@ import com.ledgerai.app.domain.receipts.ConfirmedReceipt
 import com.ledgerai.app.domain.receipts.Receipt
 import com.ledgerai.app.domain.receipts.ReceiptDrafts
 import com.ledgerai.app.domain.receipts.ValueConfidence
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 interface ReceiptStore {
     suspend fun upsert(receipt: Receipt): Receipt
     suspend fun find(id: Long): Receipt?
+
+    /** Every saved receipt without its lines, newest first. */
+    fun observeAll(): Flow<List<Receipt>> = flowOf(emptyList())
+
+    suspend fun delete(id: Long, at: Long) = Unit
 }
 
 /**
@@ -45,6 +53,11 @@ class ReceiptRepository(
     }
 
     suspend fun find(id: Long): Receipt? = store.find(id)
+
+    fun observeAll(): Flow<List<Receipt>> = store.observeAll()
+
+    /** Removes the receipt from the list. A transaction made from it is not touched. */
+    suspend fun delete(id: Long) = store.delete(id, now())
 }
 
 private fun <T> acceptedConfidence(value: T?, current: ValueConfidence?): ValueConfidence? =
@@ -61,4 +74,9 @@ class RoomReceiptStore(private val dao: ReceiptDao) : ReceiptStore {
         val entity = dao.getReceipt(id) ?: return null
         return entity.toDomain(dao.linesFor(id))
     }
+
+    override suspend fun delete(id: Long, at: Long) = dao.softDelete(id, at)
+
+    override fun observeAll(): Flow<List<Receipt>> =
+        dao.observeAll().map { rows -> rows.map { it.toDomain(emptyList()) } }
 }

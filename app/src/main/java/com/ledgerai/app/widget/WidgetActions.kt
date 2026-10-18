@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import com.ledgerai.app.MainActivity
 import com.ledgerai.app.service.FocusForegroundService
+import com.ledgerai.app.service.QuickCaptureActivity
 import com.ledgerai.app.service.WidgetVoiceCaptureActivity
 
 object WidgetActions {
@@ -14,6 +15,7 @@ object WidgetActions {
     const val EXTRA_ADD_TRANSACTION = "add_transaction"
     const val EXTRA_OPEN_TASKS = "open_tasks"
     const val EXTRA_OPEN_NOTES = "open_notes"
+    const val EXTRA_OPEN_NOTEBOOK = "open_notebook"
     const val EXTRA_OPEN_BILLS = "open_bills"
     const val EXTRA_OPEN_SEARCH = "open_search"
     const val EXTRA_OPEN_DAY = "open_today"
@@ -31,9 +33,6 @@ object WidgetActions {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             configure()
         }
-
-    fun openVoice(context: Context) =
-        main(context) { putExtra(EXTRA_OPEN_VOICE, true) }
 
     /** Opens the voice page and shows the suggestion for these words. */
     fun openVoiceReview(context: Context, text: String) =
@@ -81,6 +80,9 @@ object WidgetActions {
     fun openNotes(context: Context) =
         main(context) { putExtra(EXTRA_OPEN_NOTES, true) }
 
+    fun openNotebook(context: Context) =
+        main(context) { putExtra(EXTRA_OPEN_NOTEBOOK, true) }
+
     /** A small note field over the home screen. It does not open the app. */
     fun openNoteComposer(context: Context): Intent =
         Intent(context, WidgetNoteActivity::class.java).apply {
@@ -101,6 +103,10 @@ object WidgetActions {
             putExtra(EXTRA_LIFE_TAB, LIFE_TAB_JOBS)
             putExtra(EXTRA_OPEN_CALENDAR, true)
         }
+
+    /** The "+" button: camera first, then a message, then both go to the AI. */
+    fun addPhoto(context: Context): Intent =
+        QuickCaptureActivity.intent(context, QuickCaptureActivity.MODE_CAMERA)
 
     fun voiceCapture(context: Context): Intent =
         Intent(context, WidgetVoiceCaptureActivity::class.java).apply {

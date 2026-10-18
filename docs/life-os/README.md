@@ -1,6 +1,6 @@
 # Lifeline: Life OS plan
 
-Source brief: [../full-plan.md](../full-plan.md). This folder turns it into an executable plan for **this** repo (the existing LedgerAI Android app).
+This folder is the executable plan for **this** repo (the existing LedgerAI Android app).
 
 | Doc | What it answers |
 |---|---|

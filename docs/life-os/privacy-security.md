@@ -37,6 +37,8 @@ RLS pattern: `user_id = auth.uid()` for private; for shared, `household_id in (s
 `assistant_actions` and `event_log` record who/what/when/source. Surfaced in an Activity screen with undo where possible.
 
 ## Screen and share access
+Screen text is read only when the user calls Notebook (the assistant gesture). Nothing watches the screen in the background. The text and the screenshot stay in the panel's memory and are dropped when the panel closes. Only blocks or words the user selects are saved. Sending the whole screen to the AI takes an extra tap. Sensitive checks run before Save or Ask. There is no AccessibilityService.
+
 Start with explicit share-to-app and user-triggered capture. No background screen reading. Accessibility-service approaches are out of scope until reviewed for Play policy.
 
 ## Threats to check each stage

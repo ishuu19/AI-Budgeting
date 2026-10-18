@@ -11,13 +11,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import android.widget.LinearLayout
 import com.ledgerai.app.R
-import com.ledgerai.app.data.capture.AskService
 import com.ledgerai.app.data.preferences.UserPreferences
-import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.VoiceCaptureRepository
 import com.ledgerai.app.data.voice.AndroidOnDeviceStt
-import com.ledgerai.app.widget.WidgetActions
+import com.ledgerai.app.domain.widget.widgetMicTranscript
 import com.ledgerai.app.widget.runWidgetAi
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -29,8 +27,6 @@ import kotlinx.coroutines.launch
 class WidgetVoiceCaptureActivity : ComponentActivity() {
 
     @Inject lateinit var prefs: UserPreferences
-    @Inject lateinit var session: UserSession
-    @Inject lateinit var ask: AskService
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
 
@@ -49,11 +45,6 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
         heard = findViewById(R.id.widget_listen_heard)
         findViewById<android.view.View>(R.id.widget_listen_scrim).setOnClickListener {
             stt.destroy()
-            finish()
-        }
-        findViewById<android.view.View>(R.id.widget_listen_open).setOnClickListener {
-            stt.destroy()
-            startActivity(WidgetActions.openVoice(this))
             finish()
         }
         when {
@@ -78,9 +69,9 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
         override fun onLevel(level: Float) = Unit
 
         override fun onFinal(text: String) {
-            val spoken = text.trim()
-            if (spoken.isEmpty()) {
-                heard?.text = "Didn't catch that. Try again, or open the mic."
+            val spoken = widgetMicTranscript(text)
+            if (spoken == null) {
+                heard?.text = "Didn't catch that. Try again."
                 return
             }
             heard?.text = spoken
@@ -88,11 +79,10 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
             lifecycleScope.launch {
                 val host = findViewById<LinearLayout>(R.id.widget_suggestions)
                 if (host == null) {
-                    heard?.text = "Didn't catch that. Try again, or open the mic."
+                    heard?.text = "Didn't catch that. Try again."
                     return@launch
                 }
-                val userId = runCatching { session.userInfo.first().userId }.getOrDefault("")
-                runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ask, ai, capture, userId)
+                runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ai, capture)
             }
         }
 

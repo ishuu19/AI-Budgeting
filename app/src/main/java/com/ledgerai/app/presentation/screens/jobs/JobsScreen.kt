@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -104,11 +106,41 @@ internal fun parseJobLine(line: String): Pair<String, String> {
 @HiltViewModel
 class JobsViewModel @Inject constructor(
     private val repo: JobRepository,
-    private val lexicon: com.ledgerai.app.data.ai.JobLexiconProvider
+    private val lexicon: com.ledgerai.app.data.ai.JobLexiconProvider,
+    private val ai: com.ledgerai.app.data.repository.AiRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
     private val _state = MutableStateFlow(JobsUiState())
     val state: StateFlow<JobsUiState> = _state.asStateFlow()
     private var job: kotlinx.coroutines.Job? = null
+
+    private val _reading = MutableStateFlow(false)
+    val reading: StateFlow<Boolean> = _reading.asStateFlow()
+
+    /** Reads the words in job screenshots on the phone. [onText] gets null when nothing was readable. */
+    fun readPhotos(uris: List<Uri>, onText: (String?) -> Unit) {
+        viewModelScope.launch {
+            _reading.value = true
+            val pages = uris.mapNotNull { uri ->
+                val bitmap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { decode(uri) }
+                    ?: return@mapNotNull null
+                val lines = com.ledgerai.app.data.notebook.ScreenReader.ocr(bitmap)
+                bitmap.recycle()
+                lines.joinToString("\n") { it.text }.takeIf { it.isNotBlank() }
+            }
+            _reading.value = false
+            onText(pages.joinToString("\n\n").ifBlank { null })
+        }
+    }
+
+    private fun decode(uri: Uri): android.graphics.Bitmap? = runCatching {
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it, null, bounds) }
+        var sample = 1
+        while (bounds.outWidth / sample > 2_400) sample *= 2
+        val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = sample }
+        context.contentResolver.openInputStream(uri)?.use { android.graphics.BitmapFactory.decodeStream(it, null, options) }
+    }.getOrNull()
 
     init { load() }
 
@@ -126,7 +158,22 @@ class JobsViewModel @Inject constructor(
         if (text.isBlank()) return
         viewModelScope.launch {
             val today = LocalDate.now()
-            val apps = com.ledgerai.app.data.ai.JobPasteParser.parseMany(text, today, lexicon.lexicon).map { p ->
+            var parsedList = com.ledgerai.app.data.ai.JobPasteParser.parseMany(text, today, lexicon.lexicon)
+            // Rules first. The cloud is asked only when one posting gave neither company nor role.
+            val only = parsedList.singleOrNull()
+            if (only != null && only.company.isBlank() && only.title.isBlank() && ai.isAiAvailable()) {
+                val found = runCatching { ai.parseVoiceIntents("I applied for this job: " + text.take(600)).getOrNull() }
+                    .getOrNull()?.filterIsInstance<com.ledgerai.app.data.ai.ParsedIntent.Job>()?.firstOrNull()
+                if (found != null) {
+                    parsedList = listOf(
+                        only.copy(
+                            company = found.company.takeUnless { it.equals("Company", true) }.orEmpty(),
+                            title = found.title.takeUnless { it.equals("Role", true) }.orEmpty(),
+                        )
+                    )
+                }
+            }
+            val apps = parsedList.map { p ->
                 val fallback = parseJobLine(p.notes.lines().firstOrNull { it.isNotBlank() } ?: text)
                 val applied = p.appliedOn ?: today
                 JobApplication(
@@ -375,6 +422,24 @@ fun JobsScreen(
                     voice.toggle,
                     active = voice.listening
                 )
+            }
+            val reading by viewModel.reading.collectAsState()
+            var unreadable by remember { mutableStateOf(false) }
+            val photos = com.ledgerai.app.presentation.components.rememberPhotoActions(max = 4) { uris ->
+                unreadable = false
+                viewModel.readPhotos(uris) { text ->
+                    if (text == null) unreadable = true
+                    else paste = listOf(paste, text).filter { it.isNotBlank() }.joinToString("\n\n")
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                com.ledgerai.app.presentation.components.PhotoButton(Icons.Filled.PhotoCamera, "Camera", photos.shoot)
+                com.ledgerai.app.presentation.components.PhotoButton(Icons.Filled.PhotoLibrary, "Screenshot", photos.pick)
+            }
+            if (reading) Text("Reading the photo…", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+            if (unreadable) Text("Couldn't read any text in that photo.", style = MaterialTheme.typography.bodyMedium, color = L.Danger)
+            if (paste.isNotBlank() && !reading) {
+                Text("Check the words, then Save. Company, role and dates are picked out from them.", style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
             }
         }
     }

@@ -100,7 +100,7 @@ class ClipCaptureActivity : ComponentActivity() {
         if (intent.action == Intent.ACTION_PROCESS_TEXT) {
             lifecycleScope.launch {
                 if (!prefs.clipMenuNow()) {
-                    toast("Add to Notes is turned off")
+                    toast("Add to Notebook is turned off")
                     finish()
                     return@launch
                 }

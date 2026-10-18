@@ -37,12 +37,12 @@ class ClipDigestWorker @AssistedInject constructor(
         val manager = applicationContext.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             manager?.createNotificationChannel(
-                NotificationChannel(CHANNEL, "Add to Notes", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(CHANNEL, "Add to Notebook", NotificationManager.IMPORTANCE_LOW)
             )
         }
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL)
             .setSmallIcon(R.drawable.ic_tile_capture)
-            .setContentTitle("Add to Notes")
+            .setContentTitle("Add to Notebook")
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .build()

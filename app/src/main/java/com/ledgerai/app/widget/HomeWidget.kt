@@ -74,7 +74,7 @@ private fun HomeContent(payload: WidgetPayload) {
                         WidgetRoundAction(
                             R.drawable.widget_ic_plus,
                             palette,
-                            actionStartActivity(WidgetActions.openAddTransaction(context)),
+                            actionStartActivity(WidgetActions.addPhoto(context)),
                             iconSize = 26.dp,
                             backgroundRes = R.drawable.widget_btn_plus
                         )

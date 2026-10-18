@@ -2,6 +2,27 @@
 
 Newest first. Add an entry for every change that touches the assistant, data model or roadmap. Keep each line to what changed and why.
 
+## 2026-10-19
+
+- **Ledger AI panel (selection menu) is now simple.** It shows the selected text, a message box, an optional **Add screen** and two buttons: **Save** and **Ask AI**. Add screen asks Android for one-time screen-capture permission, takes one picture and stops (`ScreenGrabService`). The picture is kept with the notebook entry as a `media_assets` row (`kind=other`, `linkedType=clip`, `uploadState=local`), so it is never uploaded. The AI gets the words read from the picture on the phone (ML Kit), not the picture. No Room version change.
+- **Notes is the Notebook.** Plan → Notes opens the Notebook (Board, Chats) with a third **Notes** tab holding the classic notes. Nothing was deleted.
+- **Receipts list.** Money → Receipts (the receipt icon in the Spend toolbar; the segmented control holds at most four options) lists saved receipts and scans new ones through the existing capture pipeline (AI reads shop, date, total and lines into an unconfirmed draft). Tap opens the review screen. Delete is a soft delete. Creates no transaction.
+- **Home chat history.** Each Home chat is stored as a `chat_threads` row with `origin = 'home'` (already allowed by `021_notebook.sql`) and `chat_messages` rows with `state = 'done'`, so the notebook worker ignores them. Leaving the app files the chat under History and starts a fresh one. History can continue or delete a chat. Camera and gallery do not count as leaving.
+- **People can be edited and removed**, with their memories, moments (including the photo) and promises. **Jobs** accept screenshots: text is read on the phone, shown for checking, then parsed (AI only if rules found neither company nor role).
+- **Fix: Life tabs blank on first open.** Wardrobe, People and Household built their list from a blank user id for the first moment after launch. They now wait for the id.
+
+- **"Ledger AI" in the text-selection menu; widget "+" is photo + message.** Selecting text in any app shows **Ledger AI** next to Copy. It opens the notebook chat panel with the selection loaded, so you can add your own line and ask. Nothing is saved until you tap Save or Ask. The widget "+" (home, quick-actions and action-row widgets) now opens the quick-capture sheet in camera mode: take a photo, add a message, and both go through the existing capture pipeline to the AI. Add-transaction is no longer on the widget "+". No data-model change.
+- **Widget mic only categorizes.** The home, quick-actions, and focus mics open the listener. Speech is categorized into suggested entries. Meal, outfit, and shopping answers, the "Open mic" jump into the app, and saving a voice-history row from that listener are gone. The notebook tile, bubble, and shortcut still open the panel.
+
+## 2026-10-13
+
+- **Notebook, phase 1.** Calling the assistant reads that screen into a panel (text only, and only when the user calls). Picks plus a typed line save as one clip. Edits sit in `editedText`; the captured text stays. Pinned clips skip retention. Room v21 starts here (`Migration20To21`). User-facing "Add to Notes" is now "Add to Notebook". The gesture opens the panel; **Log it** still opens the voice sheet.
+- **Notebook, phase 2.** Ask AI stores a thread and messages on the phone (`chat_threads`, `chat_messages`) and sends them through `ai-proxy` when the network is up. Answers that invent a price are dropped. Proposed actions stay on a confirm card until a tap. `021_notebook.sql` stays in `supabase/planned/` because 012–020 are still unapplied. Chats are owner-only. Sensitive clips and the messages that used them are not synced.
+- **Notebook, phase 3.** The first spoken word can Save, Ask, Summarize, Translate, Explain, Reply, To-do, Pin, Read, or Select all. "Read it" speaks the selection. If the screen has no text, on-phone OCR reads the screenshot. A hidden screen says "Can't read this screen".
+- **Decisions D1–D4 are in.** Screen reading is user-triggered only. Assumption: the setup card names the app LedgerAI, which is the label in the default-assistant list. The Capture quick-settings tile still opens voice capture. The Notebook tile, bubble, widget mic, and `notebook` shortcut open the panel. Layout uses the same width breaks as window size class (under 600, under 840, and wider) from the current window. v1 capture settings stay under Notebook → More → Capture.
+
+- **Notebook design (Add to Notes v2), built.** [notebook.md](notebook.md). The design is unchanged. The three phases above are the build.
+
 ## 2026-10-12
 
 - **Add to Notes, phase 1.** Text selected in another app, or shared as text, lands as a clip. Several clips can collect into one note. Profile has an Add to Notes screen. Room v20 adds `clips` (`Migration19To20`).

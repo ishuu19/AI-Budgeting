@@ -25,6 +25,9 @@ import com.ledgerai.app.data.receipts.ReceiptEntity
 import com.ledgerai.app.data.receipts.ReceiptLineEntity
 import com.ledgerai.app.data.subscriptions.SubscriptionDao
 import com.ledgerai.app.data.subscriptions.SubscriptionEntity
+import com.ledgerai.app.data.chat.ChatDao
+import com.ledgerai.app.data.chat.ChatMessageEntity
+import com.ledgerai.app.data.chat.ChatThreadEntity
 import com.ledgerai.app.data.clips.ClipDao
 import com.ledgerai.app.data.clips.ClipEntity
 import com.ledgerai.app.data.media.MediaAssetDao
@@ -77,8 +80,10 @@ import com.ledgerai.app.data.wardrobe.WardrobeItemEntity
         OutfitEntity::class,
         MediaAssetEntity::class,
         ClipEntity::class,
+        ChatThreadEntity::class,
+        ChatMessageEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -122,4 +127,5 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun outfitDao(): OutfitDao
     abstract fun mediaAssetDao(): MediaAssetDao
     abstract fun clipDao(): ClipDao
+    abstract fun chatDao(): ChatDao
 }

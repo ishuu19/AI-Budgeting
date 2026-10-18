@@ -7,6 +7,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.ledgerai.app.data.chat.ChatDao
 import com.ledgerai.app.data.clips.ClipDao
 import com.ledgerai.app.data.preferences.UserPreferences
 import dagger.assisted.Assisted
@@ -19,19 +20,31 @@ class ClipCleanupWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val dao: ClipDao,
+    private val chat: ChatDao,
     private val prefs: UserPreferences,
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val keep = prefs.clipRetentionNow()
-        val days = when (keep) {
+        val now = System.currentTimeMillis()
+        val clipDays = when (prefs.clipRetentionNow()) {
             "30" -> 30L
             "365" -> 365L
-            else -> return Result.success()
+            else -> null
         }
-        val now = System.currentTimeMillis()
-        val before = now - days * 24L * 60L * 60L * 1000L
-        dao.softDeleteInboxOlder(before, now)
+        if (clipDays != null) {
+            val before = now - clipDays * 24L * 60L * 60L * 1000L
+            dao.softDeleteInboxOlder(before, now)
+        }
+        val chatDays = when (prefs.notebookChatKeepNow()) {
+            "30" -> 30L
+            "365" -> 365L
+            else -> null
+        }
+        if (chatDays != null) {
+            val chatBefore = now - chatDays * 24L * 60L * 60L * 1000L
+            chat.softDeleteUnpinnedThreads(chatBefore, now)
+            chat.softDeleteMessagesOfDeletedThreads(now)
+        }
         return Result.success()
     }
 

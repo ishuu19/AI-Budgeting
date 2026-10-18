@@ -157,8 +157,12 @@ fun WardrobeScreen(
     val viewModel: WardrobeViewModel = viewModel(key = userId) { WardrobeViewModel(repository, userId) }
     val photos: PhotoSaveViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
-    val garments by viewModel.garments.collectAsState()
-    val outfits by viewModel.outfits.collectAsState()
+    // Collected straight from the repository for this id, so a list can never be stuck on an earlier id.
+    val garments by remember(repository, userId) { repository.observeGarments(userId) }.collectAsState(emptyList())
+    val outfits by remember(repository, userId) { repository.observeOutfits(userId) }.collectAsState(emptyList())
+    LaunchedEffect(userId, garments.size) {
+        android.util.Log.d("LifeTab", "wardrobe user=${userId.take(8)} garments=${garments.size}")
+    }
     val message by viewModel.message.collectAsState()
     val notices = remember { SnackbarHostState() }
 

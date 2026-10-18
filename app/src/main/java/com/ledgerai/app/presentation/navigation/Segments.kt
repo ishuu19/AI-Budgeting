@@ -5,7 +5,7 @@ package com.ledgerai.app.presentation.navigation
 enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Notes("Notes"), Log("Log"), Jobs("Jobs") }
 enum class VoiceSeg(val label: String) { Capture("Capture"), Speak("Speak"), Notes("Notes"), Ask("Chat") }
 enum class LifeSeg(val label: String) { Pantry("Pantry"), Wardrobe("Wardrobe"), People("People"), Home("Household") }
-enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Budget"), Owed("Owed") }
+enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Budget"), Owed("Owed"), Receipts("Receipts") }
 
 /** Ways a tab screen can reach another place. Wired once in [AppNavigation]. */
 class AppLinks(
@@ -33,6 +33,8 @@ class AppLinks(
 
     val insights: () -> Unit = {},
     val spendGuide: () -> Unit = {},
+    /** Opens Notebook (board and chats). */
+    val notebook: () -> Unit = {},
     /** Opens the full-screen assistant seeded with an insight. */
     val chat: (insight: String) -> Unit = {},
     /** Opens an item (search result, saved toast) in its own tab and segment. */
@@ -63,5 +65,6 @@ data class LaunchRequest(
     val bills: Boolean = false,
     val focusBlockId: Long = 0L,
     val focusTopic: String? = null,
-    val hasFocus: Boolean = false
+    val hasFocus: Boolean = false,
+    val notebook: Boolean = false,
 )

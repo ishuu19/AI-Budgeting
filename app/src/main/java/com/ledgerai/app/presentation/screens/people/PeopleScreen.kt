@@ -146,6 +146,8 @@ fun PeopleScreen(
     val viewModel: PeopleViewModel = viewModel(key = userId) {
         PeopleViewModel(repository, userId, interactions)
     }
+    // Reload on every entry: a person may have been edited or deleted on their own screen.
+    LaunchedEffect(Unit) { viewModel.refresh() }
     val people by viewModel.people.collectAsState()
     val lastSeen by viewModel.lastSeen.collectAsState()
     val message by viewModel.message.collectAsState()

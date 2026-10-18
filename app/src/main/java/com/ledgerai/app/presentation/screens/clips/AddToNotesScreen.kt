@@ -141,7 +141,7 @@ fun AddToNotesScreen(
     }
 
     LScreen(
-        title = "Add to Notes",
+        title = "Add to Notebook",
         onBack = onBack,
         action = { ProfileButton() },
         snackbarHost = { message?.let { LSnackbar(it) } },
@@ -233,7 +233,7 @@ fun AddToNotesScreen(
         item { LSection("Settings") }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LSwitchRow("Show \"Add to Notes\" in the text menu", menuOn, viewModel::setMenu)
+                LSwitchRow("Show \"Add to Notebook\" in the text menu", menuOn, viewModel::setMenu)
                 LSwitchRow("Skip the sheet (fast mode)", fast, viewModel::setFast)
                 LSwitchRow("Offer to add what I copied", offer, viewModel::setOffer)
                 Text("AI filing", color = L.InkMuted, style = MaterialTheme.typography.labelLarge)
@@ -464,9 +464,9 @@ private fun ClipDetail(
 @Composable
 private fun EmptyClips() {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        LEmpty(Icons.Filled.ContentPaste, "Select text in any app and tap Add to Notes.")
+        LEmpty(Icons.Filled.ContentPaste, "Select text in any app and tap Add to Notebook.")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Copy", "Add to Notes", "Select all").forEach { label ->
+            listOf("Copy", "Add to Notebook", "Select all").forEach { label ->
                 Box(
                     Modifier.width(96.dp).height(64.dp).border(1.dp, L.Line, RoundedCornerShape(8.dp)).padding(8.dp),
                     contentAlignment = Alignment.Center,

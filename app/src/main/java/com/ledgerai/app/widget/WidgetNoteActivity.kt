@@ -7,21 +7,16 @@ import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.ledgerai.app.R
-import com.ledgerai.app.data.capture.AskService
-import com.ledgerai.app.data.preferences.UserSession
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.VoiceCaptureRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Search from the widget. The words stay in this popup and become suggestions. */
 @AndroidEntryPoint
 class WidgetNoteActivity : ComponentActivity() {
 
-    @Inject lateinit var session: UserSession
-    @Inject lateinit var ask: AskService
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
 
@@ -40,8 +35,7 @@ class WidgetNoteActivity : ComponentActivity() {
             if (text.isEmpty()) return@setOnClickListener
             val host = findViewById<LinearLayout>(R.id.widget_suggestions)
             lifecycleScope.launch {
-                val userId = runCatching { session.userInfo.first().userId }.getOrDefault("")
-                runWidgetAi(this@WidgetNoteActivity, host, text, ask, ai, capture, userId)
+                runWidgetAi(this@WidgetNoteActivity, host, text, ai, capture)
             }
         }
     }

@@ -89,7 +89,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Money        : Screen("money",        "Money",    Icons.Filled.AccountBalanceWallet)
     object Life         : Screen("life",         "Life",     Icons.Filled.Category)
     object Settings     : Screen("settings",     "Settings", Icons.Filled.Settings)
-    object AddToNotes   : Screen("add_to_notes",  "Add to Notes", Icons.Filled.Description)
+    object AddToNotes   : Screen("add_to_notes",  "Notebook", Icons.Filled.Description)
 
     object Insights     : Screen("insights",     "Insights", Icons.Filled.Insights)
     object SpendGuide   : Screen("spend_guide",  "Safe to spend", Icons.AutoMirrored.Filled.TrendingUp)
@@ -167,6 +167,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
             person = { id -> nav.go("person/${Uri.encode(id)}") },
             insights = { nav.go(Screen.Insights.route) },
             spendGuide = { nav.go(Screen.SpendGuide.route) },
+            notebook = { nav.go(Screen.AddToNotes.route) },
             chat = { insight -> nav.go("${Screen.AiAssistant.route}?insight=${Uri.encode(insight)}") },
             open = { kind, id ->
                 pendingOpen = OpenItem(kind, id, System.nanoTime())
@@ -193,6 +194,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 nav.tab(Screen.Chat.route)
             }
             r.notes -> { planSeg = PlanSeg.Notes; nav.tab(Screen.Plan.route) }
+            r.notebook -> nav.go(Screen.AddToNotes.route)
             r.hasFocus -> {
                 nav.tab(Screen.Plan.route)
                 nav.go(focusRoute(r.focusBlockId, r.focusTopic ?: "Focus"))
@@ -313,7 +315,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 SettingsScreen(links = links, onBack = back, onAddToNotes = { nav.go(Screen.AddToNotes.route) })
             }
             composable(Screen.AddToNotes.route) {
-                com.ledgerai.app.presentation.screens.clips.AddToNotesScreen(onBack = back)
+                com.ledgerai.app.presentation.screens.notebook.NotebookScreen(onBack = back)
             }
             composable(
                 route = Screen.Receipt.route,

@@ -52,6 +52,8 @@ class UserPreferences @Inject constructor(
         val CLIP_BUBBLE = booleanPreferencesKey("clip_bubble")
         val CLIP_AI_DAY = stringPreferencesKey("clip_ai_day")
         val CLIP_AI_COUNT = stringPreferencesKey("clip_ai_count")
+        val NOTEBOOK_PROMPTS = stringPreferencesKey("notebook_prompts")
+        val NOTEBOOK_CHAT_KEEP = stringPreferencesKey("notebook_chat_keep")
     }
 
     val currency: Flow<String> = context.dataStore.data.map {
@@ -210,6 +212,19 @@ class UserPreferences @Inject constructor(
     suspend fun clipRetentionNow(): String = clipKeep(context.dataStore.data.first()[Keys.CLIP_KEEP])
     suspend fun clipPinNow(): Boolean = context.dataStore.data.first()[Keys.CLIP_PIN] ?: false
 
+    val notebookPrompts: Flow<String> = context.dataStore.data.map { it[Keys.NOTEBOOK_PROMPTS] ?: "" }
+    val notebookChatKeep: Flow<String> = context.dataStore.data.map { chatKeep(it[Keys.NOTEBOOK_CHAT_KEEP]) }
+
+    suspend fun setNotebookPrompts(raw: String) {
+        context.dataStore.edit { it[Keys.NOTEBOOK_PROMPTS] = raw }
+    }
+
+    suspend fun setNotebookChatKeep(value: String) {
+        context.dataStore.edit { it[Keys.NOTEBOOK_CHAT_KEEP] = chatKeep(value) }
+    }
+
+    suspend fun notebookChatKeepNow(): String = chatKeep(context.dataStore.data.first()[Keys.NOTEBOOK_CHAT_KEEP])
+
     /** Counts one model call. Returns false when today's 100-call cap is already used. */
     suspend fun tryConsumeClipAiCall(): Boolean {
         val today = java.time.LocalDate.now().toString()
@@ -244,6 +259,12 @@ class UserPreferences @Inject constructor(
         "30" -> "30"
         "forever" -> "forever"
         else -> "365"
+    }
+
+    private fun chatKeep(raw: String?): String = when (raw) {
+        "30" -> "30"
+        "365" -> "365"
+        else -> "forever"
     }
 
     /** Clears all Room tables once per device (see [DatabaseSeeder]). */

@@ -32,4 +32,11 @@ data class ClipEntity(
     val capturedAt: Long,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null,
+    val editedText: String? = null,
+    val pinned: Boolean = false,
+    val pinOrder: Int? = null,
+    val prompt: String? = null,
+    val windowTitle: String? = null,
+    val threadId: String? = null,
+    val messageId: String? = null,
 )

@@ -51,6 +51,8 @@ object MediaKind {
 object UploadState {
     const val PENDING = "pending"
     const val UPLOADED = "uploaded"
+    /** Stays on the phone and is never queued for upload (screenshots of other apps). */
+    const val LOCAL = "local"
 }
 
 object AnalysisState {
@@ -81,6 +83,9 @@ interface MediaAssetDao {
 
     @Query("SELECT * FROM media_assets WHERE userId = :userId AND kind = :kind AND deletedAt IS NULL ORDER BY createdAt DESC")
     suspend fun listByKind(userId: String, kind: String): List<MediaAssetEntity>
+
+    @Query("SELECT * FROM media_assets WHERE linkedType = :type AND linkedId = :id AND deletedAt IS NULL ORDER BY createdAt")
+    fun observeLinked(type: String, id: String): Flow<List<MediaAssetEntity>>
 
     @Query("SELECT * FROM media_assets WHERE updatedAt > :since")
     suspend fun listForSync(since: Long): List<MediaAssetEntity>

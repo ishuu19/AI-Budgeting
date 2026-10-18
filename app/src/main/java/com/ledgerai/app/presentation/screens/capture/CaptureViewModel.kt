@@ -10,6 +10,10 @@ import com.ledgerai.app.data.capture.AskService
 import com.ledgerai.app.data.capture.CaptureEngine
 import com.ledgerai.app.data.capture.CaptureFiler
 import com.ledgerai.app.data.capture.Suggestion
+import com.ledgerai.app.data.chat.ChatRepository
+import com.ledgerai.app.data.chat.ChatThreadEntity
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.ledgerai.app.data.media.MediaAssetEntity
 import com.ledgerai.app.data.media.MediaRepository
 import com.ledgerai.app.data.preferences.UserPreferences
@@ -75,6 +79,7 @@ class CaptureViewModel @Inject constructor(
     private val filer: CaptureFiler,
     private val session: UserSession,
     private val prefs: UserPreferences,
+    private val chat: ChatRepository,
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(CaptureUi())
@@ -92,7 +97,98 @@ class CaptureViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<ChatMsg>>(emptyList())
     val messages: StateFlow<List<ChatMsg>> = _messages.asStateFlow()
     private var nextMsgId = 1L
-    private fun post(make: (Long) -> ChatMsg) = _messages.update { it + make(nextMsgId++) }
+    private fun post(make: (Long) -> ChatMsg) {
+        val msg = make(nextMsgId++)
+        _messages.update { it + msg }
+        keep(msg)
+    }
+
+    // Home chat history ----------------------------------------------------------------------
+    // Every line is kept as it is posted. Leaving the app starts a fresh chat; the old one stays in history.
+
+    private var homeThreadId: String? = null
+    private val saveLock = Mutex()
+    private var holdReset = false
+
+    val history: StateFlow<List<ChatThreadEntity>> = chat.observeThreads()
+        .map { list -> list.filter { it.origin == "home" } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private fun keep(msg: ChatMsg) {
+        val (role, text) = when (msg) {
+            is ChatMsg.User -> "user" to listOfNotNull(
+                if (msg.images.isNotEmpty()) "[${msg.images.size} photo${if (msg.images.size == 1) "" else "s"}]" else null,
+                msg.text.takeIf { it.isNotBlank() },
+            ).joinToString(" ")
+            is ChatMsg.Bot -> "assistant" to msg.text
+            is ChatMsg.Answer -> "assistant" to answerText(msg.answer)
+            is ChatMsg.Photos -> return
+        }
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            saveLock.withLock {
+                val id = homeThreadId ?: chat.openThread(text.take(48), null, origin = "home").id.also { homeThreadId = it }
+                chat.addMessage(id, role, text, prompt = null, clipIds = null, state = "done")
+            }
+        }
+    }
+
+    private fun answerText(answer: AskResult): String = when (answer) {
+        is AskResult.Meals -> "Meal ideas:\n" + answer.ideas.joinToString("\n") { idea ->
+            "• ${idea.title}" + (idea.minutes?.let { " ($it min)" } ?: "")
+        }
+        is AskResult.Outfits -> "Outfit ideas:\n" + answer.ideas.joinToString("\n") { "• ${it.title}: ${it.why}" }
+        is AskResult.Shopping -> "Worth buying:\n" + answer.items.joinToString("\n") { "• ${it.name}: ${it.reason}" }
+        is AskResult.Empty -> answer.reason
+        AskResult.LogIt -> ""
+    }
+
+    /** The photo or camera screen is about to cover the app: this is not "leaving". */
+    fun holdArchive() {
+        holdReset = true
+    }
+
+    fun onAppStopped(changingConfiguration: Boolean) {
+        if (holdReset || changingConfiguration) return
+        archiveCurrent()
+    }
+
+    fun onAppStarted() {
+        holdReset = false
+    }
+
+    private fun archiveCurrent() {
+        if (_messages.value.isEmpty()) return
+        homeThreadId = null
+        nextMsgId = 1L
+        _messages.value = emptyList()
+        _ui.update { it.copy(answer = null, notice = null) }
+    }
+
+    fun continueChat(threadId: String) {
+        viewModelScope.launch {
+            val lines = chat.latest(threadId, 200).asReversed()
+            nextMsgId = lines.size + 1L
+            _messages.value = lines.mapIndexed { index, row ->
+                if (row.role == "user") ChatMsg.User(index + 1L, row.text, emptyList())
+                else ChatMsg.Bot(index + 1L, row.text)
+            }
+            homeThreadId = threadId
+        }
+    }
+
+    fun newChat() = archiveCurrent()
+
+    fun deleteChat(threadId: String) {
+        viewModelScope.launch {
+            chat.deleteThread(threadId)
+            if (homeThreadId == threadId) {
+                homeThreadId = null
+                nextMsgId = 1L
+                _messages.value = emptyList()
+            }
+        }
+    }
 
     private var pendingCamera: Uri? = null
     private var autoSend = false
