@@ -228,6 +228,7 @@ fun ChatScreen(
                     }
                 }
             }
+            voice.record?.let { r -> item(key = "record") { com.ledgerai.app.presentation.screens.voice.RecordCard(r, vvm::saveRecord, vvm::dismissRecord, links.passwords) } }
             voice.errorMessage?.let { msg -> item(key = "voice-error") { BotBubble(msg) } }
             if (ui.busy) item(key = "busy") { TypingBubble() }
         }

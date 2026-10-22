@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -55,6 +56,9 @@ import java.util.Locale
  * Spacing scale: 4 · 8 · 12 · 16 · 24 · 32.
  */
 
+/** Row divider color. Read inside draw scope, so a theme switch is picked up. */
+internal fun Hairline(): Color = LineColor
+
 object L {
     val Page: Color get() = PageColor
     val Box: Color get() = CardColor
@@ -76,10 +80,10 @@ object L {
     val Line: Color get() = LineColor
     val Danger: Color get() = DangerColor
     val Income: Color get() = IncomeColor
-    val Radius = 16.dp
-    val RadiusSm = 10.dp
+    val Radius = 12.dp
+    val RadiusSm = 8.dp
     val RadiusPill = RoundedCornerShape(50)
-    val Gutter = 16.dp
+    val Gutter = 20.dp
     val Target = 48.dp
     val Mic = 52.dp
     val Thumb = 64.dp
@@ -100,7 +104,7 @@ enum class Pace { OnTrack, Near, Over }
 
 fun paceColor(pace: Pace): Color = when (pace) {
     Pace.OnTrack -> L.Accent
-    Pace.Near -> L.Highlight
+    Pace.Near -> L.Ink
     Pace.Over -> L.Danger
 }
 
@@ -187,12 +191,10 @@ fun LHero(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = L.Box,
-        shape = RoundedCornerShape(L.Radius),
-        border = BorderStroke(1.dp, L.Line),
+        color = Color.Transparent,
     ) {
-        Column(Modifier.padding(L.Space.x16), verticalArrangement = Arrangement.spacedBy(L.Space.x4)) {
-            Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+        Column(Modifier.padding(vertical = L.Space.x8), verticalArrangement = Arrangement.spacedBy(L.Space.x4)) {
+            Text(label.lowercase(), style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted)
             Text(value, style = MaterialTheme.typography.displaySmall, color = valueColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (delta != null) DeltaLine(delta)
             if (!trend.isNullOrEmpty()) LSparkline(trend)
@@ -220,13 +222,10 @@ fun LCard(
     padding: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(L.Radius)
-    val base = modifier.fillMaxWidth().clip(shape)
+    val base = modifier.fillMaxWidth()
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
-            .background(L.Box)
-            .border(1.dp, L.Line, shape)
-            .padding(padding),
+            .padding(vertical = padding / 2),
         verticalArrangement = Arrangement.spacedBy(L.Space.x8),
         content = content
     )
@@ -235,8 +234,7 @@ fun LCard(
 @Composable
 fun LStat(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = L.OnBox) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(L.Radius)).background(L.Box)
-            .border(1.dp, L.Line, RoundedCornerShape(L.Radius)).padding(L.Space.x16),
+        modifier = modifier.padding(vertical = L.Space.x8),
         verticalArrangement = Arrangement.spacedBy(L.Space.x4)
     ) {
         Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1)
@@ -256,22 +254,16 @@ fun LRow(
     onClick: (() -> Unit)? = null,
     end: (@Composable () -> Unit)? = null
 ) {
-    val shape = RoundedCornerShape(L.Radius)
-    val base = modifier.fillMaxWidth().clip(shape)
+    val base = modifier.fillMaxWidth()
     Row(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
-            .background(L.Box)
-            .border(1.dp, L.Line, shape)
-            .padding(horizontal = L.Space.x16, vertical = L.Space.x16),
+            .heightIn(min = 56.dp)
+            .drawBehind { drawLine(Hairline(), androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height), 1.dp.toPx()) }
+            .padding(vertical = L.Space.x12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(L.Space.x12)
     ) {
-        if (icon != null) {
-            Box(
-                Modifier.size(32.dp).clip(CircleShape).background(L.BoxDeep),
-                contentAlignment = Alignment.Center
-            ) { Icon(icon, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(16.dp)) }
-        }
+        if (icon != null) Icon(icon, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(20.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(L.Space.x4)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = L.OnBox, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -283,12 +275,12 @@ fun LRow(
 
 @Composable
 fun LSection(text: String, action: String? = null, onAction: () -> Unit = {}, sub: String? = null) {
-    Column(Modifier.fillMaxWidth().padding(top = L.Space.x8)) {
+    Column(Modifier.fillMaxWidth().padding(top = L.Space.x24)) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = L.Target),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text, style = MaterialTheme.typography.titleMedium, color = L.Ink, modifier = Modifier.weight(1f).semantics { heading() })
+            Text(text.lowercase(), style = MaterialTheme.typography.labelMedium, color = L.InkMuted, modifier = Modifier.weight(1f).semantics { heading() })
             if (action != null) LTextLink(action, onAction)
         }
         if (!sub.isNullOrBlank()) {
@@ -316,10 +308,7 @@ fun LEmpty(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(Modifier.size(64.dp).clip(CircleShape).background(L.Box).border(1.dp, L.Line, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(24.dp))
-        }
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = L.InkMuted)
+        Text(text, style = MaterialTheme.typography.headlineMedium, color = L.Ink)
     }
 }
 
@@ -397,17 +386,19 @@ fun LField(
     minLines: Int = 1,
     keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default
 ) {
-    OutlinedTextField(
+    TextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
         singleLine = singleLine,
         minLines = minLines,
         keyboardOptions = keyboardOptions,
-        shape = RoundedCornerShape(L.Radius),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = L.Accent,
-            unfocusedBorderColor = L.Line,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = L.Accent,
+            unfocusedIndicatorColor = L.Line,
             focusedLabelColor = L.Accent,
             cursorColor = L.Accent,
             focusedTextColor = L.Ink,
@@ -451,11 +442,10 @@ private fun LChoiceChip(
         Text(
             text,
             style = MaterialTheme.typography.labelLarge,
-            color = if (selected) L.OnAccent else L.Ink,
+            color = if (selected) L.Accent else L.InkMuted,
             modifier = Modifier
                 .clip(L.RadiusPill)
-                .background(if (selected) L.Accent else Color.Transparent)
-                .border(1.dp, if (selected) L.Accent else L.Line, L.RadiusPill)
+                .background(if (selected) L.GoldSoft else Color.Transparent)
                 .padding(horizontal = L.Space.x16, vertical = L.Space.x8)
         )
     }
@@ -502,7 +492,7 @@ fun LProgress(
     marker: Float? = null,
 ) {
     BoxWithConstraints(
-        modifier.fillMaxWidth().height(L.Space.x8).clip(L.RadiusPill).background(L.BoxDeep)
+        modifier.fillMaxWidth().height(4.dp).clip(L.RadiusPill).background(L.Line)
     ) {
         Box(
             Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight()
@@ -566,8 +556,7 @@ fun LSnackbar(
             .fillMaxWidth()
             .heightIn(min = L.Target)
             .clip(RoundedCornerShape(L.Radius))
-            .background(L.Box)
-            .border(1.dp, L.Line, RoundedCornerShape(L.Radius))
+            .background(L.BoxDeep)
             .padding(horizontal = L.Space.x16),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(L.Space.x8),

@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -87,7 +88,7 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Mic          : Screen("mic",          "Speak",    Icons.Filled.Mic)
     object VoiceLog     : Screen("voice_log",    "Voice log", Icons.Filled.GraphicEq)
     object Money        : Screen("money",        "Money",    Icons.Filled.AccountBalanceWallet)
-    object Life         : Screen("life",         "Life",     Icons.Filled.Category)
+    object Life         : Screen("life",         "Library",  Icons.Filled.Category)
     object Settings     : Screen("settings",     "Settings", Icons.Filled.Settings)
     object AddToNotes   : Screen("add_to_notes",  "Notebook", Icons.Filled.Description)
 
@@ -99,7 +100,28 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     object Receipt      : Screen("receipt/{id}", "Receipt",    Icons.AutoMirrored.Filled.ReceiptLong)
     object PersonMemory : Screen("person/{personId}", "Person", Icons.Filled.Person)
     object Subscriptions : Screen("subscriptions", "Subscriptions", Icons.Filled.Subscriptions)
+    object Brief        : Screen("brief",        "Home",     Icons.Filled.Home)
+    object People       : Screen("people",       "People",   Icons.Filled.Groups)
+    object Pantry       : Screen("pantry",       "Pantry",   Icons.Filled.Kitchen)
+    object Wardrobe     : Screen("wardrobe",     "Wardrobe", Icons.Filled.Checkroom)
+    object Household    : Screen("household",    "Household", Icons.Filled.Home)
+    object Jobs         : Screen("jobs",         "Jobs",     Icons.Filled.Work)
+    object LifeLog      : Screen("life_log",     "Life log", Icons.Filled.History)
+    object Birthdays    : Screen("birthdays",    "Birthdays", Icons.Filled.Cake)
+    object Trips        : Screen("trips",        "Trips",    Icons.Filled.Flight)
+    object Vault        : Screen("vault",        "Vault",    Icons.Filled.Folder)
+    object Passwords    : Screen("passwords",    "Passwords", Icons.Filled.Lock)
+    object Achievements : Screen("achievements", "Achievements", Icons.Filled.EmojiEvents)
+    object Wishes       : Screen("wishes",       "Wishes",   Icons.Filled.Star)
+    object AppTime      : Screen("app_time",     "App time", Icons.Filled.Timer)
+    object Analysis     : Screen("analysis",     "Analysis", Icons.Filled.Insights)
 }
+
+/** Routes that belong to the Library tab, so it stays highlighted inside them. */
+private val libraryRoutes = listOf(
+    "birthdays", "trips", "vault", "passwords", "achievements", "wishes", "app_time",
+    "people", "pantry", "wardrobe", "household", "jobs", "life_log", "add_to_notes",
+)
 
 private val tabs = listOf(Screen.Chat, Screen.Plan, Screen.Mic, Screen.Money, Screen.Life)
 
@@ -109,7 +131,8 @@ private fun tabOf(route: String?): Screen? = when {
     route.startsWith(Screen.Plan.route) || route.startsWith(Screen.Focus.route) -> Screen.Plan
     route.startsWith(Screen.Money.route) || route.startsWith(Screen.Insights.route) ||
         route.startsWith(Screen.SpendGuide.route) || route.startsWith(Screen.Subscriptions.route) -> Screen.Money
-    route.startsWith(Screen.Life.route) || route.startsWith("receipt/") || route.startsWith("person/") -> Screen.Life
+    route.startsWith(Screen.Life.route) || route.startsWith("receipt/") || route.startsWith("person/") ||
+        libraryRoutes.any { route.startsWith(it) } -> Screen.Life
     // Home owns the chat, the full day, search, settings and the other tools.
     else -> Screen.Chat
 }
@@ -129,7 +152,6 @@ fun AppNavigation(request: LaunchRequest? = null) {
     val entry by nav.currentBackStackEntryAsState()
     val currentTab = tabOf(entry?.destination?.route)
 
-    var lifeSeg by rememberSaveable { mutableStateOf(LifeSeg.Pantry) }
     var planSeg by rememberSaveable { mutableStateOf(PlanSeg.Calendar) }
     var micRequest by remember { mutableStateOf(false) }
     var moneySeg by rememberSaveable { mutableStateOf(MoneySeg.Overview) }
@@ -146,12 +168,19 @@ fun AppNavigation(request: LaunchRequest? = null) {
         AppLinks(
             search = { nav.go(Screen.Search.route) },
             focus = { id, topic -> nav.go(focusRoute(id, topic)) },
-            plan = { seg -> planSeg = seg; nav.tab(Screen.Plan.route) },
+            plan = { seg ->
+                when (seg) {
+                    PlanSeg.Jobs -> nav.go(Screen.Jobs.route)
+                    PlanSeg.Log -> nav.go(Screen.LifeLog.route)
+                    PlanSeg.Notes -> nav.go(Screen.AddToNotes.route)
+                    else -> { planSeg = seg; nav.tab(Screen.Plan.route) }
+                }
+            },
             money = { seg -> moneySeg = seg; nav.tab(Screen.Money.route) },
             voice = { seg ->
                 when (seg) {
                     VoiceSeg.Capture, VoiceSeg.Speak -> nav.tab(Screen.Chat.route)
-                    VoiceSeg.Notes -> { planSeg = PlanSeg.Notes; nav.tab(Screen.Plan.route) }
+                    VoiceSeg.Notes -> nav.go(Screen.Vault.route)
                     VoiceSeg.Ask -> nav.go("${Screen.AiAssistant.route}?insight=")
                 }
             },
@@ -159,9 +188,19 @@ fun AppNavigation(request: LaunchRequest? = null) {
             voiceLog = { nav.go(Screen.VoiceLog.route) },
             listen = { micRequest = true; nav.tab(Screen.Chat.route) },
             you = { nav.go(Screen.Settings.route) },
-            life = { seg -> lifeSeg = seg; nav.tab(Screen.Life.route) },
+            life = { seg ->
+                nav.go(when (seg) {
+                    LifeSeg.Pantry -> Screen.Pantry.route
+                    LifeSeg.Wardrobe -> Screen.Wardrobe.route
+                    LifeSeg.People -> Screen.People.route
+                    LifeSeg.Home -> Screen.Household.route
+                })
+            },
             addExpense = { moneySeg = MoneySeg.Spend; addSpend = true; nav.tab(Screen.Money.route) },
             subscriptions = { nav.go(Screen.Subscriptions.route) },
+            analysis = { nav.go(Screen.Analysis.route) },
+            passwords = { nav.go(Screen.Passwords.route) },
+            wishes = { nav.go(Screen.Wishes.route) },
             speak = { text -> voiceSeed = text; nav.tab(Screen.Chat.route) },
             receipt = { id -> nav.go("receipt/$id") },
             person = { id -> nav.go("person/${Uri.encode(id)}") },
@@ -173,13 +212,32 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 pendingOpen = OpenItem(kind, id, System.nanoTime())
                 when (kind) {
                     OpenKind.Event -> { planSeg = PlanSeg.Calendar; nav.tab(Screen.Plan.route) }
-                    OpenKind.Job -> { planSeg = PlanSeg.Jobs; nav.tab(Screen.Plan.route) }
-                    OpenKind.Note -> { planSeg = PlanSeg.Notes; nav.tab(Screen.Plan.route) }
+                    OpenKind.Job -> nav.go(Screen.Jobs.route)
+                    OpenKind.Note -> nav.go(Screen.Vault.route)
                     OpenKind.Transaction -> { moneySeg = MoneySeg.Spend; nav.tab(Screen.Money.route) }
                     OpenKind.Budget, OpenKind.Goal -> { moneySeg = MoneySeg.Plan; nav.tab(Screen.Money.route) }
                     OpenKind.Bill, OpenKind.Debt -> { moneySeg = MoneySeg.Owed; nav.tab(Screen.Money.route) }
                 }
             }
+        )
+    }
+
+    val library = remember(nav) {
+        com.ledgerai.app.presentation.screens.library.LibraryLinks(
+            birthdays = { nav.go(Screen.Birthdays.route) },
+            trips = { nav.go(Screen.Trips.route) },
+            vault = { nav.go(Screen.Vault.route) },
+            passwords = { nav.go(Screen.Passwords.route) },
+            achievements = { nav.go(Screen.Achievements.route) },
+            wishes = { nav.go(Screen.Wishes.route) },
+            people = { nav.go(Screen.People.route) },
+            jobs = { nav.go(Screen.Jobs.route) },
+            pantry = { nav.go(Screen.Pantry.route) },
+            wardrobe = { nav.go(Screen.Wardrobe.route) },
+            household = { nav.go(Screen.Household.route) },
+            notes = { nav.go(Screen.AddToNotes.route) },
+            lifeLog = { nav.go(Screen.LifeLog.route) },
+            appTime = { nav.go(Screen.AppTime.route) },
         )
     }
 
@@ -193,7 +251,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 if (r.voiceSeed == null) micRequest = true
                 nav.tab(Screen.Chat.route)
             }
-            r.notes -> { planSeg = PlanSeg.Notes; nav.tab(Screen.Plan.route) }
+            r.notes -> nav.go(Screen.Vault.route)
             r.notebook -> nav.go(Screen.AddToNotes.route)
             r.hasFocus -> {
                 nav.tab(Screen.Plan.route)
@@ -220,7 +278,12 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 planSeg = PlanSeg.Calendar
                 nav.tab(Screen.Plan.route)
             }
-            r.plan != null -> { planSeg = r.plan; nav.tab(Screen.Plan.route) }
+            r.plan != null -> when (r.plan) {
+                PlanSeg.Jobs -> nav.go(Screen.Jobs.route)
+                PlanSeg.Log -> nav.go(Screen.LifeLog.route)
+                PlanSeg.Notes -> nav.go(Screen.AddToNotes.route)
+                else -> { planSeg = r.plan; nav.tab(Screen.Plan.route) }
+            }
         }
     }
 
@@ -242,10 +305,15 @@ fun AppNavigation(request: LaunchRequest? = null) {
             LedgerTabBar(
                 selected = { s -> currentTab == s },
                 onSelect = {
-                    if (it == Screen.Mic) {
-                        micRequest = true
-                        nav.tab(Screen.Chat.route)
-                    } else nav.tab(it.route)
+                    when (it) {
+                        Screen.Mic -> {
+                            micRequest = true
+                            nav.tab(Screen.Chat.route)
+                        }
+                        // Home is the briefing. The chat screen is where speech turns into suggestions.
+                        Screen.Chat -> nav.tab(Screen.Brief.route)
+                        else -> nav.tab(it.route)
+                    }
                 },
                 onVoiceHoldStart = {
                     nav.tab(Screen.Chat.route)
@@ -257,13 +325,24 @@ fun AppNavigation(request: LaunchRequest? = null) {
     ) { inner ->
         NavHost(
             navController = nav,
-            startDestination = Screen.Chat.route,
+            startDestination = Screen.Brief.route,
             modifier = Modifier.padding(inner).consumeWindowInsets(inner)
         ) {
             val back: () -> Unit = { nav.popBackStack() }
             fun openFor(vararg kinds: OpenKind): OpenItem? = pendingOpen?.takeIf { it.kind in kinds }
             val opened: () -> Unit = { pendingOpen = null }
 
+            composable(Screen.Brief.route) {
+                com.ledgerai.app.presentation.screens.home.BriefScreen(links, library)
+            }
+            composable(Screen.Birthdays.route) { com.ledgerai.app.presentation.screens.dates.BirthdaysScreen(onBack = back) }
+            composable(Screen.Trips.route) { com.ledgerai.app.presentation.screens.dates.TripsScreen(onBack = back) }
+            composable(Screen.Vault.route) { com.ledgerai.app.presentation.screens.vault.VaultScreen(onBack = back) }
+            composable(Screen.Passwords.route) { com.ledgerai.app.presentation.screens.passwords.PasswordsScreen(onBack = back) }
+            composable(Screen.Achievements.route) { com.ledgerai.app.presentation.screens.records.AchievementsScreen(onBack = back) }
+            composable(Screen.Wishes.route) { com.ledgerai.app.presentation.screens.records.WishesScreen(onBack = back) }
+            composable(Screen.Analysis.route) { com.ledgerai.app.presentation.screens.analysis.AnalysisScreen(onBack = back) }
+            composable(Screen.AppTime.route) { com.ledgerai.app.presentation.screens.appusage.AppTimeScreen(onBack = back) }
             composable(Screen.Chat.route) {
                 ChatScreen(links, micRequest, { micRequest = false }, holdMic, voiceSeed, onSeedConsumed = { voiceSeed = null })
             }
@@ -305,14 +384,33 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 )
             }
             composable(Screen.Life.route) {
-                LifeTab(
-                    lifeSeg,
-                    { lifeSeg = it },
-                    onOpenPerson = { id -> nav.go("person/${Uri.encode(id)}") },
+                com.ledgerai.app.presentation.screens.library.LibraryScreen(library)
+            }
+            composable(Screen.People.route) {
+                LifePlace(LifeSeg.People, back) { id -> nav.go("person/${Uri.encode(id)}") }
+            }
+            composable(Screen.Pantry.route) {
+                LifePlace(LifeSeg.Pantry, back) { _ -> }
+            }
+            composable(Screen.Wardrobe.route) {
+                LifePlace(LifeSeg.Wardrobe, back) { _ -> }
+            }
+            composable(Screen.Household.route) {
+                LifePlace(LifeSeg.Home, back) { _ -> }
+            }
+            composable(Screen.Jobs.route) {
+                val open = openFor(OpenKind.Job)
+                com.ledgerai.app.presentation.screens.jobs.JobsScreen(
+                    openId = open?.id,
+                    onOpened = opened,
+                    onBack = back,
                 )
             }
+            composable(Screen.LifeLog.route) {
+                com.ledgerai.app.presentation.screens.lifelog.LifeLogScreen(onBack = back)
+            }
             composable(Screen.Settings.route) {
-                SettingsScreen(links = links, onBack = back, onAddToNotes = { nav.go(Screen.AddToNotes.route) })
+                SettingsScreen(links = links, onBack = back)
             }
             composable(Screen.AddToNotes.route) {
                 com.ledgerai.app.presentation.screens.notebook.NotebookScreen(onBack = back)
@@ -427,17 +525,13 @@ private fun LedgerTabBar(
     onVoiceHoldStart: () -> Unit,
     onVoiceHoldEnd: () -> Unit
 ) {
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(L.Radius)
-    // Floating bar: same radius and border as every other card. The mic stays the one round control.
-    Box(Modifier.fillMaxWidth().background(L.Page).navigationBarsPadding().padding(horizontal = L.Gutter, vertical = L.Space.x8)) {
+    // Flat bar: page colour, one hairline above, no card. Only the selected item shows its label.
+    Box(
+        Modifier.fillMaxWidth().background(L.Page).navigationBarsPadding()
+            .drawBehind { drawLine(L.Line, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, 0f), 1.dp.toPx()) }
+    ) {
         Row(
-            Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .clip(shape)
-                .background(L.Box)
-                .border(1.dp, L.Line, shape)
-                .padding(horizontal = L.Space.x8),
+            Modifier.fillMaxWidth().height(64.dp).padding(horizontal = L.Space.x8),
             verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEach { screen ->
@@ -466,25 +560,16 @@ private fun LedgerTabBar(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Box(
-                            Modifier
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(L.Radius))
-                                .background(if (on) L.BoxDeep else androidx.compose.ui.graphics.Color.Transparent)
-                                .padding(horizontal = L.Space.x16, vertical = L.Space.x8)
-                        ) {
-                            Icon(
-                                screen.icon,
-                                contentDescription = null,
-                                tint = if (on) L.Ink else L.InkMuted,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Spacer(Modifier.height(L.Space.x4))
-                        Text(
-                            screen.label,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (on) L.Ink else L.InkMuted
+                        Icon(
+                            screen.icon,
+                            contentDescription = if (on) null else screen.label,
+                            tint = if (on) L.Accent else L.InkMuted,
+                            modifier = Modifier.size(24.dp)
                         )
+                        if (on) {
+                            Spacer(Modifier.height(L.Space.x4))
+                            Text(screen.label, style = MaterialTheme.typography.labelMedium, color = L.Accent)
+                        }
                     }
                 }
             }

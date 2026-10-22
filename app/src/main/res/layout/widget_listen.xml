@@ -17,9 +17,10 @@
         android:padding="20dp">
 
         <TextView
+            android:id="@+id/widget_listen_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Listening…"
+            android:text="Heard"
             android:textColor="#F2F6F3"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -29,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="Speak to add it from here."
+            android:text=""
             android:textColor="#B9CFC4"
             android:textSize="14sp" />
 

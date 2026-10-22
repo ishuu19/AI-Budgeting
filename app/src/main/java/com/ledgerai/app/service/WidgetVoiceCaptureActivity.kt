@@ -1,28 +1,26 @@
 package com.ledgerai.app.service
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import android.widget.LinearLayout
 import com.ledgerai.app.R
 import com.ledgerai.app.data.preferences.UserPreferences
 import com.ledgerai.app.data.repository.AiRepository
 import com.ledgerai.app.data.repository.VoiceCaptureRepository
-import com.ledgerai.app.data.voice.AndroidOnDeviceStt
-import com.ledgerai.app.domain.widget.widgetMicTranscript
+import com.ledgerai.app.domain.widget.widgetMicFromRecognizer
 import com.ledgerai.app.widget.runWidgetAi
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/** Widget mic. Listens on the home screen with the same recognizer as the voice page. */
+/** Widget mic. Opens the phone's built-in speech mic, then categorizes what was said. */
 @AndroidEntryPoint
 class WidgetVoiceCaptureActivity : ComponentActivity() {
 
@@ -30,64 +28,59 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
 
-    private val stt by lazy { AndroidOnDeviceStt(this) }
-    private var heard: TextView? = null
+    private var startedMic = false
 
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) startListening() else finishWithToast("Microphone permission needed")
+    private val systemMic = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val spoken = widgetMicFromRecognizer(
+            result.resultCode == RESULT_OK,
+            result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS),
+        )
+        if (spoken == null) {
+            finish()
+            return@registerForActivityResult
+        }
+        showSuggestions(spoken)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.widget_listen)
-        heard = findViewById(R.id.widget_listen_heard)
-        findViewById<android.view.View>(R.id.widget_listen_scrim).setOnClickListener {
-            stt.destroy()
-            finish()
-        }
-        when {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
-                PackageManager.PERMISSION_GRANTED -> startListening()
-            else -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
+        if (savedInstanceState?.getBoolean(KEY_STARTED) == true) return
+        openPhoneMic()
     }
 
-    private fun startListening() {
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(KEY_STARTED, startedMic)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun openPhoneMic() {
         lifecycleScope.launch {
             val lang = runCatching { prefs.voiceLanguage.first() }.getOrDefault("en")
-            stt.start(listener, if (lang == "bn") "bn-BD" else "en-US")
+            val tag = if (lang == "bn") "bn-BD" else "en-US"
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, tag)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, tag)
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Listening")
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            }
+            if (intent.resolveActivity(packageManager) == null) {
+                finishWithToast("No microphone on this phone")
+                return@launch
+            }
+            startedMic = true
+            systemMic.launch(intent)
         }
     }
 
-    private val listener = object : AndroidOnDeviceStt.Listener {
-        override fun onPartial(text: String) {
-            heard?.text = text
-        }
-
-        override fun onLevel(level: Float) = Unit
-
-        override fun onFinal(text: String) {
-            val spoken = widgetMicTranscript(text)
-            if (spoken == null) {
-                heard?.text = "Didn't catch that. Try again."
-                return
-            }
-            heard?.text = spoken
-            stt.destroy()
-            lifecycleScope.launch {
-                val host = findViewById<LinearLayout>(R.id.widget_suggestions)
-                if (host == null) {
-                    heard?.text = "Didn't catch that. Try again."
-                    return@launch
-                }
-                runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ai, capture)
-            }
-        }
-
-        override fun onError(message: String, permission: Boolean) {
-            heard?.text = message
+    private fun showSuggestions(spoken: String) {
+        setContentView(R.layout.widget_listen)
+        findViewById<TextView>(R.id.widget_listen_title).text = "Heard"
+        findViewById<TextView>(R.id.widget_listen_heard).text = spoken
+        findViewById<android.view.View>(R.id.widget_listen_scrim).setOnClickListener { finish() }
+        val host = findViewById<LinearLayout>(R.id.widget_suggestions)
+        lifecycleScope.launch {
+            runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ai, capture)
         }
     }
 
@@ -96,8 +89,7 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
         finish()
     }
 
-    override fun onDestroy() {
-        stt.destroy()
-        super.onDestroy()
+    private companion object {
+        const val KEY_STARTED = "widget_mic_started"
     }
 }

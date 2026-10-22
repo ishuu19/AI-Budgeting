@@ -34,6 +34,10 @@ data class MediaAssetEntity(
     val linkedType: String? = null,
     val linkedId: String? = null,
     val payload: String? = null,
+    /** Vault files: media type, byte size, and whether the file sits in a locked folder (never uploaded). */
+    val mime: String? = null,
+    val sizeBytes: Long? = null,
+    val locked: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null,
@@ -87,7 +91,8 @@ interface MediaAssetDao {
     @Query("SELECT * FROM media_assets WHERE linkedType = :type AND linkedId = :id AND deletedAt IS NULL ORDER BY createdAt")
     fun observeLinked(type: String, id: String): Flow<List<MediaAssetEntity>>
 
-    @Query("SELECT * FROM media_assets WHERE updatedAt > :since")
+    /** Files in locked folders never leave the phone. */
+    @Query("SELECT * FROM media_assets WHERE updatedAt > :since AND locked = 0")
     suspend fun listForSync(since: Long): List<MediaAssetEntity>
 
     @Query("UPDATE media_assets SET deletedAt = :ts, updatedAt = :ts WHERE id = :id")

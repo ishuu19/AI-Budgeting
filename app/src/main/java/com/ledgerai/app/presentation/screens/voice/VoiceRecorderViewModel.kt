@@ -101,7 +101,9 @@ data class VoiceUiState(
     /** "en" or "bn". */
     val speechLang: String = "en",
     val redo: RedoContext? = null,
-    val notice: SavedNotice? = null
+    val notice: SavedNotice? = null,
+    /** A birthday, trip, appointment, achievement or wish read from the words. Saved only on a tap. */
+    val record: com.ledgerai.app.domain.records.RecordDraft? = null
 ) {
     val maxSeconds: Int get() = VoiceRecorderViewModel.MAX_SECONDS
 }
@@ -127,7 +129,8 @@ class VoiceRecorderViewModel @Inject constructor(
     private val aiRepo: AiRepository,
     private val voskModelManager: VoskModelManager,
     private val offlineEngine: OfflineSttEngine,
-    private val prefs: UserPreferences
+    private val prefs: UserPreferences,
+    private val records: com.ledgerai.app.data.records.RecordSaver
 ) : ViewModel() {
 
     companion object {
@@ -469,9 +472,19 @@ class VoiceRecorderViewModel @Inject constructor(
             showError(ErrorType.AUDIO_UNCLEAR, "Didn't catch that")
             return
         }
+        com.ledgerai.app.domain.records.RecordIntentRules.parse(text)?.let { draft ->
+            // A password sentence is never kept: not shown, not stored in history.
+            val secret = draft === com.ledgerai.app.domain.records.PasswordGuard
+            _uiState.update {
+                it.copy(recorderState = VoiceRecorderState.RESULT, transcript = if (secret) "" else text, cards = emptyList(), record = draft, modelDownloadProgress = null)
+            }
+            if (!secret) viewModelScope.launch { capture.recordHeard(text) }
+            return
+        }
         _uiState.update {
             it.copy(
                 recorderState = VoiceRecorderState.PARSING,
+                record = null,
                 transcript = text,
                 modelDownloadProgress = null,
                 cards = emptyList()
@@ -495,6 +508,17 @@ class VoiceRecorderViewModel @Inject constructor(
     }
 
     fun updateTypedInput(text: String) = _uiState.update { it.copy(typedInput = text) }
+
+    fun saveRecord() {
+        val draft = _uiState.value.record ?: return
+        viewModelScope.launch {
+            runCatching { records.save(draft) }
+                .onSuccess { _uiState.update { it.copy(record = null, recorderState = VoiceRecorderState.IDLE, transcript = "") } }
+                .onFailure { e -> showError(ErrorType.PARSE_FAILED, e.message ?: "Could not save") }
+        }
+    }
+
+    fun dismissRecord() = _uiState.update { it.copy(record = null, recorderState = VoiceRecorderState.IDLE, transcript = "") }
 
     /** Words from the widget. Shows the suggestion cards; nothing is saved until the user confirms. */
     fun offerText(text: String) {

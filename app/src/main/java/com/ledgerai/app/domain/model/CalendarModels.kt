@@ -8,7 +8,7 @@ const val MAX_REMINDERS_PER_EVENT = 10
 
 /** PERSONAL is the pre-merge name for a plain event and is treated exactly like [EVENT]. */
 enum class CalendarEventKind {
-    EVENT, TASK, EXAM, CLASS, ROUTINE, ALARM, PERSONAL;
+    EVENT, TASK, EXAM, CLASS, ROUTINE, ALARM, PERSONAL, APPOINTMENT;
 
     val isPlainEvent: Boolean get() = this == EVENT || this == PERSONAL
 
@@ -63,7 +63,11 @@ data class CalendarEvent(
     /** Occurrence day when expanded from a series. */
     val instanceDate: LocalDate? = null,
     /** Master [CalendarEvent.id] for expanded instances. */
-    val seriesEventId: Long? = null
+    val seriesEventId: Long? = null,
+    /** Appointments only. */
+    val personId: String? = null,
+    val jobId: Long? = null,
+    val status: String? = null
 ) {
     val reminderCount: Int get() = reminders.size
     val canAddReminder: Boolean get() = reminders.size < MAX_REMINDERS_PER_EVENT

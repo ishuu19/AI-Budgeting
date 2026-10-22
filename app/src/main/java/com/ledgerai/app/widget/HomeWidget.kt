@@ -45,10 +45,10 @@ class HomeWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = HomeWidget()
 }
 
-private val Ink = ColorProvider(Color(0xFFF2F6F3))
-private val Muted = ColorProvider(Color(0xFFB9CFC4))
-private val Mint = ColorProvider(Color(0xFF3FE0A0))
-private val Line = ColorProvider(Color(0x73203228))
+private val Ink = ColorProvider(Color(0xFFECE9E2))
+private val Muted = ColorProvider(Color(0xFF9A968E))
+private val Mint = ColorProvider(Color(0xFFAAB6F4))
+private val Line = ColorProvider(Color(0x4026252A))
 
 @Composable
 private fun HomeContent(payload: WidgetPayload) {
@@ -159,7 +159,7 @@ private fun HomeContent(payload: WidgetPayload) {
                         text = "Nothing on today",
                         maxLines = 1,
                         modifier = GlanceModifier.padding(vertical = 8.dp).clickable(openDay),
-                        style = TextStyle(color = ColorProvider(Color(0xFF143228)), fontSize = 14.sp)
+                        style = TextStyle(color = ColorProvider(Color(0xFF121214)), fontSize = 14.sp)
                     )
                 } else {
                     LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
@@ -188,14 +188,14 @@ private fun HomeContent(payload: WidgetPayload) {
                                         text = item.time,
                                         maxLines = 1,
                                         modifier = GlanceModifier.width(78.dp),
-                                        style = TextStyle(color = ColorProvider(Color(0xFFE4EFE8)), fontSize = 13.sp)
+                                        style = TextStyle(color = ColorProvider(Color(0xFFECE9E2)), fontSize = 13.sp)
                                     )
                                     Text(
                                         text = item.title,
                                         maxLines = 1,
                                         modifier = GlanceModifier.defaultWeight(),
                                         style = TextStyle(
-                                            color = ColorProvider(Color(0xFF143228)),
+                                            color = ColorProvider(Color(0xFF121214)),
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Medium
                                         )

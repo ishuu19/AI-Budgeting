@@ -25,6 +25,23 @@ import com.ledgerai.app.data.clips.ClipDao
 import com.ledgerai.app.data.local.room.MIGRATION_18_19
 import com.ledgerai.app.data.local.room.MIGRATION_19_20
 import com.ledgerai.app.data.local.room.MIGRATION_20_21
+import com.ledgerai.app.data.local.room.MIGRATION_21_22
+import com.ledgerai.app.data.achievements.AchievementDao
+import com.ledgerai.app.data.achievements.AchievementEntity
+import com.ledgerai.app.data.appusage.AppUsageDao
+import com.ledgerai.app.data.appusage.AppUsageDayEntity
+import com.ledgerai.app.data.dates.BirthdayDao
+import com.ledgerai.app.data.dates.BirthdayEntity
+import com.ledgerai.app.data.dates.TripDao
+import com.ledgerai.app.data.dates.TripEntity
+import com.ledgerai.app.data.passwords.PasswordDao
+import com.ledgerai.app.data.passwords.PasswordEntity
+import com.ledgerai.app.data.reminders.ReminderDao
+import com.ledgerai.app.data.reminders.ReminderEntity
+import com.ledgerai.app.data.vault.FolderDao
+import com.ledgerai.app.data.vault.FolderEntity
+import com.ledgerai.app.data.wishes.WishDao
+import com.ledgerai.app.data.wishes.WishEntity
 import com.ledgerai.app.data.chat.ChatDao
 import com.ledgerai.app.data.media.MediaAssetDao
 import com.ledgerai.app.data.local.room.VoiceHistoryDao
@@ -92,7 +109,7 @@ object DatabaseModule {
     @Singleton
     fun provideLedgerDatabase(@ApplicationContext context: Context): LedgerDatabase =
         Room.databaseBuilder(context, LedgerDatabase::class.java, "ledgerai.db")
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
             .fallbackToDestructiveMigrationFrom(1)
             .build()
 
@@ -139,6 +156,14 @@ object DatabaseModule {
     @Provides fun provideAssistantAuditDao(db: LedgerDatabase): AssistantAuditDao = db.assistantAuditDao()
     @Provides fun provideClipDao(db: LedgerDatabase): ClipDao = db.clipDao()
     @Provides fun provideChatDao(db: LedgerDatabase): ChatDao = db.chatDao()
+    @Provides fun provideFolderDao(db: LedgerDatabase): FolderDao = db.folderDao()
+    @Provides fun provideBirthdayDao(db: LedgerDatabase): BirthdayDao = db.birthdayDao()
+    @Provides fun provideTripDao(db: LedgerDatabase): TripDao = db.tripDao()
+    @Provides fun provideAchievementDao(db: LedgerDatabase): AchievementDao = db.achievementDao()
+    @Provides fun provideWishDao(db: LedgerDatabase): WishDao = db.wishDao()
+    @Provides fun providePasswordDao(db: LedgerDatabase): PasswordDao = db.passwordDao()
+    @Provides fun provideAppUsageDao(db: LedgerDatabase): AppUsageDao = db.appUsageDao()
+    @Provides fun provideReminderDao(db: LedgerDatabase): ReminderDao = db.reminderDao()
 
     @Provides
     fun provideHouseholdDao(db: LedgerDatabase): HouseholdDao = db.householdDao()

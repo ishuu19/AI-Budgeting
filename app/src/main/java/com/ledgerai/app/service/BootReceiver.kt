@@ -32,6 +32,7 @@ class BootReceiver : BroadcastReceiver() {
     @Inject lateinit var leaveByRepository: LeaveByRepository
     @Inject lateinit var planRepository: PlanRepository
     @Inject lateinit var habitRepository: HabitRepository
+    @Inject lateinit var reminderEngine: ReminderEngine
 
     override fun onReceive(context: Context, intent: Intent) {
         val timeChange = intent.action == Intent.ACTION_TIMEZONE_CHANGED ||
@@ -80,6 +81,11 @@ class BootReceiver : BroadcastReceiver() {
                 Log.i(TAG, "Re-scheduled $planCount plan block alarm(s)")
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to re-schedule plan blocks", e)
+            }
+            try {
+                reminderEngine.rebuildAndArm()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to re-arm birthday and trip reminders", e)
             }
             try {
                 val habitCount = habitRepository.rescheduleAllNudges()

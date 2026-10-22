@@ -50,6 +50,8 @@ class LedgerApp : Application(), Configuration.Provider {
     @Inject lateinit var planRepository: PlanRepository
     @Inject lateinit var habitRepository: HabitRepository
     @Inject lateinit var localParseModel: LocalParseModel
+    @Inject lateinit var database: com.ledgerai.app.data.local.room.LedgerDatabase
+    @Inject lateinit var reminderEngine: com.ledgerai.app.service.ReminderEngine
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var syncNetworkCallback: ConnectivityManager.NetworkCallback? = null
@@ -73,9 +75,11 @@ class LedgerApp : Application(), Configuration.Provider {
         ClipDigestWorker.schedule(this)
         WidgetRefreshWorker.schedule(this)
         AppPulse.schedule(this)
+        com.ledgerai.app.worker.AppUsageWorker.schedule(this)
         armAlarms()
         watchWidgetData()
         appScope.launch { localParseModel.prepare() }
+        appScope.launch(Dispatchers.IO) { runCatching { reminderEngine.rebuildAndArm() } }
         appScope.launch {
             runCatching { quoteRepository.persistForWidgetRemote() }
             userSession.userInfo
@@ -84,6 +88,8 @@ class LedgerApp : Application(), Configuration.Provider {
                 .collect { remote ->
                     if (remote) {
                         SyncWorker.schedule(this@LedgerApp)
+                        SyncWorker.syncNow(this@LedgerApp)
+                        watchLocalChanges()
                         registerSyncOnAvailable()
                     } else {
                         unregisterSyncOnAvailable()
@@ -130,6 +136,28 @@ class LedgerApp : Application(), Configuration.Provider {
                     .collect { runCatching { WidgetRefresh.refreshAll(this@LedgerApp) } }
             }
         }
+    }
+
+    private var changeObserver: androidx.room.InvalidationTracker.Observer? = null
+    private val syncHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    /** Any change to a synced table schedules an upload within seconds. Many quick edits become one sync. */
+    private fun watchLocalChanges() {
+        if (changeObserver != null) return
+        val tables = arrayOf(
+            "transactions", "budgets", "debts", "goals", "bills", "notes", "calendar_events", "event_reminders",
+            "habits", "habit_logs", "study_plans", "plan_blocks", "focus_sessions", "job_applications", "voice_history",
+            "folders", "birthdays", "trips", "achievements", "wishes", "media_assets", "clips", "chat_threads",
+            "chat_messages", "people", "subscriptions",
+        )
+        val observer = object : androidx.room.InvalidationTracker.Observer(tables) {
+            override fun onInvalidated(tables: Set<String>) {
+                syncHandler.removeCallbacksAndMessages(null)
+                syncHandler.postDelayed({ SyncWorker.syncNow(this@LedgerApp) }, 4_000)
+            }
+        }
+        database.invalidationTracker.addObserver(observer)
+        changeObserver = observer
     }
 
     private fun registerSyncOnAvailable() {

@@ -102,6 +102,9 @@ data class RemoteEventDto(
     @SerializedName("specific_dates") val specificDates: String = "",
     @SerializedName("recurrence_until") val recurrenceUntil: String? = null,
     @SerializedName("excluded_dates") val excludedDates: String = "",
+    /** Appointments only. Null for every other kind, so Gson leaves the keys out until the server has them. */
+    @SerializedName("person_id") val personId: String? = null,
+    @SerializedName("status") val status: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null,
     @SerializedName("deleted_at") val deletedAt: String? = null
 )

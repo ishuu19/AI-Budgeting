@@ -128,6 +128,7 @@ fun MoneyPlanScreen(
             onAsk = { links.voice(VoiceSeg.Ask) },
             onCopyLastMonth = budgetVm::copyLastMonth
         )
+        item { com.ledgerai.app.presentation.components.LSection("wishes", "Open", links.wishes) }
         goalItems(
             goals = goals,
             filter = goalFilter,

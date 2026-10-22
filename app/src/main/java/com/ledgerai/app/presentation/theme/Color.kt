@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
 /**
- * Deep blue and white, with one warm amber highlight. Light and dark are two sets of the same tokens,
+ * Warm paper, ink, and one ink-blue accent (docs/life-os/screens.md). Light and dark are two sets of the same tokens,
  * so a screen that only uses tokens (L.* or MaterialTheme) follows the system theme with no extra code.
  * The home-screen widgets keep their own palette in widget/WidgetTheme.kt.
  */
@@ -18,35 +18,35 @@ object Palette {
 }
 
 // Light
-internal val LightPage = Color(0xFFF2F5FB)
-internal val LightCard = Color(0xFFFFFFFF)
-internal val LightCardDeep = Color(0xFFE7ECF8)
-internal val LightText = Color(0xFF0C1A3E)
-internal val LightTextMuted = Color(0xFF55638A)
-internal val LightPrimary = Color(0xFF17306F)
-internal val LightAccent = Color(0xFF2F5FE3)
-internal val LightLine = Color(0xFFDCE3F2)
-internal val LightDanger = Color(0xFFC62828)
-internal val LightSoft = Color(0xFFD6E2FF)
-internal val LightAmber = Color(0xFFF5A524)
-internal val LightIncome = Color(0xFF1F7A4D)
+internal val LightPage = Color(0xFFFAF8F4)
+internal val LightCard = Color(0xFFFAF8F4)
+internal val LightCardDeep = Color(0xFFF0ECE3)
+internal val LightText = Color(0xFF1C1B1A)
+internal val LightTextMuted = Color(0xFF77736B)
+internal val LightPrimary = Color(0xFF1C1B1A)
+internal val LightAccent = Color(0xFF2F3E8F)
+internal val LightLine = Color(0xFFE8E4DB)
+internal val LightDanger = Color(0xFFA33B32)
+internal val LightSoft = Color(0xFFE9ECF8)
+internal val LightAmber = Color(0xFF2F3E8F)
+internal val LightIncome = Color(0xFF2E6B4B)
 
 // Dark
-internal val DarkPage = Color(0xFF101113)
-internal val DarkCard = Color(0xFF1B1C1F)
-internal val DarkCardDeep = Color(0xFF26272B)
-internal val DarkText = Color(0xFFECECEF)
-internal val DarkTextMuted = Color(0xFFA0A1A8)
-internal val DarkPrimary = Color(0xFFB4C3FF)
-internal val DarkAccent = Color(0xFF8DA2F2)
-internal val DarkLine = Color(0xFF2E2F34)
-internal val DarkDanger = Color(0xFFFF8A80)
-internal val DarkSoft = Color(0xFF34363D)
-internal val DarkAmber = Color(0xFFFFB84D)
-internal val DarkIncome = Color(0xFF7DCEA0)
+internal val DarkPage = Color(0xFF121214)
+internal val DarkCard = Color(0xFF121214)
+internal val DarkCardDeep = Color(0xFF1C1C20)
+internal val DarkText = Color(0xFFECE9E2)
+internal val DarkTextMuted = Color(0xFF9A968E)
+internal val DarkPrimary = Color(0xFFECE9E2)
+internal val DarkAccent = Color(0xFFAAB6F4)
+internal val DarkLine = Color(0xFF26252A)
+internal val DarkDanger = Color(0xFFF09A92)
+internal val DarkSoft = Color(0xFF1E2132)
+internal val DarkAmber = Color(0xFFAAB6F4)
+internal val DarkIncome = Color(0xFF86C9A4)
 
-/** Navy on amber. Same in both themes so the mic label stays readable. */
-internal val OnHighlightNavy = Color(0xFF0B1B45)
+/** Text on the accent fill in light theme. Dark theme uses the page color. */
+internal val OnHighlightNavy = Color(0xFFFFFFFF)
 
 val AmberHighlight: Color get() = Palette.pick(LightAmber, DarkAmber)
 
@@ -57,7 +57,7 @@ val PrimaryColor: Color get() = Palette.pick(LightPrimary, DarkPrimary)
 val OnPrimaryColor: Color get() = Palette.pick(Color.White, DarkPage)
 val AccentColor: Color get() = Palette.pick(LightAccent, DarkAccent)
 val OnAccentColor: Color get() = Palette.pick(Color.White, DarkPage)
-val OnHighlightColor: Color get() = OnHighlightNavy
+val OnHighlightColor: Color get() = Palette.pick(OnHighlightNavy, DarkPage)
 val LineColor: Color get() = Palette.pick(LightLine, DarkLine)
 val DangerColor: Color get() = Palette.pick(LightDanger, DarkDanger)
 val SoftColor: Color get() = Palette.pick(LightSoft, DarkSoft)

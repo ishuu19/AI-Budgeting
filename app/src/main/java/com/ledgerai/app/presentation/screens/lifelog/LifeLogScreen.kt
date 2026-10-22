@@ -123,7 +123,10 @@ class LifeLogViewModel @Inject constructor(
 }
 
 @Composable
-fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
+fun LifeLogScreen(
+    onBack: (() -> Unit)? = null,
+    viewModel: LifeLogViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsState()
     val fmt = remember { DateTimeFormatter.ofPattern("h:mm a") }
     var answerId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -131,7 +134,7 @@ fun LifeLogScreen(viewModel: LifeLogViewModel = hiltViewModel()) {
     var text by rememberSaveable { mutableStateOf("") }
     var fromVoice by rememberSaveable { mutableStateOf(false) }
 
-    LScreen(title = "Log") {
+    LScreen(title = "Life log", onBack = onBack) {
         when {
             state.loading -> item { LLoading() }
             state.error -> item { LError("Could not load", onRetry = viewModel::load) }

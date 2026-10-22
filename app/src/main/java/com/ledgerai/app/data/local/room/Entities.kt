@@ -116,6 +116,8 @@ data class NoteEntity(
     val tags: String = "",
     val createdAt: LocalDateTime,
     val editedAt: LocalDateTime,
+    /** Vault folder id. Null means the Notes folder, so every existing note already has a home. */
+    val folderId: String? = null,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null
 )
@@ -156,6 +158,10 @@ data class CalendarEventEntity(
     val specificDatesJson: String = "",
     val recurrenceUntil: LocalDate? = null,
     val excludedDatesJson: String = "",
+    /** Appointments only: `people.id`, local `job_applications.id`, and UPCOMING / DONE / CANCELLED. Local until the server migration is applied. */
+    val personId: String? = null,
+    val jobId: Long? = null,
+    val status: String? = null,
     val updatedAt: Long = 0L,
     val deletedAt: Long? = null
 )

@@ -74,16 +74,13 @@ fun LHeroCard(
     onClick: (() -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null
 ) {
-    val shape = RoundedCornerShape(L.Radius)
-    val base = modifier.fillMaxWidth().clip(shape)
+    val base = modifier.fillMaxWidth()
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
-            .background(L.Box)
-            .border(1.dp, L.Line, shape)
-            .padding(16.dp),
+            .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted)
+        Text(label.lowercase(), style = MaterialTheme.typography.labelMedium, color = L.OnBoxMuted)
         Text(title, style = MaterialTheme.typography.displaySmall, color = L.OnBox, maxLines = 2, overflow = TextOverflow.Ellipsis)
         if (!sub.isNullOrBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = L.OnBoxMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (actions != null) {
@@ -119,13 +116,10 @@ fun LSmallBlock(
     trend: List<Float>? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(L.Radius)
-    val base = modifier.clip(shape)
+    val base = modifier
     Column(
         modifier = (if (onClick != null) base.clickable(onClick = onClick) else base)
-            .background(L.Box)
-            .border(1.dp, L.Line, shape)
-            .padding(16.dp),
+            .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(label, style = MaterialTheme.typography.bodySmall, color = L.OnBoxMuted, maxLines = 1)
@@ -156,16 +150,12 @@ fun LSmallPair(
 /** One container for related rows, separated by dividers. */
 @Composable
 fun LGroup(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val shape = RoundedCornerShape(L.Radius)
-    Column(
-        modifier.fillMaxWidth().clip(shape).background(L.Box).border(1.dp, L.Line, shape),
-        content = content
-    )
+    Column(modifier.fillMaxWidth(), content = content)
 }
 
 @Composable
 fun LGroupDivider() {
-    HorizontalDivider(Modifier.padding(horizontal = L.Space.x16), color = L.Line)
+    HorizontalDivider(color = L.Line)
 }
 
 /** Row inside an [LGroup]: no box of its own. Minimum height 56dp. */
@@ -186,7 +176,7 @@ fun LGroupRow(
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = L.Space.x16, vertical = L.Space.x16),
+            .padding(vertical = L.Space.x12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(L.Space.x12)
     ) {
@@ -259,30 +249,26 @@ fun <T> LSegments(
     modifier: Modifier = Modifier
 ) {
     require(options.size <= 4) { "Segmented control holds at most 4 options" }
-    Row(
-        modifier
-            .fillMaxWidth()
-            .clip(L.RadiusPill)
-            .background(L.Line)
-            .padding(L.Space.x4),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(L.Space.x8)) {
         options.forEach { option ->
             val on = option == selected
-            Box(
+            Column(
                 Modifier
                     .weight(1f)
                     .heightIn(min = 48.dp)
-                    .clip(L.RadiusPill)
-                    .background(if (on) L.Box else Color.Transparent)
                     .selectable(selected = on, role = Role.Tab, onClick = { onSelect(option) }),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     label(option),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (on) L.OnBox else L.InkMuted,
+                    color = if (on) L.Ink else L.InkMuted,
                     maxLines = 1
+                )
+                Box(
+                    Modifier.padding(top = 6.dp).height(2.dp).fillMaxWidth()
+                        .background(if (on) L.Accent else Color.Transparent)
                 )
             }
         }
@@ -390,12 +376,6 @@ fun LError(text: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? =
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(L.Space.x8)
     ) {
-        Box(
-            Modifier.size(64.dp).clip(androidx.compose.foundation.shape.CircleShape).background(L.Box).border(1.dp, L.Line, androidx.compose.foundation.shape.CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = L.InkMuted, modifier = Modifier.size(24.dp))
-        }
         Text(text, style = MaterialTheme.typography.bodyLarge, color = L.InkMuted)
         if (onRetry != null) LGhostButton("Retry", onRetry, Modifier.width(160.dp), fill = false)
     }

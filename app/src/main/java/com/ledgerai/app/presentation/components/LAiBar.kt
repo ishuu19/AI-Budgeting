@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
@@ -93,6 +94,7 @@ fun LAiBar(
     onSend: (String) -> Unit,
     onMic: () -> Unit,
     modifier: Modifier = Modifier,
+    onImage: (() -> Unit)? = null,
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     val canSend = text.isNotBlank()
@@ -119,6 +121,7 @@ fun LAiBar(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        if (onImage != null) LToolButton(Icons.Filled.Image, "Upload image", onImage)
         if (canSend) {
             Box(
                 Modifier

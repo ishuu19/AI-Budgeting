@@ -2,6 +2,7 @@
 <paths>
     <files-path name="exports" path="exports/" />
     <files-path name="tones" path="tones/" />
+    <files-path name="vault" path="vault/" />
     <cache-path name="cache" path="." />
     <external-files-path name="external_files" path="." />
 </paths>

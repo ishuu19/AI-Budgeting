@@ -208,6 +208,8 @@ internal fun CalendarEventEntity.toRemoteDto(remoteId: String, userId: String): 
         specificDates = specificDatesJson,
         recurrenceUntil = recurrenceUntil?.let(SyncTime::dateToString),
         excludedDates = excludedDatesJson,
+        personId = personId,
+        status = status,
         updatedAt = SyncTime.millisToIso(updatedAt),
         deletedAt = deletedAt?.let(SyncTime::millisToIso)
     )
@@ -238,6 +240,8 @@ internal fun RemoteEventDto.toEntity(localId: Long = 0): CalendarEventEntity {
         specificDatesJson = specificDates,
         recurrenceUntil = SyncTime.optionalDate(recurrenceUntil),
         excludedDatesJson = excludedDates,
+        personId = personId,
+        status = status,
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )

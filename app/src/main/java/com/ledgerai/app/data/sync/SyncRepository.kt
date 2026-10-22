@@ -1,5 +1,6 @@
 package com.ledgerai.app.data.sync
 
+import com.ledgerai.app.domain.model.CalendarEventKind
 import com.ledgerai.app.BuildConfig
 import com.ledgerai.app.data.local.room.BillDao
 import com.ledgerai.app.data.local.room.BudgetDao
@@ -55,28 +56,41 @@ class SyncRepository @Inject constructor(
         val startedAt = System.currentTimeMillis()
         val filter = SyncTime.postgrestGtFilter(sinceMs)
 
-        pullTransactions(bearer, filter)
-        pullBudgets(bearer, filter)
-        pullDebts(bearer, filter)
-        pullGoals(bearer, filter)
-        pullBills(bearer, filter)
+        var failed = false
+        suspend fun step(work: suspend () -> Unit) {
+            try {
+                work()
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failed = true
+                android.util.Log.w("Sync", "A sync step failed and will be retried: ${e.message}")
+            }
+        }
         val touchedEvents = mutableSetOf<Long>()
-        pullEvents(bearer, filter, touchedEvents)
-        pullEventReminders(bearer, filter, touchedEvents)
-        pullNotes(bearer, filter)
+        step { pullTransactions(bearer, filter) }
+        step { pullBudgets(bearer, filter) }
+        step { pullDebts(bearer, filter) }
+        step { pullGoals(bearer, filter) }
+        step { pullBills(bearer, filter) }
+        step { pullEvents(bearer, filter, touchedEvents) }
+        step { pullEventReminders(bearer, filter, touchedEvents) }
+        step { pullNotes(bearer, filter) }
 
-        pushTransactions(userId, sinceMs, bearer)
-        pushBudgets(userId, sinceMs, bearer)
-        pushDebts(userId, sinceMs, bearer)
-        pushGoals(userId, sinceMs, bearer)
-        pushBills(userId, sinceMs, bearer)
-        pushEvents(userId, sinceMs, bearer)
-        pushEventReminders(userId, sinceMs, bearer)
-        pushNotes(userId, sinceMs, bearer)
-        extras.forEach { it.sync(bearer, anonKey, userId, sinceMs, filter) }
+        step { pushTransactions(userId, sinceMs, bearer) }
+        step { pushBudgets(userId, sinceMs, bearer) }
+        step { pushDebts(userId, sinceMs, bearer) }
+        step { pushGoals(userId, sinceMs, bearer) }
+        step { pushBills(userId, sinceMs, bearer) }
+        step { pushEvents(userId, sinceMs, bearer) }
+        step { pushEventReminders(userId, sinceMs, bearer) }
+        step { pushNotes(userId, sinceMs, bearer) }
+        extras.forEach { extra -> step { extra.sync(bearer, anonKey, userId, sinceMs, filter) } }
 
         touchedEvents.forEach { calendarRepository.rearmAfterPull(it) }
 
+        // Keep the cursor where it was if anything failed, so the next run retries from the same point.
+        if (failed) throw IllegalStateException("Sync incomplete")
         cursorStore.saveLastSyncMs(startedAt)
         return true
     }
@@ -159,7 +173,14 @@ class SyncRepository @Inject constructor(
                 val id = eventDao.insert(remote.toEntity())
                 touched += id
             } else if (SyncTime.remoteWins(remote.updatedAt, local.updatedAt)) {
-                eventDao.update(remote.toEntity(localId = local.id))
+                eventDao.update(
+                    remote.toEntity(localId = local.id).copy(
+                        kind = if (local.kind == CalendarEventKind.APPOINTMENT) local.kind else CalendarEventKind.parse(remote.kind),
+                        personId = local.personId,
+                        jobId = local.jobId,
+                        status = local.status,
+                    )
+                )
                 touched += local.id
             }
         }
@@ -199,7 +220,7 @@ class SyncRepository @Inject constructor(
             val local = noteDao.getByRemoteId(remote.id)
             if (local == null) noteDao.insert(remote.toEntity())
             else if (remoteUpdated >= local.updatedAt) {
-                noteDao.update(remote.toEntity(localId = local.id).copy(location = local.location))
+                noteDao.update(remote.toEntity(localId = local.id).copy(location = local.location, folderId = local.folderId))
             }
         }
     }
@@ -282,7 +303,8 @@ class SyncRepository @Inject constructor(
     }
 
     private suspend fun pushEvents(userId: String, sinceMs: Long, bearer: String) {
-        val locals = eventDao.listForSync(sinceMs)
+        // Appointments stay on the phone until supabase/planned 022 is applied (server kind check).
+        val locals = eventDao.listForSync(sinceMs).filter { it.kind != CalendarEventKind.APPOINTMENT || APPOINTMENT_SYNC_READY }
         if (locals.isEmpty()) return
         val rows = ArrayList<RemoteEventDto>(locals.size)
         for (local in locals) {
@@ -331,5 +353,7 @@ class SyncRepository @Inject constructor(
 
     private companion object {
         const val PUSH_CHUNK = 200
+        /** Server migration 022 applied 2026-10-22. */
+        const val APPOINTMENT_SYNC_READY = true
     }
 }

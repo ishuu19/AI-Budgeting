@@ -243,8 +243,28 @@ interface BillDao {
 @Dao
 interface NoteDao {
 
-    @Query("SELECT * FROM notes WHERE deletedAt IS NULL ORDER BY editedAt DESC")
+    /** Notes from locked Vault folders are left out here, so search and Ask never see them. */
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE deletedAt IS NULL AND (folderId IS NULL OR folderId NOT IN (SELECT id FROM folders WHERE locked = 1))
+        ORDER BY editedAt DESC
+        """
+    )
     fun observeAll(): Flow<List<NoteEntity>>
+
+    /** Notes in one Vault folder. [isNotesFolder] = 1 also takes notes with no folder (every note from before the Vault). */
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE deletedAt IS NULL AND (folderId = :folderId OR (:isNotesFolder = 1 AND folderId IS NULL))
+        ORDER BY editedAt DESC
+        """
+    )
+    fun observeInFolder(folderId: String, isNotesFolder: Int): Flow<List<NoteEntity>>
+
+    @Query("UPDATE notes SET folderId = :folderId, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun moveToFolder(id: Long, folderId: String?, updatedAt: Long)
 
     @Query("SELECT * FROM notes WHERE id = :id AND deletedAt IS NULL LIMIT 1")
     suspend fun getById(id: Long): NoteEntity?
@@ -258,7 +278,14 @@ interface NoteDao {
     @Query("UPDATE notes SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun softDelete(id: Long, deletedAt: Long, updatedAt: Long)
 
-    @Query("SELECT * FROM notes WHERE updatedAt > :sinceMs OR remoteId IS NULL")
+    /** Locked folders never leave the phone. */
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE (updatedAt > :sinceMs OR remoteId IS NULL)
+        AND (folderId IS NULL OR folderId NOT IN (SELECT id FROM folders WHERE locked = 1))
+        """
+    )
     suspend fun listForSync(sinceMs: Long): List<NoteEntity>
 
     @Query("SELECT * FROM notes WHERE remoteId = :remoteId LIMIT 1")

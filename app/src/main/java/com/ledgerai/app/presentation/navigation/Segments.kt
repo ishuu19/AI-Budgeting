@@ -1,8 +1,8 @@
 package com.ledgerai.app.presentation.navigation
 
 /** Segments inside each tab. Saved with rememberSaveable in the shell, so rotation keeps them. */
-/** Log is reached from More; the segmented control shows Calendar, Tasks, Notes, Jobs. */
-enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Notes("Notes"), Log("Log"), Jobs("Jobs") }
+/** The Plan strip is Calendar, Tasks, Appointments. Notes, Log and Jobs open from Library. */
+enum class PlanSeg(val label: String) { Calendar("Calendar"), Tasks("Tasks"), Appointments("Appointments"), Notes("Notes"), Log("Log"), Jobs("Jobs") }
 enum class VoiceSeg(val label: String) { Capture("Capture"), Speak("Speak"), Notes("Notes"), Ask("Chat") }
 enum class LifeSeg(val label: String) { Pantry("Pantry"), Wardrobe("Wardrobe"), People("People"), Home("Household") }
 enum class MoneySeg(val label: String) { Overview("Overview"), Spend("Spend"), Plan("Budget"), Owed("Owed"), Receipts("Receipts") }
@@ -21,6 +21,9 @@ class AppLinks(
     /** Opens the manual expense form. */
     val addExpense: () -> Unit = {},
     val subscriptions: () -> Unit = {},
+    val analysis: () -> Unit = {},
+    val passwords: () -> Unit = {},
+    val wishes: () -> Unit = {},
     /** The full-day view (schedule, tasks, habits). */
     val today: () -> Unit = {},
     val voiceLog: () -> Unit = {},

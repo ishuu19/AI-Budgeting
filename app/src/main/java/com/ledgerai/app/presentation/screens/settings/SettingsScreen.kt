@@ -21,13 +21,11 @@ import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.Today
@@ -166,23 +164,20 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, About, Privacy }
+private enum class YouSheet { None, Profile, Look, Voice, Money, Alerts, Reminders, About, Privacy }
 
 @Composable
 fun SettingsScreen(
     links: com.ledgerai.app.presentation.navigation.AppLinks = com.ledgerai.app.presentation.navigation.AppLinks(),
     onBack: (() -> Unit)? = null,
-    onAddToNotes: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
-    clipsViewModel: com.ledgerai.app.presentation.screens.clips.AddToNotesViewModel = hiltViewModel(),
 ) {
     val user by authViewModel.uiState.collectAsState()
     val state by viewModel.uiState.collectAsState()
     val trackMode by viewModel.trackMode.collectAsState(initial = "both")
     val cashOnHand by viewModel.cashOnHand.collectAsState(initial = "")
     val themeMode by viewModel.themeMode.collectAsState(initial = "system")
-    val captureSubtitle by clipsViewModel.subtitle.collectAsState()
 
     var sheet by rememberSaveable { mutableStateOf(YouSheet.None) }
     val close = { sheet = YouSheet.None }
@@ -239,16 +234,12 @@ fun SettingsScreen(
                     onClick = { sheet = YouSheet.Alerts },
                     end = { Chevron() }
                 )
-            }
-        }
-        item { LSection("Capture") }
-        item {
-            LGroup {
+                LGroupDivider()
                 LGroupRow(
-                    title = "Add to Notebook",
-                    sub = captureSubtitle,
-                    icon = Icons.Filled.ContentPaste,
-                    onClick = onAddToNotes,
+                    title = "Reminders",
+                    sub = "Birthdays and trips",
+                    icon = Icons.Filled.Notifications,
+                    onClick = { sheet = YouSheet.Reminders },
                     end = { Chevron() }
                 )
             }
@@ -256,9 +247,7 @@ fun SettingsScreen(
         item { LSection("Shortcuts") }
         item {
             LGroup {
-                LGroupRow(title = "Life log", icon = Icons.Filled.History, onClick = { links.plan(com.ledgerai.app.presentation.navigation.PlanSeg.Log) }, end = { Chevron() })
-                LGroupDivider()
-                LGroupRow(title = "Insights", icon = Icons.Filled.Insights, onClick = links.insights, end = { Chevron() })
+                LGroupRow(title = "Analysis", icon = Icons.Filled.Insights, onClick = links.analysis, end = { Chevron() })
             }
         }
         item { LSection("About") }
@@ -293,6 +282,7 @@ fun SettingsScreen(
             cashOnHand = cashOnHand,
             onDismiss = close
         )
+        YouSheet.Reminders -> RemindersSheet(onDismiss = close)
         YouSheet.Alerts -> AlertsSheet(
             viewModel = viewModel,
             enabled = state.notificationsEnabled,
@@ -690,3 +680,44 @@ Accounts
 
 We do not sell personal financial data. This summary is product guidance, not legal advice. Contact the app owner for formal policy updates.
 """.trimIndent()
+
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface ReminderEngineEntry {
+    fun engine(): com.ledgerai.app.service.ReminderEngine
+}
+
+/** When day-level birthday and trip reminders fire, whether exact alarms are allowed, and a test button. */
+@Composable
+private fun RemindersSheet(onDismiss: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val engine = remember(ctx) {
+        dagger.hilt.android.EntryPointAccessors.fromApplication(ctx.applicationContext, ReminderEngineEntry::class.java).engine()
+    }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var hour by remember { mutableStateOf(com.ledgerai.app.data.reminders.ReminderRepository.reminderHour(ctx).hour) }
+    val exact = android.os.Build.VERSION.SDK_INT < 31 ||
+        (ctx.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager).canScheduleExactAlarms()
+    LSheet(title = "Reminders", onDismiss = onDismiss, primary = "Done", onPrimary = onDismiss) {
+        Text("Reminders a day or more ahead fire at", style = MaterialTheme.typography.bodyMedium, color = L.InkMuted)
+        com.ledgerai.app.presentation.components.ChipsRow {
+            listOf(7, 8, 9, 10, 12, 18).forEach { h ->
+                com.ledgerai.app.presentation.components.LChip("%02d:00".format(h), hour == h, {
+                    hour = h
+                    com.ledgerai.app.data.reminders.ReminderRepository.setReminderHour(ctx, h)
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) { engine.rebuildAndArm() }
+                })
+            }
+        }
+        Text(
+            if (exact) "Exact alarms are allowed, so reminders arrive on time." else "Exact alarms are off, so reminders can arrive late.",
+            style = MaterialTheme.typography.bodySmall, color = if (exact) L.InkMuted else L.Danger,
+        )
+        if (!exact && android.os.Build.VERSION.SDK_INT >= 31) {
+            com.ledgerai.app.presentation.components.LGhostButton("Allow exact alarms", {
+                ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            })
+        }
+        com.ledgerai.app.presentation.components.LGhostButton("Send a test reminder", { scope.launch(kotlinx.coroutines.Dispatchers.IO) { engine.sendTest() } })
+    }
+}

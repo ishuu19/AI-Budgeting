@@ -105,6 +105,8 @@ class MediaAssetExtraSync @Inject constructor(
         @SerializedName("analysis_state") val analysisState: String = "pending",
         @SerializedName("linked_type") val linkedType: String? = null,
         @SerializedName("linked_id") val linkedId: String? = null,
+        @SerializedName("mime") val mime: String? = null,
+        @SerializedName("size_bytes") val sizeBytes: Long? = null,
         @SerializedName("created_at") val createdAt: String? = null,
         @SerializedName("updated_at") val updatedAt: String? = null,
         @SerializedName("deleted_at") val deletedAt: String? = null
@@ -121,6 +123,8 @@ class MediaAssetExtraSync @Inject constructor(
         analysisState = analysisState,
         linkedType = linkedType,
         linkedId = linkedId,
+        mime = mime,
+        sizeBytes = sizeBytes,
         createdAt = SyncTime.millisToIso(createdAt),
         updatedAt = SyncTime.millisToIso(updatedAt),
         deletedAt = deletedAt?.let(SyncTime::millisToIso)
@@ -140,6 +144,8 @@ class MediaAssetExtraSync @Inject constructor(
         analysisState = analysisState,
         linkedType = linkedType,
         linkedId = linkedId,
+        mime = mime,
+        sizeBytes = sizeBytes,
         createdAt = SyncTime.isoToMillis(createdAt),
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
@@ -155,6 +161,8 @@ class MediaAssetExtraSync @Inject constructor(
         linkedType = linkedType,
         linkedId = linkedId,
         uploadState = if (remotePath != null) UploadState.UPLOADED else local.uploadState,
+        mime = mime ?: local.mime,
+        sizeBytes = sizeBytes ?: local.sizeBytes,
         updatedAt = SyncTime.isoToMillis(updatedAt),
         deletedAt = deletedAt?.let { SyncTime.isoToMillis(it).takeIf { ms -> ms > 0 } }
     )

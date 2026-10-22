@@ -34,8 +34,8 @@ object WidgetTheme {
 
     fun palette(context: Context, forceDark: Boolean? = null): WidgetPalette {
         val night = forceDark ?: isNight(context)
-        val ink = ColorProvider(Color(0xFFE2F0EC))
-        val muted = ColorProvider(Color(0xFF8FA89B))
+        val ink = ColorProvider(Color(0xFFECE9E2))
+        val muted = ColorProvider(Color(0xFF9A968E))
         return WidgetPalette(
             canvasBg = if (night) R.drawable.widget_canvas_dark else R.drawable.widget_canvas_light,
             tileBg = R.drawable.widget_tile_bg,
@@ -43,10 +43,10 @@ object WidgetTheme {
             onTile = ink,
             onTileMuted = muted,
             onCanvas = ink,
-            gold = ColorProvider(Color(0xFFD4AF37)),
+            gold = ColorProvider(Color(0xFFAAB6F4)),
             danger = ColorProvider(Color(0xFFE5645A)),
             success = ColorProvider(Color(0xFF3FBF84)),
-            amber = ColorProvider(Color(0xFFE8B84A)),
+            amber = ColorProvider(Color(0xFFAAB6F4)),
         )
     }
 

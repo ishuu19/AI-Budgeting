@@ -1,0 +1,17 @@
+---
+description: Visual rules for LedgerAI phone screens. Follow when building or editing the Compose ledger screens.
+globs: app/src/main/java/com/ledgerai/app/presentation/paper/**,design-system/**,.design/**
+alwaysApply: false
+---
+
+# LedgerAI screen design
+
+Read `design-system/ledgerai/pages/app.md` before drawing a screen. It overrides the rejected glass kit in `design-system/ledgerai/MASTER.md`.
+
+Also follow:
+
+- `.agents/skills/frontend-design/SKILL.md`
+- `.agents/skills/ui-ux-pro-max/SKILL.md` and `references/pro-rules.md` (48dp targets, 4.5:1 text, visible press, no emoji icons, safe areas)
+- UX scan: the primary answer is first, one large amount, one filled action (the mic)
+
+Do not add a `web/` prototype. Do not introduce glassmorphism, Inter, Quicksand, Caveat, or an 8px spacing scale. Spacing stays 6, 11, 18, 29, 47. Rows are hairlines, not cards.

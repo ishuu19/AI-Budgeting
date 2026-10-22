@@ -90,6 +90,7 @@ fun CalendarEventKind.label(): String = when (this) {
     CalendarEventKind.CLASS -> "Class"
     CalendarEventKind.ROUTINE -> "Routine"
     CalendarEventKind.ALARM -> "Alarm"
+    CalendarEventKind.APPOINTMENT -> "Appointment"
 }
 
 /** Horizontally scrolling row for chip groups. */

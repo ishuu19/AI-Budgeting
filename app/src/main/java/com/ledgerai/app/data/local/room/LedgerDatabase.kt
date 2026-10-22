@@ -3,6 +3,22 @@ package com.ledgerai.app.data.local.room
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.ledgerai.app.data.achievements.AchievementDao
+import com.ledgerai.app.data.achievements.AchievementEntity
+import com.ledgerai.app.data.appusage.AppUsageDao
+import com.ledgerai.app.data.appusage.AppUsageDayEntity
+import com.ledgerai.app.data.dates.BirthdayDao
+import com.ledgerai.app.data.dates.BirthdayEntity
+import com.ledgerai.app.data.dates.TripDao
+import com.ledgerai.app.data.dates.TripEntity
+import com.ledgerai.app.data.passwords.PasswordDao
+import com.ledgerai.app.data.passwords.PasswordEntity
+import com.ledgerai.app.data.reminders.ReminderDao
+import com.ledgerai.app.data.reminders.ReminderEntity
+import com.ledgerai.app.data.vault.FolderDao
+import com.ledgerai.app.data.vault.FolderEntity
+import com.ledgerai.app.data.wishes.WishDao
+import com.ledgerai.app.data.wishes.WishEntity
 import com.ledgerai.app.data.household.HouseholdDao
 import com.ledgerai.app.data.household.HouseholdEntity
 import com.ledgerai.app.data.household.HouseholdMemberEntity
@@ -82,8 +98,16 @@ import com.ledgerai.app.data.wardrobe.WardrobeItemEntity
         ClipEntity::class,
         ChatThreadEntity::class,
         ChatMessageEntity::class,
+        FolderEntity::class,
+        BirthdayEntity::class,
+        TripEntity::class,
+        AchievementEntity::class,
+        WishEntity::class,
+        PasswordEntity::class,
+        AppUsageDayEntity::class,
+        ReminderEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -128,4 +152,12 @@ abstract class LedgerDatabase : RoomDatabase() {
     abstract fun mediaAssetDao(): MediaAssetDao
     abstract fun clipDao(): ClipDao
     abstract fun chatDao(): ChatDao
+    abstract fun folderDao(): FolderDao
+    abstract fun birthdayDao(): BirthdayDao
+    abstract fun tripDao(): TripDao
+    abstract fun achievementDao(): AchievementDao
+    abstract fun wishDao(): WishDao
+    abstract fun passwordDao(): PasswordDao
+    abstract fun appUsageDao(): AppUsageDao
+    abstract fun reminderDao(): ReminderDao
 }

@@ -44,11 +44,19 @@ class MediaUploader @Inject constructor(
     suspend fun upload(row: MediaAssetEntity): Boolean = withContext(Dispatchers.IO) {
         val file = File(row.localPath)
         if (!file.exists()) return@withContext false
-        val signed = sign("put", row.id) ?: return@withContext false
+        val vault = row.mime != null
+        val ext = if (vault) VaultFiles.uploadExt(row.localPath) else "jpg"
+        if (ext == null) {
+            // A type the cloud does not take: keep it on this phone and stop retrying.
+            repo.save((repo.get(row.id) ?: row).copy(uploadState = UploadState.LOCAL))
+            return@withContext true
+        }
+        val type = VaultFiles.TYPES.getValue(ext)
+        val signed = sign("put", row.id, if (vault) ext else null) ?: return@withContext false
         val request = Request.Builder()
             .url(signed.url)
-            .header("Content-Type", "image/jpeg")
-            .put(file.asRequestBody("image/jpeg".toMediaType()))
+            .header("Content-Type", type)
+            .put(file.asRequestBody(type.toMediaType()))
             .build()
         val ok = runCatching { client.newCall(request).execute().use { it.isSuccessful } }.getOrDefault(false)
         if (ok) {
@@ -76,10 +84,25 @@ class MediaUploader @Inject constructor(
         ok
     }
 
-    private suspend fun sign(action: String, id: String): Signed? {
+    /** Fetches a Vault file added on another device into this phone's vault folder. */
+    suspend fun downloadVaultFile(row: MediaAssetEntity, dest: File): Boolean = withContext(Dispatchers.IO) {
+        if (dest.exists()) return@withContext true
+        val path = row.remotePath ?: return@withContext false
+        val signed = sign("get", row.id, VaultFiles.uploadExt(path)) ?: return@withContext false
+        runCatching {
+            client.newCall(Request.Builder().url(signed.url).build()).execute().use { resp ->
+                if (!resp.isSuccessful) return@use false
+                resp.body?.byteStream()?.use { input -> dest.outputStream().use { input.copyTo(it) } }
+                true
+            }
+        }.getOrDefault(false)
+    }
+
+    private suspend fun sign(action: String, id: String, ext: String? = null): Signed? {
         val info = session.userInfo.first()
         if (!info.hasRemoteUser || baseUrl.isEmpty()) return null
-        val body = """{"action":"$action","id":"$id"}""".toRequestBody("application/json".toMediaType())
+        val extPart = if (ext == null) "" else ",\"ext\":\"$ext\""
+        val body = "{\"action\":\"$action\",\"id\":\"$id\"$extPart}".toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url("$baseUrl/functions/v1/media-sign")
             .header("apikey", BuildConfig.SUPABASE_ANON_KEY)

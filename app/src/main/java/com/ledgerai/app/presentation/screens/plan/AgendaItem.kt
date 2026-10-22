@@ -55,7 +55,7 @@ object AgendaKeys {
 }
 
 private fun CalendarEventKind.planKind(): PlanKind = when (this) {
-    CalendarEventKind.EVENT, CalendarEventKind.PERSONAL, CalendarEventKind.EXAM -> PlanKind.Events
+    CalendarEventKind.EVENT, CalendarEventKind.PERSONAL, CalendarEventKind.EXAM, CalendarEventKind.APPOINTMENT -> PlanKind.Events
     CalendarEventKind.TASK -> PlanKind.Tasks
     CalendarEventKind.CLASS, CalendarEventKind.ROUTINE -> PlanKind.Classes
     CalendarEventKind.ALARM -> PlanKind.Alarms
@@ -79,6 +79,7 @@ fun CalendarEvent.toAgendaItem(): AgendaItem {
             CalendarEventKind.CLASS -> "Class"
             CalendarEventKind.ROUTINE -> "Routine"
             CalendarEventKind.ALARM -> "Alarm"
+            CalendarEventKind.APPOINTMENT -> "Appointment"
         },
         place = location,
         done = isCompleted,

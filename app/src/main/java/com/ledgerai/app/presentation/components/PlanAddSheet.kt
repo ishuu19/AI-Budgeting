@@ -62,7 +62,7 @@ enum class AddKind(val label: String) {
 
     companion object {
         fun of(kind: CalendarEventKind): AddKind = when (kind) {
-            CalendarEventKind.EVENT, CalendarEventKind.PERSONAL -> Event
+            CalendarEventKind.EVENT, CalendarEventKind.PERSONAL, CalendarEventKind.APPOINTMENT -> Event
             CalendarEventKind.TASK -> Task
             CalendarEventKind.EXAM -> Exam
             CalendarEventKind.CLASS -> Class

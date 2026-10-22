@@ -65,8 +65,8 @@ class NotebookRulesTest {
     @Test
     fun plannedSqlKeepsChatsPrivateToTheOwner() {
         val file = listOf(
-            File("supabase/planned/migrations/021_notebook.sql"),
-            File("../supabase/planned/migrations/021_notebook.sql"),
+            File("supabase/migrations/021_notebook.sql"),
+            File("../supabase/migrations/021_notebook.sql"),
         ).first { it.exists() }
         val sql = file.readText()
         assertTrue(sql.contains("create policy chat_threads_owner"))

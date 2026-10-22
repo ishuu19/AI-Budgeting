@@ -54,19 +54,23 @@ create index if not exists media_assets_updated_at_idx
 
 alter table public.media_assets enable row level security;
 
+drop policy if exists "media_assets_select_own" on public.media_assets;
 create policy "media_assets_select_own"
   on public.media_assets for select
   using (user_id = auth.uid());
 
+drop policy if exists "media_assets_insert_own" on public.media_assets;
 create policy "media_assets_insert_own"
   on public.media_assets for insert
   with check (user_id = auth.uid());
 
+drop policy if exists "media_assets_update_own" on public.media_assets;
 create policy "media_assets_update_own"
   on public.media_assets for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+drop policy if exists "media_assets_delete_own" on public.media_assets;
 create policy "media_assets_delete_own"
   on public.media_assets for delete
   using (user_id = auth.uid());

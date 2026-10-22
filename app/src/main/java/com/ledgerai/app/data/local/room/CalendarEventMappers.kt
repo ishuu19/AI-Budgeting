@@ -32,7 +32,10 @@ fun CalendarEventEntity.toDomain(reminders: List<EventReminder> = emptyList()) =
         until = recurrenceUntil,
         excludedDates = RecurrenceJson.decodeDates(excludedDatesJson)
     ),
-    reminders = reminders
+    reminders = reminders,
+    personId = personId,
+    jobId = jobId,
+    status = status
 )
 
 fun EventWithReminders.toDomain() = event.toDomain(
@@ -78,6 +81,9 @@ fun CalendarEvent.toEntity(
         },
         recurrenceUntil = r.until,
         excludedDatesJson = RecurrenceJson.encodeDates(r.excludedDates),
+        personId = personId,
+        jobId = jobId,
+        status = status,
         updatedAt = updatedAt,
         deletedAt = deletedAt
     )

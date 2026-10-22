@@ -33,9 +33,20 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- App time: read foreground time per app. Granted by the user on the Usage Access page. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+
     <queries>
+        <!-- Lets App time show app names on Android 11+ without the all-packages permission. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <intent>
             <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
         </intent>
     </queries>
 
@@ -279,6 +290,14 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.ledgerai.app.action.DEBT_REMINDER_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".service.ReminderFireReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ledgerai.app.action.REMINDER_FIRE" />
             </intent-filter>
         </receiver>
 

@@ -59,7 +59,8 @@ class AuthRepository @Inject constructor(
         if (switching && previous.hasRemoteUser) {
             syncUploadingPending()
         }
-        if (switching || foreignPending || !previous.hasRemoteUser) {
+        // Local rows from before sign-in are kept and uploaded under this account; only a different account clears them.
+        if (switching || foreignPending) {
             wipeLocal()
             if (foreignPending) userSession.clearPendingUploadUserId()
         }

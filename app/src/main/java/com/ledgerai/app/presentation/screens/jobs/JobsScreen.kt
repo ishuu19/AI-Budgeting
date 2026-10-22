@@ -266,6 +266,7 @@ fun JobsScreen(
     onOpened: () -> Unit = {},
     utterance: String = "",
     onUtteranceConsumed: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
     viewModel: JobsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -295,6 +296,7 @@ fun JobsScreen(
 
     LScreen(
         title = "Jobs",
+        onBack = onBack,
         fab = { LFab(Icons.Default.Add, onClick = { paste = ""; adding = true }, label = "New job") }
     ) {
         when {
