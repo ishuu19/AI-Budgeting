@@ -27,6 +27,8 @@ import com.ledgerai.app.widget.WidgetActions
 import com.ledgerai.app.presentation.screens.auth.LoginScreen
 import com.ledgerai.app.presentation.theme.LedgerAITheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,6 +44,17 @@ class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var userPreferences: UserPreferences
+
+    @Inject
+    lateinit var authRepository: com.ledgerai.app.data.repository.AuthRepository
+
+    override fun onStart() {
+        super.onStart()
+        // A sign-in older than 30 days ends here, so the sign-in screen shows without waiting for a sync.
+        lifecycleScope.launch { authRepository.enforceSessionLimit() }
+        // Opening the app uploads anything still waiting.
+        com.ledgerai.app.worker.SyncWorker.syncNow(this)
+    }
 
     private var request by mutableStateOf<LaunchRequest?>(null)
     private var requestCounter = 0L

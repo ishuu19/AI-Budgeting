@@ -39,6 +39,8 @@ object SyncModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            // First, so the log below shows each request that is really sent.
+            .addInterceptor(com.ledgerai.app.data.sync.UniformKeysInterceptor())
 
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor().apply {

@@ -33,6 +33,8 @@ data class UserInfo(
      * Empty after a successful [com.ledgerai.app.data.sync.SyncRepository.syncAll].
      */
     val pendingUploadUserId: String = "",
+    /** When the user last signed in (not when the token was last renewed); 0 if unknown. Starts the 30-day limit. */
+    val signedInAtEpochMs: Long = 0L,
 ) {
     /** Cloud session: non-local user id + Bearer JWT present. */
     val hasRemoteUser: Boolean
@@ -57,6 +59,7 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
         val KEY_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val KEY_EXPIRES_AT = longPreferencesKey("expires_at_epoch_ms")
         val KEY_PENDING_UPLOAD_USER_ID = stringPreferencesKey("pending_upload_user_id")
+        val KEY_SIGNED_IN_AT = longPreferencesKey("signed_in_at_epoch_ms")
     }
 
     val userInfo: Flow<UserInfo> = store.data.map { prefs ->
@@ -70,6 +73,7 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
             refreshToken = prefs[KEY_REFRESH_TOKEN] ?: "",
             expiresAtEpochMs = prefs[KEY_EXPIRES_AT] ?: 0L,
             pendingUploadUserId = prefs[KEY_PENDING_UPLOAD_USER_ID] ?: "",
+            signedInAtEpochMs = prefs[KEY_SIGNED_IN_AT] ?: 0L,
         )
     }
 
@@ -84,8 +88,11 @@ class UserSession @Inject constructor(@ApplicationContext private val context: C
         accessToken: String = "",
         refreshToken: String = "",
         expiresAtEpochMs: Long = 0L,
+        /** Set only by a real sign-in. A token renewal leaves it alone; an older session starts its clock now. */
+        signedInAtEpochMs: Long? = null,
     ) {
         store.edit { prefs ->
+            prefs[KEY_SIGNED_IN_AT] = signedInAtEpochMs ?: prefs[KEY_SIGNED_IN_AT] ?: System.currentTimeMillis()
             prefs[KEY_LOGGED_IN] = true
             prefs[KEY_USER_ID] = userId
             prefs[KEY_NAME] = name

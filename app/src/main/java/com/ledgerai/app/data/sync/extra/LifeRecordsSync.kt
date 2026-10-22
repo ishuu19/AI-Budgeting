@@ -53,7 +53,9 @@ abstract class RowSync<E : Any>(
     private val api: RowApi = Retrofit.Builder()
         .baseUrl(restBaseUrl(BuildConfig.SUPABASE_URL))
         .client(client)
-        .addConverterFactory(GsonConverterFactory.create(gson))
+        // Nulls must be sent: a batch whose rows have different keys is refused (PGRST102), and a cleared
+        // field has to reach the server as null, not be left out.
+        .addConverterFactory(GsonConverterFactory.create(gson.newBuilder().serializeNulls().create()))
         .build()
         .create(RowApi::class.java)
 
@@ -71,7 +73,12 @@ abstract class RowSync<E : Any>(
         } catch (e: retrofit2.HttpException) {
             // Only a table that is not on the server yet is skipped. Anything else (offline, expired
             // sign-in, server error) is rethrown so the sync cursor stays put and the next run retries.
-            if (e.code() == 404) Log.w(TAG, "$table is not on the server yet: skipped") else throw e
+            if (e.code() == 404) {
+                Log.w(TAG, "$table is not on the server yet: skipped")
+            } else {
+                Log.e(TAG, "$table sync failed: HTTP ${e.code()} ${e.response()?.errorBody()?.string()?.take(300)}")
+                throw e
+            }
         }
     }
 

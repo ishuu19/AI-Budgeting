@@ -129,7 +129,9 @@ fun AchievementsScreen(onBack: () -> Unit, vm: AchievementsViewModel = hiltViewM
         rows.forEach { a ->
             if (a.happenedOn.year != lastYear) {
                 lastYear = a.happenedOn.year
-                item(key = "y$lastYear") { LSection(lastYear.toString()) }
+                // Fixed here: the item is drawn after this loop ends, so it must not read the changing lastYear.
+                val heading = lastYear
+                item(key = "y$heading") { LSection(heading.toString()) }
             }
             item(key = a.id) { LThreadRow(fmt.format(a.happenedOn), a.title, detail = a.note.ifBlank { null }, onClick = { editing = a }) }
         }

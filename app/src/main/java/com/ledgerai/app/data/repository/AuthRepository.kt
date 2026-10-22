@@ -14,6 +14,7 @@ import io.github.jan.supabase.gotrue.providers.builtin.IDToken
 import io.github.jan.supabase.gotrue.user.UserSession as SupabaseUserSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,7 +50,7 @@ class AuthRepository @Inject constructor(
         val newUserId = session.user?.id.orEmpty()
         val pendingId = previous.pendingUploadUserId
         if (pendingId.isNotBlank() && pendingId == newUserId) {
-            persistSupabaseSession(session)
+            persistSupabaseSession(session, newSignIn = true)
             syncUploadingPending()
             return
         }
@@ -64,7 +65,7 @@ class AuthRepository @Inject constructor(
             wipeLocal()
             if (foreignPending) userSession.clearPendingUploadUserId()
         }
-        persistSupabaseSession(session)
+        persistSupabaseSession(session, newSignIn = true)
         syncUploadingPending()
     }
 
@@ -74,27 +75,58 @@ class AuthRepository @Inject constructor(
      *
      * @return true if the session is usable (fresh, refreshed, or local-only); false if refresh failed.
      */
-    suspend fun refreshIfNeeded(): Boolean {
+    suspend fun refreshIfNeeded(): Boolean = refreshLock.withLock {
         val info = userSession.userInfo.first()
-        if (!info.isLoggedIn || info.userId.startsWith("local-")) return true
+        if (!info.isLoggedIn || info.userId.startsWith("local-")) return@withLock true
         if (info.refreshToken.isBlank()) {
             // Legacy sessions without a refresh token: keep using the access token if present.
-            return info.accessToken.isNotBlank()
+            return@withLock info.accessToken.isNotBlank()
         }
 
         val now = System.currentTimeMillis()
+        if (com.ledgerai.app.data.auth.sessionTooOld(info.signedInAtEpochMs, now)) {
+            endDeadSession(info.userId, "30 days since sign-in")
+            return@withLock false
+        }
         if (info.expiresAtEpochMs > 0L && now + REFRESH_SKEW_MS < info.expiresAtEpochMs) {
-            return true
+            return@withLock true
         }
 
-        val client = supabase ?: return info.accessToken.isNotBlank()
-        return try {
+        val client = supabase ?: return@withLock info.accessToken.isNotBlank()
+        try {
             val session = client.auth.refreshSession(info.refreshToken)
             persistSupabaseSession(session, fallbackUserId = info.userId)
             true
         } catch (e: Exception) {
             Log.w(TAG, "JWT refresh failed: ${e.message}")
+            val status = (e as? io.github.jan.supabase.exceptions.RestException)?.statusCode
+            if (com.ledgerai.app.data.auth.isSessionDead(e.message, status)) endDeadSession(info.userId)
             false
+        }
+    }
+
+    /**
+     * One refresh at a time. Supabase rotates the refresh token on every use, so two callers refreshing
+     * together (sync, AI calls, widgets) would spend the same token twice and kill the session
+     * ("Already Used"). The second caller waits, then sees the fresh token and returns.
+     */
+    private val refreshLock = kotlinx.coroutines.sync.Mutex()
+
+    /**
+     * The refresh token was refused, so this sign-in cannot be renewed. Log out so the sign-in screen shows.
+     * Local data is kept and marked as waiting to upload: signing in to the same account sends it up.
+     */
+    private suspend fun endDeadSession(userId: String, reason: String = "refresh token refused") {
+        Log.w(TAG, "Sign-in ended ($reason): logging out. Local data is kept for the next sign-in.")
+        userSession.clearSession()
+        if (userId.isNotBlank() && !userId.startsWith("local-")) userSession.setPendingUploadUserId(userId)
+    }
+
+    /** Logs out once the sign-in is 30 days old. No network. Called whenever the app opens and before each refresh. */
+    suspend fun enforceSessionLimit() {
+        val info = userSession.userInfo.first()
+        if (info.hasRemoteUser && com.ledgerai.app.data.auth.sessionTooOld(info.signedInAtEpochMs, System.currentTimeMillis())) {
+            endDeadSession(info.userId, "30 days since sign-in")
         }
     }
 
@@ -128,6 +160,7 @@ class AuthRepository @Inject constructor(
     private suspend fun persistSupabaseSession(
         session: SupabaseUserSession,
         fallbackUserId: String = "",
+        newSignIn: Boolean = false,
     ) {
         val user = session.user
         val meta = user?.userMetadata
@@ -152,6 +185,7 @@ class AuthRepository @Inject constructor(
             accessToken = session.accessToken,
             refreshToken = session.refreshToken,
             expiresAtEpochMs = expiresAt,
+            signedInAtEpochMs = if (newSignIn) System.currentTimeMillis() else null,
         )
     }
 

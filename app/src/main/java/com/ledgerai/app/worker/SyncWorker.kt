@@ -2,6 +2,7 @@ package com.ledgerai.app.worker
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -57,6 +58,7 @@ class SyncWorker @AssistedInject constructor(
 
             val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
                 .setConstraints(constraints)
+                .setBackoffCriteria(BackoffPolicy.LINEAR, 30, TimeUnit.SECONDS)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -66,7 +68,11 @@ class SyncWorker @AssistedInject constructor(
             )
         }
 
-        /** One-shot sync. [ExistingWorkPolicy.KEEP] drops repeats while one is queued or running. */
+        /**
+         * One-shot sync. REPLACE, not KEEP: a run that failed sits in retry back-off, which grows to hours,
+         * and KEEP would drop every later trigger (new data, network back, app opened) until it ended.
+         * A new trigger restarts the sync at once; a sync cut short keeps its cursor and resumes safely.
+         */
         fun syncNow(context: Context) {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -74,11 +80,12 @@ class SyncWorker @AssistedInject constructor(
 
             val request = OneTimeWorkRequestBuilder<SyncWorker>()
                 .setConstraints(constraints)
+                .setBackoffCriteria(BackoffPolicy.LINEAR, 30, TimeUnit.SECONDS)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
                 NOW_WORK_NAME,
-                ExistingWorkPolicy.KEEP,
+                ExistingWorkPolicy.REPLACE,
                 request
             )
         }

@@ -64,7 +64,8 @@ class SyncRepository @Inject constructor(
                 throw e
             } catch (e: Exception) {
                 failed = true
-                android.util.Log.w("Sync", "A sync step failed and will be retried: ${e.message}")
+                val where = e.stackTrace.firstOrNull { it.className.contains("ledgerai") }?.let { "${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" }
+                android.util.Log.w("Sync", "A sync step failed and will be retried: ${e::class.simpleName} ${e.message} at $where")
             }
         }
         val touchedEvents = mutableSetOf<Long>()

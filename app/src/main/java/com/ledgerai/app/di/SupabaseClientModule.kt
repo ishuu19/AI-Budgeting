@@ -32,7 +32,13 @@ object SupabaseClientModule {
             supabaseUrl = url,
             supabaseKey = anon
         ) {
-            install(Auth)
+            // The app keeps the session in its own store and refreshes it in one place (AuthRepository).
+            // The plugin's own background refresh would rotate the refresh token behind the app's back.
+            install(Auth) {
+                alwaysAutoRefresh = false
+                autoLoadFromStorage = false
+                autoSaveToStorage = false
+            }
             install(Postgrest)
         }
     }
