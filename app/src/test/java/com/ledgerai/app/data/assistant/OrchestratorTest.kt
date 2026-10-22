@@ -47,6 +47,35 @@ class OrchestratorTest {
     }
 
     @Test
+    fun promptOnlyListsAllowedActionsAndAddsAnswerRulesOnRequest() {
+        val two = ActionRegistry(
+            listOf(
+                ActionSpec("lib.a.add", Risk.LOW, "A", "x", validate = { null }, apply = { ActionOutcome("ok") }),
+                ActionSpec("lib.b.add", Risk.LOW, "B", "x", validate = { null }, apply = { ActionOutcome("ok") }),
+            ),
+        )
+        val o = Orchestrator({ _, _ -> Result.success("{}") }, two)
+        val prompt = o.systemPrompt("now", allowed = { it.type.startsWith("lib.a.") }, answers = true)
+        assertTrue(prompt.contains("lib.a.add"))
+        assertTrue(!prompt.contains("lib.b.add"))
+        assertTrue(prompt.contains("using ONLY <context>"))
+        assertTrue(!o.systemPrompt("now").contains("using ONLY <context>"))
+    }
+
+    @Test
+    fun anAnswerWithoutActionsOrWithoutJsonIsStillAnAnswer() = runBlocking {
+        val noActions = orchestrator(Result.success("""{"reply":"Sam's birthday is 14 March."}"""))
+            .plan("v", "when", nowIso = "n", answers = true).getOrThrow()
+        assertTrue(noActions.actions.isEmpty())
+        assertEquals("Sam's birthday is 14 March.", noActions.reply)
+        val plain = orchestrator(Result.success("You have 12 notes."))
+            .plan("v", "how many notes", nowIso = "n", answers = true).getOrThrow()
+        assertEquals("You have 12 notes.", plain.reply)
+        assertTrue(orchestrator(Result.success("You have 12 notes.")).plan("v", "x", nowIso = "n").isFailure)
+        assertTrue(orchestrator(Result.success("{}")).plan("v", "x", nowIso = "n", answers = true).isFailure)
+    }
+
+    @Test
     fun parserIgnoresActionsWithoutType() {
         val plan = PlanParser.parse("v", """{"actions":[{"args":{}},{"type":"note.add"}]}""")!!
         assertEquals(1, plan.actions.size)

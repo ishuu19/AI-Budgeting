@@ -88,6 +88,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -138,7 +139,20 @@ class SearchViewModel @Inject constructor(
     wardrobe: WardrobeRepository,
     peopleRepo: PeopleRepository,
     session: UserSession,
+    private val keywords: com.ledgerai.app.data.capture.SearchKeywords,
 ) : ViewModel() {
+    /** [query] is the text the AI was asked about; [plan] stays null while waiting or when it found nothing. */
+    data class AiSearch(val query: String = "", val busy: Boolean = false, val plan: com.ledgerai.app.data.capture.SearchPlan? = null)
+
+    private val _ai = kotlinx.coroutines.flow.MutableStateFlow(AiSearch())
+    val ai: StateFlow<AiSearch> = _ai
+
+    fun askAi(query: String) {
+        if (_ai.value.query == query) return
+        _ai.value = AiSearch(query, busy = true)
+        viewModelScope.launch { _ai.value = AiSearch(query, busy = false, plan = keywords.plan(query)) }
+    }
+
     private val today = LocalDate.now()
 
     private val money = combine(
@@ -282,7 +296,22 @@ fun SearchScreen(
         recentRaw = (listOf(q) + prior).take(6).joinToString("\n")
     }
     val kindFilter = kind.ifBlank { null }
-    val hits = remember(corpus, q, kindFilter) { searchHits(corpus, q, kindFilter) }
+    val ai by viewModel.ai.collectAsState()
+    val plainHits = remember(corpus, q, kindFilter) { searchHits(corpus, q, kindFilter) }
+    val words = q.split(' ').count { it.isNotBlank() }
+    // A sentence that finds nothing as typed is sent to the AI once, to pick key words and sections.
+    LaunchedEffect(q, plainHits.isEmpty()) {
+        if (words >= 2 && plainHits.isEmpty() && kindFilter == null) viewModel.askAi(q)
+    }
+    val aiPlan = ai.plan?.takeIf { ai.query == q && kindFilter == null }
+    val aiHits = remember(corpus, aiPlan) {
+        aiPlan?.let { plan ->
+            val kinds: List<String?> = if (plan.kinds.isEmpty()) listOf(null) else plan.kinds.toList()
+            plan.keywords.flatMap { k -> kinds.flatMap { kind -> searchHits(corpus, k, kind) } }
+                .distinctBy { Triple(it.group, it.title, it.id to it.personId) }
+        }.orEmpty()
+    }
+    val hits = if (aiPlan != null && plainHits.isEmpty()) aiHits else plainHits
     val recent = remember(recentRaw) { recentRaw.split('\n').filter { it.isNotBlank() } }
 
     LScreen(title = "Search", onBack = onBack) {
@@ -321,7 +350,23 @@ fun SearchScreen(
                 }
             }
         }
-        if ((q.isNotEmpty() || kindFilter != null) && hits.isEmpty()) {
+        if (q.isNotEmpty() && kindFilter == null && words >= 2 && ai.query == q) {
+            val note = when {
+                ai.busy -> "Asking AI what to look for..."
+                aiPlan != null && plainHits.isEmpty() ->
+                    "AI looked for ${aiPlan.keywords.joinToString(", ")}" +
+                        if (aiPlan.kinds.isEmpty()) "" else " in ${aiPlan.kinds.joinToString(", ")}"
+                else -> null
+            }
+            if (note != null) item {
+                androidx.compose.material3.Text(
+                    note,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                    color = com.ledgerai.app.presentation.components.L.InkMuted,
+                )
+            }
+        }
+        if ((q.isNotEmpty() || kindFilter != null) && hits.isEmpty() && !ai.busy) {
             item { LEmpty(Icons.Filled.Search, "No matches") }
         }
         hits.groupBy { it.group }.forEach { (group, rows) ->

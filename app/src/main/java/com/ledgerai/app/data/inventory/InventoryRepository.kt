@@ -109,6 +109,38 @@ class InventoryRepository(
         items.update(row.copy(quantity = quantity, unit = unit.trim(), updatedAt = now()))
     }
 
+    /** Writes every editable field of an item. Callers pass the full new values (start from the stored item). */
+    suspend fun updateItem(
+        id: Long,
+        name: String,
+        category: String,
+        quantity: Double?,
+        unit: String,
+        location: String,
+        expiresOn: LocalDate?,
+        kind: ItemKind,
+    ) {
+        val row = items.getById(id) ?: return
+        if (!StockQuantity.isVisible(row.deletedAt)) return
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        items.update(
+            row.copy(
+                name = trimmed, category = category.trim(), quantity = quantity, unit = unit.trim(),
+                location = location.trim(), expiresOn = expiresOn, kind = kind.stored, updatedAt = now(),
+            )
+        )
+    }
+
+    /** Renames a shopping line or changes how many to buy. */
+    suspend fun updateLine(id: Long, itemName: String, qty: Double?) {
+        val row = lines.getById(id) ?: return
+        if (!StockQuantity.isVisible(row.deletedAt)) return
+        val trimmed = itemName.trim()
+        if (trimmed.isEmpty()) return
+        lines.update(row.copy(itemName = trimmed, qty = qty, updatedAt = now()))
+    }
+
     suspend fun ensureList(
         name: String,
         userId: String? = null,

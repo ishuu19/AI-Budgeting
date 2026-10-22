@@ -7,7 +7,7 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     companion object {
         const val EXTRA_OPEN_FOCUS_BLOCK_ID = "open_focus_block_id"
@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        com.ledgerai.app.data.security.AppLock.hardenWindow(this)
         requestNotificationPermission()
         // Pick up photos captured while offline or before an update.
         com.ledgerai.app.worker.CaptureWorker.kick(this)
@@ -65,6 +66,7 @@ class MainActivity : ComponentActivity() {
                     else -> androidx.compose.foundation.isSystemInDarkTheme()
                 }
             ) {
+                com.ledgerai.app.presentation.components.AppLockGate(this@MainActivity) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     val userInfo by userSession.userInfo.collectAsStateWithLifecycle(
                         initialValue = com.ledgerai.app.data.preferences.UserInfo()
@@ -77,6 +79,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         LoginScreen(onSignedIn = { /* state update triggers recomposition */ })
                     }
+                }
                 }
             }
         }

@@ -17,6 +17,8 @@ class ActionSpec(
     /** Returns an error message, or null when the args are acceptable. */
     val validate: (Map<String, Any?>) -> String?,
     val apply: suspend (Map<String, Any?>) -> ActionOutcome,
+    /** One line the user reads before approving, e.g. the name of the record an edit or delete targets. */
+    val preview: suspend (Map<String, Any?>) -> String? = { null },
 )
 
 /** Only registered types can run. Unknown types from the model are rejected by the executor. */

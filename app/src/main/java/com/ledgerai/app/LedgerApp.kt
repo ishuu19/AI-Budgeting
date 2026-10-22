@@ -63,6 +63,7 @@ class LedgerApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        com.ledgerai.app.data.security.AppLock.install(this)
         databaseSeeder.onApplicationStart()
         BudgetCheckWorker.schedule(this)
         BillReminderWorker.schedule(this)

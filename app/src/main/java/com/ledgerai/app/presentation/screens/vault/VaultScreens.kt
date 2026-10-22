@@ -233,6 +233,7 @@ fun VaultScreen(onBack: () -> Unit, vm: VaultViewModel = hiltViewModel()) {
     val pinned = folders.filter { it.pinned }
     val rest = folders.filter { !it.pinned }
     LScreen(title = "Vault", onBack = onBack, action = { LAddAction({ adding = true }, "New folder") }) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.NOTE) }
         if (folders.isEmpty()) item { LEmpty(Icons.Filled.Folder, "No folders yet.") }
         if (pinned.isNotEmpty()) item { LSection("pinned") }
         pinned.forEach { f -> item(key = "p${f.id}") { FolderRow(f) { open = f.id } } }

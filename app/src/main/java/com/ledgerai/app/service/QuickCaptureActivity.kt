@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
@@ -53,12 +53,13 @@ import java.time.format.DateTimeFormatter
  * tile, launcher shortcuts, and "Share" from the gallery.
  */
 @AndroidEntryPoint
-class QuickCaptureActivity : ComponentActivity() {
+class QuickCaptureActivity : FragmentActivity() {
 
     private val vm: CaptureViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         val mode = intent.getStringExtra(EXTRA_MODE)
         val shared = sharedImages(intent)
         if (savedInstanceState == null && shared.isNotEmpty()) vm.addImages(shared)

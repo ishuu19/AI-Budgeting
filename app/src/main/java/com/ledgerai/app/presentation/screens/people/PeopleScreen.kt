@@ -158,6 +158,7 @@ fun PeopleScreen(
         message = message,
         onBack = onBack,
         lastSeen = lastSeen,
+        onRefresh = viewModel::refresh,
     )
 }
 
@@ -182,6 +183,7 @@ fun PeopleScreen(
     onBack: (() -> Unit)? = null,
     message: String? = null,
     lastSeen: Map<String, LocalDate> = emptyMap(),
+    onRefresh: () -> Unit = {},
 ) {
     val photos: PhotoSaveViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
@@ -233,6 +235,7 @@ fun PeopleScreen(
                 )
             },
         ) {
+            item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.PERSON, onChanged = onRefresh) }
             if (shown.isEmpty()) {
                 item { LEmpty(Icons.Default.Person, if (visible.isEmpty()) "No people yet" else "No matches") }
             } else {

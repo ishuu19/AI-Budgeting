@@ -16,6 +16,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.Multibinds
+import kotlinx.coroutines.flow.first
 import javax.inject.Singleton
 
 /**
@@ -27,6 +28,9 @@ import javax.inject.Singleton
 abstract class ActionSpecBindings {
     @Multibinds
     abstract fun actionSpecs(): Set<ActionSpec>
+
+    @dagger.Binds
+    abstract fun assistantFacts(impl: com.ledgerai.app.data.assistant.AssistantContext): com.ledgerai.app.data.assistant.AssistantFacts
 }
 
 @Module
@@ -51,6 +55,12 @@ object AssistantModule {
     fun provideClipSpecs(actions: com.ledgerai.app.data.clips.ClipActions): Set<ActionSpec> =
         actions.specs().toSet()
 
+    /** Library add, edit and delete, for the section AI bars and the Home chat. */
+    @Provides
+    @dagger.multibindings.ElementsIntoSet
+    fun provideLibrarySpecs(actions: com.ledgerai.app.data.assistant.LibraryActions): Set<ActionSpec> =
+        actions.specs().toSet()
+
     @Provides
     @Singleton
     fun providePlanModel(router: AiProviderRouter): PlanModel = router.asPlanModel()
@@ -59,6 +69,21 @@ object AssistantModule {
     @Singleton
     fun provideOrchestrator(model: PlanModel, registry: ActionRegistry): Orchestrator =
         Orchestrator(model, registry)
+
+    @Provides
+    @Singleton
+    fun provideLibraryAssistant(
+        executor: Executor,
+        registry: ActionRegistry,
+        facts: com.ledgerai.app.data.assistant.AssistantFacts,
+        session: com.ledgerai.app.data.preferences.UserSession,
+        gateway: com.ledgerai.app.data.capture.AiGateway,
+    ): com.ledgerai.app.data.assistant.LibraryAssistant =
+        // Through the gateway, not the bare router: release builds have no model key and must use ai-proxy.
+        com.ledgerai.app.data.assistant.LibraryAssistant(
+            Orchestrator(PlanModel { system, user -> gateway.fast(system, user) }, registry),
+            executor, registry, facts,
+        ) { session.userInfo.first().userId }
 
     @Provides
     @Singleton

@@ -243,6 +243,12 @@ fun InventoryScreen(
                 }
             },
         ) {
+            item(key = "pantry-ai") {
+                com.ledgerai.app.presentation.screens.library.LibraryAiBar(
+                    com.ledgerai.app.domain.assistant.AssistantArea.PANTRY,
+                    extra = setOf(com.ledgerai.app.domain.assistant.AssistantArea.SHOPPING),
+                )
+            }
             item(key = "pantry-switch") {
                 LSegments(
                     options = listOf(InventoryPage.Pantry, InventoryPage.Shopping),

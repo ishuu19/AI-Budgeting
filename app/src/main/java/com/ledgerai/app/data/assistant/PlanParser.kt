@@ -18,16 +18,17 @@ object PlanParser {
             null
         } ?: return null
 
+        // A pure answer may omit "actions"; an object with neither is not a plan.
         val actions = root.getAsJsonArray("actions")
             ?.mapNotNull { it.takeIf { e -> e.isJsonObject }?.asJsonObject?.toAction() }
             ?.take(MAX_ACTIONS)
-            ?: return null
+            ?: if (root.get("reply").asStringOrNull().isNullOrBlank()) return null else emptyList()
 
         return ActionPlan(
             inputRef = inputRef,
             actions = actions,
             unknowns = root.getAsJsonArray("unknowns")?.mapNotNull { it.asStringOrNull() } ?: emptyList(),
-            reply = root.get("reply").asStringOrNull().orEmpty().take(500),
+            reply = root.get("reply").asStringOrNull().orEmpty().take(1500),
         )
     }
 

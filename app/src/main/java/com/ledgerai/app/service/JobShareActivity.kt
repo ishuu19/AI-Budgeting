@@ -3,7 +3,7 @@ package com.ledgerai.app.service
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import com.ledgerai.app.data.ai.JobLexiconProvider
 import com.ledgerai.app.data.ai.JobPasteParser
 import com.ledgerai.app.data.ai.ParsedIntent
@@ -18,7 +18,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class JobShareActivity : ComponentActivity() {
+class JobShareActivity : FragmentActivity() {
 
     @Inject lateinit var jobRepo: JobRepository
     @Inject lateinit var lexicon: JobLexiconProvider
@@ -26,6 +26,7 @@ class JobShareActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         if (intent?.action != Intent.ACTION_SEND) {
             finish()
             return

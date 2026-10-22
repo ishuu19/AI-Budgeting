@@ -122,6 +122,7 @@ fun BirthdaysScreen(onBack: () -> Unit, vm: BirthdaysViewModel = hiltViewModel()
     var adding by rememberSaveable { mutableStateOf(false) }
 
     LScreen(title = "Birthdays", onBack = onBack, action = { LAddAction({ adding = true }, "Add birthday") }) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.BIRTHDAY) }
         if (rows.isEmpty()) {
             item { LEmpty(Icons.Filled.Cake, "No birthdays yet.") }
         }
@@ -265,6 +266,7 @@ fun TripsScreen(onBack: () -> Unit, vm: TripsViewModel = hiltViewModel()) {
     }
 
     LScreen(title = "Trips", onBack = onBack, action = { LAddAction({ adding = true }, "Add trip") }) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.TRIP) }
         if (trips.isEmpty()) item { LEmpty(Icons.Filled.Cake, "No trips yet.") }
         if (ongoing.isNotEmpty()) item { LSection("now") }
         eachItem(ongoing, key = { it.id }) { t -> LThreadRow(shortDate.format(t.startDate), "${t.name} · ${t.place}", detail = detail(t), now = true, onClick = { editing = t }) }

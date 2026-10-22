@@ -5,7 +5,7 @@ import com.google.gson.JsonParser
 import java.time.LocalDate
 
 /** Where a typed or spoken message goes. [LOG] is the existing voice pipeline (expenses, reminders, notes). */
-enum class AskRoute { MEAL, OUTFIT, BUY, LOG }
+enum class AskRoute { MEAL, OUTFIT, BUY, DATA, LOG }
 
 /** One line the model may rely on. Only names and short facts are sent, never photos. */
 data class PantryLine(
@@ -45,12 +45,25 @@ data class BuyIdea(val name: String, val reason: String)
 object AskPrompts {
 
     val ROUTE_SYSTEM: String = """
-        Classify the user's message for a personal organizer. Reply with ONLY JSON: {"route":"meal|outfit|buy|log"}.
+        Classify the user's message for a personal organizer. Reply with ONLY JSON: {"route":"meal|outfit|buy|data|log","areas":[...],"keywords":[...]}.
         meal   = they want something to eat or cook, or ask what they can make with what they have.
         outfit = they want clothes or an outfit suggested (an event, weather, a plan to go somewhere).
-        buy    = they ask what to buy, what is running out, or what to add to a shopping list.
-        log    = anything else: recording an expense, a reminder, a note, a person, a bill.
+        buy    = they ask what to buy or what is running out.
+        data   = a question about their own information (what do I have, when is, how much did I spend, who is, what did I save),
+                 OR adding, changing or removing a person, job, pantry or shopping item, clothing, birthday, trip, achievement, wish or note,
+                 OR changing, completing or deleting something that already exists (a transaction, bill, debt, task or event).
+        log    = recording something new: an expense or income, a bill, a debt, a reminder, a task, an event, a quick note.
         A statement about money spent on food is "log", not "meal".
+        Anything about a password, PIN or login is "log" (the app never lets the AI see passwords).
+        Examples of data: "when is Sam's birthday" (birthday), "how many notes do I have" (note), "what's on my list today" (task),
+        "when is my next trip" (trip), "which app takes most of my time" (appusage), "which wish is most affordable" (wish, transaction),
+        "find my note about visas" (note), "do I have eggs" (pantry), "who is Ana" (person).
+        areas  = only for data: the one to three kinds of records the message is about, from
+                 person, job, pantry, shopping, garment, birthday, trip, achievement, wish, note, task, transaction, bill, debt, household, appusage.
+                 Leave it out for every other route.
+        keywords = only for data: one to five words a matching record would contain (names, items, merchants, places), in the user's
+                 language, root form, no filler like "my", "what", "when", "list", "today". Empty for general or counting questions
+                 such as "what is on today", "how many notes do I have", "when is my next trip", "which app takes most time".
     """.trimIndent()
 
     fun parseRoute(raw: String): AskRoute {
@@ -59,8 +72,42 @@ object AskPrompts {
             "meal" -> AskRoute.MEAL
             "outfit" -> AskRoute.OUTFIT
             "buy" -> AskRoute.BUY
+            "data" -> AskRoute.DATA
             else -> AskRoute.LOG
         }
+    }
+
+    /** The record kinds a data message is about. Empty when the model named none. */
+    fun parseAreas(raw: String): Set<com.ledgerai.app.domain.assistant.AssistantArea> {
+        val list = rootObject(raw)?.get("areas")?.takeIf { it.isJsonArray }?.asJsonArray ?: return emptySet()
+        val keys = list.mapNotNull { e -> e.takeIf { it.isJsonPrimitive }?.asString?.trim()?.lowercase() }
+        return com.ledgerai.app.domain.assistant.AssistantArea.entries.filter { it.key in keys }.toSet()
+    }
+
+    /** Words to look for in the records. Empty means a general question: no narrowing. */
+    fun parseKeywords(raw: String): List<String> {
+        val list = rootObject(raw)?.get("keywords")?.takeIf { it.isJsonArray }?.asJsonArray ?: return emptyList()
+        return list.mapNotNull { e -> e.takeIf { it.isJsonPrimitive }?.asString?.trim() }
+            .filter { it.length in 2..40 }.distinct().take(5)
+    }
+
+    /** Names of the Search screen's kinds, as the chips show them. */
+    val SEARCH_KINDS = listOf("Spending", "Income", "Bills", "Debts", "Goals", "Budgets", "Events", "Notes", "Jobs", "Pantry", "Wardrobe", "People")
+
+    val SEARCH_SYSTEM: String = """
+        A person typed a search for their own organizer app. Pick out what to look for.
+        Reply with ONLY JSON: {"keywords":[...],"kinds":[...]}.
+        keywords = one to five words a matching record would contain (names, items, merchants, places), in the user's language,
+                   root form, no filler words like "my", "what", "when", "show".
+        kinds    = the one to three kinds of records to look in, only from: ${SEARCH_KINDS.joinToString(", ")}. Empty if unsure.
+    """.trimIndent()
+
+    /** Keywords and kinds from the search extractor; kinds the app does not know are dropped. */
+    fun parseSearch(raw: String): Pair<List<String>, Set<String>> {
+        val kinds = rootObject(raw)?.get("kinds")?.takeIf { it.isJsonArray }?.asJsonArray
+            ?.mapNotNull { e -> e.takeIf { it.isJsonPrimitive }?.asString?.trim() }
+            ?.mapNotNull { k -> SEARCH_KINDS.firstOrNull { it.equals(k, true) } }?.toSet().orEmpty()
+        return parseKeywords(raw) to kinds
     }
 
     /** The most items a suggested meal may lack. More than this is not a suggestion, it is a shopping trip. */

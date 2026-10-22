@@ -80,6 +80,7 @@ class CaptureViewModel @Inject constructor(
     private val session: UserSession,
     private val prefs: UserPreferences,
     private val chat: ChatRepository,
+    private val assistant: com.ledgerai.app.data.assistant.LibraryAssistant,
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(CaptureUi())
@@ -140,6 +141,7 @@ class CaptureViewModel @Inject constructor(
         is AskResult.Outfits -> "Outfit ideas:\n" + answer.ideas.joinToString("\n") { "• ${it.title}: ${it.why}" }
         is AskResult.Shopping -> "Worth buying:\n" + answer.items.joinToString("\n") { "• ${it.name}: ${it.reason}" }
         is AskResult.Empty -> answer.reason
+        is AskResult.Data -> answer.turn.summary()
         AskResult.LogIt -> ""
     }
 
@@ -281,6 +283,28 @@ class CaptureViewModel @Inject constructor(
     fun quickAsk(prompt: String) {
         _ui.update { it.copy(text = prompt) }
         submit()
+    }
+
+    // Steps of an assistant answer. The turn is found by its plan id, so the same card works in the chat
+    // and in the quick-capture window.
+    fun approveStep(turnId: String, index: Int) = changeTurn(turnId) { assistant.approve(it, index) }
+    fun skipStep(turnId: String, index: Int) = changeTurn(turnId) { assistant.skip(it, index) }
+    fun undoStep(turnId: String, index: Int) = changeTurn(turnId) { assistant.undo(it, index) }
+
+    private fun changeTurn(turnId: String, next: suspend (com.ledgerai.app.domain.assistant.AssistantTurn) -> com.ledgerai.app.domain.assistant.AssistantTurn) {
+        viewModelScope.launch {
+            val current = (_messages.value.firstNotNullOfOrNull { m ->
+                ((m as? ChatMsg.Answer)?.answer as? AskResult.Data)?.turn?.takeIf { it.plan.inputRef == turnId }
+            } ?: (_ui.value.answer as? AskResult.Data)?.turn?.takeIf { it.plan.inputRef == turnId }) ?: return@launch
+            val updated = AskResult.Data(next(current))
+            _messages.update { list ->
+                list.map { m ->
+                    val a = (m as? ChatMsg.Answer)?.answer as? AskResult.Data
+                    if (a != null && a.turn.plan.inputRef == turnId) ChatMsg.Answer(m.id, updated) else m
+                }
+            }
+            _ui.update { s -> if ((s.answer as? AskResult.Data)?.turn?.plan?.inputRef == turnId) s.copy(answer = updated) else s }
+        }
     }
 
     fun dismissAnswer() = _ui.update { it.copy(answer = null) }

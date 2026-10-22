@@ -123,6 +123,7 @@ fun AchievementsScreen(onBack: () -> Unit, vm: AchievementsViewModel = hiltViewM
     val fmt = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
 
     LScreen(title = "Achievements", onBack = onBack, action = { LAddAction({ adding = true }, "Add achievement") }) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.ACHIEVEMENT) }
         if (rows.isEmpty()) item { LEmpty(Icons.Filled.EmojiEvents, "Nothing here yet.") }
         var lastYear = -1
         rows.forEach { a ->
@@ -252,6 +253,7 @@ fun WishesScreen(onBack: () -> Unit, vm: WishesViewModel = hiltViewModel()) {
     val now = System.currentTimeMillis()
 
     LScreen(title = "Wishes", onBack = onBack, action = { LAddAction({ adding = true }, "Add wish") }) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.WISH) }
         if (rows.isEmpty()) item { LEmpty(Icons.Filled.Star, "Nothing on the list.") }
         open.forEach { w ->
             item(key = w.id) {

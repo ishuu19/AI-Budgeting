@@ -178,6 +178,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // Fingerprint app lock (strong biometric bound to a Keystore key).
+    implementation("androidx.biometric:biometric:1.1.0")
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
     implementation(platform(libs.androidx.compose.bom))

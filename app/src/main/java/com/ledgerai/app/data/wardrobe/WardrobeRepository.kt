@@ -66,6 +66,31 @@ class WardrobeRepository(
         )
     }
 
+    /** Writes the editable fields of a garment. Callers pass the full new values (start from the stored garment). */
+    suspend fun updateGarment(
+        userId: String,
+        id: Long,
+        name: String,
+        type: String,
+        colors: List<String>,
+        seasons: List<String>,
+        laundryStatus: String,
+    ): Boolean {
+        val row = items.getById(id) ?: return false
+        if (row.userId != userId.trim() || row.deletedAt != null || name.trim().isEmpty()) return false
+        items.insert(
+            row.copy(
+                name = name.trim(),
+                type = WardrobeRules.typeOrUnknown(type),
+                colors = encodeTextList(WardrobeRules.colorsOrUnknown(colors)),
+                seasons = encodeTextList(WardrobeRules.seasonsAsGiven(seasons)),
+                laundryStatus = WardrobeRules.laundryOrUnknown(laundryStatus),
+                updatedAt = now(),
+            )
+        )
+        return true
+    }
+
     suspend fun logWear(
         userId: String,
         itemIds: List<Long>,

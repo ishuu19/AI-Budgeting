@@ -68,8 +68,10 @@ abstract class RowSync<E : Any>(
         try {
             pull(bearer, apiKey, filter)
             push(bearer, apiKey, userId, sinceMs)
-        } catch (e: Exception) {
-            Log.w(TAG, "$table sync skipped: ${e.message}")
+        } catch (e: retrofit2.HttpException) {
+            // Only a table that is not on the server yet is skipped. Anything else (offline, expired
+            // sign-in, server error) is rethrown so the sync cursor stays put and the next run retries.
+            if (e.code() == 404) Log.w(TAG, "$table is not on the server yet: skipped") else throw e
         }
     }
 
@@ -92,7 +94,20 @@ abstract class RowSync<E : Any>(
 
     private suspend fun push(bearer: String, apiKey: String, userId: String, sinceMs: Long) {
         val rows = changedSince(sinceMs).map { toJson(it, userId) }
-        rows.chunked(PUSH_CHUNK).forEach { api.upsert(table, bearer, apiKey, body = it) }
+        for (chunk in rows.chunked(PUSH_CHUNK)) {
+            val response = api.upsert(table, bearer, apiKey, body = chunk)
+            if (response.isSuccessful) continue
+            // A 4xx means the server refused something in this chunk (a length or format check).
+            // Retry row by row so one bad row cannot hold back the others; a refused row is logged.
+            // Anything else (401, 5xx) is thrown so the run is retried later.
+            if (response.code() !in 400..499 || response.code() == 401 || response.code() == 404) throw retrofit2.HttpException(response)
+            for (row in chunk) {
+                val one = api.upsert(table, bearer, apiKey, body = listOf(row))
+                if (one.isSuccessful) continue
+                if (one.code() == 401 || one.code() == 404 || one.code() !in 400..499) throw retrofit2.HttpException(one)
+                Log.e(TAG, "$table row ${row.str("id")} was refused by the server (${one.code()}): ${one.errorBody()?.string()?.take(200)}")
+            }
+        }
     }
 
     private interface RowApi {

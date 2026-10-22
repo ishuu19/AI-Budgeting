@@ -1,5 +1,6 @@
 package com.ledgerai.app.domain.capture
 
+import com.ledgerai.app.domain.assistant.AssistantArea
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -23,6 +24,18 @@ class AskPromptsTest {
         assertEquals(AskRoute.LOG, AskPrompts.parseRoute("hmm"))
         assertEquals(AskRoute.LOG, AskPrompts.parseRoute("""{"route":"banana"}"""))
         assertEquals(AskRoute.MEAL, AskPrompts.parseRoute("""{"route":"meal"}"""))
+        assertEquals(AskRoute.DATA, AskPrompts.parseRoute("""{"route":" Data "}"""))
+        assertEquals(
+            setOf(AssistantArea.PANTRY, AssistantArea.SHOPPING),
+            AskPrompts.parseAreas("""{"route":"data","areas":["Pantry","shopping","nonsense"]}"""),
+        )
+        assertEquals(emptySet<AssistantArea>(), AskPrompts.parseAreas("""{"route":"data"}"""))
+        assertEquals(listOf("eggs", "Ana"), AskPrompts.parseKeywords("""{"keywords":[" eggs ","Ana","x","eggs"]}"""))
+        assertEquals(emptyList<String>(), AskPrompts.parseKeywords("""{"route":"data"}"""))
+        assertEquals(
+            listOf("dentist") to setOf("Events", "People"),
+            AskPrompts.parseSearch("""{"keywords":["dentist"],"kinds":["events","People","Bananas"]}"""),
+        )
         assertEquals(AskRoute.OUTFIT, AskPrompts.parseRoute("""{"route":" Outfit "}"""))
     }
 

@@ -162,6 +162,31 @@ fun AppNavigation(request: LaunchRequest? = null) {
     var addSpend by remember { mutableStateOf(false) }
     var pendingAgenda by remember { mutableStateOf<Pair<String, Long>?>(null) }
 
+    // The mic only opens the mic. On Home it listens in the chat; anywhere else it opens the phone's own
+    // speech dialog on top of the current screen, and the words go to Home once they are heard.
+    val context = LocalContext.current
+    val systemMic = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        com.ledgerai.app.domain.widget.widgetMicFromRecognizer(
+            result.resultCode == android.app.Activity.RESULT_OK,
+            result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS),
+        )?.let { heard -> voiceSeed = heard; nav.tab(Screen.Chat.route) }
+    }
+    val openMic = rememberUpdatedState<() -> Unit> {
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "Listening")
+            putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+        }
+        when {
+            entry?.destination?.route == Screen.Chat.route -> micRequest = true
+            intent.resolveActivity(context.packageManager) != null -> systemMic.launch(intent)
+            // No phone speech dialog: fall back to listening in the Home chat.
+            else -> { micRequest = true; nav.tab(Screen.Chat.route) }
+        }
+    }
+
     fun focusRoute(id: Long, topic: String) = "${Screen.Focus.route}/$id?topic=${Uri.encode(topic)}"
 
     val links = remember(nav) {
@@ -186,7 +211,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
             },
             today = { nav.go(Screen.Today.route) },
             voiceLog = { nav.go(Screen.VoiceLog.route) },
-            listen = { micRequest = true; nav.tab(Screen.Chat.route) },
+            listen = { openMic.value() },
             you = { nav.go(Screen.Settings.route) },
             life = { seg ->
                 nav.go(when (seg) {
@@ -306,18 +331,13 @@ fun AppNavigation(request: LaunchRequest? = null) {
                 selected = { s -> currentTab == s },
                 onSelect = {
                     when (it) {
-                        Screen.Mic -> {
-                            micRequest = true
-                            nav.tab(Screen.Chat.route)
-                        }
-                        // Home is the briefing. The chat screen is where speech turns into suggestions.
-                        Screen.Chat -> nav.tab(Screen.Brief.route)
+                        Screen.Mic -> openMic.value()
+                        // Home is the chat: the day's briefing on top, speech and typing below.
                         else -> nav.tab(it.route)
                     }
                 },
                 onVoiceHoldStart = {
-                    nav.tab(Screen.Chat.route)
-                    holdMic = true
+                    if (entry?.destination?.route == Screen.Chat.route) holdMic = true else openMic.value()
                 },
                 onVoiceHoldEnd = { holdMic = false }
             )
@@ -325,7 +345,7 @@ fun AppNavigation(request: LaunchRequest? = null) {
     ) { inner ->
         NavHost(
             navController = nav,
-            startDestination = Screen.Brief.route,
+            startDestination = Screen.Chat.route,
             modifier = Modifier.padding(inner).consumeWindowInsets(inner)
         ) {
             val back: () -> Unit = { nav.popBackStack() }

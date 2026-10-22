@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.LinearLayout
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.ledgerai.app.R
 import com.ledgerai.app.data.repository.AiRepository
@@ -15,13 +15,14 @@ import kotlinx.coroutines.launch
 
 /** Search from the widget. The words stay in this popup and become suggestions. */
 @AndroidEntryPoint
-class WidgetNoteActivity : ComponentActivity() {
+class WidgetNoteActivity : FragmentActivity() {
 
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         setContentView(R.layout.widget_note_composer)
         val field = findViewById<EditText>(R.id.widget_note_field)
         field.requestFocus()

@@ -34,6 +34,11 @@ class HabitNudgeActionReceiver : BroadcastReceiver() {
             }
             ACTION_SNOOZE -> habitNudgeScheduler.snooze(habitId, title, 5)
             ACTION_SKIP -> {
+                // Logging a skipped habit needs the fingerprint: open the app instead while locked.
+                if (!com.ledgerai.app.data.security.AppLock.isUnlocked()) {
+                    context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    return
+                }
                 val pending = goAsync()
                 CoroutineScope(Dispatchers.IO).launch {
                     habitRepo.logOutcome(habitId, com.ledgerai.app.domain.model.HabitOutcome.SKIPPED)

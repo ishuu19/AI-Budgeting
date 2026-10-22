@@ -20,6 +20,8 @@ sealed interface AskResult {
     data class Meals(val ideas: List<MealIdea>) : AskResult
     data class Outfits(val ideas: List<OutfitIdea>, val garments: Map<Long, WardrobeItem>) : AskResult
     data class Shopping(val items: List<BuyIdea>) : AskResult
+    /** A question about the user's data, or a change to it. Steps that need a tap wait inside [turn]. */
+    data class Data(val turn: com.ledgerai.app.domain.assistant.AssistantTurn) : AskResult
     /** Not a question for the pantry or wardrobe: hand the text to the normal voice pipeline. */
     data object LogIt : AskResult
     data class Empty(val reason: String) : AskResult
@@ -37,20 +39,40 @@ class AskService @Inject constructor(
     private val wardrobe: WardrobeRepository,
     private val weather: WeatherSource,
     private val calendar: com.ledgerai.app.data.repository.CalendarRepository,
+    private val assistant: com.ledgerai.app.data.assistant.LibraryAssistant,
 ) {
 
     suspend fun ask(userId: String, text: String): AskResult {
         val message = text.trim()
         if (message.isEmpty()) return AskResult.LogIt
         // If the router call fails (offline, no key) the message takes the normal voice path.
-        val route = ai.fast(AskPrompts.ROUTE_SYSTEM, message).getOrNull()
-            ?.let(AskPrompts::parseRoute) ?: AskRoute.LOG
+        val routed = ai.fast(AskPrompts.ROUTE_SYSTEM, message).getOrNull()
+        val route = routed?.let(AskPrompts::parseRoute) ?: AskRoute.LOG
         return when (route) {
             AskRoute.MEAL -> meals(message)
             AskRoute.OUTFIT -> outfits(userId, message)
             AskRoute.BUY -> buy(userId, message)
+            AskRoute.DATA -> data(message, routed?.let(AskPrompts::parseAreas).orEmpty(), routed?.let(AskPrompts::parseKeywords).orEmpty())
             AskRoute.LOG -> AskResult.LogIt
         }
+    }
+
+    /** Questions and library changes: one pass over all of the user's records, then the executor. */
+    private suspend fun data(
+        message: String,
+        areas: Set<com.ledgerai.app.domain.assistant.AssistantArea>,
+        keywords: List<String>,
+    ): AskResult {
+        // Only the kinds of records the message is about go to the model; the proxy caps how much text it takes.
+        val scope = areas.ifEmpty { com.ledgerai.app.domain.assistant.AssistantArea.ALL }
+        val turn = assistant.ask(message, scope, keywords).getOrElse { e ->
+            return AskResult.Empty(
+                (e as? com.ledgerai.app.data.assistant.AssistantUserError)?.message
+                    ?: "I couldn't reach the AI. Try again when you're online."
+            )
+        }
+        // Nothing to answer and nothing to change: let the normal voice flow try.
+        return if (turn.isEmpty) AskResult.LogIt else AskResult.Data(turn)
     }
 
     /** Everything the user owns that counts as food, with what is low and where it is. */

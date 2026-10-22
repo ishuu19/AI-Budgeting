@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import android.speech.tts.TextToSpeech
 import android.service.voice.VoiceInteractionService
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
@@ -66,7 +66,7 @@ object NotebookHandoff {
 }
 
 @AndroidEntryPoint
-class NotebookPanelActivity : ComponentActivity(), TextToSpeech.OnInitListener {
+class NotebookPanelActivity : FragmentActivity(), TextToSpeech.OnInitListener {
 
     @Inject lateinit var prefs: UserPreferences
 
@@ -126,6 +126,7 @@ class NotebookPanelActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         tts = TextToSpeech(this, this)
         val handoff = if (intent.getBooleanExtra(EXTRA_HANDOFF, false)) NotebookHandoff.take() else null
         blocks = handoff?.blocks.orEmpty()

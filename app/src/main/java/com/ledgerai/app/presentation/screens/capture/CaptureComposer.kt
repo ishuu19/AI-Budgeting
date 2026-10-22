@@ -215,6 +215,15 @@ internal fun AnswerCards(answer: AskResult?, vm: CaptureViewModel) {
             }
         }
         is AskResult.Empty -> Text(answer.reason, style = MaterialTheme.typography.bodyMedium, color = L.Ink)
+        is AskResult.Data -> {
+            val id = answer.turn.plan.inputRef
+            com.ledgerai.app.presentation.components.AssistantTurnCard(
+                answer.turn,
+                onApprove = { vm.approveStep(id, it) },
+                onSkip = { vm.skipStep(id, it) },
+                onUndo = { vm.undoStep(id, it) },
+            )
+        }
         AskResult.LogIt, null -> Unit
     }
 }

@@ -215,6 +215,7 @@ fun WardrobeScreen(
             snackbarHost = { NoticeHost(notices) },
             fab = { LFab(Icons.Filled.Add, onClick = { adding = true }, label = "New garment") },
         ) {
+            item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.GARMENT) }
             item {
                 LKindChips(
                     options = listOf("All") + Types,

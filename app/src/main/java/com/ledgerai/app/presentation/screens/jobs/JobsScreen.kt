@@ -299,6 +299,7 @@ fun JobsScreen(
         onBack = onBack,
         fab = { LFab(Icons.Default.Add, onClick = { paste = ""; adding = true }, label = "New job") }
     ) {
+        item { com.ledgerai.app.presentation.screens.library.LibraryAiBar(com.ledgerai.app.domain.assistant.AssistantArea.JOB, onChanged = viewModel::load) }
         when {
             state.loading -> item { LLoading() }
             state.error -> item { LError("Could not load", onRetry = viewModel::load) }

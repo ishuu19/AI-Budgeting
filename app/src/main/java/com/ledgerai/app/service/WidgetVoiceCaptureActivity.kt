@@ -6,7 +6,7 @@ import android.speech.RecognizerIntent
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.ledgerai.app.R
@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 /** Widget mic. Opens the phone's built-in speech mic, then categorizes what was said. */
 @AndroidEntryPoint
-class WidgetVoiceCaptureActivity : ComponentActivity() {
+class WidgetVoiceCaptureActivity : FragmentActivity() {
 
     @Inject lateinit var prefs: UserPreferences
     @Inject lateinit var ai: AiRepository
@@ -44,6 +44,7 @@ class WidgetVoiceCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         if (savedInstanceState?.getBoolean(KEY_STARTED) == true) return
         openPhoneMic()
     }

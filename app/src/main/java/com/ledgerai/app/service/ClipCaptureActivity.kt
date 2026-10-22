@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
  * Clipboard text is read only after the window has focus, and only when the user asked.
  */
 @AndroidEntryPoint
-class ClipCaptureActivity : ComponentActivity() {
+class ClipCaptureActivity : FragmentActivity() {
 
     @Inject lateinit var clips: ClipRepository
     @Inject lateinit var prefs: UserPreferences
@@ -56,6 +56,7 @@ class ClipCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (com.ledgerai.app.data.security.AppLock.holdIfLocked(this)) return
         val mode = intent.getStringExtra(EXTRA_MODE)
         clipboardMode = mode == MODE_CLIPBOARD
         sourceKind = intent.getStringExtra(EXTRA_SOURCE) ?: when (intent.action) {
