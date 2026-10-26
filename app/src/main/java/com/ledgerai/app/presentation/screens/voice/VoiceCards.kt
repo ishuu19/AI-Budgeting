@@ -217,7 +217,7 @@ internal fun ConfirmCard(
             Text(
                 headline,
                 style = MaterialTheme.typography.titleMedium,
-                color = L.OnBox,
+                color = if (card.saved) L.OnBoxMuted else L.OnBox,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -235,7 +235,7 @@ internal fun ConfirmCard(
             Modifier.fillMaxWidth().background(L.Page).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            CardPickers(intent) { onChange(it, null) }
+            if (!card.saved) CardPickers(intent) { onChange(it, null) }
             Row(
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -243,12 +243,12 @@ internal fun ConfirmCard(
             ) {
                 Box(Modifier.weight(1f)) {
                     TonalButton(
-                        if (unmatched) "Keep as note" else "Save",
+                        if (card.saved) "Saved" else if (unmatched) "Keep as note" else "Save",
                         onClick = onSave,
-                        enabled = canSave(intent)
+                        enabled = !card.saved && canSave(intent)
                     )
                 }
-                CardAction("Edit", onClick = { editing = true })
+                if (!card.saved) CardAction("Edit", onClick = { editing = true })
                 CardAction("Discard", onClick = onDiscard)
             }
         }

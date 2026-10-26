@@ -17,12 +17,19 @@ import com.ledgerai.app.presentation.components.LTextLink
 
 /** One suggestion for a birthday, trip, appointment, achievement or wish. Nothing is saved until Save. */
 @Composable
-fun RecordCard(draft: RecordDraft, onSave: () -> Unit, onDismiss: () -> Unit, onOpenPasswords: () -> Unit) {
+fun RecordCard(
+    draft: RecordDraft,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit,
+    onOpenPasswords: () -> Unit,
+    saved: Boolean = false,
+) {
     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(draft.title, style = MaterialTheme.typography.titleMedium, color = L.Ink)
+        Text(draft.title, style = MaterialTheme.typography.titleMedium, color = if (saved) L.InkMuted else L.Ink)
         Text(draft.detail, style = MaterialTheme.typography.bodySmall, color = L.InkMuted)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (draft === PasswordGuard) LTextLink("Open Passwords", { onDismiss(); onOpenPasswords() })
+            else if (saved) Text("Saved", style = MaterialTheme.typography.labelLarge, color = L.InkMuted)
             else LTextLink("Save", onSave)
             LTextLink("Dismiss", onDismiss)
         }

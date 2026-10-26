@@ -200,7 +200,7 @@ fun VoiceRecorderScreen(
                         }
                     )
                 }
-                if (state.recorderState == VoiceRecorderState.RESULT && state.cards.size > 1) {
+                if (state.recorderState == VoiceRecorderState.RESULT && state.cards.count { !it.saved } > 1) {
                     Box(Modifier.padding(horizontal = L.Gutter, vertical = 8.dp)) {
                         LButton("Save all", onClick = viewModel::saveAll)
                     }

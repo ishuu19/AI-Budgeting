@@ -307,6 +307,12 @@ class CaptureViewModel @Inject constructor(
         }
     }
 
+    /** A line from a save on the home chat, such as "Task added". */
+    fun say(text: String) {
+        if (text.isBlank()) return
+        post { ChatMsg.Bot(it, text) }
+    }
+
     fun dismissAnswer() = _ui.update { it.copy(answer = null) }
 
     fun addToShopping(names: List<String>, done: (Int) -> Unit = {}) {

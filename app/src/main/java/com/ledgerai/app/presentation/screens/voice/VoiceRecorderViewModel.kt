@@ -29,9 +29,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -70,6 +73,7 @@ data class VoiceCard(
     val intent: ParsedIntent,
     val remindersEdited: Boolean = false,
     val source: IntentSource? = null,
+    val saved: Boolean = false,
 )
 
 /** A history row being redone: saving a card updates that row, and optionally removes its old item. */
@@ -103,7 +107,9 @@ data class VoiceUiState(
     val redo: RedoContext? = null,
     val notice: SavedNotice? = null,
     /** A birthday, trip, appointment, achievement or wish read from the words. Saved only on a tap. */
-    val record: com.ledgerai.app.domain.records.RecordDraft? = null
+    val record: com.ledgerai.app.domain.records.RecordDraft? = null,
+    /** True after Save on [record], so the card can show Saved instead of disappearing. */
+    val recordSaved: Boolean = false,
 ) {
     val maxSeconds: Int get() = VoiceRecorderViewModel.MAX_SECONDS
 }
@@ -137,6 +143,10 @@ class VoiceRecorderViewModel @Inject constructor(
         const val MAX_SECONDS = 60
         private const val MIN_RECORDING_MS = 1000L
     }
+
+    /** One line for the home chat after a save. The voice screen does not collect this. */
+    private val _savedChat = MutableSharedFlow<String>(extraBufferCapacity = 8)
+    val savedChat: SharedFlow<String> = _savedChat.asSharedFlow()
 
     private var engine: OfflineVoiceEngine = OfflineVoiceEngine.SHERPA
     private var speechLang: String = "en"
@@ -476,7 +486,14 @@ class VoiceRecorderViewModel @Inject constructor(
             // A password sentence is never kept: not shown, not stored in history.
             val secret = draft === com.ledgerai.app.domain.records.PasswordGuard
             _uiState.update {
-                it.copy(recorderState = VoiceRecorderState.RESULT, transcript = if (secret) "" else text, cards = emptyList(), record = draft, modelDownloadProgress = null)
+                it.copy(
+                    recorderState = VoiceRecorderState.RESULT,
+                    transcript = if (secret) "" else text,
+                    cards = emptyList(),
+                    record = draft,
+                    recordSaved = false,
+                    modelDownloadProgress = null,
+                )
             }
             if (!secret) viewModelScope.launch { capture.recordHeard(text) }
             return
@@ -513,7 +530,10 @@ class VoiceRecorderViewModel @Inject constructor(
         val draft = _uiState.value.record ?: return
         viewModelScope.launch {
             runCatching { records.save(draft) }
-                .onSuccess { _uiState.update { it.copy(record = null, recorderState = VoiceRecorderState.IDLE, transcript = "") } }
+                .onSuccess {
+                    _uiState.update { it.copy(recordSaved = true) }
+                    tellChat("Entry added")
+                }
                 .onFailure { e -> showError(ErrorType.PARSE_FAILED, e.message ?: "Could not save") }
         }
     }
@@ -584,11 +604,13 @@ class VoiceRecorderViewModel @Inject constructor(
     /** Saves one card. An unmatched card is kept as a note. */
     fun saveCard(key: Int) {
         val card = _uiState.value.cards.firstOrNull { it.key == key } ?: return
+        if (card.saved) return
         viewModelScope.launch {
             val saved = saveOne(card, _uiState.value.transcript)
             if (saved != null) {
-                removeCard(key)
+                markSaved(key)
                 publish(listOf(saved))
+                tellChat("${saved.kind.label} added")
             }
         }
     }
@@ -599,14 +621,28 @@ class VoiceRecorderViewModel @Inject constructor(
         viewModelScope.launch {
             val saved = mutableListOf<SavedVoiceItem>()
             for (card in state.cards) {
+                if (card.saved) continue
                 val result = saveOne(card, state.transcript)
                 if (result != null) {
                     saved += result
-                    removeCard(card.key)
+                    markSaved(card.key)
                 }
             }
-            if (saved.isNotEmpty()) publish(saved)
+            if (saved.isNotEmpty()) {
+                publish(saved)
+                tellChat(if (saved.size == 1) "${saved.first().kind.label} added" else "${saved.size} entries added")
+            }
         }
+    }
+
+    private fun markSaved(key: Int) {
+        _uiState.update { state ->
+            state.copy(cards = state.cards.map { if (it.key == key) it.copy(saved = true) else it })
+        }
+    }
+
+    private fun tellChat(line: String) {
+        _savedChat.tryEmit(line)
     }
 
     private suspend fun saveOne(card: VoiceCard, transcript: String): SavedVoiceItem? {

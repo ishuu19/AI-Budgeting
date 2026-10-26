@@ -156,6 +156,9 @@ fun ChatScreen(
     LaunchedEffect(cvm) {
         cvm.events.collect { if (it is CaptureEvent.HandOff) vvm.offerText(it.text) }
     }
+    LaunchedEffect(vvm) {
+        vvm.savedChat.collect { cvm.say(it) }
+    }
     // A tap on the big mic is a one-time request. Coming back to Home never reopens the mic.
     LaunchedEffect(micRequest) { if (micRequest) { onMicConsumed(); toggleMic() } }
     LaunchedEffect(holdMic) {
@@ -219,7 +222,7 @@ fun ChatScreen(
                         onDiscard = { vvm.discardCard(card.key) },
                     )
                 }
-                if (voice.cards.size > 1) {
+                if (voice.cards.count { !it.saved } > 1) {
                     item(key = "save-all") {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             LButton("Save all", vvm::saveAll, Modifier.weight(1f))
@@ -228,7 +231,13 @@ fun ChatScreen(
                     }
                 }
             }
-            voice.record?.let { r -> item(key = "record") { com.ledgerai.app.presentation.screens.voice.RecordCard(r, vvm::saveRecord, vvm::dismissRecord, links.passwords) } }
+            voice.record?.let { r ->
+                item(key = "record") {
+                    com.ledgerai.app.presentation.screens.voice.RecordCard(
+                        r, vvm::saveRecord, vvm::dismissRecord, links.passwords, saved = voice.recordSaved,
+                    )
+                }
+            }
             voice.errorMessage?.let { msg -> item(key = "voice-error") { BotBubble(msg) } }
             if (ui.busy) item(key = "busy") { TypingBubble() }
         }
