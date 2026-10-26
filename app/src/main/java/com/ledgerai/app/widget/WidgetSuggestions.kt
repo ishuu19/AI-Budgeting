@@ -19,6 +19,7 @@ internal fun showWidgetSuggestions(
     items: List<ParsedIntent>,
     transcript: String,
     capture: VoiceCaptureRepository,
+    onAdded: () -> Unit = {},
 ) {
     host.removeAllViews()
     val inflater = LayoutInflater.from(activity)
@@ -30,22 +31,26 @@ internal fun showWidgetSuggestions(
         if (detail.isNullOrBlank()) detailView.visibility = android.view.View.GONE
         else detailView.text = detail
         val save = row.findViewById<TextView>(R.id.widget_suggestion_save)
+        var taken = false
         save.setOnClickListener {
+            if (taken) return@setOnClickListener
+            taken = true
             save.isEnabled = false
+            save.isClickable = false
+            save.text = "Saved"
+            host.addView(TextView(activity).apply {
+                text = "Entry added"
+                setTextColor(0xFFB9CFC4.toInt())
+                textSize = 14f
+                setPadding(0, 8, 0, 0)
+            })
+            onAdded()
             activity.lifecycleScope.launch {
-                val toSave = if (intent is ParsedIntent.Unmatched || !canSave(intent)) {
-                    ParsedIntent.Note(title = transcript.take(80), body = transcript, rawTranscript = transcript)
-                } else {
-                    intent
-                }
+                val note = ParsedIntent.Note(title = transcript.take(80).ifBlank { "Note" }, body = transcript, rawTranscript = transcript)
+                val toSave = if (intent is ParsedIntent.Unmatched || !canSave(intent)) note else intent
                 val saved = capture.save(toSave, transcript)
-                if (saved != null) {
-                    WidgetRefresh.refreshAll(activity.applicationContext)
-                    save.text = "Saved"
-                } else {
-                    save.isEnabled = true
-                    save.text = "Save"
-                }
+                    ?: if (toSave !is ParsedIntent.Note) capture.save(note, transcript) else null
+                if (saved != null) WidgetRefresh.refreshAll(activity.applicationContext)
             }
         }
         host.addView(row)

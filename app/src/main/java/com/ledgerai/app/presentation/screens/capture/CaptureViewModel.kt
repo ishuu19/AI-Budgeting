@@ -81,7 +81,15 @@ class CaptureViewModel @Inject constructor(
     private val prefs: UserPreferences,
     private val chat: ChatRepository,
     private val assistant: com.ledgerai.app.data.assistant.LibraryAssistant,
+    private val chatNotice: com.ledgerai.app.data.chat.HomeChatNotice,
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            chatNotice.take().forEach { say(it) }
+            chatNotice.lines.collect { chatNotice.take().forEach { line -> say(line) } }
+        }
+    }
 
     private val _ui = MutableStateFlow(CaptureUi())
     val ui: StateFlow<CaptureUi> = _ui.asStateFlow()

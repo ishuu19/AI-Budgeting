@@ -27,6 +27,7 @@ class WidgetVoiceCaptureActivity : FragmentActivity() {
     @Inject lateinit var prefs: UserPreferences
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
+    @Inject lateinit var chatNotice: com.ledgerai.app.data.chat.HomeChatNotice
 
     private var startedMic = false
 
@@ -81,7 +82,9 @@ class WidgetVoiceCaptureActivity : FragmentActivity() {
         findViewById<android.view.View>(R.id.widget_listen_scrim).setOnClickListener { finish() }
         val host = findViewById<LinearLayout>(R.id.widget_suggestions)
         lifecycleScope.launch {
-            runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ai, capture)
+            runWidgetAi(this@WidgetVoiceCaptureActivity, host, spoken, ai, capture) {
+                chatNotice.post("Entry added")
+            }
         }
     }
 

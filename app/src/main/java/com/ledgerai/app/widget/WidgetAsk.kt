@@ -16,6 +16,7 @@ internal suspend fun runWidgetAi(
     text: String,
     ai: AiRepository,
     capture: VoiceCaptureRepository,
+    onAdded: () -> Unit = {},
 ) {
     host.removeAllViews()
     val spoken = widgetMicTranscript(text) ?: return
@@ -31,5 +32,5 @@ internal suspend fun runWidgetAi(
         return
     }
     host.removeView(status)
-    showWidgetSuggestions(activity, host, items, spoken, capture)
+    showWidgetSuggestions(activity, host, items, spoken, capture, onAdded)
 }

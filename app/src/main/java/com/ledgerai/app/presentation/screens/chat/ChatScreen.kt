@@ -156,9 +156,6 @@ fun ChatScreen(
     LaunchedEffect(cvm) {
         cvm.events.collect { if (it is CaptureEvent.HandOff) vvm.offerText(it.text) }
     }
-    LaunchedEffect(vvm) {
-        vvm.savedChat.collect { cvm.say(it) }
-    }
     // A tap on the big mic is a one-time request. Coming back to Home never reopens the mic.
     LaunchedEffect(micRequest) { if (micRequest) { onMicConsumed(); toggleMic() } }
     LaunchedEffect(holdMic) {

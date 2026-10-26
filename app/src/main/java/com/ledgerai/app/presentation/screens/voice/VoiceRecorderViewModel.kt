@@ -29,12 +29,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -136,17 +133,14 @@ class VoiceRecorderViewModel @Inject constructor(
     private val voskModelManager: VoskModelManager,
     private val offlineEngine: OfflineSttEngine,
     private val prefs: UserPreferences,
-    private val records: com.ledgerai.app.data.records.RecordSaver
+    private val records: com.ledgerai.app.data.records.RecordSaver,
+    private val chatNotice: com.ledgerai.app.data.chat.HomeChatNotice,
 ) : ViewModel() {
 
     companion object {
         const val MAX_SECONDS = 60
         private const val MIN_RECORDING_MS = 1000L
     }
-
-    /** One line for the home chat after a save. The voice screen does not collect this. */
-    private val _savedChat = MutableSharedFlow<String>(extraBufferCapacity = 8)
-    val savedChat: SharedFlow<String> = _savedChat.asSharedFlow()
 
     private var engine: OfflineVoiceEngine = OfflineVoiceEngine.SHERPA
     private var speechLang: String = "en"
@@ -527,14 +521,17 @@ class VoiceRecorderViewModel @Inject constructor(
     fun updateTypedInput(text: String) = _uiState.update { it.copy(typedInput = text) }
 
     fun saveRecord() {
-        val draft = _uiState.value.record ?: return
+        val state = _uiState.value
+        val draft = state.record ?: return
+        if (state.recordSaved) return
+        _uiState.update { it.copy(recordSaved = true) }
+        chatNotice.post("Entry added")
         viewModelScope.launch {
             runCatching { records.save(draft) }
-                .onSuccess {
-                    _uiState.update { it.copy(recordSaved = true) }
-                    tellChat("Entry added")
+                .onFailure { e ->
+                    _uiState.update { it.copy(recordSaved = false) }
+                    showError(ErrorType.PARSE_FAILED, e.message ?: "Could not save")
                 }
-                .onFailure { e -> showError(ErrorType.PARSE_FAILED, e.message ?: "Could not save") }
         }
     }
 
@@ -601,37 +598,32 @@ class VoiceRecorderViewModel @Inject constructor(
         }
     }
 
-    /** Saves one card. An unmatched card is kept as a note. */
+    /** Saves one card. An unmatched card is kept as a note. The button locks on the first tap. */
     fun saveCard(key: Int) {
         val card = _uiState.value.cards.firstOrNull { it.key == key } ?: return
         if (card.saved) return
+        markSaved(key)
+        chatNotice.post("Entry added")
         viewModelScope.launch {
             val saved = saveOne(card, _uiState.value.transcript)
-            if (saved != null) {
-                markSaved(key)
-                publish(listOf(saved))
-                tellChat("${saved.kind.label} added")
-            }
+            if (saved != null) publish(listOf(saved))
         }
     }
 
-    /** Saves every card that can be saved; the rest stay. */
+    /** Saves every card that can be saved; the rest stay. A second tap does not write them again. */
     fun saveAll() {
-        val state = _uiState.value
+        val pending = _uiState.value.cards.filter { !it.saved }
+        if (pending.isEmpty()) return
+        pending.forEach { markSaved(it.key) }
+        chatNotice.post(if (pending.size == 1) "Entry added" else "${pending.size} entries added")
+        val transcript = _uiState.value.transcript
         viewModelScope.launch {
             val saved = mutableListOf<SavedVoiceItem>()
-            for (card in state.cards) {
-                if (card.saved) continue
-                val result = saveOne(card, state.transcript)
-                if (result != null) {
-                    saved += result
-                    markSaved(card.key)
-                }
+            for (card in pending) {
+                val result = saveOne(card, transcript)
+                if (result != null) saved += result
             }
-            if (saved.isNotEmpty()) {
-                publish(saved)
-                tellChat(if (saved.size == 1) "${saved.first().kind.label} added" else "${saved.size} entries added")
-            }
+            if (saved.isNotEmpty()) publish(saved)
         }
     }
 
@@ -639,10 +631,6 @@ class VoiceRecorderViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(cards = state.cards.map { if (it.key == key) it.copy(saved = true) else it })
         }
-    }
-
-    private fun tellChat(line: String) {
-        _savedChat.tryEmit(line)
     }
 
     private suspend fun saveOne(card: VoiceCard, transcript: String): SavedVoiceItem? {
@@ -653,7 +641,18 @@ class VoiceRecorderViewModel @Inject constructor(
             } else it
         }
         val text = card.intent.rawTranscript.ifBlank { transcript }
-        val saved = capture.save(intent, text.ifBlank { transcript }, redo?.history, card.remindersEdited)
+        val words = text.ifBlank { transcript }
+        val saved = capture.save(intent, words, redo?.history, card.remindersEdited)
+            ?: if (intent !is ParsedIntent.Note) {
+                capture.save(
+                    ParsedIntent.Note(title = noteTitle(words), body = words, rawTranscript = words),
+                    words,
+                    redo?.history,
+                    card.remindersEdited,
+                )
+            } else {
+                null
+            }
         if (saved != null && redo != null) {
             if (redo.replaceOld) redo.history.linkedItemId?.let { capture.deleteLinked(redo.history.kind, it) }
             // The first saved card takes over the row; further cards add their own rows.

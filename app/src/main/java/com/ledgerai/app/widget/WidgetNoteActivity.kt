@@ -19,6 +19,7 @@ class WidgetNoteActivity : FragmentActivity() {
 
     @Inject lateinit var ai: AiRepository
     @Inject lateinit var capture: VoiceCaptureRepository
+    @Inject lateinit var chatNotice: com.ledgerai.app.data.chat.HomeChatNotice
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +37,9 @@ class WidgetNoteActivity : FragmentActivity() {
             if (text.isEmpty()) return@setOnClickListener
             val host = findViewById<LinearLayout>(R.id.widget_suggestions)
             lifecycleScope.launch {
-                runWidgetAi(this@WidgetNoteActivity, host, text, ai, capture)
+                runWidgetAi(this@WidgetNoteActivity, host, text, ai, capture) {
+                    chatNotice.post("Entry added")
+                }
             }
         }
     }
